@@ -8,3 +8,10 @@ expo-env.d.ts
 
 # windsurf rules
 .windsurfrules
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
