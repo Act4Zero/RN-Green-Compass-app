@@ -26,7 +26,7 @@ Make sure we stick to clean architecture so that the codebase is readable and sc
   Strive to have the business logic (state management, data fetching, etc.) completely shared and only branch when it comes to input methods or rendering differences. Where possible, write platform-agnostic code. Use the cross-platform components from React Native core or from libraries that support all platforms. For example, use `<TouchableOpacity>` or `<Pressable>` for clickable elements – these work for both mobile (touch) and web (clickable and even support hover events if needed). By using these abstractions, you avoid having divergent code.
   
 - **Mind the Web Back Button and URL**:  
-  If your app runs on the web, users expect to use the browser’s Back/Forward buttons and share URLs to specific screens. Consider using deep linking / linking options provided by React Navigation to map internal navigation state to URL paths. React Navigation’s latest versions allow configuring a linking object so that, for example, going to the Profile screen corresponds to `/profile/:id` URL. This way your web app is a proper single-page application with bookmarkable links, rather than a monolithic page that breaks web conventions.
+  Follow Expo router documentation to implement deep linking and handle back navigation
   
 - **Use Universal Packages**:  
   Choose libraries that explicitly support web when possible. See resources like the [React Native Directory website](https://reactnative.directory/) or [LogRocket’s blog](https://blog.logrocket.com).
@@ -119,6 +119,6 @@ Smooth animations are a hallmark of a polished app. In React Native, animations 
 
 - [React Native](https://reactnative.dev/docs/getting-started)
 - [Expo](https://docs.expo.dev/)
-- [React Navigation](https://reactnavigation.org/docs/getting-started/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
 - [Flexbox](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox) (to ensure responsive styles)
 - [Supabase](https://supabase.com/docs/reference/javascript/introduction)
