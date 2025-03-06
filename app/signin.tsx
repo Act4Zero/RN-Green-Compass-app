@@ -96,7 +96,7 @@ export default function SignIn() {
         }
       } else {
         console.log('Successfully signed in:', data?.user?.email);
-        // Navigation will be handled by the index.tsx redirect
+        router.replace('/home');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
