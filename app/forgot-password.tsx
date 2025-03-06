@@ -168,10 +168,12 @@ const styles = StyleSheet.create<Styles>({
     backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
   content: {
-    width: '90%',
+    width: '100%',
     padding: 24,
+    alignItems: 'center',
   },
   header: {
     marginBottom: 32,
@@ -190,6 +192,7 @@ const styles = StyleSheet.create<Styles>({
   },
   form: {
     width: '100%',
+    alignItems: 'stretch',
   },
   errorContainer: {
     backgroundColor: '#FFEBEE',

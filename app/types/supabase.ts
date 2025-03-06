@@ -47,3 +47,7 @@ export interface Database {
     }
   }
 }
+
+// Default export to fix the 'missing required default export' warning
+const SupabaseTypes = {};
+export default SupabaseTypes;

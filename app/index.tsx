@@ -5,6 +5,7 @@ import Welcome from './components/Welcome';
 import { useAuth } from './context/AuthContext';
 
 export default function Index() {
+  // This component renders the Green Compass Welcome page
   const { user, loading } = useAuth();
 
   // If the user is authenticated, redirect to the home screen

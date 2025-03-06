@@ -206,8 +206,16 @@ export default function SignUp() {
               </View>
               <Text style={styles.checkboxText}>
                 I agree to the{' '}
-                <Text style={styles.checkboxLink}>Terms of Service</Text> and{' '}
-                <Text style={styles.checkboxLink}>Privacy Policy</Text>
+                <Link href="https://greencompass.org/terms" asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.checkboxLink}>Terms of Service</Text>
+                  </TouchableOpacity>
+                </Link> and{' '}
+                <Link href="https://greencompass.org/privacy" asChild>
+                  <TouchableOpacity>
+                    <Text style={styles.checkboxLink}>Privacy Policy</Text>
+                  </TouchableOpacity>
+                </Link>
               </Text>
             </TouchableOpacity>
             {termsError && <Text style={styles.errorText}>{termsError}</Text>}
@@ -257,10 +265,12 @@ const styles = StyleSheet.create<Styles>({
     backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
   content: {
-    width: '90%',
+    width: '100%',
     padding: 24,
+    alignItems: 'center',
   },
   header: {
     marginBottom: 32,
@@ -279,6 +289,7 @@ const styles = StyleSheet.create<Styles>({
   },
   form: {
     width: '100%',
+    alignItems: 'stretch',
   },
   checkboxContainer: {
     flexDirection: 'row',

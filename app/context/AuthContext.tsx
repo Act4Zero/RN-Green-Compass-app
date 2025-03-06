@@ -117,3 +117,9 @@ export const useAuth = () => {
   
   return context;
 };
+
+// Default export to fix the 'missing required default export' warning
+export default {
+  AuthProvider,
+  useAuth,
+};

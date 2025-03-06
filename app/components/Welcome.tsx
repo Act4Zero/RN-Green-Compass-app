@@ -45,7 +45,7 @@ const Welcome: React.FC = () => {
       <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/images/icon.png')}
+            source={require('../../assets/images/GCLogo-no-bg.png')}
             style={styles.logo}
             resizeMode="contain"
           />
