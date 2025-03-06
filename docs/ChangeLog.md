@@ -91,3 +91,13 @@
   - Fixed React ref forwarding warnings by removing the `asChild` prop pattern in all authentication screens
   - Replaced Link components with direct navigation using the router.push method
   - Updated the Welcome component to use direct navigation instead of nested components with refs
+
+## 2025-03-06 (Supabase Authentication Integration)
+- Connected authentication screen buttons with Supabase DB functions:
+  - Implemented proper error handling for authentication functions
+  - Connected signup form to Supabase signUp method with validation
+  - Connected signin form to Supabase signIn method with validation
+  - Added loading states during authentication processes
+  - Implemented proper navigation after successful authentication
+  - Prepared social authentication buttons for future implementation
+  - Added proper error messages for authentication failures

@@ -117,11 +117,26 @@ export default function SignUp() {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password);
+      const { data, error } = await signUp(email, password);
       
       if (error) {
-        setError(error.message);
+        if (error.message.includes('already registered')) {
+          setError('This email is already registered. Please use a different email or try signing in.');
+        } else if (error.message.includes('password')) {
+          setError('Password is too weak. Please use a stronger password with at least 8 characters.');
+        } else {
+          setError(error.message);
+        }
       } else {
+        console.log('Successfully signed up:', data?.user?.email);
+        
+        // If fullName is provided, we would update the user profile here
+        // This would typically be done in a separate function that calls the Supabase profiles table
+        if (fullName) {
+          console.log('Would update profile with name:', fullName);
+          // Future implementation: Update user profile with fullName
+        }
+        
         // Show success message and navigate to success screen
         router.push('/signup-success');
       }
@@ -133,14 +148,50 @@ export default function SignUp() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    // Will be implemented with Supabase social auth
-    console.log('Google sign up pressed');
+  const handleGoogleSignUp = async () => {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      // This is a placeholder for future implementation with Supabase social auth
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: 'google',
+      //   options: {
+      //     redirectTo: 'yourapp://auth/callback',
+      //   },
+      // });
+      
+      console.log('Google sign up pressed - to be implemented with Supabase OAuth');
+      setError('Google sign-up will be available soon!');
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Google sign up error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAppleSignUp = () => {
-    // Will be implemented with Supabase social auth
-    console.log('Apple sign up pressed');
+  const handleAppleSignUp = async () => {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      // This is a placeholder for future implementation with Supabase social auth
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: 'apple',
+      //   options: {
+      //     redirectTo: 'yourapp://auth/callback',
+      //   },
+      // });
+      
+      console.log('Apple sign up pressed - to be implemented with Supabase OAuth');
+      setError('Apple sign-up will be available soon!');
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Apple sign up error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleTerms = () => {

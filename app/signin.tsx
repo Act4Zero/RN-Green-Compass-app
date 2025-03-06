@@ -84,11 +84,18 @@ export default function SignIn() {
     setLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
+      const { data, error } = await signIn(email, password);
       
       if (error) {
-        setError(error.message);
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please confirm your email address before signing in.');
+        } else {
+          setError(error.message);
+        }
       } else {
+        console.log('Successfully signed in:', data?.user?.email);
         // Navigation will be handled by the index.tsx redirect
       }
     } catch (err) {
@@ -99,14 +106,50 @@ export default function SignIn() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    // Will be implemented with Supabase social auth
-    console.log('Google sign in pressed');
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      // This is a placeholder for future implementation with Supabase social auth
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: 'google',
+      //   options: {
+      //     redirectTo: 'yourapp://auth/callback',
+      //   },
+      // });
+      
+      console.log('Google sign in pressed - to be implemented with Supabase OAuth');
+      setError('Google sign-in will be available soon!');
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Google sign in error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAppleSignIn = () => {
-    // Will be implemented with Supabase social auth
-    console.log('Apple sign in pressed');
+  const handleAppleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      // This is a placeholder for future implementation with Supabase social auth
+      // const { data, error } = await supabase.auth.signInWithOAuth({
+      //   provider: 'apple',
+      //   options: {
+      //     redirectTo: 'yourapp://auth/callback',
+      //   },
+      // });
+      
+      console.log('Apple sign in pressed - to be implemented with Supabase OAuth');
+      setError('Apple sign-in will be available soon!');
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Apple sign in error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
