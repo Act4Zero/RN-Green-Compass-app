@@ -11,3 +11,14 @@
   - Updated app/_layout.tsx to include the AuthProvider
   - Added TypeScript types for Supabase database schema
   - Created comprehensive documentation for Supabase setup in docs/SUPABASE_SETUP.md
+
+## 2025-03-06
+- Fixed environment variables configuration to be compatible with expo-router
+  - Removed react-native-dotenv from babel.config.js as it conflicts with expo-router
+  - Created app.config.js to use Expo's configuration system for environment variables
+  - Updated supabase.ts to use Constants.expoConfig.extra instead of @env imports
+  - Implemented a simple in-memory storage adapter for Supabase auth after encountering issues with both SecureStore and AsyncStorage
+  - Created .env.example file with the new EXPO_PUBLIC_ prefix naming convention
+  - Updated SUPABASE_SETUP.md documentation with the new environment variables approach
+  - Added fallback values for Supabase URL and key in supabase.ts to prevent "Invalid URL" errors
+  - Modified app.config.js to directly access environment variables

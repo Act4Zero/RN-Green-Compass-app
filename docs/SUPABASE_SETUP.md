@@ -22,12 +22,14 @@ This document provides instructions on how to set up Supabase for authentication
 
 1. In your Supabase project dashboard, go to Project Settings > API
 2. Copy the "Project URL" and "anon/public" key
-3. Update the `.env` file in the root of the project with these values:
+3. Create a `.env` file in the root of the project with these values using the Expo naming convention:
 
 ```
-SUPABASE_URL=your_project_url
-SUPABASE_ANON_KEY=your_anon_key
+EXPO_PUBLIC_SUPABASE_URL=your_project_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
+
+Note: The app uses Expo's built-in environment variables system, which requires the `EXPO_PUBLIC_` prefix for variables that need to be accessible at runtime.
 
 ### 3. Set Up Authentication
 
@@ -127,3 +129,4 @@ const handleSignOut = async () => {
 - [Supabase Documentation](https://supabase.com/docs)
 - [Supabase JavaScript Client](https://supabase.com/docs/reference/javascript/introduction)
 - [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
+- [Expo Environment Variables](https://docs.expo.dev/guides/environment-variables/)
