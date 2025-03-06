@@ -150,11 +150,7 @@ export default function ForgotPassword() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Remember your password?{' '}
-              <Link href="/signin" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}>Login</Text>
-                </TouchableOpacity>
-              </Link>
+              <Text style={styles.footerLink} onPress={() => router.push('/signin')}>Login</Text>
             </Text>
           </View>
         </View>

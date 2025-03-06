@@ -148,11 +148,10 @@ export default function SignIn() {
               autoComplete="password"
             />
 
-            <Link href="/forgot-password" asChild>
-              <TouchableOpacity>
-                <Text style={styles.forgotPassword}>Forgot password?</Text>
-              </TouchableOpacity>
-            </Link>
+            {/* Changed from asChild pattern to avoid ref forwarding warning */}
+            <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+              <Text style={styles.forgotPassword}>Forgot password?</Text>
+            </TouchableOpacity>
 
             {error && (
               <View style={styles.errorContainer}>
@@ -180,11 +179,7 @@ export default function SignIn() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               New here?{' '}
-              <Link href="/signup" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </Link>
+              <Text style={styles.footerLink} onPress={() => router.push('/signup')}>Sign Up</Text>
             </Text>
           </View>
         </View>

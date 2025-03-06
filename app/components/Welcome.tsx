@@ -9,7 +9,7 @@ import {
   TextStyle,
   ImageStyle,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Button from './Button';
 import SocialButton from './SocialButton';
 
@@ -29,6 +29,7 @@ interface Styles {
 const Welcome: React.FC = () => {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const router = useRouter();
 
   const handleGoogleSignIn = () => {
     // Will be implemented with Supabase social auth
@@ -57,13 +58,17 @@ const Welcome: React.FC = () => {
         </Text>
 
         <View style={styles.buttonContainer}>
-          <Link href="/signup" asChild>
-            <Button title="Sign Up" variant="primary" onPress={() => {}} />
-          </Link>
+          <Button 
+            title="Sign Up" 
+            variant="primary" 
+            onPress={() => router.push('/signup')} 
+          />
 
-          <Link href="/signin" asChild>
-            <Button title="Login" variant="outline" onPress={() => {}} />
-          </Link>
+          <Button 
+            title="Login" 
+            variant="outline" 
+            onPress={() => router.push('/signin')} 
+          />
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />

@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   ViewStyle,
   TextStyle,
+  Linking,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
@@ -207,16 +208,18 @@ export default function SignUp() {
               </View>
               <Text style={styles.checkboxText}>
                 I agree to the{' '}
-                <Link href="https://greencompass.org/terms" asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.checkboxLink}>Terms of Service</Text>
-                  </TouchableOpacity>
-                </Link> and{' '}
-                <Link href="https://greencompass.org/privacy" asChild>
-                  <TouchableOpacity>
-                    <Text style={styles.checkboxLink}>Privacy Policy</Text>
-                  </TouchableOpacity>
-                </Link>
+                <Text 
+                  style={styles.checkboxLink} 
+                  onPress={() => Linking.openURL('https://greencompass.org/terms')}
+                >
+                  Terms of Service
+                </Text> and{' '}
+                <Text 
+                  style={styles.checkboxLink} 
+                  onPress={() => Linking.openURL('https://greencompass.org/privacy')}
+                >
+                  Privacy Policy
+                </Text>
               </Text>
             </TouchableOpacity>
             {termsError && <Text style={styles.errorText}>{termsError}</Text>}
@@ -247,11 +250,7 @@ export default function SignUp() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Already have an account?{' '}
-              <Link href="/signin" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}>Login</Text>
-                </TouchableOpacity>
-              </Link>
+              <Text style={styles.footerLink} onPress={() => router.push('/signin')}>Login</Text>
             </Text>
           </View>
         </View>

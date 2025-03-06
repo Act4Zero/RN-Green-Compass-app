@@ -88,3 +88,6 @@
   - Optimized layout for both small mobile screens and larger tablet/desktop displays
 - Fixed errors and warnings:
   - Fixed ReferenceError in supabase.ts by properly implementing the default export with an empty object instead of trying to export types as values
+  - Fixed React ref forwarding warnings by removing the `asChild` prop pattern in all authentication screens
+  - Replaced Link components with direct navigation using the router.push method
+  - Updated the Welcome component to use direct navigation instead of nested components with refs
