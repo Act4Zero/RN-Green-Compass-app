@@ -17,3 +17,6 @@ expo-env.d.ts
 .env.development
 .env.production
 .env.test
+
+# Android
+app/.DS_Store
