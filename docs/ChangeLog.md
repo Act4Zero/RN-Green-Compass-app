@@ -101,3 +101,11 @@
   - Implemented proper navigation after successful authentication
   - Prepared social authentication buttons for future implementation
   - Added proper error messages for authentication failures
+
+## 2025-03-06 (Sign-out Functionality Enhancement)
+- Enhanced sign-out functionality in the Home screen:
+  - Updated the handleSignOut function to redirect to the signin screen after successful logout
+  - Added error handling to display a generic error message if sign-out fails
+  - Implemented useRouter hook for programmatic navigation
+  - Added loading state during sign-out process to improve user experience
+  - Ensured proper cleanup of user session after sign-out

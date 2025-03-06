@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   ViewStyle,
   TextStyle,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface Styles {
   container: ViewStyle;
@@ -35,10 +37,33 @@ export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignOut = async () => {
-    await signOut();
-    // Navigation will be handled by the index.tsx redirect
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await signOut();
+      
+      if (error) {
+        // Display generic error message if sign-out fails
+        setError('Failed to sign out. Please try again.');
+        Alert.alert('Error', 'Failed to sign out. Please try again.');
+      } else {
+        // Redirect to signin screen after successful logout
+        router.replace('/signin');
+      }
+    } catch (err) {
+      // Handle unexpected errors
+      setError('An unexpected error occurred. Please try again.');
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error('Sign out error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,6 +118,8 @@ export default function Home() {
           onPress={handleSignOut}
           variant="outline"
           style={{ marginTop: 24, marginBottom: 40 }}
+          loading={loading}
+          disabled={loading}
         />
       </View>
     </ScrollView>
