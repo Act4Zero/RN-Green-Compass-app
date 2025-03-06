@@ -171,29 +171,6 @@ export default function SignUp() {
     }
   };
 
-  const handleAppleSignUp = async () => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      // This is a placeholder for future implementation with Supabase social auth
-      // const { data, error } = await supabase.auth.signInWithOAuth({
-      //   provider: 'apple',
-      //   options: {
-      //     redirectTo: 'yourapp://auth/callback',
-      //   },
-      // });
-      
-      console.log('Apple sign up pressed - to be implemented with Supabase OAuth');
-      setError('Apple sign-up will be available soon!');
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Apple sign up error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleTerms = () => {
     setTermsAccepted(!termsAccepted);
     if (termsError) validateTerms();
@@ -295,7 +272,6 @@ export default function SignUp() {
             </View>
 
             <SocialButton provider="google" onPress={handleGoogleSignUp} />
-            <SocialButton provider="apple" onPress={handleAppleSignUp} />
           </View>
 
           <View style={styles.footer}>

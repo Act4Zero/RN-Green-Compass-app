@@ -36,11 +36,6 @@ const Welcome: React.FC = () => {
     console.log('Google sign in pressed');
   };
 
-  const handleAppleSignIn = () => {
-    // Will be implemented with Supabase social auth
-    console.log('Apple sign in pressed');
-  };
-
   return (
     <View style={styles.container}>
       <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
@@ -77,7 +72,6 @@ const Welcome: React.FC = () => {
           </View>
 
           <SocialButton provider="google" onPress={handleGoogleSignIn} />
-          <SocialButton provider="apple" onPress={handleAppleSignIn} />
         </View>
       </View>
     </View>
