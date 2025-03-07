@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 const { EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY } = process.env;
 
 module.exports = {
