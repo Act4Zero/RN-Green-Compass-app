@@ -37,10 +37,21 @@ const supabase = createClient(
     auth: {
       storage: memoryStorageAdapter,
       autoRefreshToken: true,
-      persistSession: false, // Don't try to persist the session since we're using in-memory storage
-      detectSessionInUrl: false,
+      persistSession: true,
+      detectSessionInUrl: true, // Enable this to detect OAuth state in URL
     },
   }
 );
+
+// For web platform, handle OAuth response in URL
+if (typeof window !== 'undefined') {
+  // This will capture the OAuth response and set the session
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Supabase auth event:', event);
+    if (session) {
+      console.log('Session established');
+    }
+  });
+}
 
 export default supabase;

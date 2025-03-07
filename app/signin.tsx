@@ -40,7 +40,7 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -111,16 +111,20 @@ export default function SignIn() {
     setLoading(true);
     
     try {
-      // This is a placeholder for future implementation with Supabase social auth
-      // const { data, error } = await supabase.auth.signInWithOAuth({
-      //   provider: 'google',
-      //   options: {
-      //     redirectTo: 'yourapp://auth/callback',
-      //   },
-      // });
+      const { data, error } = await signInWithGoogle();
       
-      console.log('Google sign in pressed - to be implemented with Supabase OAuth');
-      setError('Google sign-in will be available soon!');
+      if (error) {
+        if (error.message.includes('cancelled')) {
+          console.log('Google sign in was cancelled');
+          setError(null); // Don't show error for user cancellation
+        } else {
+          console.error('Google sign in error:', error.message);
+          setError('Failed to sign in with Google. Please try again.');
+        }
+      } else if (data?.user) {
+        console.log('Successfully signed in with Google:', data.user.email);
+        router.replace('/home');
+      }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Google sign in error:', err);

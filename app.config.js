@@ -1,6 +1,13 @@
 import 'dotenv/config';
 
-const { EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY } = process.env;
+const { 
+  EXPO_PUBLIC_SUPABASE_URL, 
+  EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_REDIRECT_URI
+} = process.env;
 
 module.exports = {
   name: "GreenCompass",
@@ -8,12 +15,17 @@ module.exports = {
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: "myapp",
+  scheme: "greencompass",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.anonymous.GreenCompass"
+    bundleIdentifier: "com.anonymous.GreenCompass",
+    config: {
+      googleSignIn: {
+        reservedClientId: EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
+      }
+    }
   },
   android: {
     adaptiveIcon: {
@@ -46,5 +58,11 @@ module.exports = {
   extra: {
     supabaseUrl: EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    googleWebClientId: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    googleIosClientId: EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    googleAndroidClientId: EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    // For web, this should match the redirect URI configured in Google Cloud Console
+    // This should be the same URI that's configured in your Google Cloud Console
+    googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
   }
 };

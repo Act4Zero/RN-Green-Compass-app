@@ -17,12 +17,15 @@ interface SocialButtonProps {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  disabled?: boolean;
 }
 
 interface Styles {
   button: ViewStyle;
   buttonText: TextStyle;
   iconContainer: ViewStyle;
+  buttonDisabled: ViewStyle;
+  textDisabled: TextStyle;
 }
 
 const SocialButton: React.FC<SocialButtonProps> = ({
@@ -30,6 +33,7 @@ const SocialButton: React.FC<SocialButtonProps> = ({
   onPress,
   style,
   textStyle,
+  disabled = false,
 }) => {
   const getProviderIcon = () => {
     switch (provider) {
@@ -55,14 +59,23 @@ const SocialButton: React.FC<SocialButtonProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.button, style]}
+      style={[
+        styles.button, 
+        style, 
+        disabled && styles.buttonDisabled
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
+      disabled={disabled}
     >
       <View style={styles.iconContainer}>
         {getProviderIcon()}
       </View>
-      <Text style={[styles.buttonText, textStyle]}>
+      <Text style={[
+        styles.buttonText, 
+        textStyle,
+        disabled && styles.textDisabled
+      ]}>
         {getProviderText()}
       </Text>
     </TouchableOpacity>
@@ -92,6 +105,14 @@ const styles = StyleSheet.create<Styles>({
     marginRight: 12,
     width: 24,
     alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#E0E0E0',
+    opacity: 0.7,
+  },
+  textDisabled: {
+    color: '#9E9E9E',
   }
 });
 
