@@ -238,13 +238,13 @@ export default function SignUp() {
                 I agree to the{' '}
                 <Text 
                   style={styles.checkboxLink} 
-                  onPress={() => Linking.openURL('https://greencompass.org/terms')}
+                  onPress={() => Linking.openURL('https://www.greencompass.app/tos')}
                 >
                   Terms of Service
                 </Text> and{' '}
                 <Text 
                   style={styles.checkboxLink} 
-                  onPress={() => Linking.openURL('https://greencompass.org/privacy')}
+                  onPress={() => Linking.openURL('https://www.greencompass.app/privacy')}
                 >
                   Privacy Policy
                 </Text>
