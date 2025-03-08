@@ -148,44 +148,6 @@ export default function SignUp() {
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const { data, error } = await signInWithGoogle();
-      
-      if (error) {
-        if (error.message.includes('cancelled')) {
-          console.log('Google sign up was cancelled');
-          setError(null); // Don't show error for user cancellation
-        } else {
-          console.error('Google sign up error:', error.message);
-          setError('Failed to sign up with Google. Please try again.');
-        }
-      } else if (data?.user) {
-        console.log('Successfully signed up with Google:', data.user.email);
-        
-        // For new users, we might want to collect additional profile information
-        // before redirecting to the home screen
-        const isNewUser = data.user.app_metadata.provider === 'google' && 
-                         data.user.created_at === data.user.updated_at;
-                         
-        if (isNewUser) {
-          // Could redirect to a profile completion page in the future
-          console.log('New user signed up with Google');
-        }
-        
-        router.replace('/home');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Google sign up error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const toggleTerms = () => {
     setTermsAccepted(!termsAccepted);
     if (termsError) validateTerms();
@@ -285,8 +247,6 @@ export default function SignUp() {
               <Text style={styles.dividerText}>or</Text>
               <View style={styles.divider} />
             </View>
-
-            <SocialButton provider="google" onPress={handleGoogleSignUp} />
           </View>
 
           <View style={styles.footer}>

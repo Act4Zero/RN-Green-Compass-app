@@ -106,33 +106,6 @@ export default function SignIn() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const { data, error } = await signInWithGoogle();
-      
-      if (error) {
-        if (error.message.includes('cancelled')) {
-          console.log('Google sign in was cancelled');
-          setError(null); // Don't show error for user cancellation
-        } else {
-          console.error('Google sign in error:', error.message);
-          setError('Failed to sign in with Google. Please try again.');
-        }
-      } else if (data?.user) {
-        console.log('Successfully signed in with Google:', data.user.email);
-        router.replace('/home');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Google sign in error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoidingContainer}
@@ -195,8 +168,6 @@ export default function SignIn() {
               <Text style={styles.dividerText}>or</Text>
               <View style={styles.divider} />
             </View>
-
-            <SocialButton provider="google" onPress={handleGoogleSignIn} />
           </View>
 
           <View style={styles.footer}>

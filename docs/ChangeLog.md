@@ -140,3 +140,9 @@
   - Implemented visual styling for disabled state
   - Improved accessibility by properly handling disabled interactions
   - Added TypeScript types for the disabled prop
+
+## 2025-03-08 (Removing Google Sign-In)
+- Removed Google Sign-In from the Welcome screen:
+  - Removed Google Sign-In button from Welcome component
+  - Updated AuthContext to remove Google Sign-In method
+  - Updated signin and signup screens to remove Google Sign-In options

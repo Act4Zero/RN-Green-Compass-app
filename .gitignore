@@ -19,4 +19,8 @@ expo-env.d.ts
 .env.test
 
 # Android
+android/app/src/main/java/com/act4Zero/
 app/.DS_Store
+.idea/
+
+yarn.lock

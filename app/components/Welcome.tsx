@@ -36,33 +36,6 @@ const Welcome: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const { data, error } = await signInWithGoogle();
-      
-      if (error) {
-        if (error.message.includes('cancelled')) {
-          console.log('Google sign in was cancelled');
-          // Don't show error for user cancellation
-        } else {
-          console.error('Google sign in error:', error.message);
-          setError('Failed to sign in with Google. Please try again.');
-        }
-      } else if (data?.user) {
-        console.log('Successfully signed in with Google:', data.user.email);
-        router.replace('/home');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error('Google sign in error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
@@ -90,18 +63,6 @@ const Welcome: React.FC = () => {
             title="Login" 
             variant="outline" 
             onPress={() => router.push('/signin')} 
-          />
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <SocialButton 
-            provider="google" 
-            onPress={handleGoogleSignIn} 
-            disabled={loading}
           />
           
           {loading && (
