@@ -13,10 +13,9 @@ import {
   Linking,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { useAuth } from './context/AuthContext';
-import Button from './components/Button';
-import Input from './components/Input';
-import SocialButton from './components/SocialButton';
+import { useAuth } from '../context/AuthContext';
+import Button from '../components/Button';
+import Input from '../components/Input';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
@@ -138,7 +137,7 @@ export default function SignUp() {
         }
         
         // Show success message and navigate to success screen
-        router.push('/signup-success');
+        router.push('/authentication/signup-success');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');

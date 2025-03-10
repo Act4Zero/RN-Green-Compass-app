@@ -13,7 +13,6 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from './Button';
-import SocialButton from './SocialButton';
 
 interface Styles {
   container: ViewStyle;
@@ -56,13 +55,13 @@ const Welcome: React.FC = () => {
           <Button 
             title="Sign Up" 
             variant="primary" 
-            onPress={() => router.push('/signup')} 
+            onPress={() => router.push('/authentication/signup')} 
           />
 
           <Button 
             title="Login" 
             variant="outline" 
-            onPress={() => router.push('/signin')} 
+            onPress={() => router.push('/authentication/signin')} 
           />
           
           {loading && (
