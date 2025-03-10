@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
 // Get the environment variables from Expo Constants or use hardcoded values as fallback
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl || 'https://okyxunjbqqeuarhqlznq.supabase.co';
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXh1bmpicXFldWFyaHFsem5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMzA3MjksImV4cCI6MjA1NjYwNjcyOX0._BUE3i3NflPCFf2jRpArJXkv6_i40xWdm1d1hf6YU24';
+const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
 // Validate URL and key
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -37,10 +37,21 @@ const supabase = createClient(
     auth: {
       storage: memoryStorageAdapter,
       autoRefreshToken: true,
-      persistSession: false, // Don't try to persist the session since we're using in-memory storage
-      detectSessionInUrl: false,
+      persistSession: true,
+      detectSessionInUrl: true, // Enable this to detect OAuth state in URL
     },
   }
 );
+
+// For web platform, handle OAuth response in URL
+if (typeof window !== 'undefined') {
+  // This will capture the OAuth response and set the session
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Supabase auth event:', event);
+    if (session) {
+      console.log('Session established');
+    }
+  });
+}
 
 export default supabase;

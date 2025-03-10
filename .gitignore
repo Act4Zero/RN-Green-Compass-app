@@ -6,6 +6,7 @@ node_modules
 expo-env.d.ts
 # @end expo-cli
 .expo
+.expo/types/router.d.ts
 
 # windsurf rules
 .windsurfrules
@@ -16,3 +17,10 @@ expo-env.d.ts
 .env.development
 .env.production
 .env.test
+
+# Android
+android/app/src/main/java/com/act4Zero/
+app/.DS_Store
+.idea/
+
+yarn.lock

@@ -1,6 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import supabase from '../lib/supabase';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 
 // Define the shape of the auth context
 type AuthContextType = {
@@ -12,6 +16,10 @@ type AuthContextType = {
     data: { user: User | null; session: Session | null } | null;
   }>;
   signIn: (email: string, password: string) => Promise<{
+    error: Error | null;
+    data: { user: User | null; session: Session | null } | null;
+  }>;
+  signInWithGoogle: () => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
@@ -28,14 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get the current session
+    // Fetch the current session
     const getSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-      
       if (error) {
         console.error('Error getting session:', error.message);
       }
-      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -50,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Cleanup subscription
+    // Cleanup the subscription
     return () => {
       subscription.unsubscribe();
     };
@@ -59,11 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign up function
   const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
+      const { data, error } = await supabase.auth.signUp({ email, password });
       return { data, error };
     } catch (error) {
       return { data: null, error: error as Error };
@@ -73,11 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign in function
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       return { data, error };
     } catch (error) {
       return { data: null, error: error as Error };
@@ -94,13 +92,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Auth context value
+  // The context value exposing auth functions and state
   const value = {
     user,
     session,
     loading,
     signUp,
     signIn,
+
     signOut,
   };
 
@@ -110,10 +109,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 // Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
+};
+
+// Default export to avoid the "missing required default export" warning
+export default {
+  AuthProvider,
+  useAuth,
 };
