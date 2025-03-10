@@ -154,3 +154,29 @@
   - Moved home.tsx to app/home.tsx
   - Moved welcome.tsx to app/welcome.tsx
   - Updated imports in other files to reflect new locations
+
+## 2025-03-10 (Habit Tracking and Sustainability Goals Implementation)
+- Created database schema types for habit tracking in app/types/supabase.ts:
+  - Added Habit interface for defining sustainable habits
+  - Added UserHabit interface for tracking user-selected habits
+  - Added HabitLog interface for recording completed habit actions
+  - Added UserGoal interface for tracking sustainability goals
+- Implemented habit service in app/services/habitService.ts:
+  - Created methods to fetch habits from the database
+  - Added functionality to manage user habits (add, update, remove)
+  - Implemented habit logging with CO2 impact calculation
+  - Added goal tracking and progress updating
+  - Created methods for calculating statistics (CO2 saved, streaks, etc.)
+- Implemented context and hooks for habit tracking:
+  - Created HabitContext (app/context/HabitContext/HabitContext.tsx) for centralized state management
+  - Implemented useHabitTracking hook (app/hooks/useHabitTracking.ts) for habit management
+  - Created useGoals hook (app/hooks/useGoals.ts) for sustainability goals
+  - Added useHabitStats hook (app/hooks/useHabitStats.ts) for tracking statistics
+- Added functionality for:
+  - Tracking habits with frequency and period settings
+  - Logging completed habits with quantity and notes
+  - Creating and managing sustainability goals
+  - Calculating CO2 impact and environmental statistics
+  - Tracking streaks and progress towards goals
+  - Filtering and sorting habits and goals by category
+  - Calculating goal progress percentages
