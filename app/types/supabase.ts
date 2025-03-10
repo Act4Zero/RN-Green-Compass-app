@@ -43,6 +43,7 @@ export interface Database {
           name: string
           description: string | null
           category: string | null
+          subcategory: string | null
           estimated_co2_saving: number | null
         }
         Insert: {
@@ -52,6 +53,7 @@ export interface Database {
           name: string
           description?: string | null
           category?: string | null
+          subcategory?: string | null
           estimated_co2_saving?: number | null
         }
         Update: {
@@ -61,6 +63,7 @@ export interface Database {
           name?: string
           description?: string | null
           category?: string | null
+          subcategory?: string | null
           estimated_co2_saving?: number | null
         }
       }

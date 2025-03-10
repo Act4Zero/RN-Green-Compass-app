@@ -501,6 +501,7 @@ export const goalService = {
     title: string,
     targetValue: number,
     category?: string,
+    subcategory?: string,
     habitId?: string,
     description?: string,
     endDate?: string

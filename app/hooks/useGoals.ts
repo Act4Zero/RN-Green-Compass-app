@@ -36,6 +36,7 @@ export const useGoals = () => {
     title: string,
     targetValue: number,
     category?: string,
+    subcategory?: string,
     habitId?: string,
     description?: string,
     endDate?: string
@@ -44,7 +45,7 @@ export const useGoals = () => {
     setError(null);
     
     try {
-      await createGoal(title, targetValue, category, habitId, description, endDate);
+      await createGoal(title, targetValue, category, subcategory, habitId, description, endDate);
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create goal';
@@ -104,10 +105,38 @@ export const useGoals = () => {
   }, [userGoals]);
 
   /**
+   * Get goals by subcategory
+   */
+  const getGoalsBySubcategory = useCallback((subcategory: string): UserGoal[] => {
+    return userGoals.filter(goal => goal.subcategory === subcategory);
+  }, [userGoals]);
+
+  /**
+   * Get goals by category and subcategory
+   */
+  const getGoalsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserGoal[] => {
+    return userGoals.filter(goal => goal.category === category && goal.subcategory === subcategory);
+  }, [userGoals]);
+
+  /**
    * Get active goals by category
    */
   const getActiveGoalsByCategory = useCallback((category: string): UserGoal[] => {
     return activeUserGoals.filter(goal => goal.category === category);
+  }, [activeUserGoals]);
+
+  /**
+   * Get active goals by subcategory
+   */
+  const getActiveGoalsBySubcategory = useCallback((subcategory: string): UserGoal[] => {
+    return activeUserGoals.filter(goal => goal.subcategory === subcategory);
+  }, [activeUserGoals]);
+
+  /**
+   * Get active goals by category and subcategory
+   */
+  const getActiveGoalsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserGoal[] => {
+    return activeUserGoals.filter(goal => goal.category === category && goal.subcategory === subcategory);
   }, [activeUserGoals]);
 
   /**
@@ -182,15 +211,25 @@ export const useGoals = () => {
     updateExistingGoal,
     deleteExistingGoal,
     
-    // Helpers
-    getGoalsByCategory,
-    getActiveGoalsByCategory,
+    // Helpers - General
     getGoalsByHabit,
     getActiveGoalsByHabit,
     calculateGoalProgress,
     getGoalsSortedByProgress,
     getActiveGoalsSortedByProgress,
     getNearlyCompleteGoals,
+    
+    // Helpers - Category
+    getGoalsByCategory,
+    getActiveGoalsByCategory,
+    
+    // Helpers - Subcategory
+    getGoalsBySubcategory,
+    getActiveGoalsBySubcategory,
+    
+    // Helpers - Category and Subcategory
+    getGoalsByCategoryAndSubcategory,
+    getActiveGoalsByCategoryAndSubcategory,
   };
 };
 

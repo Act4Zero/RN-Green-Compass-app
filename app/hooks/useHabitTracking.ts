@@ -174,6 +174,20 @@ export const useHabitTracking = () => {
   }, [habits]);
 
   /**
+   * Get habits by subcategory
+   */
+  const getHabitsBySubcategory = useCallback((subcategory: string): Habit[] => {
+    return habits.filter(habit => habit.subcategory === subcategory);
+  }, [habits]);
+
+  /**
+   * Get habits by category and subcategory
+   */
+  const getHabitsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): Habit[] => {
+    return habits.filter(habit => habit.category === category && habit.subcategory === subcategory);
+  }, [habits]);
+
+  /**
    * Get user habits by category
    */
   const getUserHabitsByCategory = useCallback((category: string): UserHabit[] => {
@@ -184,12 +198,52 @@ export const useHabitTracking = () => {
   }, [userHabits, habits]);
 
   /**
+   * Get user habits by subcategory
+   */
+  const getUserHabitsBySubcategory = useCallback((subcategory: string): UserHabit[] => {
+    return userHabits.filter(userHabit => {
+      const habit = habits.find(h => h.id === userHabit.habit_id);
+      return habit?.subcategory === subcategory;
+    });
+  }, [userHabits, habits]);
+
+  /**
+   * Get user habits by category and subcategory
+   */
+  const getUserHabitsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserHabit[] => {
+    return userHabits.filter(userHabit => {
+      const habit = habits.find(h => h.id === userHabit.habit_id);
+      return habit?.category === category && habit?.subcategory === subcategory;
+    });
+  }, [userHabits, habits]);
+
+  /**
    * Get active user habits by category
    */
   const getActiveUserHabitsByCategory = useCallback((category: string): UserHabit[] => {
     return activeUserHabits.filter(userHabit => {
       const habit = habits.find(h => h.id === userHabit.habit_id);
       return habit?.category === category;
+    });
+  }, [activeUserHabits, habits]);
+
+  /**
+   * Get active user habits by subcategory
+   */
+  const getActiveUserHabitsBySubcategory = useCallback((subcategory: string): UserHabit[] => {
+    return activeUserHabits.filter(userHabit => {
+      const habit = habits.find(h => h.id === userHabit.habit_id);
+      return habit?.subcategory === subcategory;
+    });
+  }, [activeUserHabits, habits]);
+
+  /**
+   * Get active user habits by category and subcategory
+   */
+  const getActiveUserHabitsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserHabit[] => {
+    return activeUserHabits.filter(userHabit => {
+      const habit = habits.find(h => h.id === userHabit.habit_id);
+      return habit?.category === category && habit?.subcategory === subcategory;
     });
   }, [activeUserHabits, habits]);
 
@@ -220,10 +274,20 @@ export const useHabitTracking = () => {
     stopTrackingHabit,
     logCompletedHabit,
     
-    // Helpers
+    // Helpers - Category
     getHabitsByCategory,
     getUserHabitsByCategory,
     getActiveUserHabitsByCategory,
+    
+    // Helpers - Subcategory
+    getHabitsBySubcategory,
+    getUserHabitsBySubcategory,
+    getActiveUserHabitsBySubcategory,
+    
+    // Helpers - Category and Subcategory
+    getHabitsByCategoryAndSubcategory,
+    getUserHabitsByCategoryAndSubcategory,
+    getActiveUserHabitsByCategoryAndSubcategory,
   };
 };
 

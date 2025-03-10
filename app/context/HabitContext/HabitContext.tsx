@@ -48,6 +48,7 @@ type HabitContextType = {
     title: string,
     targetValue: number,
     category?: string,
+    subcategory?: string,
     habitId?: string,
     description?: string,
     endDate?: string
@@ -295,6 +296,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     title: string,
     targetValue: number,
     category?: string,
+    subcategory?: string,
     habitId?: string,
     description?: string,
     endDate?: string
@@ -307,6 +309,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         title,
         targetValue,
         category,
+        subcategory,
         habitId,
         description,
         endDate

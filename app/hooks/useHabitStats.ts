@@ -56,6 +56,35 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
+   * Calculate CO2 saved by subcategory
+   */
+  const getCO2SavedBySubcategory = useCallback((subcategory: string, habits: { id: string, subcategory: string | null }[]): number => {
+    const habitIds = habits
+      .filter(habit => habit.subcategory === subcategory)
+      .map(habit => habit.id);
+    
+    return habitLogs
+      .filter(log => habitIds.includes(log.habit_id) && log.completed)
+      .reduce((total, log) => total + (log.co2_saving || 0), 0);
+  }, [habitLogs]);
+
+  /**
+   * Calculate CO2 saved by category and subcategory
+   */
+  const getCO2SavedByCategoryAndSubcategory = useCallback(
+    (category: string, subcategory: string, habits: { id: string, category: string | null, subcategory: string | null }[]): number => {
+      const habitIds = habits
+        .filter(habit => habit.category === category && habit.subcategory === subcategory)
+        .map(habit => habit.id);
+      
+      return habitLogs
+        .filter(log => habitIds.includes(log.habit_id) && log.completed)
+        .reduce((total, log) => total + (log.co2_saving || 0), 0);
+    }, 
+    [habitLogs]
+  );
+
+  /**
    * Calculate actions taken by category
    */
   const getActionsByCategory = useCallback((category: string, habits: { id: string, category: string | null }[]): number => {
@@ -67,6 +96,35 @@ export const useHabitStats = () => {
       .filter(log => habitIds.includes(log.habit_id) && log.completed)
       .reduce((total, log) => total + (log.quantity || 1), 0);
   }, [habitLogs]);
+
+  /**
+   * Calculate actions taken by subcategory
+   */
+  const getActionsBySubcategory = useCallback((subcategory: string, habits: { id: string, subcategory: string | null }[]): number => {
+    const habitIds = habits
+      .filter(habit => habit.subcategory === subcategory)
+      .map(habit => habit.id);
+    
+    return habitLogs
+      .filter(log => habitIds.includes(log.habit_id) && log.completed)
+      .reduce((total, log) => total + (log.quantity || 1), 0);
+  }, [habitLogs]);
+
+  /**
+   * Calculate actions taken by category and subcategory
+   */
+  const getActionsByCategoryAndSubcategory = useCallback(
+    (category: string, subcategory: string, habits: { id: string, category: string | null, subcategory: string | null }[]): number => {
+      const habitIds = habits
+        .filter(habit => habit.category === category && habit.subcategory === subcategory)
+        .map(habit => habit.id);
+      
+      return habitLogs
+        .filter(log => habitIds.includes(log.habit_id) && log.completed)
+        .reduce((total, log) => total + (log.quantity || 1), 0);
+    },
+    [habitLogs]
+  );
 
   /**
    * Get logs by date range
@@ -181,12 +239,10 @@ export const useHabitStats = () => {
     refreshStats,
     refreshHabitLogs,
     
-    // Helpers
+    // Helpers - General
     getLogsForHabit,
     getCO2SavedForHabit,
     getActionsForHabit,
-    getCO2SavedByCategory,
-    getActionsByCategory,
     getLogsByDateRange,
     getCO2SavedInDateRange,
     getActionsInDateRange,
@@ -195,6 +251,18 @@ export const useHabitStats = () => {
     hasCompletedHabitsToday,
     getMostFrequentHabits,
     getHighestImpactHabits,
+    
+    // Helpers - Category
+    getCO2SavedByCategory,
+    getActionsByCategory,
+    
+    // Helpers - Subcategory
+    getCO2SavedBySubcategory,
+    getActionsBySubcategory,
+    
+    // Helpers - Category and Subcategory
+    getCO2SavedByCategoryAndSubcategory,
+    getActionsByCategoryAndSubcategory,
   };
 };
 
