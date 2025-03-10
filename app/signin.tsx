@@ -15,7 +15,6 @@ import { Link, useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
 import Input from './components/Input';
-import SocialButton from './components/SocialButton';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
