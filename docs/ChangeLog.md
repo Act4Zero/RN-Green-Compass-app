@@ -146,3 +146,11 @@
   - Removed Google Sign-In button from Welcome component
   - Updated AuthContext to remove Google Sign-In method
   - Updated signin and signup screens to remove Google Sign-In options
+
+## 2025-03-10 (Moved Authentication Screens to Authentication Directory)
+- Moved authentication screens to app/authentication directory:
+  - Moved signin.tsx to app/authentication/signin.tsx
+  - Moved signup.tsx to app/authentication/signup.tsx
+  - Moved home.tsx to app/home.tsx
+  - Moved welcome.tsx to app/welcome.tsx
+  - Updated imports in other files to reflect new locations

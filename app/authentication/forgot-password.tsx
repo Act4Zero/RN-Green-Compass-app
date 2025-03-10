@@ -13,9 +13,9 @@ import {
   Alert,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import supabase from './lib/supabase';
-import Button from './components/Button';
-import Input from './components/Input';
+import supabase from '../lib/supabase';
+import Button from '../components/Button';
+import Input from '../components/Input';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
