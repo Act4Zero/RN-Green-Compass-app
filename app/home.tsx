@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import useHabitStats from './hooks/useHabitStats';
+import useGoals from './hooks/useGoals';
 
 interface Styles {
   container: ViewStyle;
@@ -31,6 +33,23 @@ interface Styles {
   actionButton: ViewStyle;
   actionButtonText: TextStyle;
   logoutButton: ViewStyle;
+  section: ViewStyle;
+  goalsContainer: ViewStyle;
+  goalCard: ViewStyle;
+  goalCardHeader: ViewStyle;
+  goalTitle: TextStyle;
+  goalCategory: TextStyle;
+  goalProgress: ViewStyle;
+  goalProgressBar: ViewStyle;
+  goalProgressFill: ViewStyle;
+  goalProgressText: TextStyle;
+  goalActions: ViewStyle;
+  goalActionButton: ViewStyle;
+  goalActionText: TextStyle;
+  quickActionsContainer: ViewStyle;
+  quickActionItem: ViewStyle;
+  quickActionIcon: ViewStyle;
+  quickActionText: TextStyle;
 }
 
 export default function Home() {
@@ -40,6 +59,16 @@ export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
+  const { userGoals, loading: goalsLoading } = useGoals();
+  
+  // Mock goals data for UI demonstration
+  const [goals, setGoals] = useState([
+    { id: '1', title: 'Reduce plastic waste', category: 'waste', progress: 3, target: 5 },
+    { id: '2', title: 'Use cleaner transport', category: 'transport', progress: 2, target: 7 },
+    { id: '3', title: 'Lower energy usage', category: 'energy', progress: 4, target: 5 },
+  ]);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -87,22 +116,93 @@ export default function Home() {
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{totalActions || 0}</Text>
               <Text style={styles.statLabel}>Actions Taken</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{totalCO2Saved?.toFixed(1) || '0'}</Text>
               <Text style={styles.statLabel}>CO₂ Saved (kg)</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>0</Text>
+              <Text style={styles.statValue}>{overallStreak || 0}</Text>
               <Text style={styles.statLabel}>Streak Days</Text>
             </View>
           </View>
         </View>
+        
+        <View style={styles.section}>
+          <Text style={styles.cardTitle}>Your Goals</Text>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.goalsContainer}
+          >
+            {goals.map((goal) => (
+              <View key={goal.id} style={styles.goalCard}>
+                <View style={styles.goalCardHeader}>
+                  <Text style={styles.goalTitle}>{goal.title}</Text>
+                  <Text style={styles.goalCategory}>{goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}</Text>
+                </View>
+                
+                <View style={styles.goalProgress}>
+                  <View style={styles.goalProgressBar}>
+                    <View 
+                      style={[styles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
+                    />
+                  </View>
+                  <Text style={styles.goalProgressText}>
+                    {goal.progress} of {goal.target} actions completed
+                  </Text>
+                </View>
+                
+                <View style={styles.goalActions}>
+                  <TouchableOpacity 
+                    style={styles.goalActionButton}
+                    onPress={() => router.push('/habits/log' as any)}
+                  >
+                    <Text style={styles.goalActionText}>Log Action</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+        
+        <View style={styles.quickActionsContainer}>
+          <TouchableOpacity 
+            style={styles.quickActionItem}
+            onPress={() => router.push('/habits/log' as any)}
+          >
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="add-outline" size={24} color="#2E7D32" />
+            </View>
+            <Text style={styles.quickActionText}>Log Habit</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionItem}
+            onPress={() => router.push('/habits/history' as any)}
+          >
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="calendar-outline" size={24} color="#2E7D32" />
+            </View>
+            <Text style={styles.quickActionText}>View History</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.quickActionItem}>
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="trophy-outline" size={24} color="#2E7D32" />
+            </View>
+            <Text style={styles.quickActionText}>Achievements</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Take Your First Action</Text>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => router.push('/habits/log' as any)}
+        >
+          <Text style={styles.actionButtonText}>Log a Sustainable Action</Text>
           <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
@@ -207,5 +307,105 @@ const styles = StyleSheet.create<Styles>({
   },
   logoutButton: {
     padding: 8,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  goalsContainer: {
+    paddingBottom: 8,
+    gap: 16,
+  },
+  goalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    width: 280,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  goalCardHeader: {
+    marginBottom: 12,
+  },
+  goalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  goalCategory: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '500',
+  },
+  goalProgress: {
+    marginBottom: 16,
+  },
+  goalProgressBar: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  goalProgressFill: {
+    height: '100%',
+    backgroundColor: '#2E7D32',
+    borderRadius: 4,
+  },
+  goalProgressText: {
+    fontSize: 12,
+    color: '#555555',
+    textAlign: 'right',
+  },
+  goalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  goalActionButton: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  goalActionText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#2E7D32',
+  },
+  quickActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  quickActionItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    flex: 1,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333333',
+    textAlign: 'center',
   },
 });

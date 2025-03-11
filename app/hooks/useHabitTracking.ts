@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
-import { useHabit } from '../context/HabitContext';
+import HabitContextModule from '../context/HabitContext/HabitContext';
+
+const { useHabit } = HabitContextModule;
 import { Habit, UserHabit } from '../types/supabase';
 
 /**
