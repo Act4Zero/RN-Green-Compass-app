@@ -49,17 +49,23 @@ interface Styles {
   toastText: TextStyle;
 }
 
-// Mock categories and habits data (in a real app, this would come from the database)
-const categories = [
-  { id: 'waste', name: 'Waste Reduction', icon: 'trash-outline' },
-  { id: 'transport', name: 'Transportation', icon: 'bicycle-outline' },
-  { id: 'energy', name: 'Energy', icon: 'flash-outline' },
-  { id: 'food', name: 'Food', icon: 'nutrition-outline' },
-  { id: 'water', name: 'Water', icon: 'water-outline' },
-];
+// Map category names to icons and display names based on habits_rows.csv
+const categoryIcons: Record<string, {name: string, icon: string}> = {
+  'Mobility': { name: 'Mobility', icon: 'bicycle-outline' },
+  'Food': { name: 'Food', icon: 'nutrition-outline' },
+  'Household Activities': { name: 'Household', icon: 'home-outline' },
+  'Heating': { name: 'Heating', icon: 'thermometer-outline' },
+  // Fallback icons for any other categories
+  'waste': { name: 'Waste Reduction', icon: 'trash-outline' },
+  'energy': { name: 'Energy', icon: 'flash-outline' },
+  'water': { name: 'Water', icon: 'water-outline' },
+  'lifestyle': { name: 'Lifestyle', icon: 'person-outline' },
+  'community': { name: 'Community', icon: 'people-outline' },
+  'other': { name: 'Other', icon: 'options-outline' },
+};
 
-// Mock habits data (in a real app, this would come from the database)
-const mockHabits: Habit[] = [
+// This will be populated from the database
+const emptyHabits: Habit[] = [
   {
     id: '1',
     name: 'Used reusable water bottle',
@@ -153,9 +159,9 @@ export default function LogHabit() {
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // In a real app, we would use the habits from the hook
-  // For this prototype, we'll use the mock data
-  const [availableHabits, setAvailableHabits] = useState<Habit[]>(mockHabits);
+  // Use the habits from the hook instead of mock data
+  const [availableHabits, setAvailableHabits] = useState<Habit[]>([]);
+  const [categories, setCategories] = useState<{id: string, name: string, icon: string}[]>([]);
 
   useEffect(() => {
     if (error) {
@@ -163,14 +169,34 @@ export default function LogHabit() {
     }
   }, [error]);
 
+  // Extract categories from habits
+  useEffect(() => {
+    if (habits && habits.length > 0) {
+      // Get unique categories
+      const uniqueCategories = Array.from(new Set(habits.map(habit => habit.category).filter(Boolean)));
+      
+      // Create category objects for UI
+      const categoryList = uniqueCategories.map(category => ({
+        id: category as string,
+        name: categoryIcons[category as string]?.name || category as string,
+        icon: categoryIcons[category as string]?.icon || 'options-outline'
+      }));
+      
+      setCategories(categoryList);
+      
+      // Set initial available habits
+      setAvailableHabits(habits);
+    }
+  }, [habits]);
+
   useEffect(() => {
     // Filter habits by selected category
-    if (selectedCategory) {
-      setAvailableHabits(mockHabits.filter(habit => habit.category === selectedCategory));
-    } else {
-      setAvailableHabits(mockHabits);
+    if (selectedCategory && habits) {
+      setAvailableHabits(habits.filter(habit => habit.category === selectedCategory));
+    } else if (habits) {
+      setAvailableHabits(habits);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, habits]);
 
   const handleSelectCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);

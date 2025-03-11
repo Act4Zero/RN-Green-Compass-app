@@ -30,14 +30,16 @@ export default function SignupSuccess() {
   // Automatically redirect to home after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/home');
+      // Navigate to onboarding screen after successful signup
+      router.push('/authentication/onboarding');
     }, 5000);
 
     return () => clearTimeout(timer);
   }, [router]);
 
   const handleContinue = () => {
-    router.replace('/home');
+    // Navigate to onboarding screen after successful signup
+    router.push('/authentication/onboarding');
   };
 
   return (

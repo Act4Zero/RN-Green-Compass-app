@@ -9,12 +9,16 @@ import {
   ViewStyle,
   TextStyle,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import useGoals from '../hooks/useGoals';
+import HabitContextModule from '../context/HabitContext/HabitContext';
+
+const { useHabit } = HabitContextModule;
 
 interface Styles {
   container: ViewStyle;
@@ -53,13 +57,20 @@ type FocusArea = {
 
 type FrequencyPeriod = 'daily' | 'weekly' | 'monthly';
 
-const focusAreas: FocusArea[] = [
-  { id: '1', name: 'Reduce plastic waste', icon: 'trash-outline', category: 'waste' },
-  { id: '2', name: 'Use cleaner transport', icon: 'bicycle-outline', category: 'transport' },
-  { id: '3', name: 'Lower energy usage', icon: 'flash-outline', category: 'energy' },
-  { id: '4', name: 'Eat more sustainably', icon: 'leaf-outline', category: 'food' },
-  { id: '5', name: 'Conserve water', icon: 'water-outline', category: 'water' },
-];
+// Map category names to icons for UI display
+const categoryIcons: Record<string, string> = {
+  'Mobility': 'bicycle-outline',
+  'Food': 'nutrition-outline',
+  'Household Activities': 'home-outline',
+  'Heating': 'thermometer-outline',
+  // Fallback icons for any other categories
+  'waste': 'trash-outline',
+  'energy': 'flash-outline',
+  'water': 'water-outline',
+  'lifestyle': 'person-outline',
+  'community': 'people-outline',
+  'other': 'options-outline'
+};
 
 export default function Onboarding() {
   const { width } = useWindowDimensions();
@@ -67,11 +78,43 @@ export default function Onboarding() {
   const router = useRouter();
   const { user } = useAuth();
   const { createNewGoal, loading, error } = useGoals();
+  const { habits, loadingHabits } = useHabit();
 
+  const [focusAreas, setFocusAreas] = useState<FocusArea[]>([]);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<FrequencyPeriod>('weekly');
   const [targetValue, setTargetValue] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Extract unique categories from habits and create focus areas
+  useEffect(() => {
+    if (habits && habits.length > 0) {
+      // Get unique categories
+      const uniqueCategories = Array.from(new Set(habits.map(habit => habit.category).filter(Boolean)));
+      
+      // Create focus areas from unique categories
+      const areas = uniqueCategories.map((category, index) => ({
+        id: String(index + 1),
+        name: category ? `${category} sustainability` : 'Other',
+        icon: categoryIcons[category as string] || 'options-outline',
+        category: category as string
+      }));
+      
+      setFocusAreas(areas);
+      setLoadingCategories(false);
+    } else if (!loadingHabits) {
+      // If no habits are loaded and we're not still loading, set default categories
+      // based on the actual categories in the habits_rows.csv
+      setFocusAreas([
+        { id: '1', name: 'Mobility sustainability', icon: 'bicycle-outline', category: 'Mobility' },
+        { id: '2', name: 'Food sustainability', icon: 'nutrition-outline', category: 'Food' },
+        { id: '3', name: 'Household Activities sustainability', icon: 'home-outline', category: 'Household Activities' },
+        { id: '4', name: 'Heating sustainability', icon: 'thermometer-outline', category: 'Heating' },
+      ]);
+      setLoadingCategories(false);
+    }
+  }, [habits, loadingHabits]);
 
   useEffect(() => {
     if (error) {

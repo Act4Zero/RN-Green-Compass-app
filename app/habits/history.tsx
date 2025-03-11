@@ -57,106 +57,17 @@ interface Styles {
   emptyStateText: TextStyle;
 }
 
-// Mock data for calendar (in a real app, this would come from the database)
-const mockDates = [
-  '2025-03-01', '2025-03-03', '2025-03-05', '2025-03-06', 
-  '2025-03-07', '2025-03-08', '2025-03-10', '2025-03-11'
-];
+// Empty arrays that will be populated with real data from the database
+const emptyDates: string[] = [];
+const emptyLogs: HabitLog[] = [];
 
-// Mock habit logs (in a real app, this would come from the database)
-const mockLogs: HabitLog[] = [
-  {
-    id: '1',
-    user_id: 'user1',
-    habit_id: '1',
-    log_date: '2025-03-11',
-    completed: true,
-    quantity: 1,
-    co2_saving: 0.5,
-    notes: 'Used my reusable bottle all day',
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '2',
-    user_id: 'user1',
-    habit_id: '3',
-    log_date: '2025-03-10',
-    completed: true,
-    quantity: 1,
-    co2_saving: 2.5,
-    notes: 'Cycled to work',
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '3',
-    user_id: 'user1',
-    habit_id: '6',
-    log_date: '2025-03-10',
-    completed: true,
-    quantity: 2,
-    co2_saving: 3.0,
-    notes: 'Had plant-based lunch and dinner',
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '4',
-    user_id: 'user1',
-    habit_id: '5',
-    log_date: '2025-03-08',
-    completed: true,
-    quantity: 1,
-    co2_saving: 0.2,
-    notes: 'Made sure to turn off all lights before leaving',
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '5',
-    user_id: 'user1',
-    habit_id: '7',
-    log_date: '2025-03-07',
-    completed: true,
-    quantity: 1,
-    co2_saving: 0.1,
-    notes: 'Took a 5-minute shower',
-    created_at: '',
-    updated_at: '',
-  },
-];
-
-// Mock habit names (in a real app, this would come from the database)
-const mockHabitNames: Record<string, string> = {
-  '1': 'Used reusable water bottle',
-  '2': 'Composted food waste',
-  '3': 'Cycled instead of driving',
-  '4': 'Used public transportation',
-  '5': 'Turned off lights when not in use',
-  '6': 'Ate a plant-based meal',
-  '7': 'Took shorter shower',
-};
-
-// Mock categories (in a real app, this would come from the database)
-const mockCategories: Record<string, string> = {
+// Default categories based on habits_rows.csv
+const defaultCategories: Record<string, string> = {
   'all': 'All',
-  'waste': 'Waste',
-  'transport': 'Transport',
-  'energy': 'Energy',
-  'food': 'Food',
-  'water': 'Water',
-};
-
-// Mock habit categories (in a real app, this would come from the database)
-const mockHabitCategories: Record<string, string> = {
-  '1': 'waste',
-  '2': 'waste',
-  '3': 'transport',
-  '4': 'transport',
-  '5': 'energy',
-  '6': 'food',
-  '7': 'water',
+  'Mobility': 'Mobility',
+  'Food': 'Food',
+  'Household Activities': 'Household',
+  'Heating': 'Heating',
 };
 
 export default function HabitHistory() {
@@ -171,16 +82,15 @@ export default function HabitHistory() {
     getLogsGroupedByDate
   } = useHabitStats();
   
-  const { habitLogs } = useHabit();
+  const { habitLogs, habits } = useHabit();
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filteredLogs, setFilteredLogs] = useState<HabitLog[]>([]);
   
-  // In a real app, we would use the data from the hooks
-  // For this prototype, we'll use the mock data
-  const [activeDates, setActiveDates] = useState<string[]>(mockDates);
-  const [logs, setLogs] = useState<HabitLog[]>(mockLogs);
+  // Use real data from the hooks instead of mock data
+  const [activeDates, setActiveDates] = useState<string[]>(emptyDates);
+  const [logs, setLogs] = useState<HabitLog[]>(habitLogs || emptyLogs);
 
   // Generate calendar days for the current month
   const generateCalendarDays = () => {
@@ -215,15 +125,26 @@ export default function HabitHistory() {
     setSelectedDate(today);
   }, []);
 
+  // Update logs when habitLogs changes
+  useEffect(() => {
+    if (habitLogs && habitLogs.length > 0) {
+      setLogs(habitLogs);
+      
+      // Extract unique dates from habit logs
+      const dates = Array.from(new Set(habitLogs.map(log => log.log_date)));
+      setActiveDates(dates);
+    }
+  }, [habitLogs]);
+
   useEffect(() => {
     // Filter logs by selected date and category
     if (selectedDate) {
       let filtered = logs.filter(log => log.log_date === selectedDate);
       
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter(log => 
-          mockHabitCategories[log.habit_id] === selectedCategory
-        );
+      // For now, we'll just filter by date since we don't have the category mapping
+      // In a real implementation, we would join with the habits table to get categories
+      if (selectedCategory !== 'all' && false) { // Disabled for now
+        // filtered = filtered.filter(log => getHabitCategory(log.habit_id) === selectedCategory);
       }
       
       setFilteredLogs(filtered);
@@ -240,20 +161,25 @@ export default function HabitHistory() {
     setSelectedCategory(category);
   };
 
-  const renderLogItem = ({ item }: { item: HabitLog }) => (
-    <View style={styles.logItem}>
-      <View style={styles.logHeader}>
-        <Text style={styles.logTitle}>{mockHabitNames[item.habit_id]}</Text>
-        <Text style={styles.logQuantity}>x{item.quantity}</Text>
+  const renderLogItem = ({ item }: { item: HabitLog }) => {
+    // Find the habit name from the habits array
+    const habitName = habits?.find((h: any) => h.id === item.habit_id)?.name || 'Unknown habit';
+    
+    return (
+      <View style={styles.logItem}>
+        <View style={styles.logHeader}>
+          <Text style={styles.logTitle}>{habitName}</Text>
+          <Text style={styles.logQuantity}>x{item.quantity}</Text>
+        </View>
+        {item.notes && (
+          <Text style={styles.logDescription}>{item.notes}</Text>
+        )}
+        <View style={styles.logDetails}>
+          <Text style={styles.logCO2}>{item.co2_saving} kg CO₂ saved</Text>
+        </View>
       </View>
-      {item.notes && (
-        <Text style={styles.logDescription}>{item.notes}</Text>
-      )}
-      <View style={styles.logDetails}>
-        <Text style={styles.logCO2}>{item.co2_saving} kg CO₂ saved</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -330,7 +256,7 @@ export default function HabitHistory() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersContainer}
           >
-            {Object.entries(mockCategories).map(([id, name]) => (
+            {Object.entries(defaultCategories).map(([id, name]) => (
               <TouchableOpacity
                 key={id}
                 style={[

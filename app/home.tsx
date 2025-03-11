@@ -63,12 +63,23 @@ export default function Home() {
   const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
   const { userGoals, loading: goalsLoading } = useGoals();
   
-  // Mock goals data for UI demonstration
-  const [goals, setGoals] = useState([
-    { id: '1', title: 'Reduce plastic waste', category: 'waste', progress: 3, target: 5 },
-    { id: '2', title: 'Use cleaner transport', category: 'transport', progress: 2, target: 7 },
-    { id: '3', title: 'Lower energy usage', category: 'energy', progress: 4, target: 5 },
-  ]);
+  // Use real goals data from the database
+  const [goals, setGoals] = useState<any[]>([]);
+  
+  // Update goals when userGoals changes
+  useEffect(() => {
+    if (userGoals && userGoals.length > 0) {
+      // Transform userGoals to match the expected format
+      const formattedGoals = userGoals.map(goal => ({
+        id: goal.id,
+        title: goal.name,
+        category: goal.category || 'other',
+        progress: goal.progress || 0,
+        target: goal.target || 5
+      }));
+      setGoals(formattedGoals);
+    }
+  }, [userGoals]);
 
   const handleSignOut = async () => {
     setLoading(true);
