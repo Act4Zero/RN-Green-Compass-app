@@ -10,6 +10,8 @@ export default function RootLayout() {
       <HabitProvider>
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen
             name="home"
@@ -18,10 +20,6 @@ export default function RootLayout() {
               gestureEnabled: false,    // Disables the iOS swipe-to-go-back gesture
             }}
           />
-
-          {/* Let everything else remain the default (headerTitle is blank, etc.) */}
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="any-other-route" />
         </Stack>
       </HabitProvider>
     </AuthProvider>
