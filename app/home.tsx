@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
 import useHabitStats from './hooks/useHabitStats';
 import useGoals from './hooks/useGoals';
 
@@ -60,25 +60,30 @@ export default function Home() {
   const isTabletOrLarger = width > 768;
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Guard state to prevent accidental "pop" or back navigation
+  // until we explicitly allow it (for sign out, etc.).
+  const [shouldPreventBack, setShouldPreventBack] = useState(true);
+
   const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
   const { userGoals, loading: goalsLoading } = useGoals();
-  
+
   // Use real goals data from the database
   const [goals, setGoals] = useState<any[]>([]);
-  
+
   // Update goals when userGoals changes
   useEffect(() => {
     if (userGoals && userGoals.length > 0) {
       // Transform userGoals to match the expected format
-      const formattedGoals = userGoals.map(goal => ({
+      const formattedGoals = userGoals.map((goal) => ({
         id: goal.id,
         title: goal.name,
         category: goal.category || 'other',
         progress: goal.progress || 0,
-        target: goal.target || 5
+        target: goal.target || 5,
       }));
       setGoals(formattedGoals);
     }
@@ -87,12 +92,17 @@ export default function Home() {
   const handleSignOut = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
+      // 1) Temporarily disable the back-navigation guard
+      setShouldPreventBack(false);
+
       const { error } = await signOut();
-      
+
       if (error) {
-        // Display generic error message if sign-out fails
+        // If sign-out fails, re-enable guard
+        setShouldPreventBack(true);
+
         setError('Failed to sign out. Please try again.');
         Alert.alert('Error', 'Failed to sign out. Please try again.');
       } else {
@@ -100,7 +110,9 @@ export default function Home() {
         router.replace('/authentication/signin');
       }
     } catch (err) {
-      // Handle unexpected errors
+      // If anything unexpected happens, re-enable guard
+      setShouldPreventBack(true);
+
       setError('An unexpected error occurred. Please try again.');
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Sign out error:', err);
@@ -108,6 +120,22 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  // Prevent "back" navigation unless shouldPreventBack is false
+  useFocusEffect(
+    useCallback(() => {
+      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+        if (!shouldPreventBack) {
+          // If we explicitly turned off prevention, let them navigate
+          return;
+        }
+        // Otherwise, block navigation
+        e.preventDefault();
+      });
+
+      return unsubscribe;
+    }, [navigation, shouldPreventBack])
+  );
 
   return (
     <KeyboardAvoidingView
