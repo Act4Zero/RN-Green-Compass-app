@@ -239,13 +239,6 @@ export default function Home() {
             </View>
             <Text style={styles.quickActionText}>View History</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.quickActionItem}>
-            <View style={styles.quickActionIcon}>
-              <Ionicons name="trophy-outline" size={24} color="#2E7D32" />
-            </View>
-            <Text style={styles.quickActionText}>Achievements</Text>
-          </TouchableOpacity>
         </View>
 
         <TouchableOpacity 
