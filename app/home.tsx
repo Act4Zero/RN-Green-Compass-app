@@ -227,7 +227,7 @@ export default function Home() {
             <View style={styles.quickActionIcon}>
               <Ionicons name="add-outline" size={24} color="#2E7D32" />
             </View>
-            <Text style={styles.quickActionText}>Log Habit</Text>
+            <Text style={styles.quickActionText}>Log Action</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -239,21 +239,6 @@ export default function Home() {
             </View>
             <Text style={styles.quickActionText}>View History</Text>
           </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => router.push('/habits/log' as any)}
-        >
-          <Text style={styles.actionButtonText}>Log a Sustainable Action</Text>
-          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Tips for Today</Text>
-          <Text style={styles.cardContent}>
-            Try using a reusable water bottle instead of buying bottled water. This simple switch can save hundreds of plastic bottles per year.
-          </Text>
         </View>
 
         <Button
