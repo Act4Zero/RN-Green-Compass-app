@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   useWindowDimensions,
   ViewStyle,
   TextStyle,
@@ -18,7 +20,8 @@ import useHabitStats from './hooks/useHabitStats';
 import useGoals from './hooks/useGoals';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
   welcomeText: TextStyle;
@@ -107,8 +110,16 @@ export default function Home() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    > 
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
         <View style={styles.header}>
           <View>
             <Text style={styles.welcomeText}>Welcome to</Text>
@@ -234,16 +245,22 @@ export default function Home() {
         />
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
   content: {
-    padding: 24,
+    width: '100%',
+    padding: 16,
   },
   header: {
     flexDirection: 'row',
@@ -324,13 +341,15 @@ const styles = StyleSheet.create<Styles>({
   },
   goalsContainer: {
     paddingBottom: 8,
-    gap: 16,
+    paddingTop: 8,
+    gap: 12,
   },
   goalCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    width: 280,
+    width: 250,
+    minWidth: 200,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -390,13 +409,16 @@ const styles = StyleSheet.create<Styles>({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 24,
+    flexWrap: 'wrap',
   },
   quickActionItem: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     flex: 1,
+    minWidth: 90,
     marginHorizontal: 4,
+    marginBottom: 8,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
