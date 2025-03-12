@@ -16,9 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import useGoals from '../hooks/useGoals';
-import HabitContextModule from '../context/HabitContext/HabitContext';
-
-const { useHabit } = HabitContextModule;
 
 interface Styles {
   container: ViewStyle;
@@ -78,43 +75,19 @@ export default function Onboarding() {
   const router = useRouter();
   const { user } = useAuth();
   const { createNewGoal, loading, error } = useGoals();
-  const { habits, loadingHabits } = useHabit();
 
-  const [focusAreas, setFocusAreas] = useState<FocusArea[]>([]);
+  // Hardcoded focus areas
+  const [focusAreas] = useState<FocusArea[]>([
+    { id: '1', name: 'Mobility', icon: 'bicycle-outline', category: 'Mobility' },
+    { id: '2', name: 'Food', icon: 'nutrition-outline', category: 'Food' },
+    { id: '3', name: 'Household Activities', icon: 'home-outline', category: 'Household Activities' },
+    { id: '4', name: 'Heating', icon: 'thermometer-outline', category: 'Heating' }
+  ]);
+  
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<FrequencyPeriod>('weekly');
   const [targetValue, setTargetValue] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-
-  // Extract unique categories from habits and create focus areas
-  useEffect(() => {
-    if (habits && habits.length > 0) {
-      // Get unique categories
-      const uniqueCategories = Array.from(new Set(habits.map(habit => habit.category).filter(Boolean)));
-      
-      // Create focus areas from unique categories
-      const areas = uniqueCategories.map((category, index) => ({
-        id: String(index + 1),
-        name: category ? `${category} sustainability` : 'Other',
-        icon: categoryIcons[category as string] || 'options-outline',
-        category: category as string
-      }));
-      
-      setFocusAreas(areas);
-      setLoadingCategories(false);
-    } else if (!loadingHabits) {
-      // If no habits are loaded and we're not still loading, set default categories
-      // based on the actual categories in the habits_rows.csv
-      setFocusAreas([
-        { id: '1', name: 'Mobility sustainability', icon: 'bicycle-outline', category: 'Mobility' },
-        { id: '2', name: 'Food sustainability', icon: 'nutrition-outline', category: 'Food' },
-        { id: '3', name: 'Household Activities sustainability', icon: 'home-outline', category: 'Household Activities' },
-        { id: '4', name: 'Heating sustainability', icon: 'thermometer-outline', category: 'Heating' },
-      ]);
-      setLoadingCategories(false);
-    }
-  }, [habits, loadingHabits]);
 
   useEffect(() => {
     if (error) {
