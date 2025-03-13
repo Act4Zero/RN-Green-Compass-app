@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
-import { useHabit } from '../context/HabitContext';
+import HabitContextModule from '../context/HabitContext/HabitContext';
+
+const { useHabit } = HabitContextModule;
 import { UserGoal } from '../types/supabase';
 
 /**
@@ -106,16 +108,22 @@ export const useGoals = () => {
 
   /**
    * Get goals by subcategory
+   * Note: This is a placeholder for future functionality.
+   * Currently, UserGoal doesn't have a subcategory property.
    */
   const getGoalsBySubcategory = useCallback((subcategory: string): UserGoal[] => {
-    return userGoals.filter(goal => goal.subcategory === subcategory);
-  }, [userGoals]);
+    // Since subcategory doesn't exist in UserGoal, we return an empty array for now
+    return [];
+  }, []);
 
   /**
    * Get goals by category and subcategory
+   * Note: This is a placeholder for future functionality.
+   * Currently, UserGoal doesn't have a subcategory property.
    */
   const getGoalsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserGoal[] => {
-    return userGoals.filter(goal => goal.category === category && goal.subcategory === subcategory);
+    // Since subcategory doesn't exist in UserGoal, we filter by category only
+    return userGoals.filter(goal => goal.category === category);
   }, [userGoals]);
 
   /**
@@ -127,16 +135,22 @@ export const useGoals = () => {
 
   /**
    * Get active goals by subcategory
+   * Note: This is a placeholder for future functionality.
+   * Currently, UserGoal doesn't have a subcategory property.
    */
   const getActiveGoalsBySubcategory = useCallback((subcategory: string): UserGoal[] => {
-    return activeUserGoals.filter(goal => goal.subcategory === subcategory);
-  }, [activeUserGoals]);
+    // Since subcategory doesn't exist in UserGoal, we return an empty array for now
+    return [];
+  }, []);
 
   /**
    * Get active goals by category and subcategory
+   * Note: This is a placeholder for future functionality.
+   * Currently, UserGoal doesn't have a subcategory property.
    */
   const getActiveGoalsByCategoryAndSubcategory = useCallback((category: string, subcategory: string): UserGoal[] => {
-    return activeUserGoals.filter(goal => goal.category === category && goal.subcategory === subcategory);
+    // Since subcategory doesn't exist in UserGoal, we filter by category only
+    return activeUserGoals.filter(goal => goal.category === category);
   }, [activeUserGoals]);
 
   /**

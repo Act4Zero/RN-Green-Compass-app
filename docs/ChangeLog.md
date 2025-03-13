@@ -172,11 +172,117 @@
   - Implemented useHabitTracking hook (app/hooks/useHabitTracking.ts) for habit management
   - Created useGoals hook (app/hooks/useGoals.ts) for sustainability goals
   - Added useHabitStats hook (app/hooks/useHabitStats.ts) for tracking statistics
-- Added functionality for:
-  - Tracking habits with frequency and period settings
-  - Logging completed habits with quantity and notes
-  - Creating and managing sustainability goals
-  - Calculating CO2 impact and environmental statistics
-  - Tracking streaks and progress towards goals
-  - Filtering and sorting habits and goals by category
-  - Calculating goal progress percentages
+
+## 2025-03-11 (Habit Tracking UI Implementation & Enhancements)
+
+- **Onboarding and Goal Selection**
+  - Created onboarding screen (`app/authentication/onboarding.tsx`) for sustainability goal selection and tracking frequency (daily/weekly/monthly)
+  - Integrated onboarding with `useGoals` hook for goal management
+
+- **Habit Tracking Dashboard**
+  - Updated home dashboard (`home.tsx`) with goal progress cards, streak visualization, and "Log a Habit" action
+  - Connected dashboard components to `useHabitStats` hook for real-time statistics
+
+- **Habit Logging Interface**
+  - Implemented habit logging screen (`app/habits/log.tsx`) with category/subcategory selection and predefined habit options
+  - Added confirmation message upon habit logging
+  - Integrated habit logging functionality with `useHabitTracking` hook
+
+- **Habit History and Progress**
+  - Created habit history screen (`app/habits/history.tsx`) featuring calendar/list views and filtering by category
+  - Displayed streak and goal tracking statistics using the `useHabitStats` hook
+
+- **Navigation and Routing**
+  - Enhanced app navigation (`app/_layout.tsx`) to include habit tracking screens
+  - Implemented proper onboarding routing post-signup
+
+- **Responsive Design**
+  - Ensured responsive layout across various devices using `useWindowDimensions` hook
+
+- **TypeScript Improvements and Fixes**
+  - Added missing `'section'` style property to `home.tsx` Styles interface
+  - Fixed navigation type errors through proper path type-casting in `home.tsx`
+  - Updated `Input` component to handle multiline input and fixed style types (`ViewStyle` → `TextStyle`)
+  - Properly imported `useHabit` hook in `history.tsx` for habit logs access
+  - Corrected width property type in password strength indicator
+
+- **Additional Functionalities**
+  - Implemented habit tracking with frequency, period, quantity, and notes
+  - Added creation and management of sustainability goals
+  - Calculated and displayed CO₂ impact and environmental statistics
+
+## 2025-03-12 (User Goals Onboarding Flow Enhancement)
+
+- **Improved Onboarding Flow for User Goals**
+  - Enhanced onboarding screen to handle both new user and existing user contexts
+  - Implemented functionality to create new user goals during signup flow
+  - Added ability to update existing goals when accessed from home screen
+  - Integrated skip functionality for new users to bypass onboarding
+  - Added context-aware UI elements (skip button only shown during signup flow)
+  - Implemented proper database operations for creating and updating user_goals records
+  - Added validation for required fields (id, created_at, updated_at, user_id, goal_name, start_date, category)
+  - Enhanced error handling and loading states during goal operations
+
+## 2025-03-12 (Fixed User Goals Saving Issue)
+
+- **Fixed User Goals Creation and Update Functionality**
+  - Fixed issue where user goals were not being saved to the database
+  - Added explicit timestamps (created_at, updated_at) to goal creation and update operations
+  - Enhanced Button component to properly handle press events with improved logging
+  - Updated HabitContext to return created/updated goal objects for better tracking
+  - Added comprehensive logging throughout the goal creation process for debugging
+  - Modified createGoal and updateGoal functions to return the goal object instead of void
+  - Fixed TypeScript interfaces to properly reflect the database schema
+
+## 2025-03-13 (Fixed Database Schema Mismatch)
+
+- **Fixed Database Schema Mismatch in User Goals**
+  - Fixed error: "column user_goals.is_completed does not exist" that was occurring when fetching active goals
+  - Fixed error: "Could not find the 'title' column of 'user_goals' in the schema cache" when creating goals
+  - Updated habitService.ts to match the actual database schema by removing references to non-existent columns
+  - Updated TypeScript types to correctly reflect the database schema (using goal_name instead of title)
+
+## 2025-03-13
+- **Added Goal Update Functionality to Home Screen**
+  - Implemented the ability to update goals directly from the home screen
+  - Added an "Edit" button to each goal card in the goals list
+  - Created a modal dialog for editing goal details including:
+    - Goal name
+    - Category
+    - Target value
+  - Implemented form validation for goal updates
+  - Added error handling and success feedback
+  - Integrated with existing useGoals hook and Supabase services
+  - Ensured responsive design for the modal on different screen sizes
+
+- **Added Goal Creation from Home Screen**
+  - Implemented the ability to create new goals directly from the home screen
+  - Added an "Add Goal" button to the goals section header
+  - Reused the onboarding screen for the goal creation flow
+  - Integrated with the existing goal creation functionality
+  - Added auto-refresh of goals when returning to the home screen
+  - Ensured seamless navigation between home and goal creation screens
+  - Fixed references to goal properties in home.tsx and onboarding.tsx to use the correct field names
+  - Adjusted query parameters to use the correct column names from the Supabase database
+  - Added additional error handling to better identify database schema issues
+  - Implemented a new approach for determining active goals based on current_value < target_value
+  - Ensured all operations (create, update, filter) use the correct column names
+  - Added proper updated_at timestamp when updating goal progress
+  - Improved error handling in the onboarding flow to provide better feedback
+
+- **Enhanced Goal Display and Management**
+  - Updated the home screen to display only non-completed goals (where current_value < target_value)
+  - Added a dedicated section in the habits/history screen to display completed goals
+  - Implemented a filter in the useEffect hook to separate completed and non-completed goals
+  - Created new UI components for displaying completed goals with appropriate styling
+  - Added visual indicators to distinguish completed goals from active ones
+  - Ensured consistent styling between habit logs and completed goals sections
+  - Improved user experience by showing appropriate empty state messages when no completed goals exist
+
+- **Fixed Infinite API Call Loop in Home Screen**
+  - Replaced the problematic useFocusEffect hook with a simpler useEffect implementation
+  - Modified goal loading logic to only fetch goals once on initial component mount
+  - Added a manual refresh function that can be called when needed (e.g., after goal updates)
+  - Eliminated excessive API calls to Supabase that were causing performance issues
+  - Improved app stability by preventing the "ERR_INSUFFICIENT_RESOURCES" errors
+  - Optimized data fetching to reduce network usage and battery consumption

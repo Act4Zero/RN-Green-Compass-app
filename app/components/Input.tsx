@@ -29,12 +29,14 @@ interface InputProps {
   autoComplete?: 'email' | 'password' | 'off' | 'name';
   isPassword?: boolean;
   showPasswordStrength?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 interface Styles {
   container: ViewStyle;
   label: TextStyle;
-  input: ViewStyle;
+  input: TextStyle;
   inputText: TextStyle;
   errorText: TextStyle;
   passwordContainer: ViewStyle;
@@ -62,6 +64,8 @@ const Input: React.FC<InputProps> = ({
   autoComplete = 'off',
   isPassword = false,
   showPasswordStrength = false,
+  multiline = false,
+  numberOfLines = 1,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -106,8 +110,8 @@ const Input: React.FC<InputProps> = ({
   const passwordStrength = isPassword ? getPasswordStrength(value) : { strength: 0, label: '' };
 
   const getPasswordStrengthBarStyle = () => {
-    const width = `${(passwordStrength.strength / 5) * 100}%`;
-    let barStyle = { width };
+    const widthValue = `${(passwordStrength.strength / 5) * 100}%`;
+    let barStyle = { width: widthValue as any };
     
     if (passwordStrength.label === 'Weak') {
       return [barStyle, styles.passwordStrengthWeak];
@@ -161,6 +165,8 @@ const Input: React.FC<InputProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           autoComplete={autoComplete}
+          multiline={multiline}
+          numberOfLines={multiline ? numberOfLines : 1}
         />
       )}
       

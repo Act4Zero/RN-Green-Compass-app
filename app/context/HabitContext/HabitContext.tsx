@@ -52,8 +52,8 @@ type HabitContextType = {
     habitId?: string,
     description?: string,
     endDate?: string
-  ) => Promise<void>;
-  updateGoal: (goalId: string, updates: Partial<UserGoal>) => Promise<void>;
+  ) => Promise<UserGoal | null>;
+  updateGoal: (goalId: string, updates: Partial<UserGoal>) => Promise<UserGoal | null>;
   deleteGoal: (goalId: string) => Promise<void>;
 };
 
@@ -300,11 +300,23 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     habitId?: string,
     description?: string,
     endDate?: string
-  ): Promise<void> => {
-    if (!user) return;
+  ): Promise<UserGoal | null> => {
+    if (!user) {
+      console.error('Cannot create goal: User not authenticated');
+      return null;
+    }
+    
+    console.log('Creating goal in HabitContext:', {
+      userId: user.id,
+      title,
+      targetValue,
+      category,
+      description
+    });
     
     try {
-      await goalService.createUserGoal(
+      // Create the goal and get the result
+      const newGoal = await goalService.createUserGoal(
         user.id,
         title,
         targetValue,
@@ -314,7 +326,13 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description,
         endDate
       );
+      
+      console.log('Goal created successfully:', newGoal);
+      
+      // Refresh the goals list
       await refreshGoals();
+      
+      return newGoal;
     } catch (error) {
       console.error('Error creating goal:', error);
       throw error;
@@ -325,10 +343,19 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateGoal = async (
     goalId: string,
     updates: Partial<UserGoal>
-  ): Promise<void> => {
+  ): Promise<UserGoal | null> => {
+    console.log('Updating goal in HabitContext:', goalId, updates);
+    
     try {
-      await goalService.updateUserGoal(goalId, updates);
+      // Update the goal and get the result
+      const updatedGoal = await goalService.updateUserGoal(goalId, updates);
+      
+      console.log('Goal updated successfully:', updatedGoal);
+      
+      // Refresh the goals list
       await refreshGoals();
+      
+      return updatedGoal;
     } catch (error) {
       console.error('Error updating goal:', error);
       throw error;

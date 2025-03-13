@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 interface Styles {
   container: ViewStyle;
@@ -26,18 +27,23 @@ export default function SignupSuccess() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { user, loading } = useAuth();
 
-  // Automatically redirect to home after 5 seconds
+  // Automatically redirect to Sign In after 5 seconds, as the user is not authenticated
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/home');
+      if (!loading) {
+        console.log('User not authenticated after timeout, redirecting to signin');
+        router.push('/authentication/signin');
+      }
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, user, loading]);
 
   const handleContinue = () => {
-    router.replace('/home');
+    console.log('User not authenticated, redirecting to signin');
+    router.push('/authentication/signin');
   };
 
   return (

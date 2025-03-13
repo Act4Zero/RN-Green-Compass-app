@@ -76,10 +76,18 @@ const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  // Add debug logging for button press
+  const handlePress = () => {
+    console.log(`Button pressed: ${title}`);
+    if (onPress) {
+      onPress();
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[getButtonStyle(), icon ? styles.buttonWithIcon : null]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       activeOpacity={0.7}
     >

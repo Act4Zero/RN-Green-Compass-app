@@ -172,7 +172,7 @@ export default function SignIn() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               New here?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/signup')}>Sign Up</Text>
+              <Text style={styles.footerLink} onPress={() => router.push('/authentication/signup')}>Sign Up</Text>
             </Text>
           </View>
         </View>

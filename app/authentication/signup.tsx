@@ -12,7 +12,7 @@ import {
   TextStyle,
   Linking,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -45,7 +45,7 @@ export default function SignUp() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -251,7 +251,7 @@ export default function SignUp() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Already have an account?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/signin')}>Login</Text>
+              <Text style={styles.footerLink} onPress={() => router.push('/authentication/signin')}>Login</Text>
             </Text>
           </View>
         </View>
