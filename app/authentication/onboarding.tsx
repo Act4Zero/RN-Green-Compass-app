@@ -11,7 +11,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
@@ -73,8 +73,23 @@ export default function Onboarding() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { user } = useAuth();
-  const { createNewGoal, loading, error } = useGoals();
+  const { user, loading: authLoading } = useAuth();
+  const { createNewGoal, updateExistingGoal, userGoals, activeUserGoals, loading, error } = useGoals();
+  const { source } = useLocalSearchParams<{ source: string }>();
+  
+  // Determine if the user is coming from signup or home screen
+  const isFromSignup = source === 'signup';
+
+  // Add a useEffect to redirect if user is not authenticated
+  useEffect(() => {
+    // Only check after auth loading is complete
+    if (!authLoading && !user) {
+      console.log('No authenticated user found in onboarding, redirecting to signin');
+      router.replace('/authentication/signin');
+    } else if (!authLoading && user) {
+      console.log('Authenticated user in onboarding:', user.id);
+    }
+  }, [user, authLoading, router]);
 
   // Hardcoded focus areas
   const [focusAreas] = useState<FocusArea[]>([
@@ -88,6 +103,52 @@ export default function Onboarding() {
   const [frequency, setFrequency] = useState<FrequencyPeriod>('weekly');
   const [targetValue, setTargetValue] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingGoals, setExistingGoals] = useState<Record<string, any>>({});
+
+  // Load existing goals if the user is coming from the home screen
+  useEffect(() => {
+    if (!isFromSignup && user && userGoals.length > 0) {
+      // Map existing goals to focus areas
+      const existingSelectedAreas: string[] = [];
+      const goalsMap: Record<string, any> = {};
+      
+      userGoals.forEach(goal => {
+        // Find matching focus area by category
+        const matchingArea = focusAreas.find(area => area.category === goal.category);
+        if (matchingArea) {
+          existingSelectedAreas.push(matchingArea.id);
+          
+          // Extract frequency from goal title if available
+          let goalFrequency: FrequencyPeriod = 'weekly';
+          if (goal.title.includes('daily')) {
+            goalFrequency = 'daily';
+          } else if (goal.title.includes('monthly')) {
+            goalFrequency = 'monthly';
+          }
+          
+          // Store goal details for later use
+          goalsMap[matchingArea.id] = {
+            id: goal.id,
+            targetValue: goal.target_value,
+            frequency: goalFrequency
+          };
+        }
+      });
+      
+      // Set state with existing data
+      if (existingSelectedAreas.length > 0) {
+        setSelectedFocusAreas(existingSelectedAreas);
+        setExistingGoals(goalsMap);
+        
+        // Set frequency and target value based on the first goal
+        if (Object.keys(goalsMap).length > 0) {
+          const firstGoalKey = Object.keys(goalsMap)[0];
+          setFrequency(goalsMap[firstGoalKey].frequency);
+          setTargetValue(goalsMap[firstGoalKey].targetValue);
+        }
+      }
+    }
+  }, [isFromSignup, user, userGoals, focusAreas]);
 
   useEffect(() => {
     if (error) {
@@ -111,36 +172,122 @@ export default function Onboarding() {
     setTargetValue(prev => Math.max(prev - 1, 1));
   };
 
+  const handleSkip = () => {
+    // Skip onboarding and navigate to home screen
+    router.replace('/home');
+  };
+
   const handleContinue = async () => {
+    console.log('Handle continue button pressed');
+    
     if (selectedFocusAreas.length === 0) {
       Alert.alert('Please select at least one focus area');
       return;
     }
 
+    // Check for user authentication with better logging
+    if (!user) {
+      console.log('User not authenticated in handleContinue');
+      console.log('Auth loading state:', authLoading);
+      
+      if (authLoading) {
+        Alert.alert('Please wait', 'Still loading your account information...');
+      } else {
+        Alert.alert('Error', 'User not authenticated. Please sign in again.');
+        router.replace('/authentication/signin');
+      }
+      return;
+    }
+
+    console.log('Starting goal creation/update process');
+    console.log('Selected focus areas:', selectedFocusAreas);
+    console.log('User:', user.id);
+    console.log('Is from signup:', isFromSignup);
+    
     setIsSubmitting(true);
 
     try {
-      // Create a goal for each selected focus area
+      // Process each selected focus area
       const promises = selectedFocusAreas.map(async (areaId) => {
         const area = focusAreas.find(a => a.id === areaId);
-        if (!area) return;
+        if (!area) {
+          console.log('Area not found:', areaId);
+          return null;
+        }
 
-        return createNewGoal(
-          `${area.name} (${frequency})`,
-          targetValue,
-          area.category,
-          undefined,
-          undefined,
-          `Complete ${targetValue} sustainable actions ${frequency} related to ${area.name.toLowerCase()}`
-        );
+        const goalTitle = `${area.name} (${frequency})`;
+        const goalDescription = `Complete ${targetValue} sustainable actions ${frequency} related to ${area.name.toLowerCase()}`;
+        const currentDate = new Date().toISOString();
+
+        // Check if we're updating an existing goal or creating a new one
+        if (!isFromSignup && existingGoals[areaId]) {
+          // Update existing goal
+          const existingGoal = existingGoals[areaId];
+          console.log('Updating goal:', existingGoal.id, {
+            title: goalTitle,
+            target_value: targetValue,
+            description: goalDescription,
+            updated_at: currentDate
+          });
+          
+          const result = await updateExistingGoal(
+            existingGoal.id,
+            {
+              title: goalTitle,
+              target_value: targetValue,
+              description: goalDescription,
+              updated_at: currentDate
+            }
+          );
+          
+          console.log('Update result:', result);
+          return result;
+        } else {
+          // Create new goal with all required fields
+          console.log('Creating new goal:', {
+            title: goalTitle,
+            targetValue,
+            category: area.category,
+            description: goalDescription,
+            userId: user.id
+          });
+          
+          const result = await createNewGoal(
+            goalTitle,
+            targetValue,
+            area.category,
+            undefined, // subcategory
+            undefined, // habitId
+            goalDescription,
+            undefined  // endDate
+          );
+          
+          console.log('Creation result:', result);
+          return result;
+        }
       });
 
-      await Promise.all(promises);
+      console.log('Waiting for all promises to resolve...');
+      const results = await Promise.all(promises);
+      console.log('Goal creation/update results:', results);
       
-      // Navigate to home screen after goals are created
+      // Handle goals that were previously selected but now unselected (if coming from home)
+      if (!isFromSignup) {
+        // Find goals that were removed
+        const removedGoalIds = Object.keys(existingGoals)
+          .filter(areaId => !selectedFocusAreas.includes(areaId))
+          .map(areaId => existingGoals[areaId].id);
+        
+        console.log('Removed goal IDs:', removedGoalIds);
+        // Mark removed goals as completed or update them as needed
+        // This could be implemented based on business requirements
+      }
+      
+      console.log('Navigation to home screen');
+      // Navigate back to the appropriate screen
       router.replace('/home');
     } catch (err) {
-      console.error('Error creating goals:', err);
+      console.error('Error saving goals:', err);
       Alert.alert('Error', 'Failed to save your goals. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -150,6 +297,15 @@ export default function Onboarding() {
   return (
     <ScrollView style={styles.container}>
       <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
+        {isFromSignup && (
+          <View style={styles.skipContainer}>
+            <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+              <Text style={styles.skipText}>Skip</Text>
+              <Ionicons name="arrow-forward-outline" size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+        )}
+        
         <View style={styles.header}>
           <Text style={styles.title}>Set Your Sustainability Goals</Text>
           <Text style={styles.subtitle}>
@@ -284,7 +440,7 @@ export default function Onboarding() {
         )}
 
         <Button
-          title="Continue to Dashboard"
+          title={isFromSignup ? "Continue to Dashboard" : "Update Goals"}
           onPress={handleContinue}
           variant="primary"
           style={{ marginTop: 24, marginBottom: 40 }}
@@ -294,6 +450,38 @@ export default function Onboarding() {
       </View>
     </ScrollView>
   );
+}
+
+interface Styles {
+  container: ViewStyle;
+  content: ViewStyle;
+  header: ViewStyle;
+  title: TextStyle;
+  subtitle: TextStyle;
+  section: ViewStyle;
+  sectionTitle: TextStyle;
+  sectionSubtitle: TextStyle;
+  optionsContainer: ViewStyle;
+  optionItem: ViewStyle;
+  optionItemSelected: ViewStyle;
+  optionText: TextStyle;
+  optionIcon: ViewStyle;
+  frequencyContainer: ViewStyle;
+  frequencyOption: ViewStyle;
+  frequencyOptionSelected: ViewStyle;
+  frequencyText: TextStyle;
+  goalInputContainer: ViewStyle;
+  goalNumberContainer: ViewStyle;
+  goalNumber: TextStyle;
+  goalNumberButton: ViewStyle;
+  goalNumberButtonText: TextStyle;
+  summaryContainer: ViewStyle;
+  summaryText: TextStyle;
+  summaryHighlight: TextStyle;
+  buttonContainer: ViewStyle;
+  skipContainer: ViewStyle;
+  skipButton: ViewStyle;
+  skipText: TextStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -434,5 +622,23 @@ const styles = StyleSheet.create<Styles>({
   summaryHighlight: {
     fontWeight: 'bold',
     color: '#2E7D32',
+  },
+  buttonContainer: {
+    marginTop: 24,
+    marginBottom: 40,
+  },
+  skipContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 8,
+  },
+  skipButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  skipText: {
+    color: '#666',
+    marginRight: 4,
+    fontSize: 14,
   },
 });

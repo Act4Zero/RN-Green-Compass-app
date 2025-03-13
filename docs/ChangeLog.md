@@ -210,3 +210,27 @@
   - Implemented habit tracking with frequency, period, quantity, and notes
   - Added creation and management of sustainability goals
   - Calculated and displayed CO₂ impact and environmental statistics
+
+## 2025-03-12 (User Goals Onboarding Flow Enhancement)
+
+- **Improved Onboarding Flow for User Goals**
+  - Enhanced onboarding screen to handle both new user and existing user contexts
+  - Implemented functionality to create new user goals during signup flow
+  - Added ability to update existing goals when accessed from home screen
+  - Integrated skip functionality for new users to bypass onboarding
+  - Added context-aware UI elements (skip button only shown during signup flow)
+  - Implemented proper database operations for creating and updating user_goals records
+  - Added validation for required fields (id, created_at, updated_at, user_id, goal_name, start_date, category)
+  - Enhanced error handling and loading states during goal operations
+
+## 2025-03-12 (Fixed User Goals Saving Issue)
+
+- **Fixed User Goals Creation and Update Functionality**
+  - Fixed issue where user goals were not being saved to the database
+  - Added explicit timestamps (created_at, updated_at) to goal creation and update operations
+  - Enhanced Button component to properly handle press events with improved logging
+  - Updated HabitContext to return created/updated goal objects for better tracking
+  - Added comprehensive logging throughout the goal creation process for debugging
+  - Modified createGoal and updateGoal functions to return the goal object instead of void
+  - Fixed TypeScript interfaces to properly reflect the return types of goal operations
+  - Improved error handling in the onboarding flow to provide better feedback

@@ -506,6 +506,19 @@ export const goalService = {
     description?: string,
     endDate?: string
   ): Promise<UserGoal> => {
+    // Create timestamps for created_at and updated_at fields
+    const now = new Date().toISOString();
+    
+    // Log the goal data being inserted
+    console.log('Creating user goal with data:', {
+      user_id: userId,
+      title,
+      category,
+      target_value: targetValue,
+      created_at: now,
+      updated_at: now
+    });
+    
     const { data, error } = await supabase
       .from('user_goals')
       .insert({
@@ -519,6 +532,8 @@ export const goalService = {
         start_date: new Date().toISOString().split('T')[0],
         end_date: endDate || null,
         is_completed: false,
+        created_at: now,
+        updated_at: now
       })
       .select()
       .single();
@@ -538,9 +553,17 @@ export const goalService = {
     goalId: string,
     updates: Partial<UserGoal>
   ): Promise<UserGoal> => {
+    // Ensure updated_at is set
+    const updatedData = {
+      ...updates,
+      updated_at: updates.updated_at || new Date().toISOString()
+    };
+    
+    console.log('Updating user goal with ID:', goalId, 'Data:', updatedData);
+    
     const { data, error } = await supabase
       .from('user_goals')
-      .update(updates)
+      .update(updatedData)
       .eq('id', goalId)
       .select()
       .single();
