@@ -29,17 +29,10 @@ export default function SignupSuccess() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  // Automatically redirect to home after 5 seconds, but only if user is authenticated
+  // Automatically redirect to Sign In after 5 seconds, as the user is not authenticated
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (user) {
-        console.log('User authenticated, navigating to onboarding:', user.id);
-        // Navigate to onboarding screen after successful signup with source parameter
-        router.push({
-          pathname: '/authentication/onboarding',
-          params: { source: 'signup' }
-        });
-      } else if (!loading) {
+      if (!loading) {
         console.log('User not authenticated after timeout, redirecting to signin');
         router.push('/authentication/signin');
       }
@@ -49,17 +42,8 @@ export default function SignupSuccess() {
   }, [router, user, loading]);
 
   const handleContinue = () => {
-    if (user) {
-      console.log('User authenticated, navigating to onboarding:', user.id);
-      // Navigate to onboarding screen after successful signup with source parameter
-      router.push({
-        pathname: '/authentication/onboarding',
-        params: { source: 'signup' }
-      });
-    } else {
-      console.log('User not authenticated, redirecting to signin');
-      router.push('/authentication/signin');
-    }
+    console.log('User not authenticated, redirecting to signin');
+    router.push('/authentication/signin');
   };
 
   return (

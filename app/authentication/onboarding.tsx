@@ -9,7 +9,6 @@ import {
   ViewStyle,
   TextStyle,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,9 +75,6 @@ export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
   const { createNewGoal, updateExistingGoal, userGoals, activeUserGoals, loading, error } = useGoals();
   const { source } = useLocalSearchParams<{ source: string }>();
-  
-  // Determine if the user is coming from signup or home screen
-  const isFromSignup = source === 'signup';
 
   // Add a useEffect to redirect if user is not authenticated
   useEffect(() => {
@@ -109,13 +105,11 @@ export default function Onboarding() {
   // No need to load existing goals data when creating a new goal
   useEffect(() => {
     // Reset state when coming from home to create a new goal
-    if (!isFromSignup) {
-      setSelectedFocusAreas([]);
-      setExistingGoals({});
-      setFrequency('weekly');
-      setTargetValue(5);
-    }
-  }, [isFromSignup]);
+    setSelectedFocusAreas([]);
+    setExistingGoals({});
+    setFrequency('weekly');
+    setTargetValue(5);
+  }, [source]);
 
   useEffect(() => {
     if (error) {
@@ -169,7 +163,6 @@ export default function Onboarding() {
     console.log('Starting goal creation/update process');
     console.log('Selected focus areas:', selectedFocusAreas);
     console.log('User:', user.id);
-    console.log('Is from signup:', isFromSignup);
     
     setIsSubmitting(true);
 
@@ -184,71 +177,33 @@ export default function Onboarding() {
 
         const goalTitle = `${area.name} (${frequency})`;
         const goalDescription = `Complete ${targetValue} sustainable actions ${frequency} related to ${area.name.toLowerCase()}`;
-        const currentDate = new Date().toISOString();
 
-        // Check if we're updating an existing goal or creating a new one
-        if (!isFromSignup && existingGoals[areaId]) {
-          // Update existing goal
-          const existingGoal = existingGoals[areaId];
-          console.log('Updating goal:', existingGoal.id, {
-            title: goalTitle,
-            target_value: targetValue,
-            description: goalDescription,
-            updated_at: currentDate
-          });
-          
-          const result = await updateExistingGoal(
-            existingGoal.id,
-            {
-              goal_name: goalTitle, // Using goal_name instead of title to match DB schema
-              target_value: targetValue,
-              description: goalDescription,
-              updated_at: currentDate
-            }
-          );
-          
-          console.log('Update result:', result);
-          return result;
-        } else {
-          // Create new goal with all required fields
-          console.log('Creating new goal:', {
-            title: goalTitle,
-            targetValue,
-            category: area.category,
-            description: goalDescription,
-            userId: user.id
-          });
-          
-          const result = await createNewGoal(
-            goalTitle,
-            targetValue,
-            area.category,
-            undefined, // subcategory
-            undefined, // habitId
-            goalDescription,
-            undefined  // endDate
-          );
-          
-          console.log('Creation result:', result);
-          return result;
-        }
+        // Create new goal with all required fields
+        console.log('Creating new goal:', {
+          title: goalTitle,
+          targetValue,
+          category: area.category,
+          description: goalDescription,
+          userId: user.id
+        });
+        
+        const result = await createNewGoal(
+          goalTitle,
+          targetValue,
+          area.category,
+          undefined, // subcategory
+          undefined, // habitId
+          goalDescription,
+          undefined  // endDate
+        );
+        
+        console.log('Creation result:', result);
+        return result;
       });
 
       console.log('Waiting for all promises to resolve...');
       const results = await Promise.all(promises);
       console.log('Goal creation/update results:', results);
-      
-      // Handle goals that were previously selected but now unselected (if coming from home)
-      if (!isFromSignup) {
-        // Find goals that were removed
-        const removedGoalIds = Object.keys(existingGoals)
-          .filter(areaId => !selectedFocusAreas.includes(areaId))
-          .map(areaId => existingGoals[areaId].id);
-        
-        console.log('Removed goal IDs:', removedGoalIds);
-        // Mark removed goals as completed or update them as needed
-        // This could be implemented based on business requirements
-      }
       
       console.log('Navigation to home screen');
       // Navigate back to the appropriate screen
@@ -264,15 +219,6 @@ export default function Onboarding() {
   return (
     <ScrollView style={styles.container}>
       <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
-        {isFromSignup && (
-          <View style={styles.skipContainer}>
-            <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-              <Text style={styles.skipText}>Skip</Text>
-              <Ionicons name="arrow-forward-outline" size={16} color="#666" />
-            </TouchableOpacity>
-          </View>
-        )}
-        
         <View style={styles.header}>
           <Text style={styles.title}>Set Your Sustainability Goals</Text>
           <Text style={styles.subtitle}>
@@ -407,7 +353,7 @@ export default function Onboarding() {
         )}
 
         <Button
-          title={isFromSignup ? "Continue to Dashboard" : "Create Goal"}
+          title={"Create Goal"}
           onPress={handleContinue}
           variant="primary"
           style={{ marginTop: 24, marginBottom: 40 }}
