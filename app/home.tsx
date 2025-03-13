@@ -11,9 +11,12 @@ import {
   TextStyle,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
+import Input from './components/Input';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
 import useHabitStats from './hooks/useHabitStats';
@@ -53,6 +56,15 @@ interface Styles {
   quickActionItem: ViewStyle;
   quickActionIcon: ViewStyle;
   quickActionText: TextStyle;
+  modalContainer: ViewStyle;
+  modalContent: ViewStyle;
+  modalHeader: ViewStyle;
+  modalTitle: TextStyle;
+  modalCloseButton: ViewStyle;
+  modalForm: ViewStyle;
+  modalLabel: TextStyle;
+  modalInput: ViewStyle;
+  modalButtonContainer: ViewStyle;
 }
 
 export default function Home() {
@@ -69,10 +81,19 @@ export default function Home() {
   const [shouldPreventBack, setShouldPreventBack] = useState(true);
 
   const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
-  const { userGoals, loading: goalsLoading } = useGoals();
+  const { userGoals, loading: goalsLoading, updateExistingGoal } = useGoals();
 
   // Use real goals data from the database
   const [goals, setGoals] = useState<any[]>([]);
+  
+  // State for goal editing modal
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const [editedGoalName, setEditedGoalName] = useState('');
+  const [editedGoalCategory, setEditedGoalCategory] = useState('');
+  const [editedGoalTarget, setEditedGoalTarget] = useState('');
+  const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   // Update goals when userGoals changes
   useEffect(() => {
@@ -84,6 +105,8 @@ export default function Home() {
         category: goal.category || 'other',
         progress: goal.current_value || 0, // Using current_value instead of progress
         target: goal.target_value || 5, // Using target_value instead of target
+        // Store the original goal object for easier updates
+        originalGoal: goal,
       }));
       setGoals(formattedGoals);
     }
@@ -136,6 +159,83 @@ export default function Home() {
       return unsubscribe;
     }, [navigation, shouldPreventBack])
   );
+
+  // Open edit modal and set initial values
+  const handleEditGoal = (goal: any) => {
+    setSelectedGoal(goal);
+    setEditedGoalName(goal.title);
+    setEditedGoalCategory(goal.category);
+    setEditedGoalTarget(goal.target.toString());
+    setEditedGoalCurrent(goal.progress.toString());
+    setIsEditModalVisible(true);
+  };
+
+  // Close modal and reset values
+  const handleCloseModal = () => {
+    setIsEditModalVisible(false);
+    setSelectedGoal(null);
+    setEditedGoalName('');
+    setEditedGoalCategory('');
+    setEditedGoalTarget('');
+    setEditedGoalCurrent('');
+    setError(null);
+  };
+
+  // Save updated goal
+  const handleSaveGoal = async () => {
+    if (!selectedGoal) return;
+    
+    setUpdateLoading(true);
+    setError(null);
+    
+    try {
+      // Validate inputs
+      if (!editedGoalName.trim()) {
+        setError('Goal name is required');
+        setUpdateLoading(false);
+        return;
+      }
+      
+      const targetValue = parseFloat(editedGoalTarget);
+      if (isNaN(targetValue) || targetValue <= 0) {
+        setError('Target value must be a positive number');
+        setUpdateLoading(false);
+        return;
+      }
+      
+      const currentValue = parseFloat(editedGoalCurrent);
+      if (isNaN(currentValue) || currentValue < 0) {
+        setError('Current value must be a non-negative number');
+        setUpdateLoading(false);
+        return;
+      }
+      
+      // Prepare updates
+      const updates = {
+        goal_name: editedGoalName.trim(),
+        category: editedGoalCategory.trim() || 'other',
+        target_value: targetValue,
+        current_value: currentValue,
+      };
+      
+      // Call the update function
+      const success = await updateExistingGoal(selectedGoal.id, updates);
+      
+      if (success) {
+        // Close modal after successful update
+        handleCloseModal();
+        Alert.alert('Success', 'Goal updated successfully');
+      } else {
+        setError('Failed to update goal. Please try again.');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      console.error('Error updating goal:', err);
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -209,6 +309,12 @@ export default function Home() {
                 <View style={styles.goalActions}>
                   <TouchableOpacity 
                     style={styles.goalActionButton}
+                    onPress={() => handleEditGoal(goal)}
+                  >
+                    <Text style={styles.goalActionText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.goalActionButton, { marginLeft: 8 }]}
                     onPress={() => router.push('/habits/log' as any)}
                   >
                     <Text style={styles.goalActionText}>Log Action</Text>
@@ -250,6 +356,68 @@ export default function Home() {
           disabled={loading}
         />
       </View>
+      
+      {/* Goal Edit Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isEditModalVisible}
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Goal</Text>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={handleCloseModal}>
+                <Ionicons name="close" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalForm}>
+              {error && (
+                <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
+              )}
+              
+              <Text style={styles.modalLabel}>Goal Name</Text>
+              <Input
+                value={editedGoalName}
+                onChangeText={setEditedGoalName}
+                placeholder="Enter goal name"
+              />
+              
+              <Text style={styles.modalLabel}>Category</Text>
+              <Input
+                value={editedGoalCategory}
+                onChangeText={setEditedGoalCategory}
+                placeholder="Enter category (e.g., transport, energy)"
+              />
+              
+              <Text style={styles.modalLabel}>Target Value</Text>
+              <Input
+                value={editedGoalTarget}
+                onChangeText={setEditedGoalTarget}
+                placeholder="Enter target value"
+                keyboardType="numeric"
+              />
+              
+              <View style={styles.modalButtonContainer}>
+                <Button
+                  title="Cancel"
+                  onPress={handleCloseModal}
+                  variant="outline"
+                  style={{ flex: 1, marginRight: 8 }}
+                />
+                <Button
+                  title={updateLoading ? "Saving..." : "Save Changes"}
+                  onPress={handleSaveGoal}
+                  disabled={updateLoading}
+                  style={{ flex: 1, marginLeft: 8 }}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -446,5 +614,60 @@ const styles = StyleSheet.create<Styles>({
     fontWeight: '500',
     color: '#333333',
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalForm: {
+    width: '100%',
+  },
+  modalLabel: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+    marginTop: 10,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
   },
 });

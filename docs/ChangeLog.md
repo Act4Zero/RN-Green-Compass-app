@@ -241,6 +241,19 @@
   - Fixed error: "Could not find the 'title' column of 'user_goals' in the schema cache" when creating goals
   - Updated habitService.ts to match the actual database schema by removing references to non-existent columns
   - Updated TypeScript types to correctly reflect the database schema (using goal_name instead of title)
+
+## 2025-03-13
+- **Added Goal Update Functionality to Home Screen**
+  - Implemented the ability to update goals directly from the home screen
+  - Added an "Edit" button to each goal card in the goals list
+  - Created a modal dialog for editing goal details including:
+    - Goal name
+    - Category
+    - Target value
+  - Implemented form validation for goal updates
+  - Added error handling and success feedback
+  - Integrated with existing useGoals hook and Supabase services
+  - Ensured responsive design for the modal on different screen sizes
   - Fixed references to goal properties in home.tsx and onboarding.tsx to use the correct field names
   - Adjusted query parameters to use the correct column names from the Supabase database
   - Added additional error handling to better identify database schema issues
