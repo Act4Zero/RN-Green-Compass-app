@@ -118,11 +118,11 @@ export default function Onboarding() {
         if (matchingArea) {
           existingSelectedAreas.push(matchingArea.id);
           
-          // Extract frequency from goal title if available
+          // Extract frequency from goal name if available
           let goalFrequency: FrequencyPeriod = 'weekly';
-          if (goal.title.includes('daily')) {
+          if (goal.goal_name.includes('daily')) {
             goalFrequency = 'daily';
-          } else if (goal.title.includes('monthly')) {
+          } else if (goal.goal_name.includes('monthly')) {
             goalFrequency = 'monthly';
           }
           
@@ -233,7 +233,7 @@ export default function Onboarding() {
           const result = await updateExistingGoal(
             existingGoal.id,
             {
-              title: goalTitle,
+              goal_name: goalTitle, // Using goal_name instead of title to match DB schema
               target_value: targetValue,
               description: goalDescription,
               updated_at: currentDate

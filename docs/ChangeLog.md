@@ -232,5 +232,19 @@
   - Updated HabitContext to return created/updated goal objects for better tracking
   - Added comprehensive logging throughout the goal creation process for debugging
   - Modified createGoal and updateGoal functions to return the goal object instead of void
-  - Fixed TypeScript interfaces to properly reflect the return types of goal operations
+  - Fixed TypeScript interfaces to properly reflect the database schema
+
+## 2025-03-13 (Fixed Database Schema Mismatch)
+
+- **Fixed Database Schema Mismatch in User Goals**
+  - Fixed error: "column user_goals.is_completed does not exist" that was occurring when fetching active goals
+  - Fixed error: "Could not find the 'title' column of 'user_goals' in the schema cache" when creating goals
+  - Updated habitService.ts to match the actual database schema by removing references to non-existent columns
+  - Updated TypeScript types to correctly reflect the database schema (using goal_name instead of title)
+  - Fixed references to goal properties in home.tsx and onboarding.tsx to use the correct field names
+  - Adjusted query parameters to use the correct column names from the Supabase database
+  - Added additional error handling to better identify database schema issues
+  - Implemented a new approach for determining active goals based on current_value < target_value
+  - Ensured all operations (create, update, filter) use the correct column names
+  - Added proper updated_at timestamp when updating goal progress
   - Improved error handling in the onboarding flow to provide better feedback

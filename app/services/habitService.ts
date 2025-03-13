@@ -478,19 +478,28 @@ export const goalService = {
    * Get active (not completed) goals for a user
    */
   getActiveUserGoals: async (userId: string): Promise<UserGoal[]> => {
-    const { data, error } = await supabase
-      .from('user_goals')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_completed', false)
-      .order('created_at', { ascending: false });
+    try {
+      // Note: We're removing the is_completed filter since that column doesn't exist in the database
+      // Instead, we'll filter active goals by checking if current_value < target_value
+      const { data, error } = await supabase
+        .from('user_goals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) {
+        console.error(`Error fetching active goals for user ${userId}:`, error);
+        throw error;
+      }
+
+      // Filter active goals in the application code instead of the database query
+      // A goal is considered active if its current_value is less than its target_value
+      const activeGoals = data?.filter(goal => goal.current_value < goal.target_value) || [];
+      return activeGoals;
+    } catch (error) {
       console.error(`Error fetching active goals for user ${userId}:`, error);
       throw error;
     }
-
-    return data || [];
   },
 
   /**
@@ -512,7 +521,7 @@ export const goalService = {
     // Log the goal data being inserted
     console.log('Creating user goal with data:', {
       user_id: userId,
-      title,
+      goal_name: title, // Using goal_name instead of title to match DB schema
       category,
       target_value: targetValue,
       created_at: now,
@@ -523,7 +532,7 @@ export const goalService = {
       .from('user_goals')
       .insert({
         user_id: userId,
-        title,
+        goal_name: title, // Using goal_name instead of title to match DB schema
         description: description || null,
         category: category || null,
         habit_id: habitId || null,
@@ -531,7 +540,8 @@ export const goalService = {
         current_value: 0,
         start_date: new Date().toISOString().split('T')[0],
         end_date: endDate || null,
-        is_completed: false,
+        // Removed is_completed field as it doesn't exist in the database
+        // We'll use current_value < target_value to determine if a goal is active
         created_at: now,
         updated_at: now
       })
@@ -613,12 +623,11 @@ export const goalService = {
         throw habitError;
       }
 
-      // Get active goals that match this habit or category
+      // Get goals that match this habit or category
       const { data: goals, error: goalsError } = await supabase
         .from('user_goals')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_completed', false)
         .or(`habit_id.eq.${habitId},category.eq.${habit.category}`);
 
       if (goalsError) {
@@ -629,14 +638,20 @@ export const goalService = {
       if (!goals || goals.length === 0) {
         return;
       }
+      
+      // Filter for active goals (where current_value < target_value)
+      const activeGoals = goals.filter(goal => goal.current_value < goal.target_value);
+      if (activeGoals.length === 0) {
+        return;
+      }
 
-      // Update each matching goal
-      for (const goal of goals) {
+      // Update each matching active goal
+      for (const goal of activeGoals) {
         // Determine how much to increment the current value
         let increment = 0;
         
         // If the goal is CO2-based, use the CO2 saving
-        if (goal.title.toLowerCase().includes('co2') || goal.description?.toLowerCase().includes('co2')) {
+        if (goal.goal_name.toLowerCase().includes('co2') || goal.description?.toLowerCase().includes('co2')) {
           increment = co2Saving;
         } else {
           // Otherwise, use the quantity (number of actions)
@@ -651,7 +666,9 @@ export const goalService = {
           .from('user_goals')
           .update({
             current_value: newValue,
-            is_completed: isCompleted,
+            // Removed is_completed as it doesn't exist in the database
+            // Goal completion state is determined by current_value >= target_value
+            updated_at: new Date().toISOString()
           })
           .eq('id', goal.id);
       }

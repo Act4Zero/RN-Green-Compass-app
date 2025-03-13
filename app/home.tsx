@@ -80,10 +80,10 @@ export default function Home() {
       // Transform userGoals to match the expected format
       const formattedGoals = userGoals.map((goal) => ({
         id: goal.id,
-        title: goal.name,
+        title: goal.goal_name, // Using goal_name instead of name to match DB schema
         category: goal.category || 'other',
-        progress: goal.progress || 0,
-        target: goal.target || 5,
+        progress: goal.current_value || 0, // Using current_value instead of progress
+        target: goal.target_value || 5, // Using target_value instead of target
       }));
       setGoals(formattedGoals);
     }

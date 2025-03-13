@@ -146,7 +146,7 @@ export interface Database {
           created_at: string
           updated_at: string
           user_id: string
-          title: string
+          goal_name: string
           description: string | null
           category: string | null
           habit_id: string | null
@@ -154,14 +154,14 @@ export interface Database {
           current_value: number
           start_date: string
           end_date: string | null
-          is_completed: boolean
+          unit: string | null
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
           user_id: string
-          title: string
+          goal_name: string
           description?: string | null
           category?: string | null
           habit_id?: string | null
@@ -169,14 +169,14 @@ export interface Database {
           current_value?: number
           start_date?: string
           end_date?: string | null
-          is_completed?: boolean
+          unit?: string | null
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
           user_id?: string
-          title?: string
+          goal_name?: string
           description?: string | null
           category?: string | null
           habit_id?: string | null
@@ -184,7 +184,7 @@ export interface Database {
           current_value?: number
           start_date?: string
           end_date?: string | null
-          is_completed?: boolean
+          unit?: string | null
         }
       }
     }
