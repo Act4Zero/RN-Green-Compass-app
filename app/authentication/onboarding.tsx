@@ -105,50 +105,17 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingGoals, setExistingGoals] = useState<Record<string, any>>({});
 
-  // Load existing goals if the user is coming from the home screen
+  // When coming from home screen, we want to start from scratch for new goal creation
+  // No need to load existing goals data when creating a new goal
   useEffect(() => {
-    if (!isFromSignup && user && userGoals.length > 0) {
-      // Map existing goals to focus areas
-      const existingSelectedAreas: string[] = [];
-      const goalsMap: Record<string, any> = {};
-      
-      userGoals.forEach(goal => {
-        // Find matching focus area by category
-        const matchingArea = focusAreas.find(area => area.category === goal.category);
-        if (matchingArea) {
-          existingSelectedAreas.push(matchingArea.id);
-          
-          // Extract frequency from goal name if available
-          let goalFrequency: FrequencyPeriod = 'weekly';
-          if (goal.goal_name.includes('daily')) {
-            goalFrequency = 'daily';
-          } else if (goal.goal_name.includes('monthly')) {
-            goalFrequency = 'monthly';
-          }
-          
-          // Store goal details for later use
-          goalsMap[matchingArea.id] = {
-            id: goal.id,
-            targetValue: goal.target_value,
-            frequency: goalFrequency
-          };
-        }
-      });
-      
-      // Set state with existing data
-      if (existingSelectedAreas.length > 0) {
-        setSelectedFocusAreas(existingSelectedAreas);
-        setExistingGoals(goalsMap);
-        
-        // Set frequency and target value based on the first goal
-        if (Object.keys(goalsMap).length > 0) {
-          const firstGoalKey = Object.keys(goalsMap)[0];
-          setFrequency(goalsMap[firstGoalKey].frequency);
-          setTargetValue(goalsMap[firstGoalKey].targetValue);
-        }
-      }
+    // Reset state when coming from home to create a new goal
+    if (!isFromSignup) {
+      setSelectedFocusAreas([]);
+      setExistingGoals({});
+      setFrequency('weekly');
+      setTargetValue(5);
     }
-  }, [isFromSignup, user, userGoals, focusAreas]);
+  }, [isFromSignup]);
 
   useEffect(() => {
     if (error) {
@@ -440,7 +407,7 @@ export default function Onboarding() {
         )}
 
         <Button
-          title={isFromSignup ? "Continue to Dashboard" : "Update Goals"}
+          title={isFromSignup ? "Continue to Dashboard" : "Create Goal"}
           onPress={handleContinue}
           variant="primary"
           style={{ marginTop: 24, marginBottom: 40 }}

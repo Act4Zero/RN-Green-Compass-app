@@ -16,7 +16,7 @@ import useHabitStats from '../hooks/useHabitStats';
 import HabitContextModule from '../context/HabitContext/HabitContext';
 
 const { useHabit } = HabitContextModule;
-import { HabitLog } from '../types/supabase';
+import { HabitLog, UserGoal } from '../types/supabase';
 
 interface Styles {
   container: ViewStyle;
@@ -55,6 +55,12 @@ interface Styles {
   logCO2: TextStyle;
   emptyState: ViewStyle;
   emptyStateText: TextStyle;
+  completedGoalItem: ViewStyle;
+  completedGoalHeader: ViewStyle;
+  completedGoalTitle: TextStyle;
+  completedGoalCategory: TextStyle;
+  completedGoalProgress: ViewStyle;
+  completedGoalProgressText: TextStyle;
 }
 
 // Empty arrays that will be populated with real data from the database
@@ -82,7 +88,10 @@ export default function HabitHistory() {
     getLogsGroupedByDate
   } = useHabitStats();
   
-  const { habitLogs, habits } = useHabit();
+  const { habitLogs, habits, userGoals } = useHabit();
+  
+  // State for completed goals
+  const [completedGoals, setCompletedGoals] = useState<UserGoal[]>([]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -135,6 +144,15 @@ export default function HabitHistory() {
       setActiveDates(dates);
     }
   }, [habitLogs]);
+  
+  // Filter completed goals when userGoals changes
+  useEffect(() => {
+    if (userGoals && userGoals.length > 0) {
+      // A goal is considered completed if its current_value is greater than or equal to its target_value
+      const completed = userGoals.filter(goal => goal.current_value >= goal.target_value);
+      setCompletedGoals(completed);
+    }
+  }, [userGoals]);
 
   useEffect(() => {
     // Filter logs by selected date and category
@@ -176,6 +194,23 @@ export default function HabitHistory() {
         )}
         <View style={styles.logDetails}>
           <Text style={styles.logCO2}>{item.co2_saving} kg CO₂ saved</Text>
+        </View>
+      </View>
+    );
+  };
+  
+  // Render a completed goal item
+  const renderCompletedGoalItem = ({ item }: { item: UserGoal }) => {
+    return (
+      <View style={styles.completedGoalItem}>
+        <View style={styles.completedGoalHeader}>
+          <Text style={styles.completedGoalTitle}>{item.goal_name}</Text>
+          <Text style={styles.completedGoalCategory}>{item.category || 'General'}</Text>
+        </View>
+        <View style={styles.completedGoalProgress}>
+          <Text style={styles.completedGoalProgressText}>
+            Completed: {item.current_value}/{item.target_value} {item.unit || 'units'}
+          </Text>
         </View>
       </View>
     );
@@ -294,6 +329,26 @@ export default function HabitHistory() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>
                 {selectedDate ? 'No habits logged for this date and filter' : 'Select a date to view logged habits'}
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        {/* Completed Goals Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Completed Goals</Text>
+          
+          {completedGoals.length > 0 ? (
+            <FlatList
+              data={completedGoals}
+              renderItem={renderCompletedGoalItem}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                No completed goals yet. Keep working towards your targets!
               </Text>
             </View>
           )}
@@ -488,5 +543,44 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 16,
     color: '#555555',
     textAlign: 'center',
+  },
+  // Styles for completed goals section
+  completedGoalItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  completedGoalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  completedGoalTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    flex: 1,
+  },
+  completedGoalCategory: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '500',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 4,
+  },
+  completedGoalProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  completedGoalProgressText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '500',
   },
 });

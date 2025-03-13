@@ -40,6 +40,9 @@ interface Styles {
   actionButtonText: TextStyle;
   logoutButton: ViewStyle;
   section: ViewStyle;
+  sectionHeader: ViewStyle;
+  addGoalButton: ViewStyle;
+  addGoalText: TextStyle;
   goalsContainer: ViewStyle;
   goalCard: ViewStyle;
   goalCardHeader: ViewStyle;
@@ -81,7 +84,7 @@ export default function Home() {
   const [shouldPreventBack, setShouldPreventBack] = useState(true);
 
   const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
-  const { userGoals, loading: goalsLoading, updateExistingGoal } = useGoals();
+  const { userGoals, loading: goalsLoading, updateExistingGoal, refreshGoals } = useGoals();
 
   // Use real goals data from the database
   const [goals, setGoals] = useState<any[]>([]);
@@ -95,11 +98,21 @@ export default function Home() {
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
 
+  // Refresh goals when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshGoals();
+    }, [refreshGoals])
+  );
+
   // Update goals when userGoals changes
   useEffect(() => {
     if (userGoals && userGoals.length > 0) {
+      // Filter out completed goals (where current_value >= target_value)
+      const activeGoals = userGoals.filter(goal => goal.current_value < goal.target_value);
+      
       // Transform userGoals to match the expected format
-      const formattedGoals = userGoals.map((goal) => ({
+      const formattedGoals = activeGoals.map((goal) => ({
         id: goal.id,
         title: goal.goal_name, // Using goal_name instead of name to match DB schema
         category: goal.category || 'other',
@@ -109,6 +122,8 @@ export default function Home() {
         originalGoal: goal,
       }));
       setGoals(formattedGoals);
+    } else {
+      setGoals([]);
     }
   }, [userGoals]);
 
@@ -281,7 +296,16 @@ export default function Home() {
         </View>
         
         <View style={styles.section}>
-          <Text style={styles.cardTitle}>Your Goals</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.cardTitle}>Your Goals</Text>
+            <TouchableOpacity 
+              style={styles.addGoalButton}
+              onPress={() => router.push({ pathname: '/authentication/onboarding', params: { source: 'home' } })}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#2E7D32" />
+              <Text style={styles.addGoalText}>Add Goal</Text>
+            </TouchableOpacity>
+          </View>
           
           <ScrollView 
             horizontal 
@@ -614,6 +638,25 @@ const styles = StyleSheet.create<Styles>({
     fontWeight: '500',
     color: '#333333',
     textAlign: 'center',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addGoalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+  },
+  addGoalText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#2E7D32',
+    marginLeft: 4,
   },
   modalContainer: {
     flex: 1,

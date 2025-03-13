@@ -254,6 +254,14 @@
   - Added error handling and success feedback
   - Integrated with existing useGoals hook and Supabase services
   - Ensured responsive design for the modal on different screen sizes
+
+- **Added Goal Creation from Home Screen**
+  - Implemented the ability to create new goals directly from the home screen
+  - Added an "Add Goal" button to the goals section header
+  - Reused the onboarding screen for the goal creation flow
+  - Integrated with the existing goal creation functionality
+  - Added auto-refresh of goals when returning to the home screen
+  - Ensured seamless navigation between home and goal creation screens
   - Fixed references to goal properties in home.tsx and onboarding.tsx to use the correct field names
   - Adjusted query parameters to use the correct column names from the Supabase database
   - Added additional error handling to better identify database schema issues
@@ -261,3 +269,12 @@
   - Ensured all operations (create, update, filter) use the correct column names
   - Added proper updated_at timestamp when updating goal progress
   - Improved error handling in the onboarding flow to provide better feedback
+
+- **Enhanced Goal Display and Management**
+  - Updated the home screen to display only non-completed goals (where current_value < target_value)
+  - Added a dedicated section in the habits/history screen to display completed goals
+  - Implemented a filter in the useEffect hook to separate completed and non-completed goals
+  - Created new UI components for displaying completed goals with appropriate styling
+  - Added visual indicators to distinguish completed goals from active ones
+  - Ensured consistent styling between habit logs and completed goals sections
+  - Improved user experience by showing appropriate empty state messages when no completed goals exist
