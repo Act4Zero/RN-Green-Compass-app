@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -98,12 +98,22 @@ export default function Home() {
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  // Refresh goals when the screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
+  // Load goals only once on initial component mount
+  useEffect(() => {
+    // Only load goals if we don't already have them
+    if (userGoals.length === 0 && !goalsLoading) {
       refreshGoals();
-    }, [refreshGoals])
-  );
+    }
+    // We intentionally don't include userGoals in the dependency array
+    // to prevent refresh loops
+  }, []);
+  
+  // Manual refresh function that can be called when needed
+  const handleManualRefresh = useCallback(() => {
+    if (!goalsLoading) {
+      refreshGoals();
+    }
+  }, [refreshGoals, goalsLoading]);
 
   // Update goals when userGoals changes
   useEffect(() => {

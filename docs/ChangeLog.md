@@ -278,3 +278,11 @@
   - Added visual indicators to distinguish completed goals from active ones
   - Ensured consistent styling between habit logs and completed goals sections
   - Improved user experience by showing appropriate empty state messages when no completed goals exist
+
+- **Fixed Infinite API Call Loop in Home Screen**
+  - Replaced the problematic useFocusEffect hook with a simpler useEffect implementation
+  - Modified goal loading logic to only fetch goals once on initial component mount
+  - Added a manual refresh function that can be called when needed (e.g., after goal updates)
+  - Eliminated excessive API calls to Supabase that were causing performance issues
+  - Improved app stability by preventing the "ERR_INSUFFICIENT_RESOURCES" errors
+  - Optimized data fetching to reduce network usage and battery consumption
