@@ -259,7 +259,7 @@ export default function Goal() {
                   <Ionicons
                     name={area.icon as any}
                     size={24}
-                    color={selectedFocusAreas.includes(area.id) ? '#2E7D32' : '#2E7D32'}
+                    color={selectedFocusAreas.includes(area.id) ? '#2E7D32' : '#757575'}
                   />
                 </View>
                 <Text
