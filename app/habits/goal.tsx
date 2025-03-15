@@ -3,46 +3,21 @@ import {
   View,
   Text,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
   ViewStyle,
   TextStyle,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import useGoals from '../hooks/useGoals';
-
-interface Styles {
-  container: ViewStyle;
-  content: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
-  section: ViewStyle;
-  sectionTitle: TextStyle;
-  sectionSubtitle: TextStyle;
-  optionsContainer: ViewStyle;
-  optionItem: ViewStyle;
-  optionItemSelected: ViewStyle;
-  optionText: TextStyle;
-  optionIcon: ViewStyle;
-  frequencyContainer: ViewStyle;
-  frequencyOption: ViewStyle;
-  frequencyOptionSelected: ViewStyle;
-  frequencyText: TextStyle;
-  goalInputContainer: ViewStyle;
-  goalNumberContainer: ViewStyle;
-  goalNumber: TextStyle;
-  goalNumberButton: ViewStyle;
-  goalNumberButtonText: TextStyle;
-  summaryContainer: ViewStyle;
-  summaryText: TextStyle;
-  summaryHighlight: TextStyle;
-}
 
 type FocusArea = {
   id: string;
@@ -51,7 +26,7 @@ type FocusArea = {
   category: string;
 };
 
-type FrequencyPeriod = 'daily' | 'weekly' | 'monthly';
+type FrequencyPeriod = 'daily' | 'weekly' | 'monthly' | 'one-time';
 
 // Map category names to icons for UI display
 const categoryIcons: Record<string, string> = {
@@ -68,7 +43,7 @@ const categoryIcons: Record<string, string> = {
   'other': 'options-outline'
 };
 
-export default function Onboarding() {
+export default function Goal() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
@@ -98,6 +73,7 @@ export default function Onboarding() {
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<FrequencyPeriod>('weekly');
   const [targetValue, setTargetValue] = useState(5);
+  const [targetInputValue, setTargetInputValue] = useState<string>(targetValue.toString());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingGoals, setExistingGoals] = useState<Record<string, any>>({});
 
@@ -126,11 +102,40 @@ export default function Onboarding() {
   };
 
   const incrementTarget = () => {
-    setTargetValue(prev => Math.min(prev + 1, 20));
+    const newValue = Math.min(targetValue + 1, 20);
+    setTargetValue(newValue);
+    setTargetInputValue(newValue.toString());
   };
 
   const decrementTarget = () => {
-    setTargetValue(prev => Math.max(prev - 1, 1));
+    const newValue = Math.max(targetValue - 1, 1);
+    setTargetValue(newValue);
+    setTargetInputValue(newValue.toString());
+  };
+
+  const handleTargetInputChange = (value: string) => {
+    // Allow only numbers
+    if (/^\d*$/.test(value)) {
+      setTargetInputValue(value);
+      
+      // Convert to number and update targetValue if valid
+      const numValue = parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        // Ensure value is between 1 and 20
+        const boundedValue = Math.min(Math.max(numValue, 1), 20);
+        setTargetValue(boundedValue);
+      }
+    }
+  };
+
+  const handleTargetInputBlur = () => {
+    // If input is empty or invalid, reset to current targetValue
+    if (!targetInputValue || isNaN(parseInt(targetInputValue, 10))) {
+      setTargetInputValue(targetValue.toString());
+    } else {
+      // Ensure displayed value matches actual value (in case of bounds adjustment)
+      setTargetInputValue(targetValue.toString());
+    }
   };
 
   const handleSkip = () => {
@@ -175,8 +180,10 @@ export default function Onboarding() {
           return null;
         }
 
-        const goalTitle = `${area.name} (${frequency})`;
-        const goalDescription = `Complete ${targetValue} sustainable actions ${frequency} related to ${area.name.toLowerCase()}`;
+        const frequencyDisplay = frequency === 'one-time' ? 'One-Time' : frequency.charAt(0).toUpperCase() + frequency.slice(1);
+        const goalTitle = `${area.name} (${frequencyDisplay})`;
+        const frequencyText = frequency === 'one-time' ? '' : frequency;
+        const goalDescription = `Complete ${targetValue} sustainable actions ${frequencyText} related to ${area.name.toLowerCase()}`;
 
         // Create new goal with all required fields
         console.log('Creating new goal:', {
@@ -217,8 +224,16 @@ export default function Onboarding() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Set Your Sustainability Goals</Text>
           <Text style={styles.subtitle}>
@@ -240,11 +255,11 @@ export default function Onboarding() {
                 ]}
                 onPress={() => toggleFocusArea(area.id)}
               >
-                <View style={styles.optionIcon}>
+                <View style={[styles.optionIcon, selectedFocusAreas.includes(area.id) && styles.optionIconSelected]}>
                   <Ionicons
                     name={area.icon as any}
                     size={24}
-                    color={selectedFocusAreas.includes(area.id) ? '#FFFFFF' : '#2E7D32'}
+                    color={selectedFocusAreas.includes(area.id) ? '#2E7D32' : '#757575'}
                   />
                 </View>
                 <Text
@@ -314,6 +329,23 @@ export default function Onboarding() {
                 Monthly
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.frequencyOption,
+                frequency === 'one-time' && styles.frequencyOptionSelected,
+              ]}
+              onPress={() => setFrequency('one-time')}
+            >
+              <Text
+                style={[
+                  styles.frequencyText,
+                  { color: frequency === 'one-time' ? '#FFFFFF' : '#333333' },
+                ]}
+              >
+                One-Time
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -329,7 +361,16 @@ export default function Onboarding() {
             </TouchableOpacity>
             
             <View style={styles.goalNumberContainer}>
-              <Text style={styles.goalNumber}>{targetValue}</Text>
+              <TextInput
+                style={styles.goalNumber}
+                value={targetInputValue}
+                onChangeText={handleTargetInputChange}
+                onBlur={handleTargetInputBlur}
+                keyboardType="number-pad"
+                maxLength={2}
+                textAlign="center"
+                textAlignVertical="center"
+              />
             </View>
             
             <TouchableOpacity
@@ -344,7 +385,7 @@ export default function Onboarding() {
         {selectedFocusAreas.length > 0 && (
           <View style={styles.summaryContainer}>
             <Text style={styles.summaryText}>
-              Your initial target: <Text style={styles.summaryHighlight}>{targetValue} actions {frequency}</Text>
+              Your initial target: <Text style={styles.summaryHighlight}>{targetValue} actions {frequency !== 'one-time' ? frequency : ''}</Text>
               {selectedFocusAreas.length === 1 
                 ? ` to ${focusAreas.find(a => a.id === selectedFocusAreas[0])?.name.toLowerCase()}`
                 : ` across ${selectedFocusAreas.length} focus areas`}
@@ -362,11 +403,13 @@ export default function Onboarding() {
         />
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
   title: TextStyle;
@@ -379,6 +422,7 @@ interface Styles {
   optionItemSelected: ViewStyle;
   optionText: TextStyle;
   optionIcon: ViewStyle;
+  optionIconSelected: ViewStyle;
   frequencyContainer: ViewStyle;
   frequencyOption: ViewStyle;
   frequencyOptionSelected: ViewStyle;
@@ -398,9 +442,13 @@ interface Styles {
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   content: {
     padding: 24,
@@ -463,19 +511,25 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  optionIconSelected: {
+    backgroundColor: '#FFFFFF',
+  },
   frequencyContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   frequencyOption: {
     flex: 1,
-    padding: 16,
+    minWidth: '22%',
+    padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     alignItems: 'center',
   },
   frequencyOptionSelected: {
@@ -507,6 +561,11 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2E7D32',
+    width: '100%',
+    height: '100%',
+    textAlignVertical: 'center',
+    textAlign: 'center',
+    paddingVertical: 0,
   },
   goalNumberButton: {
     width: 50,

@@ -11,6 +11,7 @@ export default function RootLayout() {
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/goal" options={{ headerShown: false }} />
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

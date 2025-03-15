@@ -310,7 +310,7 @@ export default function Home() {
             <Text style={styles.cardTitle}>Your Goals</Text>
             <TouchableOpacity 
               style={styles.addGoalButton}
-              onPress={() => router.push({ pathname: '/authentication/onboarding', params: { source: 'home' } })}
+              onPress={() => router.push({ pathname: '/habits/goal', params: { source: 'home' } })}
             >
               <Ionicons name="add-circle-outline" size={20} color="#2E7D32" />
               <Text style={styles.addGoalText}>Add Goal</Text>

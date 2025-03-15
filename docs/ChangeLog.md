@@ -286,3 +286,12 @@
   - Eliminated excessive API calls to Supabase that were causing performance issues
   - Improved app stability by preventing the "ERR_INSUFFICIENT_RESOURCES" errors
   - Optimized data fetching to reduce network usage and battery consumption
+
+## 2025-03-14 (Goal Setting UI and UX Improvements)
+
+- **Enhanced Goal Creation Flow**
+  - Changed the screen name to "Goal" from "Onboarding"
+  - Implemented a more streamlined goal creation process
+  - Added validation for required fields (name, category, target value)
+  - Ensured responsive design for the modal on different screen sizes
+  - Enhanced UI components for better user experience
