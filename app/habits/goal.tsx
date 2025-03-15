@@ -68,7 +68,7 @@ const categoryIcons: Record<string, string> = {
   'other': 'options-outline'
 };
 
-export default function Onboarding() {
+export default function Goal() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
