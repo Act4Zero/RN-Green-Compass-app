@@ -349,7 +349,10 @@ export default function Home() {
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.goalActionButton, { marginLeft: 8 }]}
-                    onPress={() => router.push('/habits/log' as any)}
+                    onPress={() => router.push({
+                      pathname: '/habits/log',
+                      params: { category: goal.category }
+                    } as any)}
                   >
                     <Text style={styles.goalActionText}>Log Action</Text>
                   </TouchableOpacity>

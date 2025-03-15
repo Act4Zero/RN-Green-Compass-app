@@ -295,3 +295,14 @@
   - Added validation for required fields (name, category, target value)
   - Ensured responsive design for the modal on different screen sizes
   - Enhanced UI components for better user experience
+
+  ## 2025-03-15 (Habit Logging UI Improvements)
+- Improved Habit Logging UI (app/habits/log.tsx)
+  - Enhanced the layout of action items to prevent content from going out of view boundaries
+  - Made subcategories horizontally scrollable for better browsability
+  - Improved habit selection and deselection UX
+  - Kept selected habit visible on screen while allowing users to browse other habits
+  - Added a clear visual indicator for the selected habit with a deselect button
+  - Updated navigation flow to redirect users back to the home screen after successfully logging a habit
+  - Displayed a success toast message after habit logging
+  - Improved TypeScript interfaces for better type safety
