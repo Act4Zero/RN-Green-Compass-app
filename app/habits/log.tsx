@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   TouchableOpacity,
   useWindowDimensions,
   ViewStyle,
@@ -18,7 +20,8 @@ import useHabitTracking from '../hooks/useHabitTracking';
 import { Habit } from '../types/supabase';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
   backButton: ViewStyle;
@@ -246,8 +249,16 @@ export default function LogHabit() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -403,13 +414,18 @@ export default function LogHabit() {
         </View>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   content: {
     padding: 24,
