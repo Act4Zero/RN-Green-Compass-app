@@ -67,80 +67,6 @@ const categoryIcons: Record<string, {name: string, icon: string}> = {
   'other': { name: 'Other', icon: 'options-outline' },
 };
 
-// This will be populated from the database
-const emptyHabits: Habit[] = [
-  {
-    id: '1',
-    name: 'Used reusable water bottle',
-    description: 'Avoided single-use plastic bottle',
-    category: 'waste',
-    subcategory: 'plastic',
-    estimated_co2_saving: 0.5,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '2',
-    name: 'Composted food waste',
-    description: 'Diverted food waste from landfill',
-    category: 'waste',
-    subcategory: 'organic',
-    estimated_co2_saving: 0.3,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '3',
-    name: 'Cycled instead of driving',
-    description: 'Used bicycle for transportation',
-    category: 'transport',
-    subcategory: 'commute',
-    estimated_co2_saving: 2.5,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '4',
-    name: 'Used public transportation',
-    description: 'Took bus or train instead of driving',
-    category: 'transport',
-    subcategory: 'commute',
-    estimated_co2_saving: 1.8,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '5',
-    name: 'Turned off lights when not in use',
-    description: 'Reduced electricity consumption',
-    category: 'energy',
-    subcategory: 'electricity',
-    estimated_co2_saving: 0.2,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '6',
-    name: 'Ate a plant-based meal',
-    description: 'Reduced meat consumption',
-    category: 'food',
-    subcategory: 'diet',
-    estimated_co2_saving: 1.5,
-    created_at: '',
-    updated_at: '',
-  },
-  {
-    id: '7',
-    name: 'Took shorter shower',
-    description: 'Reduced water consumption',
-    category: 'water',
-    subcategory: 'conservation',
-    estimated_co2_saving: 0.1,
-    created_at: '',
-    updated_at: '',
-  },
-];
-
 export default function LogHabit() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
@@ -293,7 +219,7 @@ export default function LogHabit() {
                   <Ionicons
                     name={category.icon as any}
                     size={24}
-                    color={selectedCategory === category.id ? '#FFFFFF' : '#2E7D32'}
+                    color={selectedCategory === category.id ? '#2E7D32' : '#757575'}
                   />
                 </View>
                 <Text
