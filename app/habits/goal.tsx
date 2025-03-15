@@ -3,6 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
@@ -15,34 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import useGoals from '../hooks/useGoals';
-
-interface Styles {
-  container: ViewStyle;
-  content: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
-  section: ViewStyle;
-  sectionTitle: TextStyle;
-  sectionSubtitle: TextStyle;
-  optionsContainer: ViewStyle;
-  optionItem: ViewStyle;
-  optionItemSelected: ViewStyle;
-  optionText: TextStyle;
-  optionIcon: ViewStyle;
-  frequencyContainer: ViewStyle;
-  frequencyOption: ViewStyle;
-  frequencyOptionSelected: ViewStyle;
-  frequencyText: TextStyle;
-  goalInputContainer: ViewStyle;
-  goalNumberContainer: ViewStyle;
-  goalNumber: TextStyle;
-  goalNumberButton: ViewStyle;
-  goalNumberButtonText: TextStyle;
-  summaryContainer: ViewStyle;
-  summaryText: TextStyle;
-  summaryHighlight: TextStyle;
-}
 
 type FocusArea = {
   id: string;
@@ -217,8 +191,16 @@ export default function Goal() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.content, isTabletOrLarger && { paddingHorizontal: 48 }]}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Set Your Sustainability Goals</Text>
           <Text style={styles.subtitle}>
@@ -362,11 +344,13 @@ export default function Goal() {
         />
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
   title: TextStyle;
@@ -398,9 +382,13 @@ interface Styles {
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   content: {
     padding: 24,
