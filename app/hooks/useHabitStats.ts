@@ -27,7 +27,7 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Calculate CO2 saved for a specific habit
+   * Calculate CO₂ saved for a specific habit
    */
   const getCO2SavedForHabit = useCallback((habitId: string): number => {
     return habitLogs
@@ -45,7 +45,7 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Calculate CO2 saved by category
+   * Calculate CO₂ saved by category
    */
   const getCO2SavedByCategory = useCallback((category: string, habits: { id: string, category: string | null }[]): number => {
     const habitIds = habits
@@ -58,7 +58,7 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Calculate CO2 saved by subcategory
+   * Calculate CO₂ saved by subcategory
    */
   const getCO2SavedBySubcategory = useCallback((subcategory: string, habits: { id: string, subcategory: string | null }[]): number => {
     const habitIds = habits
@@ -71,7 +71,7 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Calculate CO2 saved by category and subcategory
+   * Calculate CO₂ saved by category and subcategory
    */
   const getCO2SavedByCategoryAndSubcategory = useCallback(
     (category: string, subcategory: string, habits: { id: string, category: string | null, subcategory: string | null }[]): number => {
@@ -137,7 +137,7 @@ export const useHabitStats = () => {
   }, [refreshHabitLogs, habitLogs]);
 
   /**
-   * Calculate CO2 saved in a date range
+   * Calculate CO₂ saved in a date range
    */
   const getCO2SavedInDateRange = useCallback(async (startDate: string, endDate: string): Promise<number> => {
     const logs = await getLogsByDateRange(startDate, endDate);
@@ -173,14 +173,14 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Get dates with at least one completed habit
+   * Get dates with at least one habit log
+   * Changed from filtering by log.completed to include all logs,
+   * so the calendar’s active dates match every log entry (e.g. including the 13th).
    */
   const getDatesWithCompletedHabits = useCallback((): string[] => {
     const dates = new Set<string>();
     
-    habitLogs
-      .filter(log => log.completed)
-      .forEach(log => dates.add(log.log_date));
+    habitLogs.forEach(log => dates.add(log.log_date));
     
     return Array.from(dates).sort().reverse();
   }, [habitLogs]);
@@ -212,7 +212,7 @@ export const useHabitStats = () => {
   }, [habitLogs]);
 
   /**
-   * Get habits with highest CO2 impact (top N)
+   * Get habits with highest CO₂ impact (top N)
    */
   const getHighestImpactHabits = useCallback((limit: number = 5): { habitId: string, co2Saved: number }[] => {
     const habitImpact: Record<string, number> = {};
@@ -241,7 +241,7 @@ export const useHabitStats = () => {
     refreshStats,
     refreshHabitLogs,
     
-    // Helpers - General
+    // Helpers – General
     getLogsForHabit,
     getCO2SavedForHabit,
     getActionsForHabit,
@@ -254,15 +254,15 @@ export const useHabitStats = () => {
     getMostFrequentHabits,
     getHighestImpactHabits,
     
-    // Helpers - Category
+    // Helpers – Category
     getCO2SavedByCategory,
     getActionsByCategory,
     
-    // Helpers - Subcategory
+    // Helpers – Subcategory
     getCO2SavedBySubcategory,
     getActionsBySubcategory,
     
-    // Helpers - Category and Subcategory
+    // Helpers – Category and Subcategory
     getCO2SavedByCategoryAndSubcategory,
     getActionsByCategoryAndSubcategory,
   };
