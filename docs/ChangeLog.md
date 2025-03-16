@@ -320,3 +320,12 @@
   - Updated routing paths in several authentication components to use the unified /auth/* pattern.
   - Added new logic in goal.tsx to calculate end dates for daily, weekly, and monthly goals.
   - Minor UI-related tweaks such as hiding the header in the home layout.
+
+## 2025-03-16
+- **Improved Supabase Authentication Storage**
+  - Implemented a platform-specific storage solution for Supabase authentication
+  - Used React Native's Platform API to conditionally apply storage based on environment:
+    - For mobile platforms (iOS, Android): Uses AsyncStorage for persistent authentication
+    - For web/Node.js environments: Uses in-memory storage to avoid "window is not defined" errors
+  - This approach allows for persistent authentication on mobile devices while preventing initialization errors in other environments
+  - Solution based on the approach from GitHub issue #870 (https://github.com/supabase/supabase-js/issues/870)

@@ -1,6 +1,8 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // Get the environment variables from Expo Constants or use hardcoded values as fallback
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
@@ -29,13 +31,14 @@ const memoryStorageAdapter = {
   },
 };
 
-// Initialize Supabase client with in-memory storage
+// Initialize Supabase client with platform-specific storage
+// Uses AsyncStorage for mobile platforms and in-memory storage for web/Node.js
 const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
     auth: {
-      storage: memoryStorageAdapter,
+      ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : { storage: memoryStorageAdapter }),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true, // Enable this to detect OAuth state in URL
