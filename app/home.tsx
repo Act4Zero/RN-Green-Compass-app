@@ -745,11 +745,35 @@ export default function Home() {
               />
               
               <Text style={styles.modalLabel}>Category</Text>
-              <Input
-                value={editedGoalCategory}
-                onChangeText={setEditedGoalCategory}
-                placeholder="Enter category (e.g., transport, energy)"
-              />
+              <View style={{ marginBottom: 16 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'nowrap' }}>
+                    {['Mobility', 'Food', 'Household Activities', 'Heating'].map((category) => (
+                      <TouchableOpacity 
+                        key={category}
+                        style={[
+                          styles.timeChip, 
+                          { 
+                            marginRight: 10, 
+                            marginBottom: 10,
+                            backgroundColor: editedGoalCategory === category ? '#2E7D32' : '#E8F5E9' 
+                          }
+                        ]}
+                        onPress={() => setEditedGoalCategory(category)}
+                      >
+                        <Text 
+                          style={[
+                            styles.timeChipText, 
+                            { color: editedGoalCategory === category ? 'white' : '#2E7D32' }
+                          ]}
+                        >
+                          {category}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
               
               <Text style={styles.modalLabel}>Target Value</Text>
               <Input
