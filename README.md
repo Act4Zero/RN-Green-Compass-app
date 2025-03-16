@@ -1,8 +1,8 @@
-# Welcome to your Expo app 👋
+# Green Compass App 🌱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is a React Native application built with [Expo](https://expo.dev) that helps users track sustainable habits and reduce their environmental footprint.
 
-## Get started
+## Getting Started
 
 1. Install dependencies
 
@@ -10,18 +10,51 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
-
-   ```bash
-    npx expo start
+2. Set up environment variables
+   
+   Create a `.env` file in the root directory with the following variables:
+   ```
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    ```
 
-In the output, you'll find options to open the app in a
+3. Start the app
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npx expo start
+   ```
+
+   In the output, you'll find options to open the app on:
+   - iOS simulator
+   - Android emulator
+   - Web browser
+   - Physical device using Expo Go
+
+## Deployment with Vercel
+
+This project is configured for deployment on Vercel. Follow these steps to deploy:
+
+1. Push your code to a GitHub repository
+
+2. Connect your repository to Vercel:
+   - Sign up/login to [Vercel](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Select the "Expo" framework preset
+
+3. Configure environment variables:
+   - Add your Supabase credentials as environment variables in the Vercel project settings
+   - Use the same variable names as in your local `.env` file
+
+4. Deploy:
+   - Click "Deploy"
+   - Vercel will automatically build and deploy your application
+
+5. Alternatively, deploy using Vercel CLI:
+   ```bash
+   vercel login
+   vercel
+   ```
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
