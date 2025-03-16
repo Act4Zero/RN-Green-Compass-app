@@ -490,6 +490,28 @@ export default function Home() {
             </View>
           </View>
         </View>
+
+        <View style={styles.quickActionsContainer}>
+          <TouchableOpacity 
+            style={styles.quickActionItem}
+            onPress={() => router.push('/habits/log' as any)}
+          >
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="add-outline" size={24} color="#2E7D32" />
+            </View>
+            <Text style={styles.quickActionText}>Log Action</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickActionItem}
+            onPress={() => router.push('/habits/history' as any)}
+          >
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="calendar-outline" size={24} color="#2E7D32" />
+            </View>
+            <Text style={styles.quickActionText}>View History</Text>
+          </TouchableOpacity>
+        </View>
         
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -682,28 +704,6 @@ export default function Home() {
               </View>
             </View>
           )}
-        </View>
-        
-        <View style={styles.quickActionsContainer}>
-          <TouchableOpacity 
-            style={styles.quickActionItem}
-            onPress={() => router.push('/habits/log' as any)}
-          >
-            <View style={styles.quickActionIcon}>
-              <Ionicons name="add-outline" size={24} color="#2E7D32" />
-            </View>
-            <Text style={styles.quickActionText}>Log Action</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.quickActionItem}
-            onPress={() => router.push('/habits/history' as any)}
-          >
-            <View style={styles.quickActionIcon}>
-              <Ionicons name="calendar-outline" size={24} color="#2E7D32" />
-            </View>
-            <Text style={styles.quickActionText}>View History</Text>
-          </TouchableOpacity>
         </View>
 
         <Button
