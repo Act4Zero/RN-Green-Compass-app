@@ -122,17 +122,26 @@ export default function HabitHistory() {
   const [currentViewMonth, setCurrentViewMonth] = useState<Date>(new Date());
   const [registrationDate, setRegistrationDate] = useState<Date | null>(null);
 
+  // Helper function to format dates in local time as "YYYY-MM-DD"
+  const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Calendar navigation functions
   const goToPreviousMonth = () => {
     const prevMonth = new Date(currentViewMonth);
     prevMonth.setMonth(prevMonth.getMonth() - 1);
     
-    // Don't go before registration date
+    // Optional: Don't go before registration date if needed
     if (registrationDate && prevMonth >= registrationDate) {
       setCurrentViewMonth(prevMonth);
     } else if (registrationDate) {
-      // Set to registration month if trying to go before it
       setCurrentViewMonth(new Date(registrationDate));
+    } else {
+      setCurrentViewMonth(prevMonth);
     }
   };
 
@@ -151,7 +160,6 @@ export default function HabitHistory() {
   
   // Get activity level for a specific date
   const getActivityLevel = (dateString: string) => {
-    // Count the number of logs for this date
     const logsForDate = logs.filter(log => log.log_date === dateString);
     const count = logsForDate.length;
     
@@ -161,7 +169,11 @@ export default function HabitHistory() {
     return 'high';
   };
   
-  // Generate calendar days for the current view month
+  // Current date for comparison with calendar dates (using local time)
+  const today = new Date();
+  const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  // Generate calendar days for the current view month using local date strings
   const generateCalendarDays = () => {
     const year = currentViewMonth.getFullYear();
     const month = currentViewMonth.getMonth();
@@ -176,28 +188,26 @@ export default function HabitHistory() {
     
     // Add empty spaces for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push({ date: '', day: 0, isActive: false, isEmpty: true });
+      days.push({ date: '', day: 0, isActive: false, isEmpty: true, id: `empty-start-${i}` });
     }
     
     // Add the days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       const date = new Date(year, month, i);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       
-      // Check if this date is before registration date
-      const isBeforeRegistration = registrationDate && date < registrationDate;
+      // Check if this date is in the future (compared to local today)
+      const isInFuture = date > todayLocal;
       
-      // Check if this date is in the future
-      const isInFuture = date > currentDate;
       // Get activity level for this date
       const activityLevel = getActivityLevel(dateString);
       
       days.push({
         date: dateString,
         day: i,
-        isActive: activeDates.includes(dateString) && !isBeforeRegistration && !isInFuture,
+        isActive: activeDates.includes(dateString) && !isInFuture,
         isEmpty: false,
-        isDisabled: isBeforeRegistration || isInFuture,
+        isDisabled: isInFuture,
         activityLevel
       });
     }
@@ -206,53 +216,46 @@ export default function HabitHistory() {
   };
 
   const calendarDays = generateCalendarDays();
-  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
-  const currentYear = new Date().getFullYear();
+  const currentMonthName = currentViewMonth.toLocaleString('default', { month: 'long' });
+  const currentYearNum = currentViewMonth.getFullYear();
 
   useEffect(() => {
-    // Set today as the default selected date
-    const today = new Date().toISOString().split('T')[0];
-    setSelectedDate(today);
+    // Use the local date string for today
+    const todayStr = formatLocalDate(todayLocal);
+    setSelectedDate(todayStr);
     
-    // Get user registration date if available
     if (user) {
       // Use user.created_at as the registration date
       const regDate = user.created_at ? new Date(user.created_at) : null;
       setRegistrationDate(regDate);
       
-      // If current view month is before registration date, set it to registration month
       if (regDate && currentViewMonth < regDate) {
         setCurrentViewMonth(new Date(regDate));
       }
     }
   }, [user, currentViewMonth]);
 
-  // Update logs when habitLogs changes
   useEffect(() => {
     if (habitLogs && habitLogs.length > 0) {
       setLogs(habitLogs);
       
-      // Extract unique dates from habit logs
+      // Extract unique dates from habit logs (assuming they are stored as "YYYY-MM-DD")
       const dates = Array.from(new Set(habitLogs.map(log => log.log_date)));
       setActiveDates(dates);
     }
   }, [habitLogs]);
   
-  // Filter completed goals when userGoals changes
   useEffect(() => {
     if (userGoals && userGoals.length > 0) {
-      // A goal is considered completed if its current_value is greater than or equal to its target_value
       const completed = userGoals.filter(goal => goal.current_value >= goal.target_value);
       setCompletedGoals(completed);
     }
   }, [userGoals]);
 
   useEffect(() => {
-    // Filter logs by selected date and category
     if (selectedDate) {
       let filtered = logs.filter(log => log.log_date === selectedDate);
       
-      // Filter by category if a specific category is selected
       if (selectedCategory !== 'all') {
         filtered = filtered.filter(log => {
           const habit = habits?.find(h => h.id === log.habit_id);
@@ -262,10 +265,7 @@ export default function HabitHistory() {
       
       setFilteredLogs(filtered);
       
-      // Find completed goals for the selected date
       if (userGoals && userGoals.length > 0) {
-        // A goal is considered completed if its current_value is greater than or equal to its target_value
-        // We'll use the updated_at field to determine when it was completed
         const dateGoals = userGoals.filter(goal => {
           return goal.current_value >= goal.target_value && 
                  goal.updated_at && 
@@ -286,17 +286,14 @@ export default function HabitHistory() {
     setSelectedCategory(category);
   };
   
-  // Format the selected date to display correctly in the UI
+  // For summary display, we can still use a local date format
   const formatSelectedDate = (dateString: string) => {
-    // Create a new date object with the correct timezone handling
-    const date = new Date(dateString);
-    // Add one day to account for timezone issues
-    date.setDate(date.getDate() + 1);
+    const [year, month, day] = dateString.split('-').map(num => parseInt(num, 10));
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString();
   };
 
   const renderLogItem = ({ item }: { item: HabitLog }) => {
-    // Find the habit name from the habits array
     const habitName = habits?.find((h: any) => h.id === item.habit_id)?.name || 'Unknown habit';
     
     return (
@@ -315,7 +312,6 @@ export default function HabitHistory() {
     );
   };
   
-  // Render a completed goal item
   const renderCompletedGoalItem = ({ item }: { item: UserGoal }) => {
     return (
       <View style={styles.completedGoalItem}>
@@ -338,193 +334,191 @@ export default function HabitHistory() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     > 
-    <ScrollView 
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#2E7D32" />
-          </TouchableOpacity>
-          <View>
-            <Text style={styles.title}>Habit History</Text>
-            <Text style={styles.subtitle}>Track your progress over time</Text>
-          </View>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{totalActions || 12}</Text>
-            <Text style={styles.statLabel}>Actions Taken</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{totalCO2Saved?.toFixed(1) || '6.3'}</Text>
-            <Text style={styles.statLabel}>CO₂ Saved (kg)</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{overallStreak || 5}</Text>
-            <Text style={styles.statLabel}>Day Streak</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Calendar</Text>
-          
-          <View style={styles.calendarContainer}>
-            <View style={styles.calendarHeader}>
-              <TouchableOpacity 
-                onPress={goToPreviousMonth}
-                style={styles.calendarNavButton}
-              >
-                <Ionicons name="chevron-back" size={24} color="#2E7D32" />
-              </TouchableOpacity>
-              
-              <Text style={styles.calendarHeaderText}>
-                {currentViewMonth.toLocaleString('default', { month: 'long' })} {currentViewMonth.getFullYear()}
-              </Text>
-              
-              <TouchableOpacity 
-                onPress={goToNextMonth}
-                style={styles.calendarNavButton}
-                disabled={currentViewMonth.getMonth() === new Date().getMonth() && 
-                         currentViewMonth.getFullYear() === new Date().getFullYear()}
-              >
-                <Ionicons 
-                  name="chevron-forward" 
-                  size={24} 
-                  color={currentViewMonth.getMonth() === new Date().getMonth() && 
-                         currentViewMonth.getFullYear() === new Date().getFullYear() ? 
-                         "#AAAAAA" : "#2E7D32"} 
-                />
-              </TouchableOpacity>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.title}>Habit History</Text>
+              <Text style={styles.subtitle}>Track your progress over time</Text>
             </View>
-            
-            {/* Days of the week header */}
-            <View style={styles.weekdayHeader}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
-                <View key={dayName} style={styles.weekdayItem}>
-                  <Text style={styles.weekdayText}>{dayName}</Text>
-                </View>
-              ))}
+          </View>
+
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{totalActions || 12}</Text>
+              <Text style={styles.statLabel}>Actions Taken</Text>
             </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{totalCO2Saved?.toFixed(1) || '6.3'}</Text>
+              <Text style={styles.statLabel}>CO₂ Saved (kg)</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{overallStreak || 5}</Text>
+              <Text style={styles.statLabel}>Day Streak</Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Calendar</Text>
             
-            <View style={styles.calendarGrid}>
-              {calendarDays.map((day) => (
+            <View style={styles.calendarContainer}>
+              <View style={styles.calendarHeader}>
+                <TouchableOpacity 
+                  onPress={goToPreviousMonth}
+                  style={styles.calendarNavButton}
+                >
+                  <Ionicons name="chevron-back" size={24} color="#2E7D32" />
+                </TouchableOpacity>
+                
+                <Text style={styles.calendarHeaderText}>
+                  {currentMonthName} {currentYearNum}
+                </Text>
+                
+                <TouchableOpacity 
+                  onPress={goToNextMonth}
+                  style={styles.calendarNavButton}
+                  disabled={currentViewMonth.getMonth() === new Date().getMonth() && 
+                           currentViewMonth.getFullYear() === new Date().getFullYear()}
+                >
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={24} 
+                    color={currentViewMonth.getMonth() === new Date().getMonth() && 
+                           currentViewMonth.getFullYear() === new Date().getFullYear() ? 
+                           "#AAAAAA" : "#2E7D32"} 
+                  />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.weekdayHeader}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((dayName) => (
+                  <View key={dayName} style={styles.weekdayItem}>
+                    <Text style={styles.weekdayText}>{dayName}</Text>
+                  </View>
+                ))}
+              </View>
+              
+              <View style={styles.calendarGrid}>
+                {calendarDays.map((day) => (
+                  <TouchableOpacity
+                    key={day.date || day.id || `empty-${day.day}-${Math.random().toString(36).substring(2, 9)}`}
+                    style={[
+                      styles.calendarDay,
+                      day.isActive && styles.calendarDayActive,
+                      day.isDisabled && styles.calendarDayDisabled,
+                      day.isActive && day.activityLevel === 'low' && styles.calendarDayLowActivity,
+                      day.isActive && day.activityLevel === 'medium' && styles.calendarDayMediumActivity,
+                      day.isActive && day.activityLevel === 'high' && styles.calendarDayHighActivity,
+                      selectedDate === day.date && { borderWidth: 2, borderColor: '#2E7D32' },
+                    ]}
+                    onPress={() => day.isActive ? handleSelectDate(day.date) : null}
+                    disabled={!day.isActive || day.isEmpty || day.isDisabled}
+                  >
+                    <Text
+                      style={[
+                        styles.calendarDayText,
+                        day.isActive && styles.calendarDayActiveText,
+                        day.isDisabled && styles.calendarDayDisabledText,
+                        day.isActive && day.activityLevel === 'high' && { color: '#FFFFFF' },
+                      ]}
+                    >
+                      {day.isEmpty ? '' : day.day}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Filter by Category</Text>
+            
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersContainer}
+            >
+              {Object.entries(defaultCategories).map(([id, name]) => (
                 <TouchableOpacity
-                  key={day.date || `empty-${day.day}`}
+                  key={id}
                   style={[
-                    styles.calendarDay,
-                    day.isActive && styles.calendarDayActive,
-                    day.isDisabled && styles.calendarDayDisabled,
-                    // Apply GitHub-style activity level colors
-                    day.isActive && day.activityLevel === 'low' && styles.calendarDayLowActivity,
-                    day.isActive && day.activityLevel === 'medium' && styles.calendarDayMediumActivity,
-                    day.isActive && day.activityLevel === 'high' && styles.calendarDayHighActivity,
-                    selectedDate === day.date && { borderWidth: 2, borderColor: '#2E7D32' },
+                    styles.filterButton,
+                    selectedCategory === id && styles.filterButtonActive,
                   ]}
-                  onPress={() => day.isActive ? handleSelectDate(day.date) : null}
-                  disabled={!day.isActive || day.isEmpty || day.isDisabled}
+                  onPress={() => handleSelectCategory(id)}
                 >
                   <Text
                     style={[
-                      styles.calendarDayText,
-                      day.isActive && styles.calendarDayActiveText,
-                      day.isDisabled && styles.calendarDayDisabledText,
-                      // Adjust text color for high activity to ensure readability
-                      day.isActive && day.activityLevel === 'high' && { color: '#FFFFFF' },
+                      styles.filterText,
+                      selectedCategory === id && styles.filterTextActive,
                     ]}
                   >
-                    {day.isEmpty ? '' : day.day}
+                    {name}
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Filter by Category</Text>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtersContainer}
-          >
-            {Object.entries(defaultCategories).map(([id, name]) => (
-              <TouchableOpacity
-                key={id}
-                style={[
-                  styles.filterButton,
-                  selectedCategory === id && styles.filterButtonActive,
-                ]}
-                onPress={() => handleSelectCategory(id)}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selectedCategory === id && styles.filterTextActive,
-                  ]}
-                >
-                  {name}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {selectedDate ? `Habits on ${formatSelectedDate(selectedDate)}` : 'Select a date'}
+              </Text>
+              {selectedDate && filteredLogs.length > 0 && (
+                <View style={styles.actionCountBadge}>
+                  <Text style={styles.actionCountText}>
+                    {filteredLogs.length} action{filteredLogs.length !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            {filteredLogs.length > 0 ? (
+              <FlatList
+                data={filteredLogs}
+                renderItem={renderLogItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>
+                  {selectedDate ? 'No habits logged for this date and filter' : 'Select a date to view logged habits'}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedDate ? `Habits on ${formatSelectedDate(selectedDate)}` : 'Select a date'}
-            </Text>
-            {selectedDate && filteredLogs.length > 0 && (
-              <View style={styles.actionCountBadge}>
-                <Text style={styles.actionCountText}>{filteredLogs.length} action{filteredLogs.length !== 1 ? 's' : ''}</Text>
               </View>
             )}
           </View>
           
-          {filteredLogs.length > 0 ? (
-            <FlatList
-              data={filteredLogs}
-              renderItem={renderLogItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {selectedDate ? 'No habits logged for this date and filter' : 'Select a date to view logged habits'}
-              </Text>
-            </View>
-          )}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Completed Goals</Text>
+            
+            {completedGoals.length > 0 ? (
+              <FlatList
+                data={completedGoals}
+                renderItem={renderCompletedGoalItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+              />
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>
+                  No completed goals yet. Keep working towards your targets!
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-        
-        {/* Completed Goals Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Completed Goals</Text>
-          
-          {completedGoals.length > 0 ? (
-            <FlatList
-              data={completedGoals}
-              renderItem={renderCompletedGoalItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                No completed goals yet. Keep working towards your targets!
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -773,7 +767,6 @@ const styles = StyleSheet.create<Styles>({
     color: '#555555',
     textAlign: 'center',
   },
-  // Styles for completed goals section
   completedGoalItem: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
