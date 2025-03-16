@@ -123,6 +123,7 @@ export default function Home() {
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
   const [editedTimeFrequency, setEditedTimeFrequency] = useState<TimeFrequency>('none');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [pendingDeleteGoalId, setPendingDeleteGoalId] = useState<string | null>(null);
 
   // Helper function to determine time frequency from goal dates
   const determineTimeFrequency = useCallback((goal: any): TimeFrequency => {
@@ -331,52 +332,36 @@ export default function Home() {
     
     // Get the original goal ID from Supabase
     const originalGoalId = selectedGoal.originalGoal.id;
-    console.log('Attempting to delete goal:', originalGoalId, selectedGoal.title);
+    const goalTitle = selectedGoal.title;
+    console.log('Attempting to delete goal:', originalGoalId, goalTitle);
     
-    Alert.alert(
-      'Delete Goal',
-      'Are you sure you want to delete this goal? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => console.log('Goal deletion cancelled')
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            console.log('Delete confirmed for goal:', originalGoalId);
-            setUpdateLoading(true);
-            setError(null);
-            
-            try {
-              console.log('Calling deleteExistingGoal with ID:', originalGoalId);
-              const success = await deleteExistingGoal(originalGoalId);
-              console.log('Delete result:', success);
-              
-              if (success) {
-                console.log('Goal deleted successfully');
-                handleCloseModal();
-                Alert.alert('Success', 'Goal deleted successfully');
-                // Force refresh goals after deletion
-                refreshGoals();
-              } else {
-                console.log('Failed to delete goal');
-                setError('Failed to delete goal. Please try again.');
-              }
-            } catch (err) {
-              const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-              setError(errorMessage);
-              console.error('Error deleting goal:', err);
-            } finally {
-              setUpdateLoading(false);
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+    // Close the modal first
+    setIsEditModalVisible(false);
+    
+    // Set loading state
+    setUpdateLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Calling deleteExistingGoal with ID:', originalGoalId);
+      const success = await deleteExistingGoal(originalGoalId);
+      console.log('Delete result:', success);
+      
+      if (success) {
+        console.log('Goal deleted successfully');
+        // Force refresh goals after deletion
+        refreshGoals();
+      } else {
+        console.log('Failed to delete goal');
+        setError('Failed to delete goal. Please try again.');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      console.error('Error deleting goal:', err);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   // Save updated goal
