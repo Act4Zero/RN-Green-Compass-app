@@ -24,3 +24,4 @@ app/.DS_Store
 .idea/
 
 yarn.lock
+.vercel

@@ -329,3 +329,12 @@
     - For web/Node.js environments: Uses in-memory storage to avoid "window is not defined" errors
   - This approach allows for persistent authentication on mobile devices while preventing initialization errors in other environments
   - Solution based on the approach from GitHub issue #870 (https://github.com/supabase/supabase-js/issues/870)
+
+- **Added Vercel Deployment Configuration**
+  - Created vercel.json configuration file with static build settings
+  - Added build scripts for Vercel deployment:
+    - Updated package.json with build and vercel-build scripts
+  - Updated README.md with comprehensive deployment instructions
+  - Ensured environment variables are properly configured for Vercel deployment
+  - Set up proper routing configuration for the web version of the app
+  - Fixed deployment issues by switching from @vercel/expo to a standard static build approach
