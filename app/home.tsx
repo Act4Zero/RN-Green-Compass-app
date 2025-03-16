@@ -13,6 +13,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  FlatList,
 } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import Button from './components/Button';
@@ -44,6 +45,8 @@ interface Styles {
   addGoalButton: ViewStyle;
   addGoalText: TextStyle;
   goalsContainer: ViewStyle;
+  scrollViewStyle: ViewStyle;
+  goalsRow: ViewStyle;
   goalCard: ViewStyle;
   goalCardHeader: ViewStyle;
   goalTitle: TextStyle;
@@ -68,6 +71,28 @@ interface Styles {
   modalLabel: TextStyle;
   modalInput: ViewStyle;
   modalButtonContainer: ViewStyle;
+  emptyGoalsContainer: ViewStyle;
+  emptyGoalsText: TextStyle;
+  timeChip: ViewStyle;
+  timeChipText: TextStyle;
+  deleteButton: ViewStyle;
+  deleteButtonText: TextStyle;
+}
+
+// Time-bound frequency options for goals
+type TimeFrequency = 'daily' | 'weekly' | 'monthly' | 'none';
+
+// Enhanced goal type with time-bound information
+interface EnhancedGoal {
+  id: string;
+  title: string;
+  category: string;
+  progress: number;
+  target: number;
+  timeFrequency: TimeFrequency;
+  startDate: string;
+  endDate?: string | null;
+  originalGoal: any;
 }
 
 export default function Home() {
@@ -84,19 +109,70 @@ export default function Home() {
   const [shouldPreventBack, setShouldPreventBack] = useState(true);
 
   const { totalCO2Saved, totalActions, overallStreak } = useHabitStats();
-  const { userGoals, loading: goalsLoading, updateExistingGoal, refreshGoals } = useGoals();
+  const { userGoals, loading: goalsLoading, updateExistingGoal, deleteExistingGoal, refreshGoals } = useGoals();
 
-  // Use real goals data from the database
-  const [goals, setGoals] = useState<any[]>([]);
+  // Use real goals data from the database with enhanced structure
+  const [goals, setGoals] = useState<EnhancedGoal[]>([]);
   
   // State for goal editing modal
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
   const [editedGoalName, setEditedGoalName] = useState('');
   const [editedGoalCategory, setEditedGoalCategory] = useState('');
   const [editedGoalTarget, setEditedGoalTarget] = useState('');
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
+  const [editedTimeFrequency, setEditedTimeFrequency] = useState<TimeFrequency>('none');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [pendingDeleteGoalId, setPendingDeleteGoalId] = useState<string | null>(null);
+
+  // Helper function to determine time frequency from goal dates
+  const determineTimeFrequency = useCallback((goal: any): TimeFrequency => {
+    if (!goal.end_date) return 'none';
+    
+    const startDate = new Date(goal.start_date);
+    const endDate = new Date(goal.end_date);
+    const daysDiff = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 1) return 'daily';
+    if (daysDiff <= 7) return 'weekly';
+    if (daysDiff <= 31) return 'monthly';
+    return 'none';
+  }, []);
+
+  // Helper function to check if a time-bound goal needs to be reset
+  const shouldResetGoalProgress = useCallback((goal: any): boolean => {
+    if (!goal.end_date) return false;
+    
+    const timeFrequency = determineTimeFrequency(goal);
+    if (timeFrequency === 'none') return false;
+    
+    const today = new Date();
+    const lastUpdated = new Date(goal.updated_at);
+    
+    // Reset daily goals if last updated was yesterday or earlier
+    if (timeFrequency === 'daily') {
+      return today.getDate() !== lastUpdated.getDate() || 
+             today.getMonth() !== lastUpdated.getMonth() || 
+             today.getFullYear() !== lastUpdated.getFullYear();
+    }
+    
+    // Reset weekly goals if last updated was in a different week
+    if (timeFrequency === 'weekly') {
+      const todayWeek = Math.floor(today.getDate() / 7);
+      const lastUpdatedWeek = Math.floor(lastUpdated.getDate() / 7);
+      return todayWeek !== lastUpdatedWeek || 
+             today.getMonth() !== lastUpdated.getMonth() || 
+             today.getFullYear() !== lastUpdated.getFullYear();
+    }
+    
+    // Reset monthly goals if last updated was in a different month
+    if (timeFrequency === 'monthly') {
+      return today.getMonth() !== lastUpdated.getMonth() || 
+             today.getFullYear() !== lastUpdated.getFullYear();
+    }
+    
+    return false;
+  }, [determineTimeFrequency]);
 
   // Load goals only once on initial component mount
   useEffect(() => {
@@ -118,16 +194,55 @@ export default function Home() {
   // Update goals when userGoals changes
   useEffect(() => {
     if (userGoals && userGoals.length > 0) {
+      // Check for time-bound goals that need to be reset
+      const goalsToReset = userGoals.filter(goal => shouldResetGoalProgress(goal));
+      
+      // Reset progress for time-bound goals if needed
+      if (goalsToReset.length > 0) {
+        Promise.all(
+          goalsToReset.map(goal => 
+            updateExistingGoal(goal.id, { 
+              current_value: 0,
+              updated_at: new Date().toISOString()
+            })
+          )
+        ).then(() => {
+          // Refresh goals after resetting
+          refreshGoals();
+        }).catch(err => {
+          console.error('Error resetting time-bound goals:', err);
+        });
+        return; // Exit early as we'll refresh goals after reset
+      }
+      
       // Filter out completed goals (where current_value >= target_value)
       const activeGoals = userGoals.filter(goal => goal.current_value < goal.target_value);
       
-      // Transform userGoals to match the expected format
-      const formattedGoals = activeGoals.map((goal) => ({
+      // Prevent duplicates by category
+      const uniqueCategories = new Set<string>();
+      const uniqueGoals = activeGoals.filter(goal => {
+        if (!goal.category) return true; // Keep goals without category
+        
+        // If we haven't seen this category before, keep it
+        if (!uniqueCategories.has(goal.category)) {
+          uniqueCategories.add(goal.category);
+          return true;
+        }
+        
+        // Otherwise, it's a duplicate category
+        return false;
+      });
+      
+      // Transform userGoals to match the expected format with time frequency
+      const formattedGoals = uniqueGoals.map((goal) => ({
         id: goal.id,
         title: goal.goal_name, // Using goal_name instead of name to match DB schema
         category: goal.category || 'other',
         progress: goal.current_value || 0, // Using current_value instead of progress
         target: goal.target_value || 5, // Using target_value instead of target
+        timeFrequency: determineTimeFrequency(goal),
+        startDate: goal.start_date,
+        endDate: goal.end_date,
         // Store the original goal object for easier updates
         originalGoal: goal,
       }));
@@ -135,7 +250,7 @@ export default function Home() {
     } else {
       setGoals([]);
     }
-  }, [userGoals]);
+  }, [userGoals, determineTimeFrequency, shouldResetGoalProgress, updateExistingGoal, refreshGoals]);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -155,7 +270,7 @@ export default function Home() {
         Alert.alert('Error', 'Failed to sign out. Please try again.');
       } else {
         // Redirect to signin screen after successful logout
-        router.replace('/authentication/signin');
+        router.replace('/auth/signin');
       }
     } catch (err) {
       // If anything unexpected happens, re-enable guard
@@ -186,12 +301,13 @@ export default function Home() {
   );
 
   // Open edit modal and set initial values
-  const handleEditGoal = (goal: any) => {
+  const handleEditGoal = (goal: EnhancedGoal) => {
     setSelectedGoal(goal);
     setEditedGoalName(goal.title);
     setEditedGoalCategory(goal.category);
     setEditedGoalTarget(goal.target.toString());
     setEditedGoalCurrent(goal.progress.toString());
+    setEditedTimeFrequency(goal.timeFrequency);
     setIsEditModalVisible(true);
   };
 
@@ -203,7 +319,49 @@ export default function Home() {
     setEditedGoalCategory('');
     setEditedGoalTarget('');
     setEditedGoalCurrent('');
+    setEditedTimeFrequency('none');
     setError(null);
+  };
+  
+  // Handle goal deletion
+  const handleDeleteGoal = async () => {
+    if (!selectedGoal || !selectedGoal.originalGoal) {
+      console.log('No goal selected for deletion or missing original goal data');
+      return;
+    }
+    
+    // Get the original goal ID from Supabase
+    const originalGoalId = selectedGoal.originalGoal.id;
+    const goalTitle = selectedGoal.title;
+    console.log('Attempting to delete goal:', originalGoalId, goalTitle);
+    
+    // Close the modal first
+    setIsEditModalVisible(false);
+    
+    // Set loading state
+    setUpdateLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Calling deleteExistingGoal with ID:', originalGoalId);
+      const success = await deleteExistingGoal(originalGoalId);
+      console.log('Delete result:', success);
+      
+      if (success) {
+        console.log('Goal deleted successfully');
+        // Force refresh goals after deletion
+        refreshGoals();
+      } else {
+        console.log('Failed to delete goal');
+        setError('Failed to delete goal. Please try again.');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      console.error('Error deleting goal:', err);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   // Save updated goal
@@ -235,12 +393,40 @@ export default function Home() {
         return;
       }
       
+      // Calculate dates based on time frequency
+      let startDate = selectedGoal.startDate;
+      let endDate = selectedGoal.endDate;
+      
+      if (editedTimeFrequency !== selectedGoal.timeFrequency) {
+        // If time frequency has changed, update the dates
+        if (editedTimeFrequency === 'none') {
+          // If changing to non-time-bound, remove end date
+          endDate = null;
+        } else {
+          // Set start date to today
+          startDate = new Date().toISOString().split('T')[0];
+          
+          // Calculate end date based on frequency
+          const endDateObj = new Date();
+          if (editedTimeFrequency === 'daily') {
+            endDateObj.setDate(endDateObj.getDate() + 1);
+          } else if (editedTimeFrequency === 'weekly') {
+            endDateObj.setDate(endDateObj.getDate() + 7);
+          } else if (editedTimeFrequency === 'monthly') {
+            endDateObj.setMonth(endDateObj.getMonth() + 1);
+          }
+          endDate = endDateObj.toISOString().split('T')[0];
+        }
+      }
+      
       // Prepare updates
       const updates = {
         goal_name: editedGoalName.trim(),
         category: editedGoalCategory.trim() || 'other',
         target_value: targetValue,
         current_value: currentValue,
+        start_date: startDate,
+        end_date: endDate,
       };
       
       // Call the update function
@@ -304,64 +490,7 @@ export default function Home() {
             </View>
           </View>
         </View>
-        
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.cardTitle}>Your Goals</Text>
-            <TouchableOpacity 
-              style={styles.addGoalButton}
-              onPress={() => router.push({ pathname: '/habits/goal', params: { source: 'home' } })}
-            >
-              <Ionicons name="add-circle-outline" size={20} color="#2E7D32" />
-              <Text style={styles.addGoalText}>Add Goal</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.goalsContainer}
-          >
-            {goals.map((goal) => (
-              <View key={goal.id} style={styles.goalCard}>
-                <View style={styles.goalCardHeader}>
-                  <Text style={styles.goalTitle}>{goal.title}</Text>
-                  <Text style={styles.goalCategory}>{goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}</Text>
-                </View>
-                
-                <View style={styles.goalProgress}>
-                  <View style={styles.goalProgressBar}>
-                    <View 
-                      style={[styles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
-                    />
-                  </View>
-                  <Text style={styles.goalProgressText}>
-                    {goal.progress} of {goal.target} actions completed
-                  </Text>
-                </View>
-                
-                <View style={styles.goalActions}>
-                  <TouchableOpacity 
-                    style={styles.goalActionButton}
-                    onPress={() => handleEditGoal(goal)}
-                  >
-                    <Text style={styles.goalActionText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.goalActionButton, { marginLeft: 8 }]}
-                    onPress={() => router.push({
-                      pathname: '/habits/log',
-                      params: { category: goal.category }
-                    } as any)}
-                  >
-                    <Text style={styles.goalActionText}>Log Action</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-        
+
         <View style={styles.quickActionsContainer}>
           <TouchableOpacity 
             style={styles.quickActionItem}
@@ -382,6 +511,199 @@ export default function Home() {
             </View>
             <Text style={styles.quickActionText}>View History</Text>
           </TouchableOpacity>
+        </View>
+        
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.cardTitle}>Your Goals</Text>
+            <TouchableOpacity 
+              style={styles.addGoalButton}
+              onPress={() => router.push({ pathname: '/habits/goal', params: { source: 'home' } })}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#2E7D32" />
+              <Text style={styles.addGoalText}>Add Goal</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Empty state for no goals */}
+          {goals.length === 0 && (
+            <View style={styles.emptyGoalsContainer}>
+              <Text style={styles.emptyGoalsText}>
+                You don't have any active goals yet. Tap 'Add Goal' to get started!
+              </Text>
+            </View>
+          )}
+          
+          {/* Single row of goals if less than 4 */}
+          {goals.length > 0 && goals.length < 4 && (
+            <FlatList
+              data={goals}
+              horizontal
+              showsHorizontalScrollIndicator={true}
+              contentContainerStyle={styles.goalsContainer}
+              style={styles.scrollViewStyle}
+              keyExtractor={(item) => item.id}
+              renderItem={({item: goal}) => (
+                <View style={styles.goalCard}>
+                  <View style={styles.goalCardHeader}>
+                    <Text style={styles.goalTitle}>{goal.title}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.goalCategory}>{goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}</Text>
+                      {goal.timeFrequency !== 'none' && (
+                        <View style={styles.timeChip}>
+                          <Text style={styles.timeChipText}>{goal.timeFrequency}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                  
+                  <View style={styles.goalProgress}>
+                    <View style={styles.goalProgressBar}>
+                      <View 
+                        style={[styles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
+                      />
+                    </View>
+                    <Text style={styles.goalProgressText}>
+                      {goal.progress} of {goal.target} actions completed
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.goalActions}>
+                    <TouchableOpacity 
+                      style={styles.goalActionButton}
+                      onPress={() => handleEditGoal(goal)}
+                    >
+                      <Text style={styles.goalActionText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.goalActionButton, { marginLeft: 8 }]}
+                      onPress={() => router.push({
+                        pathname: '/habits/log',
+                        params: { category: goal.category }
+                      } as any)}
+                    >
+                      <Text style={styles.goalActionText}>Log Action</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+          )}
+          
+          {/* Split into two rows if 4+ goals */}
+          {goals.length >= 4 && (
+            <View>
+              {/* First row */}
+              <FlatList
+                data={goals.slice(0, Math.ceil(goals.length / 2))}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.goalsContainer}
+                style={styles.scrollViewStyle}
+                keyExtractor={(item) => item.id}
+                renderItem={({item: goal}) => (
+                  <View style={styles.goalCard}>
+                    <View style={styles.goalCardHeader}>
+                      <Text style={styles.goalTitle}>{goal.title}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={styles.goalCategory}>{goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}</Text>
+                        {goal.timeFrequency !== 'none' && (
+                          <View style={styles.timeChip}>
+                            <Text style={styles.timeChipText}>{goal.timeFrequency}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    
+                    <View style={styles.goalProgress}>
+                      <View style={styles.goalProgressBar}>
+                        <View 
+                          style={[styles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
+                        />
+                      </View>
+                      <Text style={styles.goalProgressText}>
+                        {goal.progress} of {goal.target} actions completed
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.goalActions}>
+                      <TouchableOpacity 
+                        style={styles.goalActionButton}
+                        onPress={() => handleEditGoal(goal)}
+                      >
+                        <Text style={styles.goalActionText}>Edit</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.goalActionButton, { marginLeft: 8 }]}
+                        onPress={() => router.push({
+                          pathname: '/habits/log',
+                          params: { category: goal.category }
+                        } as any)}
+                      >
+                        <Text style={styles.goalActionText}>Log Action</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              />
+              
+              {/* Second row */}
+              <View style={{ marginTop: 12 }}>
+                <FlatList
+                  data={goals.slice(Math.ceil(goals.length / 2))}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.goalsContainer}
+                  style={styles.scrollViewStyle}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({item: goal}) => (
+                    <View style={styles.goalCard}>
+                      <View style={styles.goalCardHeader}>
+                        <Text style={styles.goalTitle}>{goal.title}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={styles.goalCategory}>{goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}</Text>
+                          {goal.timeFrequency !== 'none' && (
+                            <View style={styles.timeChip}>
+                              <Text style={styles.timeChipText}>{goal.timeFrequency}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                      
+                      <View style={styles.goalProgress}>
+                        <View style={styles.goalProgressBar}>
+                          <View 
+                            style={[styles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
+                          />
+                        </View>
+                        <Text style={styles.goalProgressText}>
+                          {goal.progress} of {goal.target} actions completed
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.goalActions}>
+                        <TouchableOpacity 
+                          style={styles.goalActionButton}
+                          onPress={() => handleEditGoal(goal)}
+                        >
+                          <Text style={styles.goalActionText}>Edit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={[styles.goalActionButton, { marginLeft: 8 }]}
+                          onPress={() => router.push({
+                            pathname: '/habits/log',
+                            params: { category: goal.category }
+                          } as any)}
+                        >
+                          <Text style={styles.goalActionText}>Log Action</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                />
+              </View>
+            </View>
+          )}
         </View>
 
         <Button
@@ -437,6 +759,33 @@ export default function Home() {
                 keyboardType="numeric"
               />
               
+              <Text style={styles.modalLabel}>Time Frequency</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
+                {(['none', 'daily', 'weekly', 'monthly'] as TimeFrequency[]).map((frequency) => (
+                  <TouchableOpacity 
+                    key={frequency}
+                    style={[
+                      styles.timeChip, 
+                      { 
+                        marginRight: 10, 
+                        marginBottom: 10,
+                        backgroundColor: editedTimeFrequency === frequency ? '#2E7D32' : '#E8F5E9' 
+                      }
+                    ]}
+                    onPress={() => setEditedTimeFrequency(frequency)}
+                  >
+                    <Text 
+                      style={[
+                        styles.timeChipText, 
+                        { color: editedTimeFrequency === frequency ? 'white' : '#2E7D32' }
+                      ]}
+                    >
+                      {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              
               <View style={styles.modalButtonContainer}>
                 <Button
                   title="Cancel"
@@ -451,6 +800,17 @@ export default function Home() {
                   style={{ flex: 1, marginLeft: 8 }}
                 />
               </View>
+              
+              {/* Delete button - separate from other buttons */}
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={handleDeleteGoal}
+                disabled={updateLoading}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="trash-outline" size={20} color="#D32F2F" />
+                <Text style={styles.deleteButtonText}>Delete Goal</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -468,6 +828,29 @@ const styles = StyleSheet.create<Styles>({
   scrollContent: {
     flexGrow: 1,
     padding: 16,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D32F2F',
+    backgroundColor: '#FFEBEE',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+  },
+  deleteButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#D32F2F',
+    fontWeight: '600',
   },
   content: {
     width: '100%',
@@ -553,6 +936,22 @@ const styles = StyleSheet.create<Styles>({
   goalsContainer: {
     paddingBottom: 8,
     paddingTop: 8,
+    paddingHorizontal: 8,
+    gap: 12,
+    minWidth: '100%',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+  },
+  scrollViewStyle: {
+    width: '100%',
+    minHeight: 200,
+    maxHeight: 250,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  goalsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   goalCard: {
@@ -561,6 +960,8 @@ const styles = StyleSheet.create<Styles>({
     padding: 16,
     width: 250,
     minWidth: 200,
+    marginRight: 12,
+    flexShrink: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -614,6 +1015,32 @@ const styles = StyleSheet.create<Styles>({
   goalActionText: {
     fontSize: 12,
     fontWeight: '500',
+    color: '#2E7D32',
+  },
+  emptyGoalsContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  emptyGoalsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  timeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 15,
+    alignSelf: 'flex-start',
+  },
+  timeChipText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#2E7D32',
   },
   quickActionsContainer: {

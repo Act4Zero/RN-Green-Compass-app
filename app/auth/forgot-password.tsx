@@ -139,7 +139,7 @@ export default function ForgotPassword() {
                 </Text>
                 <Button
                   title="Back to Login"
-                  onPress={() => router.push('/signin')}
+                  onPress={() => router.push('/auth/signin')}
                   variant="secondary"
                   style={{ marginTop: 24 }}
                 />
@@ -150,7 +150,7 @@ export default function ForgotPassword() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Remember your password?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/signin')}>Login</Text>
+              <Text style={styles.footerLink} onPress={() => router.push('/auth/signin')}>Login</Text>
             </Text>
           </View>
         </View>

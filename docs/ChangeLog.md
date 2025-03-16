@@ -306,3 +306,17 @@
   - Updated navigation flow to redirect users back to the home screen after successfully logging a habit
   - Displayed a success toast message after habit logging
   - Improved TypeScript interfaces for better type safety
+
+## 2025-03-16 (Improving the overall habit tracking experience)
+
+- **Habit History Screen**
+  - Improved the UI/UX of the habit history screen by enhancing calendar navigation, activity indicators, and log filtering while also updating some styling and adding a new route to the RootLayout.
+  - Adds month navigation buttons with logic to prevent navigating before the registration month and beyond the current month.
+  - Introduces activity level indicators and refines date formatting and filtering for logs and goals.
+  - Updates styling details in the HabitHistory component and adds a new "habits/history" screen in the RootLayout.
+  
+- **Home Screen**  
+  - Updating routing paths in various authentication components and adding functionality to calculate end dates for time-bound goals.
+  - Updated routing paths in several authentication components to use the unified /auth/* pattern.
+  - Added new logic in goal.tsx to calculate end dates for daily, weekly, and monthly goals.
+  - Minor UI-related tweaks such as hiding the header in the home layout.

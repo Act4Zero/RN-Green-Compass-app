@@ -145,7 +145,7 @@ export default function SignIn() {
             />
 
             {/* Changed from asChild pattern to avoid ref forwarding warning */}
-            <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+            <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>
 
@@ -172,7 +172,7 @@ export default function SignIn() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               New here?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/authentication/signup')}>Sign Up</Text>
+              <Text style={styles.footerLink} onPress={() => router.push('/auth/signup')}>Sign Up</Text>
             </Text>
           </View>
         </View>

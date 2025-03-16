@@ -56,7 +56,7 @@ export default function Goal() {
     // Only check after auth loading is complete
     if (!authLoading && !user) {
       console.log('No authenticated user found in onboarding, redirecting to signin');
-      router.replace('/authentication/signin');
+      router.replace('/auth/signin');
     } else if (!authLoading && user) {
       console.log('Authenticated user in onboarding:', user.id);
     }
@@ -160,7 +160,7 @@ export default function Goal() {
         Alert.alert('Please wait', 'Still loading your account information...');
       } else {
         Alert.alert('Error', 'User not authenticated. Please sign in again.');
-        router.replace('/authentication/signin');
+        router.replace('/auth/signin');
       }
       return;
     }
@@ -184,6 +184,24 @@ export default function Goal() {
         const goalTitle = `${area.name} (${frequencyDisplay})`;
         const frequencyText = frequency === 'one-time' ? '' : frequency;
         const goalDescription = `Complete ${targetValue} sustainable actions ${frequencyText} related to ${area.name.toLowerCase()}`;
+        
+        // Calculate end date for time-bound goals
+        let endDate: string | undefined = undefined;
+        const today = new Date();
+        
+        if (frequency === 'daily') {
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          endDate = tomorrow.toISOString().split('T')[0];
+        } else if (frequency === 'weekly') {
+          const nextWeek = new Date(today);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          endDate = nextWeek.toISOString().split('T')[0];
+        } else if (frequency === 'monthly') {
+          const nextMonth = new Date(today);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+          endDate = nextMonth.toISOString().split('T')[0];
+        }
 
         // Create new goal with all required fields
         console.log('Creating new goal:', {
@@ -191,7 +209,8 @@ export default function Goal() {
           targetValue,
           category: area.category,
           description: goalDescription,
-          userId: user.id
+          userId: user.id,
+          endDate
         });
         
         const result = await createNewGoal(
@@ -201,7 +220,7 @@ export default function Goal() {
           undefined, // subcategory
           undefined, // habitId
           goalDescription,
-          undefined  // endDate
+          endDate
         );
         
         console.log('Creation result:', result);

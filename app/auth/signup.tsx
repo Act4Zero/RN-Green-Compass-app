@@ -137,7 +137,7 @@ export default function SignUp() {
         }
         
         // Show success message and navigate to success screen
-        router.push('/authentication/signup-success');
+        router.push('/auth/signup-success');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -251,7 +251,7 @@ export default function SignUp() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Already have an account?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/authentication/signin')}>Login</Text>
+              <Text style={styles.footerLink} onPress={() => router.push('/auth/signin')}>Login</Text>
             </Text>
           </View>
         </View>

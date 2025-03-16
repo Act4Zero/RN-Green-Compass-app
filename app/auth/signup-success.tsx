@@ -34,7 +34,7 @@ export default function SignupSuccess() {
     const timer = setTimeout(() => {
       if (!loading) {
         console.log('User not authenticated after timeout, redirecting to signin');
-        router.push('/authentication/signin');
+        router.push('/auth/signin');
       }
     }, 5000);
 
@@ -43,7 +43,7 @@ export default function SignupSuccess() {
 
   const handleContinue = () => {
     console.log('User not authenticated, redirecting to signin');
-    router.push('/authentication/signin');
+    router.push('/auth/signin');
   };
 
   return (
