@@ -188,8 +188,7 @@ export default function HabitHistory() {
       const isBeforeRegistration = registrationDate && date < registrationDate;
       
       // Check if this date is in the future
-      const isInFuture = date > new Date();
-      
+      const isInFuture = date > currentDate;
       // Get activity level for this date
       const activityLevel = getActivityLevel(dateString);
       
