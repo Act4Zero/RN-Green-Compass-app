@@ -94,10 +94,11 @@ export default function Goal() {
   }, [error]);
 
   const toggleFocusArea = (id: string) => {
+    // Allow only one selection at a time
     if (selectedFocusAreas.includes(id)) {
-      setSelectedFocusAreas(selectedFocusAreas.filter(areaId => areaId !== id));
+      setSelectedFocusAreas([]);
     } else {
-      setSelectedFocusAreas([...selectedFocusAreas, id]);
+      setSelectedFocusAreas([id]);
     }
   };
 
@@ -180,8 +181,24 @@ export default function Goal() {
           return null;
         }
 
-        const frequencyDisplay = frequency === 'one-time' ? 'One-Time' : frequency.charAt(0).toUpperCase() + frequency.slice(1);
-        const goalTitle = `${area.name} (${frequencyDisplay})`;
+        // Creative goal titles based on category without frequency in parentheses
+        let goalTitle;
+        switch(area.name) {
+          case 'Mobility':
+            goalTitle = 'Green Journey';
+            break;
+          case 'Food':
+            goalTitle = 'Sustainable Bites';
+            break;
+          case 'Household Activities':
+            goalTitle = 'Eco Home Challenge';
+            break;
+          case 'Heating':
+            goalTitle = 'Climate Comfort';
+            break;
+          default:
+            goalTitle = `${area.name} Challenge`;
+        }
         const frequencyText = frequency === 'one-time' ? '' : frequency;
         const goalDescription = `Complete ${targetValue} sustainable actions ${frequencyText} related to ${area.name.toLowerCase()}`;
         
@@ -252,17 +269,20 @@ export default function Goal() {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}> 
         <View style={styles.header}>
+        <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            </TouchableOpacity>
           <Text style={styles.title}>Set Your Sustainability Goals</Text>
-          <Text style={styles.subtitle}>
-            Choose what you'd like to focus on to make a positive impact
-          </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>What would you like to focus on?</Text>
-          <Text style={styles.sectionSubtitle}>Select one or more areas (you can change these later)</Text>
+          <Text style={styles.sectionSubtitle}>Select one area to focus on (you can change this later)</Text>
 
           <View style={styles.optionsContainer}>
             {focusAreas.map((area) => (
@@ -430,6 +450,7 @@ interface Styles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
+  backButton: ViewStyle;
   header: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
@@ -472,8 +493,13 @@ const styles = StyleSheet.create<Styles>({
   content: {
     padding: 24,
   },
+  backButton: {
+    marginRight: 16,
+  },
   header: {
-    marginBottom: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   title: {
     fontSize: 28,
