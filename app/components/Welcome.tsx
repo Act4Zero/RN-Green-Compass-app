@@ -55,13 +55,13 @@ const Welcome: React.FC = () => {
           <Button 
             title="Sign Up" 
             variant="primary" 
-            onPress={() => router.push('/authentication/signup')} 
+            onPress={() => router.push('/auth/signup')} 
           />
 
           <Button 
             title="Login" 
             variant="outline" 
-            onPress={() => router.push('/authentication/signin')} 
+            onPress={() => router.push('/auth/signin')} 
           />
           
           {loading && (

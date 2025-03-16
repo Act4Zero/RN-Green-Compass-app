@@ -56,7 +56,7 @@ export default function Goal() {
     // Only check after auth loading is complete
     if (!authLoading && !user) {
       console.log('No authenticated user found in onboarding, redirecting to signin');
-      router.replace('/authentication/signin');
+      router.replace('/auth/signin');
     } else if (!authLoading && user) {
       console.log('Authenticated user in onboarding:', user.id);
     }
@@ -160,7 +160,7 @@ export default function Goal() {
         Alert.alert('Please wait', 'Still loading your account information...');
       } else {
         Alert.alert('Error', 'User not authenticated. Please sign in again.');
-        router.replace('/authentication/signin');
+        router.replace('/auth/signin');
       }
       return;
     }

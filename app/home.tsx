@@ -270,7 +270,7 @@ export default function Home() {
         Alert.alert('Error', 'Failed to sign out. Please try again.');
       } else {
         // Redirect to signin screen after successful logout
-        router.replace('/authentication/signin');
+        router.replace('/auth/signin');
       }
     } catch (err) {
       // If anything unexpected happens, re-enable guard
