@@ -19,6 +19,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="home"
             options={{
+              headerShown: false,
               headerBackVisible: false, // This hides the back button
               gestureEnabled: false,    // Disables the iOS swipe-to-go-back gesture
             }}
