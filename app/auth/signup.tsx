@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import Turnstile from '../components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
@@ -57,6 +58,7 @@ export default function SignUp() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [termsError, setTermsError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateFullName = (name: string) => {
     if (name && name.length < 2) {
@@ -116,7 +118,7 @@ export default function SignUp() {
     setLoading(true);
     
     try {
-      const { data, error } = await signUp(email, password);
+      const { data, error } = await signUp(email, password, captchaToken || undefined);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -228,6 +230,14 @@ export default function SignUp() {
             </TouchableOpacity>
             {termsError && <Text style={styles.errorText}>{termsError}</Text>}
 
+            {/* Invisible Captcha verification */}
+            <Turnstile
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                setError(null);
+              }}
+            />
+
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
@@ -238,7 +248,7 @@ export default function SignUp() {
               title="Sign Up"
               onPress={handleSignUp}
               loading={loading}
-              disabled={loading}
+              disabled={loading || !captchaToken}
             />
 
             <View style={styles.dividerContainer}>
@@ -344,8 +354,9 @@ const styles = StyleSheet.create<Styles>({
   },
   footerLink: {
     color: '#2E7D32',
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
+
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',

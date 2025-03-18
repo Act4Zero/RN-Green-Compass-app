@@ -16,6 +16,7 @@ import { Link, useRouter } from 'expo-router';
 import supabase from '../lib/supabase';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import Turnstile from '../components/Turnstile';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -44,6 +45,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -70,8 +72,10 @@ export default function ForgotPassword() {
     setLoading(true);
     
     try {
+      // Include captcha token in the options object
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'greencompass://reset-password',
+        captchaToken: captchaToken || undefined,
       });
       
       if (error) {
@@ -119,6 +123,14 @@ export default function ForgotPassword() {
                   autoComplete="email"
                 />
 
+                {/* Invisible Captcha verification */}
+                <Turnstile
+                  onVerify={(token) => {
+                    setCaptchaToken(token);
+                    setError(null);
+                  }}
+                />
+
                 {error && (
                   <View style={styles.errorContainer}>
                     <Text style={styles.errorText}>{error}</Text>
@@ -129,7 +141,7 @@ export default function ForgotPassword() {
                   title="Send Reset Link"
                   onPress={handleResetPassword}
                   loading={loading}
-                  disabled={loading}
+                  disabled={loading || !captchaToken}
                 />
               </>
             ) : (
@@ -228,4 +240,5 @@ const styles = StyleSheet.create<Styles>({
     color: '#2E7D32',
     fontWeight: 'bold',
   },
+
 });

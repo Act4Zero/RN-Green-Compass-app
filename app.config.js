@@ -6,7 +6,8 @@ const {
   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  EXPO_PUBLIC_GOOGLE_REDIRECT_URI
+  EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
+  EXPO_PUBLIC_TURNSTILE_SITE_KEY
 } = process.env;
 
 module.exports = {
@@ -64,5 +65,7 @@ module.exports = {
     // For web, this should match the redirect URI configured in Google Cloud Console
     // This should be the same URI that's configured in your Google Cloud Console
     googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
+    // Cloudflare Turnstile site key for captcha
+    turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
   }
 };
