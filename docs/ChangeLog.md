@@ -338,3 +338,25 @@
   - Ensured environment variables are properly configured for Vercel deployment
   - Set up proper routing configuration for the web version of the app
   - Fixed deployment issues by switching from @vercel/expo to a standard static build approach
+
+  ## 2025-03-18
+- **Integrated Cloudflare Turnstile Captcha for Enhanced Security**
+  - Created a reusable `Turnstile.tsx` component with platform-specific implementations:
+    - Web implementation using direct Turnstile API integration
+    - Mobile implementation using WebView to render the Turnstile widget
+  - Updated `AuthContext.tsx` to include Captcha token handling in authentication functions:
+    - Modified `signUp` function to accept an optional Captcha token
+    - Modified `signIn` function to accept an optional Captcha token
+    - Updated `resetPasswordForEmail` to include Captcha verification
+  - Integrated Captcha verification in all authentication forms:
+    - Added to `signup.tsx` for new account creation
+    - Added to `signin.tsx` for user login
+    - Added to `forgot-password.tsx` for password reset
+  - Configured invisible Captcha mode for improved user experience:
+    - Implemented automatic Captcha verification without user interaction
+    - Updated component styling to accommodate invisible mode
+    - Added appropriate data attributes for invisible mode configuration
+  - Added environment variables for Turnstile site keys in various environments:
+    - Development environment in `.env.local`
+    - Production environment in `.env` and `.env.production`
+  - Created test script for verifying Captcha integration

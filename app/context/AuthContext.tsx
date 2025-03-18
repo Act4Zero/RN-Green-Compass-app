@@ -7,17 +7,17 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{
+  signUp: (email: string, password: string, captchaToken?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
-  signIn: (email: string, password: string) => Promise<{
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
   signInWithGoogle: () => Promise<{
     error: Error | null;
-    data: { user: User | null; session: Session | null } | null;
+    data: any | null;
   }>;
   signOut: () => Promise<{ error: Error | null }>;
 };
@@ -59,9 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Sign up function
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, captchaToken?: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const options = captchaToken ? { captchaToken } : {};
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options
+      });
       return { data, error };
     } catch (error) {
       return { data: null, error: error as Error };
@@ -69,9 +74,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Sign in function
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const options = captchaToken ? { captchaToken } : {};
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+        options
+      });
       return { data, error };
     } catch (error) {
       return { data: null, error: error as Error };
@@ -88,6 +98,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sign in with Google function
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
+      return { data, error };
+    } catch (error) {
+      return { data: null, error: error as Error };
+    }
+  };
+
   // The context value exposing auth functions and state
   const value = {
     user,
@@ -95,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     signUp,
     signIn,
-
+    signInWithGoogle,
     signOut,
   };
 

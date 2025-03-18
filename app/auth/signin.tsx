@@ -15,6 +15,7 @@ import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import Turnstile from '../components/Turnstile';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -47,6 +48,7 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -83,7 +85,7 @@ export default function SignIn() {
     setLoading(true);
     
     try {
-      const { data, error } = await signIn(email, password);
+      const { data, error } = await signIn(email, password, captchaToken || undefined);
       
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
@@ -149,6 +151,14 @@ export default function SignIn() {
               <Text style={styles.forgotPassword}>Forgot password?</Text>
             </TouchableOpacity>
 
+            {/* Invisible Captcha verification */}
+            <Turnstile
+              onVerify={(token) => {
+                setCaptchaToken(token);
+                setError(null);
+              }}
+            />
+
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
@@ -159,7 +169,7 @@ export default function SignIn() {
               title="Login"
               onPress={handleSignIn}
               loading={loading}
-              disabled={loading}
+              disabled={loading || !captchaToken}
             />
 
             <View style={styles.dividerContainer}>
@@ -260,4 +270,5 @@ const styles = StyleSheet.create<Styles>({
     color: '#757575',
     fontSize: 14,
   },
+
 });
