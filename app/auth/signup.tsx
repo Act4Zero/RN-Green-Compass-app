@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   ViewStyle,
   TextStyle,
   Linking,
+  BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +20,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Turnstile from '../components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
+import supabase, { ensureValidSession } from '../lib/supabase';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -46,7 +49,10 @@ export default function SignUp() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, refreshSession } = useAuth();
+  
+  // Debug flag - set to true for verbose logging in development
+  const DEBUG = __DEV__;
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -103,6 +109,19 @@ export default function SignUp() {
     return true;
   };
 
+  // Add back button handler to prevent accidental navigation during signup process
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (loading) {
+        // Prevent back navigation during loading
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [loading]);
+
   const handleSignUp = async () => {
     setError(null);
     
@@ -118,6 +137,7 @@ export default function SignUp() {
     setLoading(true);
     
     try {
+      // First attempt at signup
       const { data, error } = await signUp(email, password, captchaToken || undefined);
       
       if (error) {
@@ -128,19 +148,61 @@ export default function SignUp() {
         } else {
           setError(error.message);
         }
-      } else {
-        console.log('Successfully signed up:', data?.user?.email);
-        
-        // If fullName is provided, we would update the user profile here
-        // This would typically be done in a separate function that calls the Supabase profiles table
-        if (fullName) {
-          console.log('Would update profile with name:', fullName);
-          // Future implementation: Update user profile with fullName
-        }
-        
-        // Show success message and navigate to success screen
-        router.push('/auth/signup-success');
+        return;
       }
+      
+      if (DEBUG) console.log('Successfully signed up:', data?.user?.email);
+      
+      // For new users, explicitly check if we have a session
+      if (!data?.session) {
+        if (DEBUG) console.log('No session returned after signup - attempting to create one');
+        
+        // Try to sign in immediately after signup to establish a session
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (signInError) {
+          if (DEBUG) console.warn('Auto sign-in after signup failed:', signInError.message);
+        } else if (signInData.session) {
+          if (DEBUG) console.log('Auto sign-in after signup successful');
+          
+          // Explicitly set the session to ensure it's properly stored
+          await supabase.auth.setSession({
+            access_token: signInData.session.access_token,
+            refresh_token: signInData.session.refresh_token
+          });
+        }
+      }
+      
+      // Ensure we have a valid session by explicitly refreshing it
+      await ensureValidSession();
+      
+      // Double-check session state with a manual refresh
+      const { error: refreshError } = await refreshSession();
+      if (refreshError) {
+        if (DEBUG) console.warn('Session refresh after signup failed:', refreshError.message);
+        // Continue anyway as this is just an extra precaution
+      }
+      
+      // Final verification of session existence
+      const { data: finalSessionCheck } = await supabase.auth.getSession();
+      if (!finalSessionCheck.session) {
+        if (DEBUG) console.warn('Still no session after all attempts - user may need to sign in manually');
+      } else {
+        if (DEBUG) console.log('Final session check successful - user is authenticated');
+      }
+      
+      // If fullName is provided, we would update the user profile here
+      // This would typically be done in a separate function that calls the Supabase profiles table
+      if (fullName) {
+        if (DEBUG) console.log('Would update profile with name:', fullName);
+        // Future implementation: Update user profile with fullName
+      }
+      
+      // Show success message and navigate to success screen
+      router.push('/auth/signup-success');
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign up error:', err);

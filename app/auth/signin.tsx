@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
   useWindowDimensions,
   ViewStyle,
   TextStyle,
+  BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Turnstile from '../components/Turnstile';
+import supabase, { ensureValidSession } from '../lib/supabase';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -40,7 +43,10 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, refreshSession } = useAuth();
+  
+  // Debug flag - set to true for verbose logging in development
+  const DEBUG = __DEV__;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +78,19 @@ export default function SignIn() {
     return true;
   };
 
+  // Add back button handler to prevent accidental navigation during signin process
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (loading) {
+        // Prevent back navigation during loading
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [loading]);
+
   const handleSignIn = async () => {
     setError(undefined);
     
@@ -85,6 +104,7 @@ export default function SignIn() {
     setLoading(true);
     
     try {
+      // First attempt at signin
       const { data, error } = await signIn(email, password, captchaToken || undefined);
       
       if (error) {
@@ -95,10 +115,23 @@ export default function SignIn() {
         } else {
           setError(error.message);
         }
-      } else {
-        console.log('Successfully signed in:', data?.user?.email);
-        router.replace('/home');
+        return;
       }
+      
+      if (DEBUG) console.log('Successfully signed in:', data?.user?.email);
+      
+      // Ensure we have a valid session by explicitly refreshing it
+      await ensureValidSession();
+      
+      // Double-check session state with a manual refresh
+      const { error: refreshError } = await refreshSession();
+      if (refreshError) {
+        if (DEBUG) console.warn('Session refresh after signin failed:', refreshError.message);
+        // Continue anyway as this is just an extra precaution
+      }
+      
+      // Navigate to home screen
+      router.replace('/home');
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign in error:', err);
