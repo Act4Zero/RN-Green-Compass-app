@@ -13,8 +13,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase URL or Anon Key is missing. Please check your environment variables.');
 }
 
-// Create a simple in-memory storage for development purposes
-// This won't persist data between app restarts but will allow the app to run
+// Create a localStorage adapter for web platforms
+const localStorageAdapter = {
+  getItem: (key: string): Promise<string | null> => {
+    if (typeof window === 'undefined') return Promise.resolve(null);
+    return Promise.resolve(window.localStorage.getItem(key));
+  },
+  setItem: (key: string, value: string): Promise<void> => {
+    if (typeof window === 'undefined') return Promise.resolve();
+    window.localStorage.setItem(key, value);
+    return Promise.resolve();
+  },
+  removeItem: (key: string): Promise<void> => {
+    if (typeof window === 'undefined') return Promise.resolve();
+    window.localStorage.removeItem(key);
+    return Promise.resolve();
+  },
+};
+
+// Fallback in-memory storage for server-side rendering contexts
 const inMemoryStorage: Record<string, string> = {};
 
 const memoryStorageAdapter = {
@@ -32,13 +49,15 @@ const memoryStorageAdapter = {
 };
 
 // Initialize Supabase client with platform-specific storage
-// Uses AsyncStorage for mobile platforms and in-memory storage for web/Node.js
+// Uses AsyncStorage for mobile platforms and localStorage for web (with SSR fallback)
 const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
     auth: {
-      ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : { storage: memoryStorageAdapter }),
+      storage: Platform.OS !== 'web' 
+        ? AsyncStorage 
+        : (typeof window !== 'undefined' ? localStorageAdapter : memoryStorageAdapter),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true, // Enable this to detect OAuth state in URL
