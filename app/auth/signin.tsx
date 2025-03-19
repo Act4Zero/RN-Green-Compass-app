@@ -45,9 +45,9 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
@@ -59,7 +59,7 @@ export default function SignIn() {
       setEmailError('Please enter a valid email address');
       return false;
     }
-    setEmailError(null);
+    setEmailError(undefined);
     return true;
   };
 
@@ -68,12 +68,12 @@ export default function SignIn() {
       setPasswordError('Password is required');
       return false;
     }
-    setPasswordError(null);
+    setPasswordError(undefined);
     return true;
   };
 
   const handleSignIn = async () => {
-    setError(null);
+    setError(undefined);
     
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
@@ -155,7 +155,7 @@ export default function SignIn() {
             <Turnstile
               onVerify={(token) => {
                 setCaptchaToken(token);
-                setError(null);
+                setError(undefined);
               }}
             />
 
@@ -170,6 +170,7 @@ export default function SignIn() {
               onPress={handleSignIn}
               loading={loading}
               disabled={loading || !captchaToken}
+              showSpinnerWhenDisabled={!captchaToken}
             />
 
             <View style={styles.dividerContainer}>

@@ -54,10 +54,10 @@ export default function SignUp() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fullNameError, setFullNameError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [termsError, setTermsError] = useState<string | null>(null);
+  const [fullNameError, setFullNameError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+  const [termsError, setTermsError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateFullName = (name: string) => {
@@ -65,7 +65,7 @@ export default function SignUp() {
       setFullNameError('Name is too short');
       return false;
     }
-    setFullNameError(null);
+    setFullNameError(undefined);
     return true;
   };
 
@@ -78,7 +78,7 @@ export default function SignUp() {
       setEmailError('Please enter a valid email address');
       return false;
     }
-    setEmailError(null);
+    setEmailError(undefined);
     return true;
   };
 
@@ -90,7 +90,7 @@ export default function SignUp() {
       setPasswordError('Password must be at least 8 characters');
       return false;
     }
-    setPasswordError(null);
+    setPasswordError(undefined);
     return true;
   };
 
@@ -99,7 +99,7 @@ export default function SignUp() {
       setTermsError('You must accept the Terms and Privacy Policy');
       return false;
     }
-    setTermsError(null);
+    setTermsError(undefined);
     return true;
   };
 
@@ -249,6 +249,7 @@ export default function SignUp() {
               onPress={handleSignUp}
               loading={loading}
               disabled={loading || !captchaToken}
+              showSpinnerWhenDisabled={!captchaToken}
             />
 
             <View style={styles.dividerContainer}>

@@ -42,8 +42,8 @@ export default function ForgotPassword() {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [isSuccess, setIsSuccess] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
@@ -56,12 +56,12 @@ export default function ForgotPassword() {
       setEmailError('Please enter a valid email address');
       return false;
     }
-    setEmailError(null);
+    setEmailError(undefined);
     return true;
   };
 
   const handleResetPassword = async () => {
-    setError(null);
+    setError(undefined);
     
     const isEmailValid = validateEmail(email);
     
@@ -127,7 +127,7 @@ export default function ForgotPassword() {
                 <Turnstile
                   onVerify={(token) => {
                     setCaptchaToken(token);
-                    setError(null);
+                    setError(undefined);
                   }}
                 />
 
@@ -142,6 +142,7 @@ export default function ForgotPassword() {
                   onPress={handleResetPassword}
                   loading={loading}
                   disabled={loading || !captchaToken}
+                  showSpinnerWhenDisabled={!captchaToken}
                 />
               </>
             ) : (

@@ -6,7 +6,8 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  StyleProp
+  StyleProp,
+  View
 } from 'react-native';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline';
@@ -20,6 +21,7 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
+  showSpinnerWhenDisabled?: boolean;
 }
 
 interface Styles {
@@ -34,6 +36,7 @@ interface Styles {
   disabled: ViewStyle;
   disabledText: TextStyle;
   buttonWithIcon: ViewStyle;
+  spinnerWithTextContainer: ViewStyle;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -44,7 +47,8 @@ const Button: React.FC<ButtonProps> = ({
   loading = false,
   style,
   textStyle,
-  icon
+  icon,
+  showSpinnerWhenDisabled = false
 }) => {
   const getButtonStyle = () => {
     if (disabled) return [styles.button, styles.disabled, style];
@@ -84,6 +88,8 @@ const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const spinnerColor = variant === 'outline' ? '#2E7D32' : '#FFFFFF';
+  
   return (
     <TouchableOpacity
       style={[getButtonStyle(), icon ? styles.buttonWithIcon : null]}
@@ -94,8 +100,16 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator 
           size="small" 
-          color={variant === 'outline' ? '#2E7D32' : '#FFFFFF'} 
+          color={spinnerColor} 
         />
+      ) : disabled && showSpinnerWhenDisabled ? (
+        <View style={styles.spinnerWithTextContainer}>
+          <ActivityIndicator 
+            size="small" 
+            color={spinnerColor} 
+          />
+          <Text style={getTextStyle()}>{title}</Text>
+        </View>
       ) : (
         <>
           {icon}
@@ -148,6 +162,12 @@ const styles = StyleSheet.create<Styles>({
     color: '#777777',
   },
   buttonWithIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  spinnerWithTextContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
