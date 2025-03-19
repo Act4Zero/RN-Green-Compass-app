@@ -5,9 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
-// Debug flag - disable verbose logging to prevent terminal flood
-const DEBUG = false; // Set to false to prevent excessive logging
-
 // Get the environment variables from Expo Constants or use hardcoded values as fallback
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
@@ -126,21 +123,6 @@ const supabase = createClient(
     },
   }
 );
-
-// Set up auth state change listener with enhanced logging
-supabase.auth.onAuthStateChange((event, session) => {
-  if (DEBUG) {
-    console.log(`[Auth] Event: ${event}`);
-    console.log(`[Auth] Session exists: ${!!session}`);
-    
-    if (session) {
-      console.log(`[Auth] User: ${session.user.email}`);
-      const expiresAt = new Date(session.expires_at! * 1000);
-      console.log(`[Auth] Session expires: ${expiresAt.toISOString()}`);
-      console.log(`[Auth] Time until expiry: ${Math.floor((expiresAt.getTime() - Date.now()) / 1000 / 60)} minutes`);
-    }
-  }
-});
 
 // Helper function to check and refresh session if needed
 export const ensureValidSession = async () => {

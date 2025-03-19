@@ -17,10 +17,6 @@ type AuthContextType = {
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
-  signInWithGoogle: () => Promise<{
-    error: Error | null;
-    data: any | null;
-  }>;
   signOut: () => Promise<{ error: Error | null }>;
   refreshSession: () => Promise<{
     error: Error | null;
@@ -40,9 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const appStateRef = useRef<AppStateStatus>(Platform.OS === 'web' ? 'active' : AppState.currentState);
   const sessionRetryCount = useRef(0);
   const maxRetries = 3;
-  
-  // Debug flag - set to true for verbose logging in development
-  const DEBUG = __DEV__;
 
   useEffect(() => {
     // Enhanced session retrieval with retry logic
@@ -63,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Implement retry logic
           if (retryCount < maxRetries) {
-            if (DEBUG) console.log(`Retrying session fetch (${retryCount + 1}/${maxRetries})...`);
             // Exponential backoff: 1s, 2s, 4s
             const delay = Math.pow(2, retryCount) * 1000;
             setTimeout(() => getSession(retryCount + 1), delay);
@@ -71,7 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        if (DEBUG) console.log('Session retrieved:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         sessionRetryCount.current = 0; // Reset retry counter on success
@@ -86,8 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Subscribe to auth changes with enhanced logging
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (DEBUG) console.log(`Auth state changed: ${event}, session exists: ${!!session}`);
-      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -104,7 +93,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         appStateRef.current.match(/inactive|background/) && 
         nextAppState === 'active'
       ) {
-        if (DEBUG) console.log('App has come to the foreground, refreshing session');
         getSession();
       }
       appStateRef.current = nextAppState;
@@ -199,16 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
-        
-        // Double-check that the session was properly stored
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (DEBUG) {
-          console.log('Session after sign in:', !!sessionData.session);
-          if (sessionData.session) {
-            const expiresAt = new Date(sessionData.session.expires_at! * 1000);
-            console.log(`Session expires at: ${expiresAt.toISOString()}`);
-          }
-        }
       }
       
       return { data, error };
@@ -230,18 +208,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign in with Google function
-  const signInWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      });
-      return { data, error };
-    } catch (error) {
-      return { data: null, error: error as Error };
-    }
-  };
-
   // Function to manually refresh the session
   const refreshSession = async () => {
     try {
@@ -256,7 +222,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.session) {
         setSession(data.session);
         setUser(data.session.user);
-        if (DEBUG) console.log('Session manually refreshed successfully');
       }
       
       return { data, error };
@@ -276,7 +241,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionError,
     signUp,
     signIn,
-    signInWithGoogle,
     signOut,
     refreshSession,
   };

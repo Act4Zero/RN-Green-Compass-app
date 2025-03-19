@@ -43,7 +43,7 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signIn, signInWithGoogle, refreshSession } = useAuth();
+  const { signIn, refreshSession } = useAuth();
   
   // Debug flag - set to true for verbose logging in development
   const DEBUG = __DEV__;
