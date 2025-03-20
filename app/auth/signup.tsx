@@ -71,23 +71,56 @@ export default function SignUp() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateFullName = (name: string) => {
-    if (name && name.length < 2) {
+    // Trim the name to remove any leading/trailing whitespace
+    const trimmedName = name.trim();
+    
+    if (!trimmedName) {
+      setFullNameError('Name is required');
+      return false;
+    } else if (trimmedName.length < 2) {
       setFullNameError('Name is too short');
       return false;
+    } else if (trimmedName.length > 100) {
+      setFullNameError('Name is too long');
+      return false;
     }
+    
+    // Check for potentially dangerous characters or script tags
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(trimmedName)) {
+      setFullNameError('Name contains invalid characters');
+      return false;
+    }
+    
+    // Only allow letters, spaces, hyphens, and apostrophes in names
+    const nameRegex = /^[\p{L}\s\-']+$/u;
+    if (!nameRegex.test(trimmedName)) {
+      setFullNameError('Name contains invalid characters');
+      return false;
+    }
+    
     setFullNameError(undefined);
     return true;
   };
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!email) {
+    // Trim the email to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Strict email regex that only allows standard email format
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
+    } else if (trimmedEmail.length > 255) {
+      setEmailError('Email is too long');
+      return false;
     }
+    
     setEmailError(undefined);
     return true;
   };
@@ -99,7 +132,29 @@ export default function SignUp() {
     } else if (password.length < 8) {
       setPasswordError('Password must be at least 8 characters');
       return false;
+    } else if (password.length > 100) {
+      setPasswordError('Password is too long');
+      return false;
     }
+    
+    // Check for potentially dangerous characters
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(password)) {
+      setPasswordError('Password contains invalid characters');
+      return false;
+    }
+    
+    // Enforce password strength
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    if (!(hasUpperCase && hasLowerCase && (hasNumbers || hasSpecialChars))) {
+      setPasswordError('Password must include uppercase, lowercase, and numbers or special characters');
+      return false;
+    }
+    
     setPasswordError(undefined);
     return true;
   };
@@ -129,8 +184,12 @@ export default function SignUp() {
   const handleSignUp = async () => {
     setError(null);
     
-    const isFullNameValid = validateFullName(fullName);
-    const isEmailValid = validateEmail(email);
+    // Sanitize inputs before validation
+    const sanitizedFullName = fullName.trim();
+    const sanitizedEmail = email.trim();
+    
+    const isFullNameValid = validateFullName(sanitizedFullName);
+    const isEmailValid = validateEmail(sanitizedEmail);
     const isPasswordValid = validatePassword(password);
     const areTermsAccepted = validateTerms();
     
@@ -142,7 +201,7 @@ export default function SignUp() {
     
     try {
       // First attempt at signup
-      const { data, error } = await signUp(email, password, captchaToken || undefined);
+      const { data, error } = await signUp(sanitizedEmail, password, captchaToken || undefined);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -163,7 +222,7 @@ export default function SignUp() {
         
         // Try to sign in immediately after signup to establish a session
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: sanitizedEmail,
           password
         });
         

@@ -243,16 +243,41 @@ export default function LogHabit() {
     }
   };
 
+  // Validate notes to prevent script injection and ensure proper format
+  const validateNotes = (notes: string) => {
+    // Check for potentially dangerous characters or script tags
+    const dangerousCharsRegex = /<script|<\/?[a-z]+[^>]*>|javascript:|onerror=|onclick=|onload=/i;
+    if (dangerousCharsRegex.test(notes)) {
+      return false;
+    }
+    
+    // Limit notes length to prevent excessive data
+    if (notes.length > 500) {
+      return false;
+    }
+    
+    return true;
+  };
+  
   const handleLogHabit = async () => {
     if (!selectedHabit) {
       Alert.alert('Please select a habit to log');
+      return;
+    }
+    
+    // Sanitize notes before saving
+    const sanitizedNotes = notes ? notes.trim() : '';
+    
+    // Validate notes if they exist
+    if (sanitizedNotes && !validateNotes(sanitizedNotes)) {
+      Alert.alert('Invalid Input', 'Notes contain invalid characters or are too long. Please revise.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await logCompletedHabit(selectedHabit.id, quantity, notes);
+      await logCompletedHabit(selectedHabit.id, quantity, sanitizedNotes);
       
       // Show success toast briefly
       setShowToast(true);
@@ -466,10 +491,16 @@ export default function LogHabit() {
                 <Text style={styles.notesLabel}>Notes (Optional)</Text>
                 <Input
                   value={notes}
-                  onChangeText={setNotes}
-                  placeholder="Add any additional details..."
+                  onChangeText={(text) => {
+                    // Limit input length during typing
+                    if (text.length <= 500) {
+                      setNotes(text);
+                    }
+                  }}
+                  placeholder="Add any additional details... (max 500 characters)"
                   multiline
                   numberOfLines={3}
+                  maxLength={500} // Enforce character limit at the UI level
                 />
               </View>
               

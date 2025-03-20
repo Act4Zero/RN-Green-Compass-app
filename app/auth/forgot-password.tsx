@@ -51,14 +51,30 @@ export default function ForgotPassword() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!email) {
+    // Trim the email to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Strict email regex that only allows standard email format
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
+    } else if (trimmedEmail.length > 255) {
+      setEmailError('Email is too long');
+      return false;
     }
+    
+    // Check for potentially dangerous characters
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(trimmedEmail)) {
+      setEmailError('Email contains invalid characters');
+      return false;
+    }
+    
     setEmailError(undefined);
     return true;
   };
@@ -66,7 +82,10 @@ export default function ForgotPassword() {
   const handleResetPassword = async () => {
     setError(undefined);
     
-    const isEmailValid = validateEmail(email);
+    // Sanitize input before validation
+    const sanitizedEmail = email.trim();
+    
+    const isEmailValid = validateEmail(sanitizedEmail);
     
     if (!isEmailValid) {
       return;
@@ -76,7 +95,7 @@ export default function ForgotPassword() {
     
     try {
       // Include captcha token in the options object
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
         redirectTo: 'greencompass://reset-password',
         captchaToken: captchaToken || undefined,
       });

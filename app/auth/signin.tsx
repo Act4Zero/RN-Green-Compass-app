@@ -60,14 +60,23 @@ export default function SignIn() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!email) {
+    // Trim the email to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Strict email regex that only allows standard email format
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
+    } else if (trimmedEmail.length > 255) {
+      setEmailError('Email is too long');
+      return false;
     }
+    
     setEmailError(undefined);
     return true;
   };
@@ -76,7 +85,18 @@ export default function SignIn() {
     if (!password) {
       setPasswordError('Password is required');
       return false;
+    } else if (password.length > 100) {
+      setPasswordError('Password is too long');
+      return false;
     }
+    
+    // Check for potentially dangerous characters
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(password)) {
+      setPasswordError('Password contains invalid characters');
+      return false;
+    }
+    
     setPasswordError(undefined);
     return true;
   };
@@ -97,7 +117,10 @@ export default function SignIn() {
   const handleSignIn = async () => {
     setError(undefined);
     
-    const isEmailValid = validateEmail(email);
+    // Sanitize inputs before validation
+    const sanitizedEmail = email.trim();
+    
+    const isEmailValid = validateEmail(sanitizedEmail);
     const isPasswordValid = validatePassword(password);
     
     if (!isEmailValid || !isPasswordValid) {
@@ -108,7 +131,7 @@ export default function SignIn() {
     
     try {
       // First attempt at signin
-      const { data, error } = await signIn(email, password, captchaToken || undefined);
+      const { data, error } = await signIn(sanitizedEmail, password, captchaToken || undefined);
       
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
