@@ -306,7 +306,7 @@ export default function HabitHistory() {
           <Text style={styles.logDescription}>{item.notes}</Text>
         )}
         <View style={styles.logDetails}>
-          <Text style={styles.logCO2}>{item.co2_saving} kg CO₂ saved</Text>
+          <Text style={styles.logCO2}>{Number(item.co2_saving).toFixed(2)} kg CO₂ saved</Text>
         </View>
       </View>
     );
