@@ -149,12 +149,8 @@ export default function SignIn() {
       // Ensure we have a valid session by explicitly refreshing it
       await ensureValidSession();
       
-      // Double-check session state with a manual refresh
-      const { error: refreshError } = await refreshSession();
-      if (refreshError) {
-        if (DEBUG) console.warn('Session refresh after signin failed:', refreshError.message);
-        // Continue anyway as this is just an extra precaution
-      }
+      // Note: We removed the duplicate refreshSession() call that was here
+      // as ensureValidSession() already refreshes the session when needed
       
       // Navigate to home screen
       router.replace('/home');
