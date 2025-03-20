@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  Image,
+  ImageStyle,
   ViewStyle,
   TextStyle,
   Linking,
@@ -26,6 +28,8 @@ interface Styles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
+  logoContainer: ViewStyle;
+  logo: ImageStyle;
   header: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
@@ -226,6 +230,14 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/GCLogo-no-bg.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+          
           <View style={styles.header}>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join Green Compass and start your sustainability journey</Text>
@@ -348,6 +360,13 @@ const styles = StyleSheet.create<Styles>({
     width: '100%',
     padding: 24,
     alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 24,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   header: {
     marginBottom: 32,
