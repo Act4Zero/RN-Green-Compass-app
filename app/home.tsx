@@ -364,6 +364,54 @@ export default function Home() {
     }
   };
 
+  // Validate goal name to prevent script injection and ensure proper format
+  const validateGoalName = (name: string) => {
+    const trimmedName = name.trim();
+    
+    // Check if empty
+    if (!trimmedName) {
+      setError('Goal name is required');
+      return false;
+    }
+    
+    // Check length
+    if (trimmedName.length > 50) {
+      setError('Goal name must be less than 50 characters');
+      return false;
+    }
+    
+    // Check for potentially dangerous characters or script tags
+    const dangerousCharsRegex = /<script|<\/?[a-z]+[^>]*>|javascript:|onerror=|onclick=|onload=/i;
+    if (dangerousCharsRegex.test(trimmedName)) {
+      setError('Goal name contains invalid characters');
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Validate numeric input to ensure it's a valid number and within reasonable range
+  const validateNumericInput = (value: string, fieldName: string, minValue: number, maxValue: number) => {
+    const numValue = parseFloat(value);
+    
+    if (isNaN(numValue)) {
+      setError(`${fieldName} must be a valid number`);
+      return false;
+    }
+    
+    if (numValue < minValue) {
+      setError(`${fieldName} must be at least ${minValue}`);
+      return false;
+    }
+    
+    if (numValue > maxValue) {
+      setError(`${fieldName} must be less than ${maxValue}`);
+      return false;
+    }
+    
+    return true;
+  };
+  
   // Save updated goal
   const handleSaveGoal = async () => {
     if (!selectedGoal) return;
@@ -372,26 +420,29 @@ export default function Home() {
     setError(null);
     
     try {
-      // Validate inputs
-      if (!editedGoalName.trim()) {
-        setError('Goal name is required');
+      // Sanitize inputs
+      const sanitizedGoalName = editedGoalName.trim();
+      const sanitizedGoalCategory = editedGoalCategory.trim();
+      
+      // Validate goal name
+      if (!validateGoalName(sanitizedGoalName)) {
         setUpdateLoading(false);
         return;
       }
       
+      // Validate target value (positive number, reasonable maximum)
+      if (!validateNumericInput(editedGoalTarget, 'Target value', 0.1, 1000000)) {
+        setUpdateLoading(false);
+        return;
+      }
       const targetValue = parseFloat(editedGoalTarget);
-      if (isNaN(targetValue) || targetValue <= 0) {
-        setError('Target value must be a positive number');
-        setUpdateLoading(false);
-        return;
-      }
       
-      const currentValue = parseFloat(editedGoalCurrent);
-      if (isNaN(currentValue) || currentValue < 0) {
-        setError('Current value must be a non-negative number');
+      // Validate current value (non-negative number, reasonable maximum)
+      if (!validateNumericInput(editedGoalCurrent, 'Current value', 0, 1000000)) {
         setUpdateLoading(false);
         return;
       }
+      const currentValue = parseFloat(editedGoalCurrent);
       
       // Calculate dates based on time frequency
       let startDate = selectedGoal.startDate;
@@ -419,10 +470,10 @@ export default function Home() {
         }
       }
       
-      // Prepare updates
+      // Prepare updates with sanitized values
       const updates = {
-        goal_name: editedGoalName.trim(),
-        category: editedGoalCategory.trim() || 'other',
+        goal_name: sanitizedGoalName,
+        category: sanitizedGoalCategory || 'other',
         target_value: targetValue,
         current_value: currentValue,
         start_date: startDate,
@@ -740,8 +791,15 @@ export default function Home() {
               <Text style={styles.modalLabel}>Goal Name</Text>
               <Input
                 value={editedGoalName}
-                onChangeText={setEditedGoalName}
-                placeholder="Enter goal name"
+                onChangeText={(text) => {
+                  // Limit input length during typing
+                  if (text.length <= 50) {
+                    setEditedGoalName(text);
+                  }
+                }}
+                placeholder="Enter goal name (max 50 characters)"
+                maxLength={50}
+                error={error && error.includes('Goal name') ? error : undefined}
               />
               
               <Text style={styles.modalLabel}>Category</Text>
@@ -778,9 +836,15 @@ export default function Home() {
               <Text style={styles.modalLabel}>Target Value</Text>
               <Input
                 value={editedGoalTarget}
-                onChangeText={setEditedGoalTarget}
-                placeholder="Enter target value"
+                onChangeText={(text) => {
+                  // Only allow numeric input with decimal point
+                  if (/^\d*\.?\d*$/.test(text)) {
+                    setEditedGoalTarget(text);
+                  }
+                }}
+                placeholder="Enter target value (positive number)"
                 keyboardType="numeric"
+                error={error && error.includes('Target value') ? error : undefined}
               />
               
               <Text style={styles.modalLabel}>Time Frequency</Text>

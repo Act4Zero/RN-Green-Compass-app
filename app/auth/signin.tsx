@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,19 +8,25 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  Image,
+  ImageStyle,
   ViewStyle,
   TextStyle,
+  BackHandler,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Turnstile from '../components/Turnstile';
+import { ensureValidSession } from '../lib/supabase';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
+  logoContainer: ViewStyle;
+  logo: ImageStyle;
   header: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
@@ -40,26 +46,38 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, refreshSession } = useAuth();
+  
+  // Debug flag - set to true for verbose logging in development
+  const DEBUG = __DEV__;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!email) {
+    // Trim the email to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Strict email regex that only allows standard email format
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
+    } else if (trimmedEmail.length > 255) {
+      setEmailError('Email is too long');
+      return false;
     }
-    setEmailError(null);
+    
+    setEmailError(undefined);
     return true;
   };
 
@@ -67,15 +85,42 @@ export default function SignIn() {
     if (!password) {
       setPasswordError('Password is required');
       return false;
+    } else if (password.length > 100) {
+      setPasswordError('Password is too long');
+      return false;
     }
-    setPasswordError(null);
+    
+    // Check for potentially dangerous characters
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(password)) {
+      setPasswordError('Password contains invalid characters');
+      return false;
+    }
+    
+    setPasswordError(undefined);
     return true;
   };
 
+  // Add back button handler to prevent accidental navigation during signin process
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (loading) {
+        // Prevent back navigation during loading
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [loading]);
+
   const handleSignIn = async () => {
-    setError(null);
+    setError(undefined);
     
-    const isEmailValid = validateEmail(email);
+    // Sanitize inputs before validation
+    const sanitizedEmail = email.trim();
+    
+    const isEmailValid = validateEmail(sanitizedEmail);
     const isPasswordValid = validatePassword(password);
     
     if (!isEmailValid || !isPasswordValid) {
@@ -85,7 +130,8 @@ export default function SignIn() {
     setLoading(true);
     
     try {
-      const { data, error } = await signIn(email, password, captchaToken || undefined);
+      // First attempt at signin
+      const { data, error } = await signIn(sanitizedEmail, password, captchaToken || undefined);
       
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
@@ -95,10 +141,19 @@ export default function SignIn() {
         } else {
           setError(error.message);
         }
-      } else {
-        console.log('Successfully signed in:', data?.user?.email);
-        router.replace('/home');
+        return;
       }
+      
+      if (DEBUG) console.log('Successfully signed in:', data?.user?.email);
+      
+      // Ensure we have a valid session by explicitly refreshing it
+      await ensureValidSession();
+      
+      // Note: We removed the duplicate refreshSession() call that was here
+      // as ensureValidSession() already refreshes the session when needed
+      
+      // Navigate to home screen
+      router.replace('/home');
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign in error:', err);
@@ -117,6 +172,14 @@ export default function SignIn() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/GCLogo-no-bg.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
           <View style={styles.header}>
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue to Green Compass</Text>
@@ -155,7 +218,7 @@ export default function SignIn() {
             <Turnstile
               onVerify={(token) => {
                 setCaptchaToken(token);
-                setError(null);
+                setError(undefined);
               }}
             />
 
@@ -170,6 +233,7 @@ export default function SignIn() {
               onPress={handleSignIn}
               loading={loading}
               disabled={loading || !captchaToken}
+              showSpinnerWhenDisabled={!captchaToken}
             />
 
             <View style={styles.dividerContainer}>
@@ -206,6 +270,13 @@ const styles = StyleSheet.create<Styles>({
     width: '100%',
     padding: 24,
     alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 24,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   header: {
     marginBottom: 32,

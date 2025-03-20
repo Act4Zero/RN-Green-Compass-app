@@ -3,11 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  Image,
+  ImageStyle,
   ViewStyle,
   TextStyle,
   Alert,
@@ -22,6 +23,8 @@ interface Styles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
+  logoContainer: ViewStyle;
+  logo: ImageStyle;
   header: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
@@ -42,28 +45,47 @@ export default function ForgotPassword() {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [isSuccess, setIsSuccess] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    if (!email) {
+    // Trim the email to remove any leading/trailing whitespace
+    const trimmedEmail = email.trim();
+    
+    // Strict email regex that only allows standard email format
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
+    } else if (trimmedEmail.length > 255) {
+      setEmailError('Email is too long');
+      return false;
     }
-    setEmailError(null);
+    
+    // Check for potentially dangerous characters
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(trimmedEmail)) {
+      setEmailError('Email contains invalid characters');
+      return false;
+    }
+    
+    setEmailError(undefined);
     return true;
   };
 
   const handleResetPassword = async () => {
-    setError(null);
+    setError(undefined);
     
-    const isEmailValid = validateEmail(email);
+    // Sanitize input before validation
+    const sanitizedEmail = email.trim();
+    
+    const isEmailValid = validateEmail(sanitizedEmail);
     
     if (!isEmailValid) {
       return;
@@ -73,7 +95,7 @@ export default function ForgotPassword() {
     
     try {
       // Include captcha token in the options object
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
         redirectTo: 'greencompass://reset-password',
         captchaToken: captchaToken || undefined,
       });
@@ -101,6 +123,13 @@ export default function ForgotPassword() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/images/GCLogo-no-bg.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
           <View style={styles.header}>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
@@ -127,7 +156,7 @@ export default function ForgotPassword() {
                 <Turnstile
                   onVerify={(token) => {
                     setCaptchaToken(token);
-                    setError(null);
+                    setError(undefined);
                   }}
                 />
 
@@ -142,6 +171,7 @@ export default function ForgotPassword() {
                   onPress={handleResetPassword}
                   loading={loading}
                   disabled={loading || !captchaToken}
+                  showSpinnerWhenDisabled={!captchaToken}
                 />
               </>
             ) : (
@@ -186,6 +216,13 @@ const styles = StyleSheet.create<Styles>({
     width: '100%',
     padding: 24,
     alignItems: 'center',
+  },
+  logoContainer: {
+    marginBottom: 24,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   header: {
     marginBottom: 32,

@@ -31,6 +31,7 @@ interface InputProps {
   showPasswordStrength?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
+  maxLength?: number; // Maximum character length for input
 }
 
 interface Styles {
@@ -66,6 +67,7 @@ const Input: React.FC<InputProps> = ({
   showPasswordStrength = false,
   multiline = false,
   numberOfLines = 1,
+  maxLength,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -167,6 +169,7 @@ const Input: React.FC<InputProps> = ({
           autoComplete={autoComplete}
           multiline={multiline}
           numberOfLines={multiline ? numberOfLines : 1}
+          maxLength={maxLength}
         />
       )}
       

@@ -15,13 +15,13 @@ module.exports = {
   slug: "GreenCompass",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/images/GCLogo-no-bg.png",
   scheme: "greencompass",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.anonymous.GreenCompass",
+    bundleIdentifier: "com.act4zero.GreenCompass",
     config: {
       googleSignIn: {
         reservedClientId: EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
@@ -30,22 +30,22 @@ module.exports = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./assets/images/GCLogo-no-bg.png",
       backgroundColor: "#ffffff"
     },
-    package: "com.anonymous.GreenCompass"
+    package: "com.act4zero.GreenCompass"
   },
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/favicon.png"
+    favicon: "./assets/images/GCLogo-no-bg.png"
   },
   plugins: [
     "expo-router",
     [
       "expo-splash-screen",
       {
-        "image": "./assets/images/splash-icon.png",
+        "image": "./assets/images/GCLogo-no-bg.png",
         "imageWidth": 200,
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"
