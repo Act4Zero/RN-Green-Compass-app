@@ -1,10 +1,17 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "./context/AuthContext";
 import HabitContextModule from "./context/HabitContext/HabitContext";
+import { useEffect } from 'react';
+import analyticsService from './services/analyticsService';
 
 const { HabitProvider } = HabitContextModule;
 
 export default function RootLayout() {
+  // Initialize analytics when the app starts
+  useEffect(() => {
+    analyticsService.initialize();
+  }, []);
+
   return (
     <AuthProvider>
       <HabitProvider>

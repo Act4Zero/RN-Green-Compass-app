@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useRef } from 'r
 import { Session, User } from '@supabase/supabase-js';
 import supabase, { ensureValidSession } from '../lib/supabase';
 import { AppState, AppStateStatus, Platform } from 'react-native';
+import analyticsService from '../services/analyticsService';
 
 // Define the shape of the auth context
 type AuthContextType = {
@@ -140,6 +141,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.user);
         
+        // Track signup event in Google Analytics
+        analyticsService.trackSignUp('email');
+        if (data.user?.id) {
+          analyticsService.setUserId(data.user.id);
+        }
+        
         // Ensure we have a valid session
         await ensureValidSession();
       } else {
@@ -153,6 +160,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Set the user and session state directly
           setSession(signInData.session);
           setUser(signInData.user);
+          
+          // Track login event in Google Analytics
+          analyticsService.trackLogin('email');
+          if (signInData.user?.id) {
+            analyticsService.setUserId(signInData.user.id);
+          }
         }
       }
       
@@ -187,6 +200,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
+        
+        // Track login event in Google Analytics
+        analyticsService.trackLogin('email');
+        if (data.user?.id) {
+          analyticsService.setUserId(data.user.id);
+        }
       }
       
       return { data, error };
@@ -201,6 +220,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out function
   const signOut = async () => {
     try {
+      // Track logout event in Google Analytics before signing out
+      analyticsService.trackEvent('logout');
+      analyticsService.setUserId(null);
+      
       const { error } = await supabase.auth.signOut();
       return { error };
     } catch (error) {
