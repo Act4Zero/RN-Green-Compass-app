@@ -304,7 +304,7 @@ export default function SignUp() {
 
           <View style={styles.form}>
             <Input
-              label="Full Name (optional)"
+              label="Full Name"
               value={fullName}
               onChangeText={setFullName}
               placeholder="Enter your full name"

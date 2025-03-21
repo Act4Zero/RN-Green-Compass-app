@@ -41,13 +41,12 @@ export default function SignupSuccess() {
 
         <Text style={styles.title}>Account Created!</Text>
         <Text style={styles.message}>
-          Your Green Compass account has been successfully created. You're now ready to start your
-          sustainability journey!
+          Your Green Compass account has been successfully created. Please head over to your inbox to confirm your email address. Once confirmed, you're ready to start your sustainability journey!
         </Text>
 
         <View style={styles.buttonContainer}>
           <Button
-            title="Continue to Home"
+            title="Continue to Sign In"
             onPress={handleContinue}
             variant="primary"
           />
