@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from './Button';
+import analyticsService from '../services/analyticsService';
 
 interface Styles {
   container: ViewStyle;
@@ -32,6 +33,18 @@ const Welcome: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track navigation to signup page
+  const handleSignUpPress = () => {
+    analyticsService.trackEvent('welcome_signup_button_press');
+    router.push('/auth/signup');
+  };
+  
+  // Track navigation to login page
+  const handleLoginPress = () => {
+    analyticsService.trackEvent('welcome_login_button_press');
+    router.push('/auth/signin');
+  };
 
   return (
     <View style={styles.container}>
@@ -53,13 +66,13 @@ const Welcome: React.FC = () => {
           <Button 
             title="Sign Up" 
             variant="primary" 
-            onPress={() => router.push('/auth/signup')} 
+            onPress={handleSignUpPress} 
           />
 
           <Button 
             title="Login" 
             variant="outline" 
-            onPress={() => router.push('/auth/signin')} 
+            onPress={handleLoginPress} 
           />
           
           {loading && (

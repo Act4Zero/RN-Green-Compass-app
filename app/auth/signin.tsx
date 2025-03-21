@@ -20,6 +20,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Turnstile from '../components/Turnstile';
 import { ensureValidSession } from '../lib/supabase';
+import analyticsService from '../services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -47,6 +48,11 @@ export default function SignIn() {
   const isTabletOrLarger = width > 768;
   const router = useRouter();
   const { signIn, refreshSession } = useAuth();
+  
+  // Track screen view when component mounts
+  useEffect(() => {
+    analyticsService.trackScreenView('SignIn');
+  }, []);
   
   // Debug flag - set to true for verbose logging in development
   const DEBUG = __DEV__;

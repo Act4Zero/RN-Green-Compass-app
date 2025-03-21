@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
 import useHabitStats from './hooks/useHabitStats';
 import useGoals from './hooks/useGoals';
+import analyticsService from './services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -103,6 +104,18 @@ export default function Home() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track screen view when component mounts
+  useEffect(() => {
+    analyticsService.trackScreenView('Home');
+    // Set user properties for better analytics segmentation
+    if (user) {
+      analyticsService.setUserProperties({
+        userEmail: user.email || 'unknown',
+        userCreatedAt: user.created_at || 'unknown'
+      });
+    }
+  }, [user]);
 
   // Guard state to prevent accidental "pop" or back navigation
   // until we explicitly allow it (for sign out, etc.).

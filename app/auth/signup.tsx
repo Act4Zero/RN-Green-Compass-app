@@ -23,6 +23,7 @@ import Input from '../components/Input';
 import Turnstile from '../components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
 import supabase, { ensureValidSession } from '../lib/supabase';
+import analyticsService from '../services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -54,6 +55,11 @@ export default function SignUp() {
   const isTabletOrLarger = width > 768;
   const router = useRouter();
   const { signUp, refreshSession } = useAuth();
+  
+  // Track screen view when component mounts
+  useEffect(() => {
+    analyticsService.trackScreenView('SignUp');
+  }, []);
   
   // Debug flag - set to true for verbose logging in development
   const DEBUG = __DEV__;
