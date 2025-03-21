@@ -373,3 +373,19 @@
   - Added BackHandler prevention during authentication operations
   - Fixed issue where new users were automatically logged out after initial login
   - Implemented explicit session refresh after signup/signin to ensure persistence  
+
+## 2025-03-21
+- **Implemented Google Analytics Integration**
+  - Added Firebase Analytics SDK for React Native (@react-native-firebase/analytics and @react-native-firebase/app)
+  - Created centralized analytics service (app/services/analyticsService.ts) with methods for:
+    - Screen view tracking
+    - Event tracking
+    - User identification
+    - User property tracking
+  - Integrated analytics tracking in key components:
+    - Welcome screen (button clicks tracking)
+    - Authentication flows (signup, signin, signout)
+    - Home screen (with user properties)
+  - Added environment variables for Google Analytics in both development and production environments
+  - Configured the analytics service to share the same Google Analytics property ID as the landing page
+  - Updated app initialization to initialize analytics on app startup  
