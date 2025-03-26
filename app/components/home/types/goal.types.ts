@@ -1,5 +1,7 @@
+import { useState } from 'react';
+
 // Time-bound frequency options for goals
-export type TimeFrequency = 'daily' | 'weekly' | 'monthly' | 'none';
+export type TimeFrequency = 'daily' | 'weekly' | 'monthly' | 'one-time';
 
 // Enhanced goal type with time-bound information
 export interface EnhancedGoal {
@@ -27,4 +29,16 @@ export interface DatabaseGoal {
   [key: string]: any; // Allow for additional fields
 }
 
-export default EnhancedGoal;
+export type FocusArea = {
+  id: string;
+  name: string;
+  icon: string;
+  category: string;
+};
+
+export const [focusAreas] = useState<FocusArea[]>([
+  { id: '1', name: 'Mobility', icon: 'bicycle-outline', category: 'Mobility' },
+  { id: '2', name: 'Food', icon: 'nutrition-outline', category: 'Food' },
+  { id: '3', name: 'Household Activities', icon: 'home-outline', category: 'Household Activities' },
+  { id: '4', name: 'Heating', icon: 'thermometer-outline', category: 'Heating' }
+]);

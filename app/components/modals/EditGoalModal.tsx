@@ -36,7 +36,7 @@ export default function EditGoalModal({
   const [editedGoalCategory, setEditedGoalCategory] = useState('');
   const [editedGoalTarget, setEditedGoalTarget] = useState('');
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
-  const [editedTimeFrequency, setEditedTimeFrequency] = useState<TimeFrequency>('none');
+  const [editedTimeFrequency, setEditedTimeFrequency] = useState<TimeFrequency>('one-time');
   const [error, setError] = useState<string | null>(null);
 
   // Reset form when goal changes
@@ -199,7 +199,7 @@ export default function EditGoalModal({
             
             <Text style={editGoalModalStyles.modalLabel}>Time Frequency</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
-              {(['none', 'daily', 'weekly', 'monthly'] as TimeFrequency[]).map((frequency) => (
+              {(['daily', 'weekly', 'monthly', 'one-time'] as TimeFrequency[]).map((frequency) => (
                 <TouchableOpacity 
                   key={frequency}
                   style={[

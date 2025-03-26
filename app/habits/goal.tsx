@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
-  ViewStyle,
-  TextStyle,
   Alert,
   TextInput,
 } from 'react-native';
@@ -18,37 +15,18 @@ import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import useGoals from '../hooks/useGoals';
-
-type FocusArea = {
-  id: string;
-  name: string;
-  icon: string;
-  category: string;
-};
-
-type FrequencyPeriod = 'daily' | 'weekly' | 'monthly' | 'one-time';
-
-// Map category names to icons for UI display
-const categoryIcons: Record<string, string> = {
-  'Mobility': 'bicycle-outline',
-  'Food': 'nutrition-outline',
-  'Household Activities': 'home-outline',
-  'Heating': 'thermometer-outline',
-  // Fallback icons for any other categories
-  'waste': 'trash-outline',
-  'energy': 'flash-outline',
-  'water': 'water-outline',
-  'lifestyle': 'person-outline',
-  'community': 'people-outline',
-  'other': 'options-outline'
-};
+import { goalStyles } from './styles/Goal.styles';
+import { focusAreas, TimeFrequency } from '../components/home/types/goal.types';
+import FocusAreasComponent from './components/FocusAreaComponent';
+import FrequencySelector from './components/FrequencySelectorProps';
+import GoalInput from './components/GoalInput';
 
 export default function Goal() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { createNewGoal, updateExistingGoal, userGoals, activeUserGoals, loading, error } = useGoals();
+  const { createNewGoal, loading, error } = useGoals();
   const { source } = useLocalSearchParams<{ source: string }>();
 
   // Add a useEffect to redirect if user is not authenticated
@@ -61,17 +39,9 @@ export default function Goal() {
       console.log('Authenticated user in onboarding:', user.id);
     }
   }, [user, authLoading, router]);
-
-  // Hardcoded focus areas
-  const [focusAreas] = useState<FocusArea[]>([
-    { id: '1', name: 'Mobility', icon: 'bicycle-outline', category: 'Mobility' },
-    { id: '2', name: 'Food', icon: 'nutrition-outline', category: 'Food' },
-    { id: '3', name: 'Household Activities', icon: 'home-outline', category: 'Household Activities' },
-    { id: '4', name: 'Heating', icon: 'thermometer-outline', category: 'Heating' }
-  ]);
   
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
-  const [frequency, setFrequency] = useState<FrequencyPeriod>('weekly');
+  const [frequency, setFrequency] = useState<TimeFrequency>('weekly');
   const [targetValue, setTargetValue] = useState(5);
   const [targetInputValue, setTargetInputValue] = useState<string>(targetValue.toString());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,11 +107,6 @@ export default function Goal() {
       // Ensure displayed value matches actual value (in case of bounds adjustment)
       setTargetInputValue(targetValue.toString());
     }
-  };
-
-  const handleSkip = () => {
-    // Skip onboarding and navigate to home screen
-    router.replace('/home');
   };
 
   const handleContinue = async () => {
@@ -261,170 +226,53 @@ export default function Goal() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={goalStyles.keyboardAvoidingContainer}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
     <ScrollView 
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={goalStyles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}> 
-        <View style={styles.header}>
+      <View style={[goalStyles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}> 
+        <View style={goalStyles.header}>
         <TouchableOpacity 
-              style={styles.backButton}
+              style={goalStyles.backButton}
               onPress={() => router.back()}
             >
               <Ionicons name="arrow-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
-          <Text style={styles.title}>Set Your Sustainability Goals</Text>
+          <Text style={goalStyles.title}>Set Your Sustainability Goals</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What would you like to focus on?</Text>
-          <Text style={styles.sectionSubtitle}>Select one area to focus on (you can change this later)</Text>
+        <View style={goalStyles.section}>
+          <Text style={goalStyles.sectionTitle}>What would you like to focus on?</Text>
+          <Text style={goalStyles.sectionSubtitle}>Select one area to focus on (you can change this later)</Text>
 
-          <View style={styles.optionsContainer}>
-            {focusAreas.map((area) => (
-              <TouchableOpacity
-                key={area.id}
-                style={[
-                  styles.optionItem,
-                  selectedFocusAreas.includes(area.id) && styles.optionItemSelected,
-                ]}
-                onPress={() => toggleFocusArea(area.id)}
-              >
-                <View style={[styles.optionIcon, selectedFocusAreas.includes(area.id) && styles.optionIconSelected]}>
-                  <Ionicons
-                    name={area.icon as any}
-                    size={24}
-                    color={selectedFocusAreas.includes(area.id) ? '#2E7D32' : '#757575'}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: selectedFocusAreas.includes(area.id) ? '#FFFFFF' : '#333333' },
-                  ]}
-                >
-                  {area.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <FocusAreasComponent
+            focusAreas={focusAreas}
+            selectedFocusAreas={selectedFocusAreas}
+            toggleFocusArea={toggleFocusArea}
+          />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How often would you like to track your progress?</Text>
-          
-          <View style={styles.frequencyContainer}>
-            <TouchableOpacity
-              style={[
-                styles.frequencyOption,
-                frequency === 'daily' && styles.frequencyOptionSelected,
-              ]}
-              onPress={() => setFrequency('daily')}
-            >
-              <Text
-                style={[
-                  styles.frequencyText,
-                  { color: frequency === 'daily' ? '#FFFFFF' : '#333333' },
-                ]}
-              >
-                Daily
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.frequencyOption,
-                frequency === 'weekly' && styles.frequencyOptionSelected,
-              ]}
-              onPress={() => setFrequency('weekly')}
-            >
-              <Text
-                style={[
-                  styles.frequencyText,
-                  { color: frequency === 'weekly' ? '#FFFFFF' : '#333333' },
-                ]}
-              >
-                Weekly
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.frequencyOption,
-                frequency === 'monthly' && styles.frequencyOptionSelected,
-              ]}
-              onPress={() => setFrequency('monthly')}
-            >
-              <Text
-                style={[
-                  styles.frequencyText,
-                  { color: frequency === 'monthly' ? '#FFFFFF' : '#333333' },
-                ]}
-              >
-                Monthly
-              </Text>
-            </TouchableOpacity>
+        <FrequencySelector
+          frequency={frequency}
+          setFrequency={setFrequency}
+        />
 
-            <TouchableOpacity
-              style={[
-                styles.frequencyOption,
-                frequency === 'one-time' && styles.frequencyOptionSelected,
-              ]}
-              onPress={() => setFrequency('one-time')}
-            >
-              <Text
-                style={[
-                  styles.frequencyText,
-                  { color: frequency === 'one-time' ? '#FFFFFF' : '#333333' },
-                ]}
-              >
-                One-Time
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Set your target number of actions</Text>
-          
-          <View style={styles.goalInputContainer}>
-            <TouchableOpacity
-              style={styles.goalNumberButton}
-              onPress={decrementTarget}
-            >
-              <Text style={styles.goalNumberButtonText}>-</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.goalNumberContainer}>
-              <TextInput
-                style={styles.goalNumber}
-                value={targetInputValue}
-                onChangeText={handleTargetInputChange}
-                onBlur={handleTargetInputBlur}
-                keyboardType="number-pad"
-                maxLength={2}
-                textAlign="center"
-                textAlignVertical="center"
-              />
-            </View>
-            
-            <TouchableOpacity
-              style={styles.goalNumberButton}
-              onPress={incrementTarget}
-            >
-              <Text style={styles.goalNumberButtonText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <GoalInput
+          targetInputValue={targetInputValue}
+          decrementTarget={decrementTarget}
+          incrementTarget={incrementTarget}
+          handleTargetInputChange={handleTargetInputChange}
+          handleTargetInputBlur={handleTargetInputBlur}
+        />
 
         {selectedFocusAreas.length > 0 && (
-          <View style={styles.summaryContainer}>
-            <Text style={styles.summaryText}>
-              Your initial target: <Text style={styles.summaryHighlight}>{targetValue} actions {frequency !== 'one-time' ? frequency : ''}</Text>
+          <View style={goalStyles.summaryContainer}>
+            <Text style={goalStyles.summaryText}>
+              Your initial target: <Text style={goalStyles.summaryHighlight}>{targetValue} actions {frequency !== 'one-time' ? frequency : ''}</Text>
               {selectedFocusAreas.length === 1 
                 ? ` to ${focusAreas.find(a => a.id === selectedFocusAreas[0])?.name.toLowerCase()}`
                 : ` across ${selectedFocusAreas.length} focus areas`}
@@ -445,217 +293,3 @@ export default function Goal() {
     </KeyboardAvoidingView>
   );
 }
-
-interface Styles {
-  keyboardAvoidingContainer: ViewStyle;
-  scrollContent: ViewStyle;
-  content: ViewStyle;
-  backButton: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
-  section: ViewStyle;
-  sectionTitle: TextStyle;
-  sectionSubtitle: TextStyle;
-  optionsContainer: ViewStyle;
-  optionItem: ViewStyle;
-  optionItemSelected: ViewStyle;
-  optionText: TextStyle;
-  optionIcon: ViewStyle;
-  optionIconSelected: ViewStyle;
-  frequencyContainer: ViewStyle;
-  frequencyOption: ViewStyle;
-  frequencyOptionSelected: ViewStyle;
-  frequencyText: TextStyle;
-  goalInputContainer: ViewStyle;
-  goalNumberContainer: ViewStyle;
-  goalNumber: TextStyle;
-  goalNumberButton: ViewStyle;
-  goalNumberButtonText: TextStyle;
-  summaryContainer: ViewStyle;
-  summaryText: TextStyle;
-  summaryHighlight: TextStyle;
-  buttonContainer: ViewStyle;
-  skipContainer: ViewStyle;
-  skipButton: ViewStyle;
-  skipText: TextStyle;
-}
-
-const styles = StyleSheet.create<Styles>({
-  keyboardAvoidingContainer: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 16,
-  },
-  content: {
-    padding: 24,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#555555',
-    lineHeight: 24,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#555555',
-    marginBottom: 16,
-  },
-  optionsContainer: {
-    flexDirection: 'column',
-    gap: 12,
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  optionItemSelected: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#2E7D32',
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-  optionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  optionIconSelected: {
-    backgroundColor: '#FFFFFF',
-  },
-  frequencyContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  frequencyOption: {
-    flex: 1,
-    minWidth: '22%',
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginHorizontal: 2,
-    alignItems: 'center',
-  },
-  frequencyOptionSelected: {
-    backgroundColor: '#2E7D32',
-    borderColor: '#2E7D32',
-  },
-  frequencyText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  goalInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  goalNumberContainer: {
-    width: 80,
-    height: 60,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  goalNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    width: '100%',
-    height: '100%',
-    textAlignVertical: 'center',
-    textAlign: 'center',
-    paddingVertical: 0,
-  },
-  goalNumberButton: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  goalNumberButtonText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-  },
-  summaryContainer: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  summaryText: {
-    fontSize: 16,
-    color: '#333333',
-    lineHeight: 24,
-  },
-  summaryHighlight: {
-    fontWeight: 'bold',
-    color: '#2E7D32',
-  },
-  buttonContainer: {
-    marginTop: 24,
-    marginBottom: 40,
-  },
-  skipContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 8,
-  },
-  skipButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-  },
-  skipText: {
-    color: '#666',
-    marginRight: 4,
-    fontSize: 14,
-  },
-});
