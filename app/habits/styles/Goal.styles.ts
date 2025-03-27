@@ -1,6 +1,7 @@
 import { ViewStyle, TextStyle, StyleSheet } from "react-native";
 
 export interface Styles {
+    container: ViewStyle;
     keyboardAvoidingContainer: ViewStyle;
     scrollContent: ViewStyle;
     content: ViewStyle;
@@ -36,6 +37,11 @@ export interface Styles {
   }
 
   export const goalStyles = StyleSheet.create<Styles>({
+    container: {
+      flexGrow: 1,
+      padding: 16,
+      backgroundColor: '#F5F5F5',
+    },
     keyboardAvoidingContainer: {
       flex: 1,
       backgroundColor: '#F5F5F5',
@@ -199,19 +205,17 @@ export interface Styles {
       marginBottom: 40,
     },
     skipContainer: {
-      alignItems: 'flex-end',
-      marginBottom: 8,
+      marginTop: 16,
+      alignItems: 'center',
     },
     skipButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
       padding: 8,
     },
     skipText: {
-      color: '#666',
-      marginRight: 4,
       fontSize: 14,
+      color: '#2E7D32',
+      textDecorationLine: 'underline',
     },
   });
-    
+
 export default goalStyles;

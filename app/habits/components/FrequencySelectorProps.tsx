@@ -5,10 +5,10 @@ import { TimeFrequency } from '../../components/home/types/goal.types';
 
 interface FrequencySelectorProps {
   frequency: TimeFrequency;
-  setFrequency: React.Dispatch<React.SetStateAction<TimeFrequency>>;
+  onFrequencyChange: (frequency: TimeFrequency) => void;
 }
 
-const FrequencySelector: React.FC<FrequencySelectorProps> = ({ frequency, setFrequency }) => {
+const FrequencySelector: React.FC<FrequencySelectorProps> = ({ frequency, onFrequencyChange }) => {
   const options: TimeFrequency[] = ['daily', 'weekly', 'monthly', 'one-time'];
 
   return (
@@ -24,7 +24,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ frequency, setFre
               goalStyles.frequencyOption,
               frequency === option && goalStyles.frequencyOptionSelected,
             ]}
-            onPress={() => setFrequency(option)}
+            onPress={() => onFrequencyChange(option)}
           >
             <Text
               style={[
