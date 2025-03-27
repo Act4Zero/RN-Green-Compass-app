@@ -31,7 +31,7 @@ import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types'
 export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
-  const { user, signOut } = useAuth();
+  const { user, signOut, authLoading } = useAuth();
   const router = useRouter();
   
   // State for UI
@@ -42,6 +42,28 @@ export default function Home() {
   
   // Guard state to prevent accidental "pop" or back navigation
   const [shouldPreventBack, setShouldPreventBack] = useState(true);
+
+  // Add authentication redirect using useFocusEffect
+  useFocusEffect(
+    useCallback(() => {
+      const checkAuth = async () => {
+        try {
+          if (!authLoading && !user) {
+            console.log('No authenticated user found, redirecting to signin');
+            await router.replace('/auth/signin');
+          } else if (!authLoading && user) {
+            console.log('Authenticated user:', user.id);
+          }
+        } catch (error) {
+          console.error('Navigation error:', error);
+        }
+      };
+
+      // Add slight delay to ensure navigation is ready
+      const timeoutId = setTimeout(checkAuth, 100);
+      return () => clearTimeout(timeoutId);
+    }, [user, authLoading, router])
+  );
 
   // Analytics tracking
   useEffect(() => {
