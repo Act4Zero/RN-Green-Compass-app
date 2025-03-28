@@ -14,6 +14,7 @@ export function CategoryFilters({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Filter by Category</Text>
+      <View style={{ paddingBottom: 16 }} />
 
       <ScrollView
         horizontal

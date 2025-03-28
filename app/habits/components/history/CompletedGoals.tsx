@@ -14,6 +14,7 @@ export function CompletedGoals({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Completed Goals</Text>
+      <View style={{ paddingBottom: 16 }} />
 
       {completedGoals.length > 0 ? (
         <FlatList

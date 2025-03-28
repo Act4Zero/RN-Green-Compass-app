@@ -25,8 +25,6 @@ export function StatsCalendar({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Calendar</Text>
-
       <View style={styles.calendarContainer}>
         <View style={styles.calendarHeader}>
           <TouchableOpacity
