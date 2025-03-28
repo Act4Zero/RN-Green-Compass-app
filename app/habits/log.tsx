@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import SubcategoriesSection from './components/log/SubcategoriesSection';
 import HabitsSection from './components/log/HabitsSection';
 import SelectedHabitSection from './components/log/SelectedHabitSection';
 import useLogManager from './hooks/useLogManager';
+import { useAuth } from '../context/AuthContext';
 
 // Styles for this component
 const styles = LogStyles;
@@ -23,7 +24,7 @@ const styles = LogStyles;
 export default function LogHabit() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
-  
+  const { user, loading: authLoading } = useAuth();  
   // Use our custom hook to manage all the log screen logic
   const {
     // States
@@ -54,6 +55,17 @@ export default function LogHabit() {
     // Router
     router
   } = useLogManager();
+
+    // Redirect to signin if user is not authenticated
+    useEffect(() => {
+      // Only check after auth loading is complete
+      if (!authLoading && !user) {
+        console.log('No authenticated user found in log habit, redirecting to signin');
+        router.replace('/auth/signin');
+      } else if (!authLoading && user) {
+        console.log('Authenticated user in log habit:', user.id);
+      }
+    }, [user, authLoading, router]);
 
   return (
     <KeyboardAvoidingView
