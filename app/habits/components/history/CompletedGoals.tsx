@@ -1,5 +1,5 @@
 import { View, Text, FlatList } from 'react-native';
-import { historyStyles } from '../styles/historyStyles';
+import { historyStyles } from '../../styles/historyStyles';
 import { UserGoal } from '@/app/types/supabase';
 
 const styles = historyStyles;

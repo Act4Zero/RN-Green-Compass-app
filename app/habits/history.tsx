@@ -9,13 +9,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StatsContainer } from './components/StatsContainer';
-import { StatsCalendar } from './components/StatsCalendar';
-import CategoryFilters from './components/CategoryFilters';
-import { HabitsHistory } from './components/HabitsHistory';
+import { StatsContainer } from './components/history/StatsContainer';
+import { StatsCalendar } from './components/history/StatsCalendar';
+import CategoryFilters from './components/history/CategoryFilters';
+import { HabitsHistory } from './components/history/HabitsHistory';
 import { HabitLog, UserGoal } from '../types/supabase';
 import { historyStyles } from './styles/historyStyles';
-import CompletedGoals from './components/CompletedGoals';
+import CompletedGoals from './components/history/CompletedGoals';
 import useHistoryManager from './hooks/useHistoryManager';
 import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
@@ -147,15 +147,15 @@ export default function HabitHistory() {
           />
 
           <HabitsHistory
-            selectedDate={selectedDate}
+            selectedDate={selectedDate as any}
             filteredLogs={filteredLogs}
-            renderLogItem={renderLogItem}
-            formatSelectedDate={formatSelectedDate}
+            renderLogItem={renderLogItem as any}
+            formatSelectedDate={formatSelectedDate as any}
           />
           
           <CompletedGoals
             completedGoals={completedGoals}
-            renderCompletedGoalItem={renderCompletedGoalItem}
+            renderCompletedGoalItem={renderCompletedGoalItem as any}
           />
         </View>
       </ScrollView>

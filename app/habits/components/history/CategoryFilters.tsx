@@ -1,6 +1,6 @@
-import { historyStyles } from '../styles/historyStyles';
+import { historyStyles } from '../../styles/historyStyles';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { defaultCategories } from '../types/history.types';
+import { defaultCategories } from '../../types/history.types';
 
 const styles = historyStyles;
 

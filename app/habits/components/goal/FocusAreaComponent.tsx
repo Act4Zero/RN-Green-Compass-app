@@ -1,8 +1,8 @@
 // For Focus Areas
 import React from 'react';
 import { View } from 'react-native';
-import SelectableItem from '../../components/SelectableItem';
-import goalStyles from '../styles/Goal.styles';
+import SelectableItem from '../../../components/SelectableItem';
+import goalStyles from '../../styles/Goal.styles';
 
 const FocusAreasComponent = ({
   focusAreas,

@@ -1,6 +1,6 @@
 import { View, Text, FlatList } from 'react-native';
-import { historyStyles } from '../styles/historyStyles';
-import { HabitLog } from '../../types/supabase';
+import { historyStyles } from '../../styles/historyStyles';
+import { HabitLog } from '../../../types/supabase';
 
 const styles = historyStyles;
 

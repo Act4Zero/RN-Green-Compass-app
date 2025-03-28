@@ -11,10 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Habit } from '../types/supabase';
 import LogStyles from './styles/LogStyles';
-import CategoriesSection from './components/CategoriesSection';
-import SubcategoriesSection from './components/SubcategoriesSection';
-import HabitsSection from './components/HabitsSection';
-import SelectedHabitSection from './components/SelectedHabitSection';
+import CategoriesSection from './components/log/CategoriesSection';
+import SubcategoriesSection from './components/log/SubcategoriesSection';
+import HabitsSection from './components/log/HabitsSection';
+import SelectedHabitSection from './components/log/SelectedHabitSection';
 import useLogManager from './hooks/useLogManager';
 
 // Styles for this component

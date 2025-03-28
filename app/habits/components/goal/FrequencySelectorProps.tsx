@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import goalStyles from '../styles/Goal.styles';
-import { TimeFrequency } from '../../components/home/types/goal.types';
+import goalStyles from '../../styles/Goal.styles';
+import { TimeFrequency } from '../../../components/home/types/goal.types';
 
 interface FrequencySelectorProps {
   frequency: TimeFrequency;

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { historyStyles } from '../styles/historyStyles';
+import { historyStyles } from '../../styles/historyStyles';
 import { View, Text, TouchableOpacity } from 'react-native';
 
 const styles = historyStyles;

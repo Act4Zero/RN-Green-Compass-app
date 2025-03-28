@@ -1,4 +1,4 @@
-import LogStyles from "../styles/LogStyles";
+import LogStyles from "../../styles/LogStyles";
 import { TouchableOpacity, Text, View, ScrollView } from 'react-native';
 
 const styles = LogStyles;

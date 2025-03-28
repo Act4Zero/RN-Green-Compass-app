@@ -1,8 +1,8 @@
-import LogStyles from "../styles/LogStyles";
+import LogStyles from "../../styles/LogStyles";
 import { View, Text, TouchableOpacity } from 'react-native';
-import Button from '../../components/Button';
+import Button from '../../../components/Button';
 import { Ionicons } from '@expo/vector-icons';
-import { Habit } from '../../types/supabase';
+import { Habit } from '../../../types/supabase';
 import Input from "@/app/components/Input";
 
 const styles = LogStyles;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
-import goalStyles from '../styles/Goal.styles';
+import goalStyles from '../../styles/Goal.styles';
 
 interface GoalInputProps {
   targetInputValue: string;

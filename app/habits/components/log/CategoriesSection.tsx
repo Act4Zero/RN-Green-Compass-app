@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import LogStyles from "../styles/LogStyles";
+import LogStyles from "../../styles/LogStyles";
 import { Ionicons } from '@expo/vector-icons';
 
 const styles = LogStyles;

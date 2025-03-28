@@ -1,6 +1,6 @@
-import LogStyles from "../styles/LogStyles";
+import LogStyles from "../../styles/LogStyles";
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Habit } from '../../types/supabase';
+import { Habit } from '../../../types/supabase';
 
 const styles = LogStyles;
 
