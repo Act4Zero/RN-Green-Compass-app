@@ -17,12 +17,15 @@ import { HabitLog, UserGoal } from '../types/supabase';
 import { historyStyles } from './styles/historyStyles';
 import CompletedGoals from './components/CompletedGoals';
 import useHistoryManager from './hooks/useHistoryManager';
+import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 
 const styles = historyStyles;
 
 export default function HabitHistory() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { user, loading: authLoading } = useAuth();
   
   // Use our custom hook to manage all the history logic
   const {
@@ -45,6 +48,17 @@ export default function HabitHistory() {
     formatSelectedDate,
     router
   } = useHistoryManager();
+
+  // Redirect to signin if user is not authenticated
+  useEffect(() => {
+    // Only check after auth loading is complete
+    if (!authLoading && !user) {
+      console.log('No authenticated user found in history, redirecting to signin');
+      router.replace('/auth/signin');
+    } else if (!authLoading && user) {
+      console.log('Authenticated user in history:', user.id);
+    }
+  }, [user, authLoading, router]);
   
   // Render functions for list items
   const renderLogItem = ({ item }: { item: HabitLog }) => {
