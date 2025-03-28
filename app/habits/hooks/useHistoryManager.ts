@@ -144,6 +144,9 @@ export default function useHistoryManager(): UseHistoryManagerReturn {
     // Get the day of the week for the first day (0 = Sunday, 6 = Saturday)
     const firstDayOfWeek = firstDay.getDay();
     
+    // Get the day of the week for the last day (0 = Sunday, 6 = Saturday)
+    const lastDayOfWeek = lastDay.getDay();
+    
     const days = [];
     
     // Add empty spaces for days before the first day of the month
@@ -170,6 +173,13 @@ export default function useHistoryManager(): UseHistoryManagerReturn {
         isDisabled: isInFuture,
         activityLevel
       });
+    }
+    
+    // Add empty spaces for days after the last day of the month to complete the grid
+    // If lastDayOfWeek is 6 (Saturday), we don't need to add any empty spaces
+    const emptySpacesNeeded = lastDayOfWeek < 6 ? 6 - lastDayOfWeek : 0;
+    for (let i = 0; i < emptySpacesNeeded; i++) {
+      days.push({ date: '', day: 0, isActive: false, isEmpty: true, id: `empty-end-${i}` });
     }
     
     return days;
