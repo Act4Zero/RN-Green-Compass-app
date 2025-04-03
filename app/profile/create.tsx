@@ -1,0 +1,96 @@
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Alert, ViewStyle } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
+import ProfileForm from '../components/profile/ProfileForm';
+import { createUserProfile, checkProfileExists } from '../services/profileService';
+import analyticsService from '../services/analyticsService';
+
+interface Styles {
+  container: ViewStyle;
+}
+
+export default function CreateProfileScreen() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Check if profile already exists, redirect if it does
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (!user) return;
+      
+      const exists = await checkProfileExists(user.id);
+      if (exists) {
+        // Profile already exists, redirect to home
+        router.replace('/home');
+      }
+    };
+
+    checkProfile();
+  }, [user, router]);
+
+  const handleSubmit = async (values: {
+    display_name: string;
+    is_anonymous: boolean;
+    interests: string[];
+    avatar?: any;
+  }) => {
+    if (!user) {
+      setError('You must be logged in to create a profile');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(undefined);
+
+    try {
+      const result = await createUserProfile(user.id, values);
+      
+      if (result.success) {
+        // Track profile creation in analytics
+        analyticsService.trackEvent('profile_created', {
+          is_anonymous: values.is_anonymous,
+          interest_count: values.interests.length,
+          has_avatar: !!values.avatar
+        });
+        
+        // Show success message and navigate to home
+        Alert.alert('Success', 'Your profile has been created!', [
+          { text: 'Continue', onPress: () => router.replace('/home') }
+        ]);
+      } else {
+        setError(result.error || 'Failed to create profile');
+      }
+    } catch (err) {
+      console.error('Error creating profile:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <ProfileForm
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        error={error}
+        initialValues={{
+          display_name: user?.email?.split('@')[0] || '',
+          is_anonymous: false,
+          interests: [],
+          avatar_url: null
+        }}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create<Styles>({
+  container: {
+    flex: 1,
+    backgroundColor: '#f9f9f9',
+  },
+});

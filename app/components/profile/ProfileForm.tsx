@@ -1,0 +1,350 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Switch,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { SUSTAINABILITY_INTERESTS } from '../../types/profiles';
+
+interface Styles {
+  container: ViewStyle;
+  heading: TextStyle;
+  formGroup: ViewStyle;
+  label: TextStyle;
+  input: TextStyle;
+  switchRow: ViewStyle;
+  switchLabel: TextStyle;
+  interestsContainer: ViewStyle;
+  interestItem: ViewStyle;
+  interestSelected: ViewStyle;
+  interestText: TextStyle;
+  selectedInterestText: TextStyle;
+  errorText: TextStyle;
+  submitButton: ViewStyle;
+  submitButtonText: TextStyle;
+  avatarContainer: ViewStyle;
+  avatar: ImageStyle;
+  avatarPlaceholder: ViewStyle;
+  uploadButton: ViewStyle;
+  uploadButtonText: TextStyle;
+}
+
+interface ProfileFormProps {
+  initialValues?: {
+    display_name: string;
+    is_anonymous: boolean;
+    interests: string[];
+    avatar_url?: string | null;
+  };
+  onSubmit: (values: {
+    display_name: string;
+    is_anonymous: boolean;
+    interests: string[];
+    avatar?: any;
+  }) => Promise<void>;
+  isLoading: boolean;
+  error?: string;
+}
+
+export default function ProfileForm({
+  initialValues = {
+    display_name: '',
+    is_anonymous: false,
+    interests: [],
+    avatar_url: null,
+  },
+  onSubmit,
+  isLoading,
+  error,
+}: ProfileFormProps) {
+  const [displayName, setDisplayName] = useState(initialValues.display_name);
+  const [isAnonymous, setIsAnonymous] = useState(initialValues.is_anonymous);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(initialValues.interests);
+  const [avatar, setAvatar] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialValues.avatar_url);
+  const [validationErrors, setValidationErrors] = useState<{
+    displayName?: string;
+    interests?: string;
+  }>({});
+  
+  const router = useRouter();
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+    
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    if (!result.canceled && result.assets && result.assets[0]) {
+      setAvatar(result.assets[0]);
+      setAvatarUrl(result.assets[0].uri || null);
+    }
+  };
+  
+  const toggleInterest = (interest: string) => {
+    if (selectedInterests.includes(interest)) {
+      setSelectedInterests(selectedInterests.filter(item => item !== interest));
+    } else {
+      setSelectedInterests([...selectedInterests, interest]);
+    }
+  };
+  
+  const validateForm = (): boolean => {
+    const errors: {
+      displayName?: string;
+      interests?: string;
+    } = {};
+    
+    // If not anonymous, display name is required
+    if (!isAnonymous && !displayName.trim()) {
+      errors.displayName = 'Display name is required when not anonymous';
+    }
+    
+    // At least one interest should be selected
+    if (selectedInterests.length === 0) {
+      errors.interests = 'Please select at least one interest';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  const handleSubmit = async () => {
+    if (validateForm()) {
+      await onSubmit({
+        display_name: displayName.trim(),
+        is_anonymous: isAnonymous,
+        interests: selectedInterests,
+        avatar: avatar,
+      });
+    }
+  };
+  
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.heading}>Your Profile</Text>
+      
+      {/* Avatar Upload */}
+      <View style={styles.avatarContainer}>
+        {avatarUrl ? (
+          <Image 
+            source={{ uri: avatarUrl }} 
+            style={styles.avatar} 
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Text>No Image</Text>
+          </View>
+        )}
+        <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+          <Text style={styles.uploadButtonText}>
+            {avatarUrl ? 'Change Photo' : 'Upload Photo'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Display Name */}
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Display Name</Text>
+        <TextInput
+          style={styles.input as any}
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="How would you like to be known?"
+          autoCapitalize="words"
+          maxLength={40}
+        />
+        {validationErrors.displayName && (
+          <Text style={styles.errorText}>{validationErrors.displayName}</Text>
+        )}
+      </View>
+      
+      {/* Anonymity Toggle */}
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Stay Anonymous</Text>
+        <Switch
+          value={isAnonymous}
+          onValueChange={setIsAnonymous}
+          trackColor={{ false: '#767577', true: '#4CAF50' }}
+          thumbColor={isAnonymous ? '#8BC34A' : '#f4f3f4'}
+        />
+      </View>
+      <Text style={{ marginBottom: 15, fontSize: 12, color: '#666' }}>
+        {isAnonymous
+          ? 'Your identity will be hidden in community features'
+          : 'Your display name will be visible to others'}
+      </Text>
+      
+      {/* Interests Selection */}
+      <Text style={styles.label}>Your Sustainability Interests</Text>
+      <View style={styles.interestsContainer}>
+        {SUSTAINABILITY_INTERESTS.map((interest) => (
+          <TouchableOpacity
+            key={interest}
+            style={[
+              styles.interestItem,
+              selectedInterests.includes(interest) && styles.interestSelected,
+            ]}
+            onPress={() => toggleInterest(interest)}
+          >
+            <Text
+              style={[
+                styles.interestText,
+                selectedInterests.includes(interest) && styles.selectedInterestText,
+              ]}
+            >
+              {interest}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {validationErrors.interests && (
+        <Text style={styles.errorText}>{validationErrors.interests}</Text>
+      )}
+      
+      {/* Error Message */}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handleSubmit}
+        disabled={isLoading}
+      >
+        <Text style={styles.submitButtonText}>
+          {isLoading ? 'Saving...' : 'Save Profile'}
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create<Styles>({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#2E7D32',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  } as TextStyle,
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  interestsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  interestItem: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    margin: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  interestSelected: {
+    backgroundColor: '#8BC34A',
+    borderColor: '#4CAF50',
+  },
+  interestText: {
+    color: '#666',
+  },
+  selectedInterestText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#D32F2F',
+    marginTop: 5,
+    fontSize: 14,
+  },
+  submitButton: {
+    backgroundColor: '#4CAF50',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 40,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 10,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  uploadButton: {
+    backgroundColor: '#8BC34A',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  uploadButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+});
