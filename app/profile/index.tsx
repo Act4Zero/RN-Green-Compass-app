@@ -44,8 +44,19 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  // Redirect to signin if user is not authenticated
+  useEffect(() => {
+    // Only check after auth loading is complete
+    if (!authLoading && !user) {
+      console.log('No authenticated user found in profile, redirecting to signin');
+      router.replace('/auth/signin');
+    } else if (!authLoading && user) {
+      console.log('Authenticated user in profile:', user.id);
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     // Track screen view
@@ -53,6 +64,11 @@ export default function ProfileScreen() {
 
     const loadProfile = async () => {
       try {
+        if (!user) {
+          console.log('No user available to load profile');
+          return;
+        }
+
         setIsLoading(true);
         const profileData = await fetchUserProfile(user.id);
         
@@ -69,8 +85,11 @@ export default function ProfileScreen() {
       }
     };
 
-    loadProfile();
-  }, [user, router]);
+    // Only attempt to load profile if auth loading is complete and user exists
+    if (!authLoading && user) {
+      loadProfile();
+    }
+  }, [user, authLoading, router]);
 
   const handleEditProfile = () => {
     router.push('/profile/edit' as any);
