@@ -7,18 +7,23 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
   ViewStyle,
   TextStyle,
   ImageStyle,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserProfile, getDisplayIdentifier } from '../services/profileService';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   header: ViewStyle;
   avatarContainer: ViewStyle;
   avatar: ImageStyle;
@@ -41,6 +46,8 @@ interface Styles {
 }
 
 export default function ProfileScreen() {
+  const { width } = useWindowDimensions();
+  const isTabletOrLarger = width > 768;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -144,7 +151,14 @@ export default function ProfileScreen() {
   const displayIdentifier = getDisplayIdentifier(profile);
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+      >
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           {profile.avatar_url ? (
@@ -183,14 +197,18 @@ export default function ProfileScreen() {
         <Text style={styles.signOutButtonText}>Sign Out</Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-    padding: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   header: {
     flexDirection: 'column',

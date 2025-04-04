@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, ViewStyle } from 'react-native';
+import { View, StyleSheet, Alert, ViewStyle, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
 import { createUserProfile, checkProfileExists } from '../services/profileService';
 import analyticsService from '../services/analyticsService';
+import { useWindowDimensions } from 'react-native';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
 }
 
 export default function CreateProfileScreen() {
+  const { width } = useWindowDimensions();
+  const isTabletOrLarger = width > 768;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { user } = useAuth();
@@ -89,7 +93,14 @@ export default function CreateProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+      <ScrollView 
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+      >
       <ProfileForm
         onSubmit={handleSubmit}
         isLoading={isLoading}
@@ -101,13 +112,18 @@ export default function CreateProfileScreen() {
           avatar_url: null
         }}
       />
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
 });

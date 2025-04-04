@@ -22,6 +22,11 @@ export default function RootLayout() {
           <Stack.Screen name="habits/log" options={{ headerShown: false }} />
           <Stack.Screen name="habits/history" options={{ headerShown: false }} />
 
+          {/* Profile screens */}
+          <Stack.Screen name="profile/index" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/create" options={{ headerShown: false }} />
+
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen
             name="home"

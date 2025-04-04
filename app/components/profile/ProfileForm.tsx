@@ -11,19 +11,25 @@ import {
   ViewStyle,
   TextStyle,
   ImageStyle,
+  KeyboardAvoidingView,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SUSTAINABILITY_INTERESTS } from '../../types/profiles';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
+  formContainer: ViewStyle;
   heading: TextStyle;
   formGroup: ViewStyle;
   label: TextStyle;
   input: TextStyle;
   switchRow: ViewStyle;
   switchLabel: TextStyle;
+  switchDescription: TextStyle;
   interestsContainer: ViewStyle;
   interestItem: ViewStyle;
   interestSelected: ViewStyle;
@@ -67,6 +73,8 @@ export default function ProfileForm({
   isLoading,
   error,
 }: ProfileFormProps) {
+  const { width } = useWindowDimensions();
+  const isTabletOrLarger = width > 768;
   const [displayName, setDisplayName] = useState(initialValues.display_name);
   const [isAnonymous, setIsAnonymous] = useState(initialValues.is_anonymous);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(initialValues.interests);
@@ -141,117 +149,139 @@ export default function ProfileForm({
   };
   
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.heading}>Your Profile</Text>
-      
-      {/* Avatar Upload */}
-      <View style={styles.avatarContainer}>
-        {avatarUrl ? (
-          <Image 
-            source={{ uri: avatarUrl }} 
-            style={styles.avatar} 
-          />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={{ color: '#2E7D32' }}>No Image</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+      <ScrollView 
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        <View style={[styles.formContainer, isTabletOrLarger && { maxWidth: 600, alignSelf: 'center' }]}>
+          <Text style={styles.heading}>Your Profile</Text>
+              
+          {/* Avatar Upload */}
+          <View style={styles.avatarContainer}>
+            {avatarUrl ? (
+              <Image 
+                source={{ uri: avatarUrl }} 
+                style={styles.avatar} 
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={{ color: '#2E7D32' }}>No Image</Text>
+              </View>
+            )}
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+              <Text style={styles.uploadButtonText}>
+                {avatarUrl ? 'Change Photo' : 'Upload Photo'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-        <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-          <Text style={styles.uploadButtonText}>
-            {avatarUrl ? 'Change Photo' : 'Upload Photo'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Display Name */}
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Display Name</Text>
-        <TextInput
-          style={styles.input as any}
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="How would you like to be known?"
-          autoCapitalize="words"
-          maxLength={40}
-        />
-        {validationErrors.displayName && (
-          <Text style={styles.errorText}>{validationErrors.displayName}</Text>
-        )}
-      </View>
-      
-      {/* Anonymity Toggle */}
-      <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Stay Anonymous</Text>
-        <Switch
-          value={isAnonymous}
-          onValueChange={setIsAnonymous}
-          trackColor={{ false: '#767577', true: '#2E7D32' }}
-          thumbColor={isAnonymous ? '#4CAF50' : '#f4f3f4'}
-        />
-      </View>
-      <Text style={{ marginBottom: 15, fontSize: 12, color: '#555555' }}>
-        {isAnonymous
-          ? 'Your identity will be hidden in community features'
-          : 'Your display name will be visible to others'}
-      </Text>
-      
-      {/* Interests Selection */}
-      <Text style={styles.label}>Your Sustainability Interests</Text>
-      <View style={styles.interestsContainer}>
-        {SUSTAINABILITY_INTERESTS.map((interest) => (
+          
+          {/* Display Name */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Display Name</Text>
+            <TextInput
+              style={styles.input as any}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="How would you like to be known?"
+              autoCapitalize="words"
+              maxLength={40}
+            />
+            {validationErrors.displayName && (
+              <Text style={styles.errorText}>{validationErrors.displayName}</Text>
+            )}
+          </View>
+          
+          {/* Anonymity Toggle */}
+          <View style={styles.formGroup}>
+            <View style={styles.switchRow}>
+              <Text style={styles.switchLabel}>Stay Anonymous</Text>
+              <Switch
+                value={isAnonymous}
+                onValueChange={setIsAnonymous}
+                trackColor={{ false: '#767577', true: '#2E7D32' }}
+                thumbColor={isAnonymous ? '#4CAF50' : '#f4f3f4'}
+              />
+            </View>
+            <Text style={styles.switchDescription}>
+              {isAnonymous
+                ? 'Your identity will be hidden in community features'
+                : 'Your display name will be visible to others'}
+            </Text>
+          </View>
+          
+          {/* Interests Selection */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Your Sustainability Interests</Text>
+            <View style={styles.interestsContainer}>
+              {SUSTAINABILITY_INTERESTS.map((interest) => (
+                <TouchableOpacity
+                  key={interest}
+                  style={[
+                    styles.interestItem,
+                    selectedInterests.includes(interest) && styles.interestSelected,
+                  ]}
+                  onPress={() => toggleInterest(interest)}
+                >
+                  <Text
+                    style={[
+                      styles.interestText,
+                      selectedInterests.includes(interest) && styles.selectedInterestText,
+                    ]}
+                  >
+                    {interest}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {validationErrors.interests && (
+              <Text style={styles.errorText}>{validationErrors.interests}</Text>
+            )}
+          </View>
+          
+          {/* Error Message */}
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          
+          {/* Submit Button */}
           <TouchableOpacity
-            key={interest}
-            style={[
-              styles.interestItem,
-              selectedInterests.includes(interest) && styles.interestSelected,
-            ]}
-            onPress={() => toggleInterest(interest)}
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            disabled={isLoading}
           >
-            <Text
-              style={[
-                styles.interestText,
-                selectedInterests.includes(interest) && styles.selectedInterestText,
-              ]}
-            >
-              {interest}
+            <Text style={styles.submitButtonText}>
+              {isLoading ? 'Saving...' : 'Save Profile'}
             </Text>
           </TouchableOpacity>
-        ))}
-      </View>
-      {validationErrors.interests && (
-        <Text style={styles.errorText}>{validationErrors.interests}</Text>
-      )}
-      
-      {/* Error Message */}
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        disabled={isLoading}
-      >
-        <Text style={styles.submitButtonText}>
-          {isLoading ? 'Saving...' : 'Save Profile'}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  formContainer: {
+    width: '100%',
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 24,
     color: '#2E7D32',
+    textAlign: 'center',
   },
   formGroup: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   label: {
     fontSize: 16,
@@ -271,17 +301,22 @@ const styles = StyleSheet.create<Styles>({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   switchLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333333',
   },
+  switchDescription: {
+    fontSize: 12,
+    color: '#555555',
+    marginBottom: 4,
+  },
   interestsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 20,
+    marginBottom: 8,
   },
   interestItem: {
     backgroundColor: '#E8F5E9',
@@ -313,8 +348,8 @@ const styles = StyleSheet.create<Styles>({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 40,
+    marginTop: 24,
+    marginBottom: 16,
   },
   submitButtonText: {
     color: 'white',
@@ -323,7 +358,7 @@ const styles = StyleSheet.create<Styles>({
   },
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   avatar: {
     width: 120,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
@@ -8,7 +8,8 @@ import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
 
 interface Styles {
-  container: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
   loadingContainer: ViewStyle;
   loadingText: TextStyle;
   errorContainer: ViewStyle;
@@ -16,6 +17,8 @@ interface Styles {
 }
 
 export default function EditProfileScreen() {
+  const { width } = useWindowDimensions();
+  const isTabletOrLarger = width > 768;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -136,12 +139,19 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {profile && (
-        <ProfileForm
-          initialValues={{
-            display_name: profile.display_name || '',
-            is_anonymous: profile.is_anonymous,
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardAvoidingContainer}
+    >
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+      >
+        {profile && (
+          <ProfileForm
+            initialValues={{
+              display_name: profile.display_name || '',
+              is_anonymous: profile.is_anonymous,
             interests: profile.interests || [],
             avatar_url: profile.avatar_url
           }}
@@ -150,14 +160,19 @@ export default function EditProfileScreen() {
           error={error}
         />
       )}
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create<Styles>({
-  container: {
+  keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
