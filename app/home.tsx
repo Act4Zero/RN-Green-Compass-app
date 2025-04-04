@@ -31,7 +31,7 @@ import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types'
 export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
-  const { user, signOut, authLoading } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
   
   // State for UI
@@ -217,12 +217,20 @@ export default function Home() {
               <Text style={homeStyles.welcomeText}>Welcome back,</Text>
               <Text style={homeStyles.userName}>{user?.email?.split('@')[0] || 'User'}</Text>
             </View>
-            <TouchableOpacity
-              style={homeStyles.logoutButton}
-              onPress={handleSignOut}
-            >
-              <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
-            </TouchableOpacity>
+            <View style={homeStyles.headerButtons}>
+              <TouchableOpacity
+                style={homeStyles.headerButton}
+                onPress={() => router.push('/profile')}
+              >
+                <Ionicons name="person-outline" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={homeStyles.headerButton}
+                onPress={handleSignOut}
+              >
+                <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Dashboard Stats */}

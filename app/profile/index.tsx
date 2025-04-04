@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   TextStyle,
   ImageStyle,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserProfile, getDisplayIdentifier } from '../services/profileService';
 import { Profile } from '../types/profiles';
@@ -42,10 +42,11 @@ interface Styles {
 
 export default function ProfileScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -58,38 +59,52 @@ export default function ProfileScreen() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    // Track screen view
-    analyticsService.trackScreenView('Profile');
-
-    const loadProfile = async () => {
-      try {
-        if (!user) {
-          console.log('No user available to load profile');
-          return;
-        }
-
-        setIsLoading(true);
-        const profileData = await fetchUserProfile(user.id);
-        
-        if (profileData) {
-          setProfile(profileData);
-        } else {
-          router.replace('/profile/create' as any);
-        }
-      } catch (err) {
-        console.error('Error loading profile:', err);
-        setError('Failed to load profile data');
-      } finally {
-        setIsLoading(false);
+  const loadProfile = useCallback(async () => {
+    try {
+      if (!user) {
+        console.log('No user available to load profile');
+        return;
       }
-    };
 
-    // Only attempt to load profile if auth loading is complete and user exists
-    if (!authLoading && user) {
-      loadProfile();
+      // Only set loading to true if we don't already have a profile
+      if (!profile) {
+        setIsLoading(true);
+      }
+      
+      const profileData = await fetchUserProfile(user.id);
+      
+      if (profileData) {
+        setProfile(profileData);
+      } else {
+        router.replace('/profile/create' as any);
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      setError('Failed to load profile data');
+    } finally {
+      setIsLoading(false);
     }
-  }, [user, authLoading, router]);
+  }, [user, router, profile]);
+
+  // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Only track screen view once per session
+      if (!hasTrackedView) {
+        analyticsService.trackScreenView('Profile');
+        setHasTrackedView(true);
+      }
+
+      // Only attempt to load profile if auth loading is complete and user exists
+      if (!authLoading && user) {
+        loadProfile();
+      }
+
+      return () => {
+        // Cleanup function if needed
+      };
+    }, [user, authLoading, loadProfile, hasTrackedView])
+  );
 
   const handleEditProfile = () => {
     router.push('/profile/edit' as any);
@@ -174,7 +189,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F5F5F5',
     padding: 20,
   },
   header: {
@@ -197,7 +212,7 @@ const styles = StyleSheet.create<Styles>({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: 'rgba(46, 125, 50, 0.1)', // Match app green with opacity
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -208,16 +223,16 @@ const styles = StyleSheet.create<Styles>({
   displayName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2E7D32',
   },
   anonymousIndicator: {
     marginTop: 5,
     fontSize: 14,
-    color: '#666',
+    color: '#555555',
     fontStyle: 'italic',
   },
   editButton: {
-    backgroundColor: '#8BC34A',
+    backgroundColor: '#2E7D32',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
@@ -230,7 +245,7 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#2E7D32',
+    color: '#333333',
   },
   interestsContainer: {
     flexDirection: 'row',
@@ -238,13 +253,13 @@ const styles = StyleSheet.create<Styles>({
     marginBottom: 30,
   },
   interestItem: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#E8F5E9', 
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     margin: 4,
     borderWidth: 1,
-    borderColor: '#a5d6a7',
+    borderColor: 'rgba(46, 125, 50, 0.3)',
   },
   interestText: {
     color: '#2E7D32',
@@ -254,17 +269,19 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#F5F5F5',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: '#555555',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#F5F5F5',
   },
   errorText: {
     fontSize: 16,
@@ -272,15 +289,17 @@ const styles = StyleSheet.create<Styles>({
     textAlign: 'center',
   },
   signOutButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'transparent',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 40,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
   },
   signOutButtonText: {
-    color: '#666',
+    color: '#2E7D32',
     fontSize: 16,
     fontWeight: '600',
   },

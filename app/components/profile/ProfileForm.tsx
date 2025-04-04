@@ -71,7 +71,8 @@ export default function ProfileForm({
   const [isAnonymous, setIsAnonymous] = useState(initialValues.is_anonymous);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(initialValues.interests);
   const [avatar, setAvatar] = useState<any>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialValues.avatar_url);
+  // Ensure avatarUrl is always a string or null, never undefined
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialValues.avatar_url || null);
   const [validationErrors, setValidationErrors] = useState<{
     displayName?: string;
     interests?: string;
@@ -96,7 +97,7 @@ export default function ProfileForm({
     
     if (!result.canceled && result.assets && result.assets[0]) {
       setAvatar(result.assets[0]);
-      setAvatarUrl(result.assets[0].uri || null);
+      setAvatarUrl(result.assets[0].uri);
     }
   };
   
@@ -152,7 +153,7 @@ export default function ProfileForm({
           />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Text>No Image</Text>
+            <Text style={{ color: '#2E7D32' }}>No Image</Text>
           </View>
         )}
         <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
@@ -184,11 +185,11 @@ export default function ProfileForm({
         <Switch
           value={isAnonymous}
           onValueChange={setIsAnonymous}
-          trackColor={{ false: '#767577', true: '#4CAF50' }}
-          thumbColor={isAnonymous ? '#8BC34A' : '#f4f3f4'}
+          trackColor={{ false: '#767577', true: '#2E7D32' }}
+          thumbColor={isAnonymous ? '#4CAF50' : '#f4f3f4'}
         />
       </View>
-      <Text style={{ marginBottom: 15, fontSize: 12, color: '#666' }}>
+      <Text style={{ marginBottom: 15, fontSize: 12, color: '#555555' }}>
         {isAnonymous
           ? 'Your identity will be hidden in community features'
           : 'Your display name will be visible to others'}
@@ -256,10 +257,11 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 16,
     marginBottom: 8,
     fontWeight: '600',
+    color: '#333333',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'rgba(46, 125, 50, 0.3)',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -274,6 +276,7 @@ const styles = StyleSheet.create<Styles>({
   switchLabel: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#333333',
   },
   interestsContainer: {
     flexDirection: 'row',
@@ -281,20 +284,20 @@ const styles = StyleSheet.create<Styles>({
     marginBottom: 20,
   },
   interestItem: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     margin: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'rgba(46, 125, 50, 0.3)',
   },
   interestSelected: {
-    backgroundColor: '#8BC34A',
-    borderColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
+    borderColor: '#1B5E20',
   },
   interestText: {
-    color: '#666',
+    color: '#2E7D32',
   },
   selectedInterestText: {
     color: '#fff',
@@ -306,7 +309,7 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 14,
   },
   submitButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -332,13 +335,15 @@ const styles = StyleSheet.create<Styles>({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.3)',
   },
   uploadButton: {
-    backgroundColor: '#8BC34A',
+    backgroundColor: '#4CAF50',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 20,

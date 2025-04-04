@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, ViewStyle } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
 import { createUserProfile, checkProfileExists } from '../services/profileService';
@@ -16,20 +16,37 @@ export default function CreateProfileScreen() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Check if profile already exists, redirect if it does
-  useEffect(() => {
-    const checkProfile = async () => {
-      if (!user) return;
-      
-      const exists = await checkProfileExists(user.id);
-      if (exists) {
-        // Profile already exists, redirect to home
-        router.replace('/home');
-      }
-    };
+  // Track if we've already tracked this screen view
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
-    checkProfile();
+  // Check if profile already exists, redirect if it does
+  const checkProfile = useCallback(async () => {
+    if (!user) return;
+    
+    const exists = await checkProfileExists(user.id);
+    if (exists) {
+      // Profile already exists, redirect to home
+      router.replace('/home');
+    }
   }, [user, router]);
+
+  // Use useFocusEffect to check profile and track screen view only when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Only track screen view once per session
+      if (!hasTrackedView) {
+        analyticsService.trackScreenView('Create Profile');
+        setHasTrackedView(true);
+      }
+
+      // Check if profile exists when screen comes into focus
+      checkProfile();
+
+      return () => {
+        // Cleanup function if needed
+      };
+    }, [checkProfile, hasTrackedView])
+  );
 
   const handleSubmit = async (values: {
     display_name: string;
@@ -91,6 +108,6 @@ export default function CreateProfileScreen() {
 const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F5F5F5',
   },
 });

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
 import { fetchUserProfile, updateUserProfile } from '../services/profileService';
@@ -24,33 +24,59 @@ export default function EditProfileScreen() {
   const { user } = useAuth();
   const router = useRouter();
 
+  // Track if we've already tracked this screen view
+  const [hasTrackedView, setHasTrackedView] = useState(false);
+
+  // Authentication check
   useEffect(() => {
     if (!user) {
       router.replace('/auth/signin');
-      return;
     }
-
-    const loadProfile = async () => {
-      try {
-        setIsLoading(true);
-        const profileData = await fetchUserProfile(user.id);
-        
-        if (profileData) {
-          setProfile(profileData);
-        } else {
-          setFetchError('Profile not found. Please create a profile first.');
-          router.replace('/profile/create' as any);
-        }
-      } catch (err) {
-        console.error('Error loading profile:', err);
-        setFetchError('Failed to load profile data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProfile();
   }, [user, router]);
+
+  // Load profile function with useCallback for memoization
+  const loadProfile = useCallback(async () => {
+    try {
+      if (!user) return;
+
+      // Only set loading to true if we don't already have a profile
+      if (!profile) {
+        setIsLoading(true);
+      }
+      
+      const profileData = await fetchUserProfile(user.id);
+      
+      if (profileData) {
+        setProfile(profileData);
+      } else {
+        setFetchError('Profile not found. Please create a profile first.');
+        router.replace('/profile/create' as any);
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      setFetchError('Failed to load profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, router, profile]);
+
+  // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Only track screen view once per session
+      if (!hasTrackedView) {
+        analyticsService.trackScreenView('Edit Profile');
+        setHasTrackedView(true);
+      }
+
+      // Load profile data when screen comes into focus
+      loadProfile();
+
+      return () => {
+        // Cleanup function if needed
+      };
+    }, [loadProfile, hasTrackedView])
+  );
 
   const handleSubmit = async (values: {
     display_name: string;
@@ -95,7 +121,7 @@ export default function EditProfileScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#2E7D32" />
         <Text style={styles.loadingText}>Loading your profile...</Text>
       </View>
     );
@@ -131,25 +157,25 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F5F5F5',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F5F5F5',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: '#555555',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F5F5F5',
   },
   errorText: {
     fontSize: 16,

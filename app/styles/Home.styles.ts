@@ -16,6 +16,8 @@ export interface HomeStyles {
   statLabel: TextStyle;
   actionButton: ViewStyle;
   actionButtonText: TextStyle;
+  headerButtons: ViewStyle;
+  headerButton: ViewStyle;
   logoutButton: ViewStyle;
   section: ViewStyle;
   sectionHeader: ViewStyle;
@@ -113,6 +115,16 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    marginLeft: 8,
   },
   logoutButton: {
     padding: 8,
