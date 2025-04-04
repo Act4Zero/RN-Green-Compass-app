@@ -19,7 +19,6 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserProfile, getDisplayIdentifier } from '../services/profileService';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
-import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -56,33 +55,21 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Redirect to signin if user is not authenticated
-  useEffect(() => {
-    // Only check after auth loading is complete
-    if (!authLoading && !user) {
-      console.log('No authenticated user found in profile, redirecting to signin');
-      router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in profile:', user.id);
-    }
-    
-    // Reset image error state when component mounts
-    setImageLoadError(false);
-  }, [user, authLoading, router]);
-
-  const loadProfile = useCallback(async () => {
+  // Define loadProfile function before it's used in useEffect
+  const loadProfile = useCallback(async (forceRefresh = false) => {
     try {
       if (!user) {
         console.log('No user available to load profile');
         return;
       }
 
-      // Only set loading to true if we don't already have a profile
-      if (!profile) {
+      // Only set loading to true if we don't already have a profile or if forcing refresh
+      if (!profile || forceRefresh) {
         setIsLoading(true);
       }
       
-      const profileData = await fetchUserProfile(user.id);
+      // Skip cache if forcing refresh
+      const profileData = await fetchUserProfile(user.id, forceRefresh);
       
       if (profileData) {
         setProfile(profileData);
@@ -97,6 +84,27 @@ export default function ProfileScreen() {
     }
   }, [user, router, profile]);
 
+  // Redirect to signin if user is not authenticated
+  useEffect(() => {
+    // Only check after auth loading is complete
+    if (!authLoading && !user) {
+      console.log('No authenticated user found in profile, redirecting to signin');
+      router.replace('/auth/signin');
+    } else if (!authLoading && user) {
+      console.log('Authenticated user in profile:', user.id);
+      // Initial profile load when component mounts and user is authenticated
+      // Only load if we don't already have the profile
+      if (!profile && !isLoading) {
+        loadProfile(false); // false = use cache if available
+      }
+    }
+    
+    // Reset image error state when component mounts
+    setImageLoadError(false);
+  }, [user, authLoading, router, profile, isLoading, loadProfile]);
+
+
+
   // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -108,13 +116,19 @@ export default function ProfileScreen() {
 
       // Only attempt to load profile if auth loading is complete and user exists
       if (!authLoading && user) {
-        loadProfile();
+        // If we already have a profile, don't reload it unless it's been 5+ minutes
+        // This prevents unnecessary network calls when navigating back to this screen
+        if (profile) {
+          console.log('Profile already loaded, skipping fetch');
+        } else if (!isLoading) { // Only load if not already loading
+          loadProfile(false); // false = use cache if available
+        }
       }
 
       return () => {
         // Cleanup function if needed
       };
-    }, [user, authLoading, loadProfile, hasTrackedView])
+    }, [user, authLoading, loadProfile, hasTrackedView, profile, isLoading])
   );
 
   const handleEditProfile = () => {
@@ -125,13 +139,16 @@ export default function ProfileScreen() {
     try {
       await signOut();
       analyticsService.trackEvent('user_signed_out');
+      setProfile(null); // Clear profile data on sign out
       router.replace('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
-  if (isLoading) {
+  // Only show loading indicator if we're actually loading and have a user
+  // This prevents potential infinite loading states
+  if (isLoading && user) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />

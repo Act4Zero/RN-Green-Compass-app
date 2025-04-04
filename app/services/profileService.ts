@@ -1,10 +1,23 @@
 import supabase from '../lib/supabase';
 import { Profile, ProfileFormData } from '../types/profiles';
+import { getCachedProfile, cacheProfile, clearCachedProfile } from './profileCache';
 
 /**
  * Fetch a user's profile by their user ID
+ * @param userId User ID to fetch profile for
+ * @param skipCache If true, will bypass the cache and force a fresh fetch
  */
-export async function fetchUserProfile(userId: string): Promise<Profile | null> {
+export async function fetchUserProfile(userId: string, skipCache: boolean = false): Promise<Profile | null> {
+  // Check cache first unless skipCache is true
+  if (!skipCache) {
+    const cachedProfile = getCachedProfile(userId);
+    if (cachedProfile) {
+      console.log('Using cached profile for user:', userId);
+      return cachedProfile;
+    }
+  }
+
+  console.log('Fetching profile from API for user:', userId);
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -26,7 +39,11 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
     data.avatar_url = urlData?.publicUrl || null; // Use null if publicUrl generation fails
   }
 
-  return data as Profile;
+  // Cache the profile data
+  const profileData = data as Profile;
+  cacheProfile(userId, profileData);
+  
+  return profileData;
 }
 
 /**
@@ -85,6 +102,9 @@ export async function createUserProfile(
       return { success: false, error: error.message };
     }
 
+    // Clear the cache for this user to ensure fresh data on next fetch
+    clearCachedProfile(userId);
+
     return { success: true };
   } catch (error) {
     console.error('Unexpected error creating profile:', error);
@@ -103,8 +123,8 @@ export async function updateUserProfile(
   profileData: ProfileFormData
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Fetch current profile first
-    const currentProfile = await fetchUserProfile(userId);
+    // Fetch current profile first - skip cache to get fresh data
+    const currentProfile = await fetchUserProfile(userId, true);
     if (!currentProfile) {
       return { success: false, error: 'Profile not found' };
     }
@@ -141,6 +161,9 @@ export async function updateUserProfile(
       console.error('Error updating profile:', error);
       return { success: false, error: error.message };
     }
+
+    // Clear the cache for this user to ensure fresh data on next fetch
+    clearCachedProfile(userId);
 
     return { success: true };
   } catch (error) {

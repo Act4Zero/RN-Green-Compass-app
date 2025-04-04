@@ -20,7 +20,7 @@ export default function EditProfileScreen() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [fetchError, setFetchError] = useState<string | undefined>();
@@ -30,24 +30,19 @@ export default function EditProfileScreen() {
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Authentication check
-  useEffect(() => {
-    if (!user) {
-      router.replace('/auth/signin');
-    }
-  }, [user, router]);
-
   // Load profile function with useCallback for memoization
-  const loadProfile = useCallback(async () => {
+  const loadProfile = useCallback(async (forceRefresh = false) => {
     try {
       if (!user) return;
 
-      // Only set loading to true if we don't already have a profile
-      if (!profile) {
+      // Only set loading to true if we don't already have a profile or forcing refresh
+      if (!profile || forceRefresh) {
         setIsLoading(true);
       }
       
-      const profileData = await fetchUserProfile(user.id);
+      // Use the cache for initial load but force refresh when explicitly requested
+      // This is important for edit screen to ensure we're editing the latest data
+      const profileData = await fetchUserProfile(user.id, forceRefresh);
       
       if (profileData) {
         setProfile(profileData);
@@ -63,6 +58,16 @@ export default function EditProfileScreen() {
     }
   }, [user, router, profile]);
 
+  // Authentication check and initial profile load
+  useEffect(() => {
+    if (!user) {
+      router.replace('/auth/signin');
+    } else if (!profile && !isLoading) {
+      // Initial load when component mounts
+      loadProfile(false); // false = use cache if available
+    }
+  }, [user, router, profile, isLoading, loadProfile]);
+
   // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -73,12 +78,17 @@ export default function EditProfileScreen() {
       }
 
       // Load profile data when screen comes into focus
-      loadProfile();
+      // If we already have profile data, don't reload it unnecessarily
+      if (user && !profile && !isLoading) {
+        // For edit screen, we want to make sure we have the latest data
+        // but we can still use the cache for the initial load
+        loadProfile(false); // false = use cache if available
+      }
 
       return () => {
         // Cleanup function if needed
       };
-    }, [loadProfile, hasTrackedView])
+    }, [loadProfile, hasTrackedView, profile, isLoading, user])
   );
 
   const handleSubmit = async (values: {
@@ -106,6 +116,9 @@ export default function EditProfileScreen() {
           has_new_avatar: !!values.avatar
         });
         
+        // Clear the profile from state to force a fresh fetch next time
+        setProfile(null);
+        
         // Show success message
         Alert.alert('Success', 'Your profile has been updated!', [
           { text: 'OK', onPress: () => router.back() }
@@ -121,7 +134,9 @@ export default function EditProfileScreen() {
     }
   };
 
-  if (isLoading) {
+  // Only show loading indicator if we're actually loading and have a user
+  // This prevents the infinite loading state when there's no user yet
+  if (isLoading && user) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
