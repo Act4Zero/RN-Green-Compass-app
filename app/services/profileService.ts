@@ -16,6 +16,16 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
     return null;
   }
 
+  // If avatar_url exists, generate the public URL
+  if (data?.avatar_url) {
+    const { data: urlData } = await supabase.storage
+      .from('profiles') // Corrected bucket name based on upload logic
+      .getPublicUrl(data.avatar_url);
+      
+    // Overwrite the avatar_url path with the full public URL
+    data.avatar_url = urlData?.publicUrl || null; // Use null if publicUrl generation fails
+  }
+
   return data as Profile;
 }
 
@@ -67,7 +77,6 @@ export async function createUserProfile(
       is_anonymous: profileData.is_anonymous,
       interests: profileData.interests,
       avatar_url,
-      alias,
       updated_at: new Date().toISOString(),
     });
 
@@ -110,21 +119,20 @@ export async function updateUserProfile(
       avatar_url = url || null;
     }
 
-    // Update alias if anonymity setting changed
-    let alias = currentProfile.alias;
-    if (profileData.is_anonymous && !currentProfile.alias) {
-      alias = profileData.display_name || generateRandomAlias();
+    // Update display name if anonymity setting changed
+    let display_name = currentProfile.display_name;
+    if (profileData.is_anonymous && !currentProfile.display_name) {
+      display_name = profileData.display_name || generateRandomAlias();
     }
 
     // Update profile in database
     const { error } = await supabase
       .from('profiles')
       .update({
-        display_name: profileData.display_name,
+        display_name,
         is_anonymous: profileData.is_anonymous,
         interests: profileData.interests,
         avatar_url,
-        alias,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
@@ -146,27 +154,137 @@ export async function updateUserProfile(
 
 /**
  * Upload a profile image to Supabase storage
+ * Handles web File objects, React Native ImagePicker assets, and base64 data URIs
  */
-async function uploadProfileImage(userId: string, file: File): Promise<{ url?: string; error?: string }> {
+async function uploadProfileImage(userId: string, file: any): Promise<{ url?: string; error?: string }> {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    // Check if file exists
+    if (!file) {
+      return { error: 'No file provided' };
+    }
 
-    const { error } = await supabase.storage
-      .from('profiles')
-      .upload(filePath, file);
-
-    if (error) {
-      console.error('Error uploading image:', error);
-      return { error: error.message };
+    let filePath: string;
+    
+    // Handle React Native asset object (from ImagePicker)
+    if (file.uri) {
+      console.log('Processing file with URI:', file.uri);
+      
+      // Handle base64 data URI (e.g., data:image/jpeg;base64,/9j/...)
+      if (typeof file.uri === 'string' && file.uri.startsWith('data:')) {
+        console.log('Processing base64 data URI');
+        
+        // Extract MIME type and base64 data
+        const matches = file.uri.match(/^data:([\w/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) {
+          return { error: 'Invalid base64 data URI format' };
+        }
+        
+        const contentType = matches[1];
+        const base64Data = matches[2];
+        const fileExt = contentType.split('/')[1] || 'jpg';
+        const fileName = `profile.${fileExt}`;
+        filePath = `${userId}/${fileName}`;
+        
+        try {
+          // Convert base64 to blob
+          const byteCharacters = atob(base64Data);
+          const byteArrays = [];
+          
+          for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            const byteNumbers = new Array(slice.length);
+            
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+          }
+          
+          const blob = new Blob(byteArrays, { type: contentType });
+          
+          // Upload the blob to Supabase storage
+          const { error } = await supabase.storage
+            .from('profiles')
+            .upload(filePath, blob, {
+              contentType: contentType,
+              upsert: true,
+            });
+            
+          if (error) {
+            console.error('Error uploading base64 image:', error);
+            return { error: error.message };
+          }
+        } catch (base64Error) {
+          console.error('Error processing base64 data:', base64Error);
+          return { error: base64Error instanceof Error ? base64Error.message : 'Failed to process base64 image data' };
+        }
+      } 
+      // Handle regular file URI (not base64)
+      else {
+        // Extract extension from URI
+        const uriParts = file.uri.split('.');
+        const fileExt = uriParts[uriParts.length - 1] || 'jpg'; // Default to jpg if no extension
+        const fileName = `profile.${fileExt}`;
+        filePath = `${userId}/${fileName}`;
+        
+        try {
+          // For React Native, we need to fetch the file as a blob first
+          const response = await fetch(file.uri);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+          }
+          
+          const blob = await response.blob();
+          
+          // Upload the blob to Supabase storage
+          const { error } = await supabase.storage
+            .from('profiles')
+            .upload(filePath, blob, {
+              contentType: `image/${fileExt}`,
+              upsert: true
+            });
+            
+          if (error) {
+            console.error('Error uploading image:', error);
+            return { error: error.message };
+          }
+        } catch (fetchError) {
+          console.error('Error processing image:', fetchError);
+          return { error: fetchError instanceof Error ? fetchError.message : 'Failed to process image file' };
+        }
+      }
+    } 
+    // Handle web File object
+    else if (file.name) {
+      const nameParts = file.name.split('.');
+      const fileExt = nameParts[nameParts.length - 1];
+      const fileName = `profile.${fileExt}`;
+      filePath = `${userId}/${fileName}`;
+      
+      const { error } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, {
+          contentType: `image/${fileExt}`,
+          upsert: true
+        });
+        
+      if (error) {
+        console.error('Error uploading image:', error);
+        return { error: error.message };
+      }
+    } 
+    else {
+      return { error: 'Invalid file format' };
     }
 
     // Get public URL for the uploaded image
     const { data } = supabase.storage
       .from('profiles')
       .getPublicUrl(filePath);
-
+    
+    // Return the URL as provided by Supabase
     return { url: data.publicUrl };
   } catch (error) {
     console.error('Unexpected error uploading image:', error);
@@ -193,7 +311,7 @@ function generateRandomAlias(): string {
  */
 export function getDisplayIdentifier(profile: Profile): string {
   if (profile.is_anonymous) {
-    return profile.alias || 'Anonymous User';
+    return profile.display_name || 'Anonymous User';
   }
   return profile.display_name || profile.email.split('@')[0];
 }

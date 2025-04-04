@@ -51,6 +51,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [imageLoadError, setImageLoadError] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -64,6 +65,9 @@ export default function ProfileScreen() {
     } else if (!authLoading && user) {
       console.log('Authenticated user in profile:', user.id);
     }
+    
+    // Reset image error state when component mounts
+    setImageLoadError(false);
   }, [user, authLoading, router]);
 
   const loadProfile = useCallback(async () => {
@@ -161,8 +165,15 @@ export default function ProfileScreen() {
       >
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          {profile.avatar_url ? (
-            <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+          {profile.avatar_url && !imageLoadError ? (
+            <Image 
+              source={{ uri: profile.avatar_url }} 
+              style={styles.avatar}
+              onError={(e) => {
+                console.error('Error loading profile image:', e.nativeEvent.error);
+                setImageLoadError(true);
+              }}
+            />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text>{displayIdentifier.charAt(0).toUpperCase()}</Text>
@@ -182,7 +193,7 @@ export default function ProfileScreen() {
 
       <Text style={styles.sectionTitle}>Your Sustainability Interests</Text>
       <View style={styles.interestsContainer}>
-        {profile.interests && profile.interests.length > 0 ? (
+        {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
           profile.interests.map((interest) => (
             <View key={interest} style={styles.interestItem}>
               <Text style={styles.interestText}>{interest}</Text>
