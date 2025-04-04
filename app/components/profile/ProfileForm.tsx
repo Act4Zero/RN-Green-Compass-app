@@ -110,41 +110,104 @@ export default function ProfileForm({
   };
   
   const toggleInterest = (interest: string) => {
+    // Verify the interest is from the allowed list
+    if (!SUSTAINABILITY_INTERESTS.includes(interest)) {
+      console.warn('Attempted to toggle invalid interest:', interest);
+      return;
+    }
+    
     if (selectedInterests.includes(interest)) {
       setSelectedInterests(selectedInterests.filter(item => item !== interest));
     } else {
       setSelectedInterests([...selectedInterests, interest]);
     }
+    
+    // Clear validation error when user selects interests
+    if (validationErrors.interests) {
+      setValidationErrors(prev => ({ ...prev, interests: undefined }));
+    }
+  };
+  
+  const validateDisplayName = (name: string): boolean => {
+    // Trim the display name to remove any leading/trailing whitespace
+    const trimmedName = name.trim();
+    
+    // Only validate if not anonymous
+    if (isAnonymous) {
+      return true;
+    }
+    
+    if (!trimmedName) {
+      setValidationErrors(prev => ({ ...prev, displayName: 'Display name is required when not anonymous' }));
+      return false;
+    } else if (trimmedName.length > 40) {
+      setValidationErrors(prev => ({ ...prev, displayName: 'Display name is too long' }));
+      return false;
+    }
+    
+    // Check for potentially dangerous characters (HTML/script injection)
+    const dangerousCharsRegex = /[<>\\]/;
+    if (dangerousCharsRegex.test(trimmedName)) {
+      setValidationErrors(prev => ({ ...prev, displayName: 'Display name contains invalid characters' }));
+      return false;
+    }
+    
+    // Remove displayName error if validation passes
+    setValidationErrors(prev => ({ ...prev, displayName: undefined }));
+    return true;
+  };
+  
+  const validateInterests = (): boolean => {
+    if (selectedInterests.length === 0) {
+      setValidationErrors(prev => ({ ...prev, interests: 'Please select at least one interest' }));
+      return false;
+    }
+    
+    // Validate that each interest is from the allowed list
+    const invalidInterests = selectedInterests.filter(interest => 
+      !SUSTAINABILITY_INTERESTS.includes(interest)
+    );
+    
+    if (invalidInterests.length > 0) {
+      setValidationErrors(prev => ({ ...prev, interests: 'Contains invalid interest selections' }));
+      return false;
+    }
+    
+    // Remove interests error if validation passes
+    setValidationErrors(prev => ({ ...prev, interests: undefined }));
+    return true;
   };
   
   const validateForm = (): boolean => {
-    const errors: {
-      displayName?: string;
-      interests?: string;
-    } = {};
+    // Reset all validation errors
+    setValidationErrors({});
     
-    // If not anonymous, display name is required
-    if (!isAnonymous && !displayName.trim()) {
-      errors.displayName = 'Display name is required when not anonymous';
-    }
+    const isDisplayNameValid = validateDisplayName(displayName);
+    const areInterestsValid = validateInterests();
     
-    // At least one interest should be selected
-    if (selectedInterests.length === 0) {
-      errors.interests = 'Please select at least one interest';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return isDisplayNameValid && areInterestsValid;
   };
   
   const handleSubmit = async () => {
     if (validateForm()) {
-      await onSubmit({
-        display_name: displayName.trim(),
-        is_anonymous: isAnonymous,
-        interests: selectedInterests,
-        avatar: avatar,
-      });
+      try {
+        // Sanitize inputs before submission
+        const sanitizedDisplayName = displayName.trim();
+        
+        // Validate interests one more time to ensure they're from allowed list
+        const validInterests = selectedInterests.filter(interest => 
+          SUSTAINABILITY_INTERESTS.includes(interest)
+        );
+        
+        await onSubmit({
+          display_name: sanitizedDisplayName,
+          is_anonymous: isAnonymous,
+          interests: validInterests,
+          avatar: avatar,
+        });
+      } catch (err) {
+        console.error('Profile submission error:', err);
+      }
     }
   };
   
@@ -185,10 +248,17 @@ export default function ProfileForm({
             <TextInput
               style={styles.input as any}
               value={displayName}
-              onChangeText={setDisplayName}
+              onChangeText={(text) => {
+                setDisplayName(text);
+                // Clear validation error when user types
+                if (validationErrors.displayName) {
+                  setValidationErrors(prev => ({ ...prev, displayName: undefined }));
+                }
+              }}
               placeholder="How would you like to be known?"
               autoCapitalize="words"
               maxLength={40}
+              onBlur={() => validateDisplayName(displayName)}
             />
             {validationErrors.displayName && (
               <Text style={styles.errorText}>{validationErrors.displayName}</Text>
