@@ -29,14 +29,14 @@ export async function fetchUserProfile(userId: string, skipCache: boolean = fals
     return null;
   }
 
-  // If avatar_url exists, generate the public URL
   if (data?.avatar_url) {
-    const { data: urlData } = await supabase.storage
-      .from('profiles') // Corrected bucket name based on upload logic
-      .getPublicUrl(data.avatar_url);
-      
-    // Overwrite the avatar_url path with the full public URL
-    data.avatar_url = urlData?.publicUrl || null; // Use null if publicUrl generation fails
+    // data.avatar_url is something like "userId/profile.jpeg"
+    const { data: signedData } = await supabase.storage
+      .from('profiles')
+      .createSignedUrl(data.avatar_url, 60 * 60 * 24); // 1 day
+  
+    // This becomes the fully qualified URL that you can pass to <Image source={...} />
+    data.avatar_url = signedData?.signedUrl || null;
   }
 
   // Cache the profile data
@@ -303,12 +303,18 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
     }
 
     // Get public URL for the uploaded image
-    const { data } = supabase.storage
+    const { error: dbError } = await supabase
       .from('profiles')
-      .getPublicUrl(filePath);
+      .update({ avatar_url: filePath })
+      .eq('id', userId);
+    
+    if (dbError) {
+      console.error('Error updating profile avatar in database:', dbError);
+      return { error: dbError.message };
+    }
     
     // Return the URL as provided by Supabase
-    return { url: data.publicUrl };
+    return { url: filePath };
   } catch (error) {
     console.error('Unexpected error uploading image:', error);
     return { error: error instanceof Error ? error.message : 'Unknown error occurred' };
