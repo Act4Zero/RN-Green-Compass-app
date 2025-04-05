@@ -25,7 +25,6 @@ export default function RootLayout() {
           {/* Profile screens */}
           <Stack.Screen name="profile/index" options={{ headerShown: false }} />
           <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/create" options={{ headerShown: false }} />
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

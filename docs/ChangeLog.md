@@ -418,7 +418,6 @@
     - Anonymity toggle
     - Sustainability interests multi-select
   - Created profile screens:
-    - Profile creation flow for new users (/profile/create.tsx)
     - Profile editing for existing users (/profile/edit.tsx)
     - Profile view with public/private information display (/profile/index.tsx)
   - Implemented business logic for:

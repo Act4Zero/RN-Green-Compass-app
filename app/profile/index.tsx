@@ -73,8 +73,6 @@ export default function ProfileScreen() {
       
       if (profileData) {
         setProfile(profileData);
-      } else {
-        router.replace('/profile/create' as any);
       }
     } catch (err) {
       console.error('Error loading profile:', err);

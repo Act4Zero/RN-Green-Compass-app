@@ -24,7 +24,7 @@ export default function EditProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [fetchError, setFetchError] = useState<string | undefined>();
-  const { user } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Track if we've already tracked this screen view
@@ -46,10 +46,7 @@ export default function EditProfileScreen() {
       
       if (profileData) {
         setProfile(profileData);
-      } else {
-        setFetchError('Profile not found. Please create a profile first.');
-        router.replace('/profile/create' as any);
-      }
+      } 
     } catch (err) {
       console.error('Error loading profile:', err);
       setFetchError('Failed to load profile data');
@@ -58,15 +55,21 @@ export default function EditProfileScreen() {
     }
   }, [user, router, profile]);
 
-  // Authentication check and initial profile load
-  useEffect(() => {
-    if (!user) {
-      router.replace('/auth/signin');
-    } else if (!profile && !isLoading) {
-      // Initial load when component mounts
-      loadProfile(false); // false = use cache if available
-    }
-  }, [user, router, profile, isLoading, loadProfile]);
+  // Redirect to signin if user is not authenticated
+    useEffect(() => {
+      // Only check after auth loading is complete
+      if (!authLoading && !user) {
+        console.log('No authenticated user found in profile, redirecting to signin');
+        router.replace('/auth/signin');
+      } else if (!authLoading && user) {
+        console.log('Authenticated user in profile:', user.id);
+        // Initial profile load when component mounts and user is authenticated
+        // Only load if we don't already have the profile
+        if (!profile && !isLoading) {
+          loadProfile(false); // false = use cache if available
+        }
+      }
+    }, [user, authLoading, router, profile, isLoading, loadProfile]);
 
   // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
   useFocusEffect(
