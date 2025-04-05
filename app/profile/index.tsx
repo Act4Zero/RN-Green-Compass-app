@@ -55,21 +55,21 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Define loadProfile function before it's used in useEffect
-  const loadProfile = useCallback(async (forceRefresh = false) => {
+  // Define loadProfile as a regular function to avoid dependency cycles
+  const loadProfile = async () => {
     try {
       if (!user) {
         console.log('No user available to load profile');
         return;
       }
 
-      // Only set loading to true if we don't already have a profile or if forcing refresh
-      if (!profile || forceRefresh) {
+      // Only set loading to true if we don't already have a profile
+      if (!profile) {
         setIsLoading(true);
       }
       
-      // Skip cache if forcing refresh
-      const profileData = await fetchUserProfile(user.id, forceRefresh);
+      // Fetch profile data
+      const profileData = await fetchUserProfile(user.id);
       
       if (profileData) {
         setProfile(profileData);
@@ -80,7 +80,7 @@ export default function ProfileScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, router, profile]);
+  };
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function ProfileScreen() {
       // Initial profile load when component mounts and user is authenticated
       // Only load if we don't already have the profile
       if (!profile && !isLoading) {
-        loadProfile(false); // false = use cache if available
+        loadProfile();
       }
     }
     
@@ -112,21 +112,17 @@ export default function ProfileScreen() {
         setHasTrackedView(true);
       }
 
-      // Only attempt to load profile if auth loading is complete and user exists
-      if (!authLoading && user) {
-        // If we already have a profile, don't reload it unless it's been 5+ minutes
-        // This prevents unnecessary network calls when navigating back to this screen
-        if (profile) {
-          console.log('Profile already loaded, skipping fetch');
-        } else if (!isLoading) { // Only load if not already loading
-          loadProfile(false); // false = use cache if available
-        }
+      // Only load profile on focus if we don't have one yet
+      // This prevents infinite loops while ensuring data is available
+      if (!authLoading && user && !profile && !isLoading) {
+        console.log('Loading profile data on screen focus - profile not loaded yet');
+        loadProfile();
       }
 
       return () => {
         // Cleanup function if needed
       };
-    }, [user, authLoading, loadProfile, hasTrackedView, profile, isLoading])
+    }, [user, authLoading, hasTrackedView, profile, isLoading])
   );
 
   const handleEditProfile = () => {

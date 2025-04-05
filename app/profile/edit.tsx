@@ -30,19 +30,16 @@ export default function EditProfileScreen() {
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Load profile function with useCallback for memoization
-  const loadProfile = useCallback(async (forceRefresh = false) => {
+  // Load profile as a regular function to avoid dependency cycles
+  const loadProfile = async () => {
     try {
       if (!user) return;
 
-      // Only set loading to true if we don't already have a profile or forcing refresh
-      if (!profile || forceRefresh) {
-        setIsLoading(true);
-      }
+      // Set loading state
+      setIsLoading(true);
       
-      // Use the cache for initial load but force refresh when explicitly requested
-      // This is important for edit screen to ensure we're editing the latest data
-      const profileData = await fetchUserProfile(user.id, forceRefresh);
+      // Fetch profile data
+      const profileData = await fetchUserProfile(user.id);
       
       if (profileData) {
         setProfile(profileData);
@@ -53,7 +50,7 @@ export default function EditProfileScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, router, profile]);
+  };
 
   // Redirect to signin if user is not authenticated
     useEffect(() => {
@@ -66,7 +63,7 @@ export default function EditProfileScreen() {
         // Initial profile load when component mounts and user is authenticated
         // Only load if we don't already have the profile
         if (!profile && !isLoading) {
-          loadProfile(false); // false = use cache if available
+          loadProfile();
         }
       }
     }, [user, authLoading, router, profile, isLoading, loadProfile]);
@@ -80,18 +77,17 @@ export default function EditProfileScreen() {
         setHasTrackedView(true);
       }
 
-      // Load profile data when screen comes into focus
-      // If we already have profile data, don't reload it unnecessarily
+      // Only load profile on focus if we don't have one yet
+      // This prevents infinite loops while ensuring data is available
       if (user && !profile && !isLoading) {
-        // For edit screen, we want to make sure we have the latest data
-        // but we can still use the cache for the initial load
-        loadProfile(false); // false = use cache if available
+        console.log('Loading profile data on edit screen focus - profile not loaded yet');
+        loadProfile();
       }
 
       return () => {
         // Cleanup function if needed
       };
-    }, [loadProfile, hasTrackedView, profile, isLoading, user])
+    }, [hasTrackedView, profile, isLoading, user])
   );
 
   const handleSubmit = async (values: {

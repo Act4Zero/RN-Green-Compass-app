@@ -1,22 +1,12 @@
 import supabase from '../lib/supabase';
 import { Profile, ProfileFormData } from '../types/profiles';
-import { getCachedProfile, cacheProfile, clearCachedProfile } from './profileCache';
+// Profile cache import removed
 
 /**
  * Fetch a user's profile by their user ID
  * @param userId User ID to fetch profile for
- * @param skipCache If true, will bypass the cache and force a fresh fetch
  */
-export async function fetchUserProfile(userId: string, skipCache: boolean = false): Promise<Profile | null> {
-  // Check cache first unless skipCache is true
-  if (!skipCache) {
-    const cachedProfile = getCachedProfile(userId);
-    if (cachedProfile) {
-      console.log('Using cached profile for user:', userId);
-      return cachedProfile;
-    }
-  }
-
+export async function fetchUserProfile(userId: string): Promise<Profile | null> {
   console.log('Fetching profile from API for user:', userId);
   const { data, error } = await supabase
     .from('profiles')
@@ -39,10 +29,8 @@ export async function fetchUserProfile(userId: string, skipCache: boolean = fals
     data.avatar_url = signedData?.signedUrl || null;
   }
 
-  // Cache the profile data
+  // Return the profile data
   const profileData = data as Profile;
-  cacheProfile(userId, profileData);
-  
   return profileData;
 }
 
@@ -102,8 +90,7 @@ export async function createUserProfile(
       return { success: false, error: error.message };
     }
 
-    // Clear the cache for this user to ensure fresh data on next fetch
-    clearCachedProfile(userId);
+    // Cache clearing removed
 
     return { success: true };
   } catch (error) {
@@ -123,8 +110,8 @@ export async function updateUserProfile(
   profileData: ProfileFormData
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Fetch current profile first - skip cache to get fresh data
-    const currentProfile = await fetchUserProfile(userId, true);
+    // Fetch current profile
+    const currentProfile = await fetchUserProfile(userId);
     if (!currentProfile) {
       return { success: false, error: 'Profile not found' };
     }
@@ -162,8 +149,7 @@ export async function updateUserProfile(
       return { success: false, error: error.message };
     }
 
-    // Clear the cache for this user to ensure fresh data on next fetch
-    clearCachedProfile(userId);
+    // Cache clearing removed
 
     return { success: true };
   } catch (error) {
