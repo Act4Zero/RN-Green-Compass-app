@@ -9,6 +9,9 @@ import {
   PROFILES_BUCKET
 } from './types';
 
+// Target file size for aggressive compression (100KB)
+const TARGET_FILE_SIZE = 100 * 1024;
+
 /**
  * Generate a file path for storage
  */
@@ -70,26 +73,51 @@ export async function compressImageNative(
   uri: string, 
   options: CompressionOptions = {}
 ): Promise<{ blob: Blob; uri: string }> {
-  const quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
+  let quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
   const width = options.width || DEFAULT_IMAGE_WIDTH;
   const format = options.format || ImageManipulator.SaveFormat.JPEG;
   
-  console.log(`Compressing image with width=${width}, quality=${quality}`);
+  console.log(`Initial compression attempt with width=${width}, quality=${quality}`);
   
-  const compressedImage = await ImageManipulator.manipulateAsync(
+  // First compression attempt
+  let compressedImage = await ImageManipulator.manipulateAsync(
     uri,
     [{ resize: { width } }],
     { compress: quality, format }
   );
   
   // Get the compressed image as blob
-  const response = await fetch(compressedImage.uri);
+  let response = await fetch(compressedImage.uri);
   if (!response.ok) {
     throw new Error(`Failed to fetch compressed image: ${response.status}`);
   }
   
-  const blob = await response.blob();
-  console.log(`Compressed image size: ${blob.size} bytes`);
+  let blob = await response.blob();
+  console.log(`First compression result: ${blob.size} bytes`);
+  
+  // If the image is still too large, try more aggressive compression
+  if (blob.size > TARGET_FILE_SIZE) {
+    // Calculate a more aggressive quality setting based on how much we need to reduce
+    const sizeRatio = TARGET_FILE_SIZE / blob.size;
+    // Adjust quality more aggressively for larger files
+    quality = Math.max(0.1, Math.min(0.6, quality * sizeRatio * 1.2));
+    
+    console.log(`Second compression attempt with quality=${quality}`);
+    
+    compressedImage = await ImageManipulator.manipulateAsync(
+      compressedImage.uri,
+      [], // No resize on second pass, just quality reduction
+      { compress: quality, format }
+    );
+    
+    response = await fetch(compressedImage.uri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch second compressed image: ${response.status}`);
+    }
+    
+    blob = await response.blob();
+    console.log(`Second compression result: ${blob.size} bytes`);
+  }
   
   return { blob, uri: compressedImage.uri };
 }
@@ -101,37 +129,90 @@ export async function compressImageWeb(
   file: File, 
   options: CompressionOptions = {}
 ): Promise<Blob> {
-  if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') {
-    throw new Error('Browser does not support required compression APIs');
+  if (typeof createImageBitmap !== 'function') {
+    // Fallback for browsers without createImageBitmap
+    return compressImageWebFallback(file, options);
   }
   
-  const quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
+  let quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
   const width = options.width || DEFAULT_IMAGE_WIDTH;
   
-  console.log(`Compressing web image with width=${width}, quality=${quality}`);
+  console.log(`Initial web compression with width=${width}, quality=${quality}`);
   
-  // Create an image bitmap from the file
-  const imageBitmap = await createImageBitmap(file);
-  
-  // Create an offscreen canvas with proportional height
-  const canvas = new OffscreenCanvas(width, width * (imageBitmap.height / imageBitmap.width));
-  const ctx = canvas.getContext('2d');
-  
-  if (!ctx) {
-    throw new Error('Failed to get canvas context');
+  try {
+    // Create an image bitmap from the file
+    const imageBitmap = await createImageBitmap(file);
+    
+    // Use OffscreenCanvas if available, otherwise regular canvas
+    let canvas, ctx;
+    
+    if (typeof OffscreenCanvas === 'function') {
+      canvas = new OffscreenCanvas(width, Math.round(width * (imageBitmap.height / imageBitmap.width)));
+      ctx = canvas.getContext('2d');
+    } else {
+      canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = Math.round(width * (imageBitmap.height / imageBitmap.width));
+      ctx = canvas.getContext('2d');
+    }
+    
+    if (!ctx) {
+      throw new Error('Failed to get canvas context');
+    }
+    
+    // Draw the image to the canvas
+    ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+    
+    // Convert to blob with compression
+    let compressedBlob;
+    if (canvas instanceof OffscreenCanvas) {
+      compressedBlob = await canvas.convertToBlob({
+        type: 'image/jpeg',
+        quality
+      });
+    } else {
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else throw new Error('Failed to create blob from canvas');
+        }, 'image/jpeg', quality);
+      });
+    }
+    
+    console.log(`First web compression result: ${compressedBlob.size} bytes`);
+    
+    // If the image is still too large, try more aggressive compression
+    if (compressedBlob.size > TARGET_FILE_SIZE) {
+      // Calculate a more aggressive quality setting
+      const sizeRatio = TARGET_FILE_SIZE / compressedBlob.size;
+      quality = Math.max(0.1, Math.min(0.5, quality * sizeRatio * 1.2));
+      
+      console.log(`Second web compression attempt with quality=${quality}`);
+      
+      // Second compression pass
+      if (canvas instanceof OffscreenCanvas) {
+        compressedBlob = await canvas.convertToBlob({
+          type: 'image/jpeg',
+          quality
+        });
+      } else {
+        compressedBlob = await new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else throw new Error('Failed to create blob from canvas');
+          }, 'image/jpeg', quality);
+        });
+      }
+      
+      console.log(`Second web compression result: ${compressedBlob.size} bytes`);
+    }
+    
+    return compressedBlob;
+  } catch (error) {
+    console.error('Error in primary web compression method:', error);
+    // Fall back to alternative method if primary fails
+    return compressImageWebFallback(file, options);
   }
-  
-  // Draw the image to the canvas
-  ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
-  
-  // Convert to blob with compression
-  const compressedBlob = await canvas.convertToBlob({
-    type: 'image/jpeg',
-    quality
-  });
-  
-  console.log(`Compressed web image size: ${compressedBlob.size} bytes`);
-  return compressedBlob;
 }
 
 /**
@@ -165,6 +246,89 @@ export async function uploadToSupabase(
 /**
  * Process a base64 data URI image
  */
+/**
+ * Fallback compression method for web browsers that don't support createImageBitmap
+ */
+export async function compressImageWebFallback(
+  file: File,
+  options: CompressionOptions = {}
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
+    const width = options.width || DEFAULT_IMAGE_WIDTH;
+    
+    console.log(`Using fallback web compression with width=${width}, quality=${quality}`);
+    
+    // Create an image element
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      // Release the object URL
+      URL.revokeObjectURL(url);
+      
+      // Create a canvas with the desired dimensions
+      const canvas = document.createElement('canvas');
+      const aspectRatio = img.height / img.width;
+      canvas.width = width;
+      canvas.height = Math.round(width * aspectRatio);
+      
+      // Draw the image to the canvas
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      
+      // Draw with better quality settings
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // First compression pass
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Failed to create blob from canvas'));
+          return;
+        }
+        
+        console.log(`First fallback compression result: ${blob.size} bytes`);
+        
+        // If the image is still too large, try more aggressive compression
+        if (blob.size > TARGET_FILE_SIZE) {
+          // Calculate a more aggressive quality setting
+          const sizeRatio = TARGET_FILE_SIZE / blob.size;
+          const newQuality = Math.max(0.1, Math.min(0.5, quality * sizeRatio * 1.2));
+          
+          console.log(`Second fallback compression attempt with quality=${newQuality}`);
+          
+          // Second compression pass
+          canvas.toBlob((secondBlob) => {
+            if (!secondBlob) {
+              reject(new Error('Failed to create blob from second compression'));
+              return;
+            }
+            
+            console.log(`Second fallback compression result: ${secondBlob.size} bytes`);
+            resolve(secondBlob);
+          }, 'image/jpeg', newQuality);
+        } else {
+          resolve(blob);
+        }
+      }, 'image/jpeg', quality);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for compression'));
+    };
+    
+    img.src = url;
+  });
+}
+
+/**
+ * Process a base64 data URI image
+ */
 export async function processBase64Image(
   userId: string, 
   dataUri: string
@@ -183,8 +347,8 @@ export async function processBase64Image(
     // Estimate base64 size (4 chars in base64 represent 3 bytes)
     const estimatedSize = Math.ceil((base64Data.length * 3) / 4);
     
-    // If image is too large and we're on mobile, compress it
-    if (estimatedSize > MAX_FILE_SIZE && Platform.OS !== 'web') {
+    // Always try to compress images on mobile, regardless of size
+    if (Platform.OS !== 'web') {
       try {
         const { blob } = await compressImageNative(dataUri);
         return await uploadToSupabase(filePath, blob, 'image/jpeg');
@@ -197,9 +361,17 @@ export async function processBase64Image(
     // Convert base64 to blob
     const blob = await base64ToBlob(base64Data, contentType);
     
-    // Check blob size for web
+    // For web platform, try to compress if the blob is too large
     if (blob.size > MAX_FILE_SIZE && Platform.OS === 'web') {
-      return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+      try {
+        // Create a File object from the blob
+        const file = new File([blob], `temp.${fileExt}`, { type: contentType });
+        const compressedBlob = await compressImageWeb(file);
+        return await uploadToSupabase(filePath, compressedBlob, 'image/jpeg');
+      } catch (compressError) {
+        console.error('Error compressing base64 image on web:', compressError);
+        return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+      }
     }
     
     // Upload the blob
@@ -221,12 +393,14 @@ export async function processFileUri(
   
   const fileExt = extractFileExtension(uri);
   const filePath = generateFilePath(userId, fileExt);
+  const isImage = /^(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(fileExt);
   
   try {
-    // For React Native, try to compress the image first
-    if (Platform.OS !== 'web') {
+    // For images, always try to compress regardless of original size
+    if (isImage && Platform.OS !== 'web') {
       try {
         const { blob } = await compressImageNative(uri);
+        console.log(`Final compressed size: ${blob.size} bytes`);
         return await uploadToSupabase(filePath, blob, 'image/jpeg');
       } catch (compressError) {
         console.error('Error compressing image:', compressError);
@@ -234,24 +408,29 @@ export async function processFileUri(
       }
     }
     
-    // Regular upload flow (web or if compression failed)
+    // Regular upload flow (web, non-image files, or if compression failed)
     const response = await fetch(uri);
     if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
     }
     
     const blob = await response.blob();
     
     // Check blob size
     if (blob.size > MAX_FILE_SIZE) {
-      return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+      // If it's an image and we're here, it means compression failed
+      if (isImage) {
+        return { error: 'Image file is too large and compression failed. Please use an image under 300KB or compress it before uploading.' };
+      }
+      return { error: 'File is too large. Please use a file under 300KB.' };
     }
     
     // Upload the blob
-    return await uploadToSupabase(filePath, blob, `image/${fileExt}`);
+    const contentType = isImage ? `image/${fileExt}` : 'application/octet-stream';
+    return await uploadToSupabase(filePath, blob, contentType);
   } catch (error) {
-    console.error('Error processing image URI:', error);
-    return { error: error instanceof Error ? error.message : 'Failed to process image file' };
+    console.error('Error processing file URI:', error);
+    return { error: error instanceof Error ? error.message : 'Failed to process file' };
   }
 }
 
@@ -267,18 +446,28 @@ export async function processWebFile(
   const fileExt = extractFileExtension(file.name);
   const filePath = generateFilePath(userId, fileExt);
   
-  // Check file size
-  if (file.size > MAX_FILE_SIZE) {
+  // Always compress images for consistency, regardless of size
+  if (file.type.startsWith('image/')) {
     try {
       // Try to compress the image
       const compressedBlob = await compressImageWeb(file);
+      console.log(`Final compressed size: ${compressedBlob.size} bytes`);
       return await uploadToSupabase(filePath, compressedBlob, 'image/jpeg');
     } catch (compressError) {
       console.error('Error compressing web image:', compressError);
-      return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+      // If compression fails, try to upload the original if it's under the size limit
+      if (file.size <= MAX_FILE_SIZE) {
+        return await uploadToSupabase(filePath, file, file.type);
+      }
+      return { error: 'Failed to compress image. Please use an image under 300KB or compress it before uploading.' };
     }
   }
   
-  // Regular upload for files under the size limit
-  return await uploadToSupabase(filePath, file, `image/${fileExt}`);
+  // For non-image files or if we get here
+  if (file.size > MAX_FILE_SIZE) {
+    return { error: 'File is too large. Please use a file under 300KB.' };
+  }
+  
+  // Regular upload for non-image files under the size limit
+  return await uploadToSupabase(filePath, file, file.type);
 }
