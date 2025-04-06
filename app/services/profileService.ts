@@ -180,7 +180,7 @@ export async function updateUserProfile(
       return { success: false, error: 'Profile not found' };
     }
 
-    // Handle avatar upload if provided
+    // Handle avatar upload only if a new avatar is explicitly provided
     let avatar_url = currentProfile.avatar_url;
     if (profileData.avatar) {
       const { url, error: uploadError } = await uploadProfileImage(userId, profileData.avatar);
@@ -189,6 +189,7 @@ export async function updateUserProfile(
       }
       avatar_url = url || null;
     }
+    // If no new avatar is provided, keep the existing avatar_url and don't update it
 
     // Update display name if anonymity setting changed
     let display_name = currentProfile.display_name;
@@ -196,16 +197,23 @@ export async function updateUserProfile(
       display_name = profileData.display_name || generateRandomAlias();
     }
 
+    // Prepare update data, only including avatar_url if it was changed
+    const updateData: any = {
+      display_name,
+      is_anonymous: profileData.is_anonymous,
+      interests: profileData.interests,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Only include avatar_url in the update if a new avatar was provided
+    if (profileData.avatar) {
+      updateData.avatar_url = avatar_url;
+    }
+    
     // Update profile in database
     const { error } = await supabase
       .from('profiles')
-      .update({
-        display_name,
-        is_anonymous: profileData.is_anonymous,
-        interests: profileData.interests,
-        avatar_url,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', userId);
 
     if (error) {
@@ -352,18 +360,12 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
       return { error: 'Invalid file format' };
     }
 
-    // Get public URL for the uploaded image
-    const { error: dbError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: filePath })
-      .eq('id', userId);
+    // We don't update the profile table here anymore, we just return the file path
+    // This way, the avatar_url in the database will only be updated when the entire profile is updated
+    // and only if a new avatar was explicitly provided
     
-    if (dbError) {
-      console.error('Error updating profile avatar in database:', dbError);
-      return { error: dbError.message };
-    }
-    
-    // Return the URL as provided by Supabase
+    // Return just the file path (not a signed URL)
+    // This ensures we store only the relative path in the database
     return { url: filePath };
   } catch (error) {
     console.error('Unexpected error uploading image:', error);
