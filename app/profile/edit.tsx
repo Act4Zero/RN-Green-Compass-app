@@ -166,6 +166,7 @@ export default function EditProfileScreen() {
       setError('An unexpected error occurred');
     } finally {
       setIsSaving(false);
+      router.replace('/profile');
     }
   };
 
