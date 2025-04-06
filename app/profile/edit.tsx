@@ -115,8 +115,11 @@ export default function EditProfileScreen() {
           has_new_avatar: !!values.avatar
         });
         
-        // Clear the profile from state to force a fresh fetch next time
+        // Clear the profile from state to force a fresh fetch
         setProfile(null);
+        
+        // Explicitly reload the profile after successful update
+        loadProfile();
         
         // Show success message
         Alert.alert('Success', 'Your profile has been updated!', [
