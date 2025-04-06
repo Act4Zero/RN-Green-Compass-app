@@ -29,10 +29,12 @@ export async function updateUserProfile(
     }
     // If no new avatar is provided, keep the existing avatar_url and don't update it
 
-    // Update display name if anonymity setting changed
-    let display_name = currentProfile.display_name;
-    if (profileData.is_anonymous && !currentProfile.display_name) {
-      display_name = profileData.display_name || generateRandomAlias();
+    // Always use the provided display_name if it exists, otherwise keep the current one
+    let display_name = profileData.display_name || currentProfile.display_name;
+    
+    // If user is anonymous and no display name is provided or exists, generate a random alias
+    if (profileData.is_anonymous && !display_name) {
+      display_name = generateRandomAlias();
     }
 
     // Prepare update data, only including avatar_url if it was changed
