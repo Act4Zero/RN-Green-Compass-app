@@ -76,10 +76,22 @@ export default function ProfileScreen() {
         console.log('Profile data received:', JSON.stringify(profileData, null, 2));
         
         // Ensure all required fields are present with defaults if needed
+        // Parse interests if it's a string (this is a backup in case it wasn't parsed in profileService)
+        let interests = profileData.interests || [];
+        if (typeof interests === 'string') {
+          try {
+            interests = JSON.parse(interests);
+            console.log('Parsed interests in component from string to array:', interests);
+          } catch (parseErr) {
+            console.error('Error parsing interests JSON string in component:', parseErr);
+            interests = [];
+          }
+        }
+        
         const processedProfile = {
           ...profileData,
           display_name: profileData.display_name || '',
-          interests: profileData.interests || [],
+          interests: interests,
           avatar_url: profileData.avatar_url || null,
           is_anonymous: typeof profileData.is_anonymous === 'boolean' ? profileData.is_anonymous : false
         };
