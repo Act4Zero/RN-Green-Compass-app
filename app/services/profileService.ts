@@ -1,5 +1,7 @@
 import supabase from '../lib/supabase';
 import { Profile, ProfileFormData } from '../types/profiles';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 // Profile cache import removed
 
 /**
@@ -237,7 +239,7 @@ export async function updateUserProfile(
  * Upload a profile image to Supabase storage
  * Handles web File objects, React Native ImagePicker assets, and base64 data URIs
  */
-async function uploadProfileImage(userId: string, file: any): Promise<{ url?: string; error?: string }> {
+export async function uploadProfileImage(userId: string, file: any): Promise<{ url?: string; error?: string }> {
   try {
     // Check if file exists
     if (!file) {
@@ -245,6 +247,9 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
     }
 
     let filePath: string;
+    
+    // Maximum file size in bytes (290KB to stay safely under Supabase's 300KB limit)
+    const MAX_FILE_SIZE = 290 * 1024; // 290KB
     
     // Handle React Native asset object (from ImagePicker)
     if (file.uri) {
@@ -267,6 +272,62 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
         filePath = `${userId}/${fileName}`;
         
         try {
+          // Estimate base64 size (4 chars in base64 represent 3 bytes)
+          const estimatedSize = Math.ceil((base64Data.length * 3) / 4);
+          
+          // If image is too large, we need to compress it before converting to blob
+          if (estimatedSize > MAX_FILE_SIZE && Platform.OS !== 'web') {
+            // For React Native, we can use ImageManipulator to compress the image
+            try {
+              // Use a single compression attempt with fixed size of 400x400
+              const quality = 0.7;
+              const width = 400;
+              let compressedBlob: Blob | null = null;
+              
+              console.log(`Using single compression with width=${width}, quality=${quality}`);
+              
+              const compressedImage = await ImageManipulator.manipulateAsync(
+                file.uri,
+                [{ resize: { width: width } }],
+                { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
+              );
+              
+              // Get the compressed image as blob
+              const response = await fetch(compressedImage.uri);
+              if (!response.ok) {
+                throw new Error(`Failed to fetch compressed image: ${response.status}`);
+              }
+              
+              compressedBlob = await response.blob();
+              
+              // Log the compressed size
+              console.log(`Compressed image size: ${compressedBlob.size} bytes`);
+              
+              // Ensure we have a blob to upload
+              if (!compressedBlob) {
+                throw new Error('Failed to compress image');
+              }
+              
+              // Upload the compressed blob
+              const { error } = await supabase.storage
+                .from('profiles')
+                .upload(filePath, compressedBlob, {
+                  contentType: 'image/jpeg',
+                  upsert: true,
+                });
+                
+              if (error) {
+                console.error('Error uploading compressed image:', error);
+                return { error: error.message };
+              }
+              
+              return { url: filePath };
+            } catch (compressError) {
+              console.error('Error compressing image:', compressError);
+              // Fall back to regular upload if compression fails
+            }
+          }
+          
           // Convert base64 to blob
           const byteCharacters = atob(base64Data);
           const byteArrays = [];
@@ -284,6 +345,11 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
           }
           
           const blob = new Blob(byteArrays, { type: contentType });
+          
+          // Check blob size
+          if (blob.size > MAX_FILE_SIZE && Platform.OS === 'web') {
+            return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+          }
           
           // Upload the blob to Supabase storage
           const { error } = await supabase.storage
@@ -311,13 +377,70 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
         filePath = `${userId}/${fileName}`;
         
         try {
-          // For React Native, we need to fetch the file as a blob first
+          // For React Native, we need to compress the image first
+          if (Platform.OS !== 'web') {
+            try {
+              // Use a single compression attempt with fixed size of 400x400
+              const quality = 0.7;
+              const width = 400;
+              let compressedBlob: Blob | null = null;
+              
+              console.log(`Using single compression with width=${width}, quality=${quality}`);
+              
+              const compressedImage = await ImageManipulator.manipulateAsync(
+                file.uri,
+                [{ resize: { width: width } }],
+                { compress: quality, format: ImageManipulator.SaveFormat.JPEG }
+              );
+              
+              // Get the compressed image as blob
+              const response = await fetch(compressedImage.uri);
+              if (!response.ok) {
+                throw new Error(`Failed to fetch compressed image: ${response.status}`);
+              }
+              
+              compressedBlob = await response.blob();
+              
+              // Log the compressed size
+              console.log(`Compressed image size: ${compressedBlob.size} bytes`);
+              
+              // Ensure we have a blob to upload
+              if (!compressedBlob) {
+                throw new Error('Failed to compress image');
+              }
+              
+              // Upload the compressed blob
+              const { error } = await supabase.storage
+                .from('profiles')
+                .upload(filePath, compressedBlob, {
+                  contentType: 'image/jpeg',
+                  upsert: true
+                });
+                
+              if (error) {
+                console.error('Error uploading compressed image:', error);
+                return { error: error.message };
+              }
+              
+              return { url: filePath };
+            } catch (compressError) {
+              console.error('Error compressing image:', compressError);
+              // Fall back to regular upload if compression fails
+            }
+          }
+          
+          // Regular upload flow (web or if compression failed)
           const response = await fetch(file.uri);
           if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
           }
           
           const blob = await response.blob();
+          
+          // Check blob size
+          if (blob.size > MAX_FILE_SIZE) {
+            return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+          }
           
           // Upload the blob to Supabase storage
           const { error } = await supabase.storage
@@ -344,19 +467,89 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
       const fileName = `profile.${fileExt}`;
       filePath = `${userId}/${fileName}`;
       
-      const { error } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, file, {
-          contentType: `image/${fileExt}`,
-          upsert: true
-        });
-        
-      if (error) {
-        console.error('Error uploading image:', error);
-        return { error: error.message };
+      // Check file size for web File objects
+      if (file.size > MAX_FILE_SIZE) {
+        // For web, we can use the browser's built-in compression capabilities
+        if (typeof createImageBitmap === 'function' && typeof OffscreenCanvas === 'function') {
+          try {
+            // Create an image bitmap from the file
+            const imageBitmap = await createImageBitmap(file);
+            
+            // Create an offscreen canvas
+            // Use a single compression attempt with fixed size of 400x400
+            const quality = 0.7;
+            const width = 400;
+            let compressedBlob: Blob | null = null;
+            
+            console.log(`Using single web compression with width=${width}, quality=${quality}`);
+            
+            const canvas = new OffscreenCanvas(width, width * (imageBitmap.height / imageBitmap.width));
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+              throw new Error('Failed to get canvas context');
+            }
+            
+            // Draw the image to the canvas with compression
+            ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to blob with compression
+            compressedBlob = await canvas.convertToBlob({
+              type: 'image/jpeg',
+              quality: quality
+            });
+            
+            // Log the compressed size
+            console.log(`Compressed web image size: ${compressedBlob.size} bytes`);
+            
+            // Ensure we have a blob to upload
+            if (!compressedBlob) {
+              throw new Error('Failed to compress web image');
+            }
+            
+            // Upload the compressed blob
+            const { error } = await supabase.storage
+              .from('profiles')
+              .upload(filePath, compressedBlob, {
+                contentType: 'image/jpeg',
+                upsert: true
+              });
+            
+            if (error) {
+              console.error('Error uploading compressed image:', error);
+              return { error: error.message };
+            }
+            
+            return { url: filePath };
+          } catch (compressError) {
+            console.error('Error compressing web image:', compressError);
+            // Fall back to error message if compression fails
+            return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+          }
+        } else {
+          // If the browser doesn't support these APIs, return an error
+          return { error: 'Image file is too large. Please use an image under 300KB or compress it before uploading.' };
+        }
       }
-    } 
-    else {
+      
+      try {
+        // Regular upload for files under the size limit
+        const { error } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, file, {
+            contentType: `image/${fileExt}`,
+            upsert: true
+          });
+        
+        if (error) {
+          console.error('Error uploading image:', error);
+          return { error: error.message };
+        }
+      } catch (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        return { error: uploadError instanceof Error ? uploadError.message : 'Failed to upload image' };
+      }
+    } else {
       return { error: 'Invalid file format' };
     }
 
@@ -376,7 +569,7 @@ async function uploadProfileImage(userId: string, file: any): Promise<{ url?: st
 /**
  * Generate a random alias for anonymous users
  */
-function generateRandomAlias(): string {
+export function generateRandomAlias(): string {
   const adjectives = ['Green', 'Blue', 'Eco', 'Solar', 'Wind', 'Ocean', 'Forest', 'Earth'];
   const nouns = ['Explorer', 'Guardian', 'Protector', 'Advocate', 'Champion', 'Pioneer', 'Ranger'];
   
