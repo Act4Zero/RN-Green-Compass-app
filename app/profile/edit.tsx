@@ -3,7 +3,7 @@ import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle,
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
-import { fetchUserProfile, updateUserProfile } from '../services/profileService';
+import { fetchUserProfile, updateUserProfile } from '../services/profile';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
 

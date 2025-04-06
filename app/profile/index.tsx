@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { fetchUserProfile, getDisplayIdentifier } from '../services/profileService';
+import { fetchUserProfile, getDisplayIdentifier } from '../services/profile';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
 
