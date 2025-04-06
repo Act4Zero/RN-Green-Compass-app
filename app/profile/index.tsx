@@ -69,10 +69,26 @@ export default function ProfileScreen() {
       }
       
       // Fetch profile data
+      console.log('Fetching profile data for user:', user.id);
       const profileData = await fetchUserProfile(user.id);
       
       if (profileData) {
-        setProfile(profileData);
+        console.log('Profile data received:', JSON.stringify(profileData, null, 2));
+        
+        // Ensure all required fields are present with defaults if needed
+        const processedProfile = {
+          ...profileData,
+          display_name: profileData.display_name || '',
+          interests: profileData.interests || [],
+          avatar_url: profileData.avatar_url || null,
+          is_anonymous: typeof profileData.is_anonymous === 'boolean' ? profileData.is_anonymous : false
+        };
+        
+        console.log('Processed profile data:', JSON.stringify(processedProfile, null, 2));
+        setProfile(processedProfile);
+        console.log('Profile state updated with processed data');
+      } else {
+        console.warn('No profile data returned from fetchUserProfile');
       }
     } catch (err) {
       console.error('Error loading profile:', err);
@@ -160,9 +176,11 @@ export default function ProfileScreen() {
   }
 
   if (!profile) {
+    console.log('Profile is null in render, returning null component');
     return null;
   }
 
+  console.log('Rendering profile screen with data:', JSON.stringify(profile, null, 2));
   const displayIdentifier = getDisplayIdentifier(profile);
 
   return (
