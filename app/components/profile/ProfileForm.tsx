@@ -77,7 +77,7 @@ export default function ProfileForm({
   const isTabletOrLarger = width > 768;
   const [displayName, setDisplayName] = useState(initialValues.display_name);
   const [isAnonymous, setIsAnonymous] = useState(initialValues.is_anonymous);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(initialValues.interests);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(Array.isArray(initialValues.interests) ? initialValues.interests : []);
   const [avatar, setAvatar] = useState<any>(null);
   // Ensure avatarUrl is always a string or null, never undefined
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialValues.avatar_url || null);
@@ -116,10 +116,13 @@ export default function ProfileForm({
       return;
     }
     
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter(item => item !== interest));
+    // Ensure selectedInterests is an array before using array methods
+    const currentInterests = Array.isArray(selectedInterests) ? selectedInterests : [];
+    
+    if (currentInterests.includes(interest)) {
+      setSelectedInterests(currentInterests.filter(item => item !== interest));
     } else {
-      setSelectedInterests([...selectedInterests, interest]);
+      setSelectedInterests([...currentInterests, interest]);
     }
     
     // Clear validation error when user selects interests
@@ -158,13 +161,16 @@ export default function ProfileForm({
   };
   
   const validateInterests = (): boolean => {
-    if (selectedInterests.length === 0) {
+    // Ensure selectedInterests is an array before using array methods
+    const interestsArray = Array.isArray(selectedInterests) ? selectedInterests : [];
+    
+    if (interestsArray.length === 0) {
       setValidationErrors(prev => ({ ...prev, interests: 'Please select at least one interest' }));
       return false;
     }
     
     // Validate that each interest is from the allowed list
-    const invalidInterests = selectedInterests.filter(interest => 
+    const invalidInterests = interestsArray.filter(interest => 
       !SUSTAINABILITY_INTERESTS.includes(interest)
     );
     
