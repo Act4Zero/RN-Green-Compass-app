@@ -30,27 +30,60 @@ export default function EditProfileScreen() {
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Load profile as a regular function to avoid dependency cycles
-  const loadProfile = async () => {
-    try {
-      if (!user) return;
-
-      // Set loading state
-      setIsLoading(true);
-      
-      // Fetch profile data
-      const profileData = await fetchUserProfile(user.id);
-      
-      if (profileData) {
-        setProfile(profileData);
-      } 
-    } catch (err) {
-      console.error('Error loading profile:', err);
-      setFetchError('Failed to load profile data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Define loadProfile as a regular function to avoid dependency cycles
+    const loadProfile = async () => {
+      try {
+        if (!user) {
+          console.log('No user available to load profile');
+          return;
+        }
+  
+        // Only set loading to true if we don't already have a profile
+        if (!profile) {
+          setIsLoading(true);
+        }
+        
+        // Fetch profile data
+        console.log('Fetching profile data for user:', user.id);
+        const profileData = await fetchUserProfile(user.id);
+        
+        if (profileData) {
+          console.log('Profile data received:', JSON.stringify(profileData, null, 2));
+          
+          // Ensure all required fields are present with defaults if needed
+          // Parse interests if it's a string (this is a backup in case it wasn't parsed in profileService)
+          let interests = profileData.interests || [];
+          if (typeof interests === 'string') {
+            try {
+              interests = JSON.parse(interests);
+              console.log('Parsed interests in component from string to array:', interests);
+            } catch (parseErr) {
+              console.error('Error parsing interests JSON string in component:', parseErr);
+              interests = [];
+            }
+          }
+          
+          const processedProfile = {
+            ...profileData,
+            display_name: profileData.display_name || '',
+            interests: interests,
+            avatar_url: profileData.avatar_url || null,
+            is_anonymous: typeof profileData.is_anonymous === 'boolean' ? profileData.is_anonymous : false
+          };
+          
+          console.log('Processed profile data:', JSON.stringify(processedProfile, null, 2));
+          setProfile(processedProfile);
+          console.log('Profile state updated with processed data');
+        } else {
+          console.warn('No profile data returned from fetchUserProfile');
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        setError('Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
   // Redirect to signin if user is not authenticated
     useEffect(() => {
