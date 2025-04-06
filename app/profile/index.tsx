@@ -19,11 +19,16 @@ import { useAuth } from '../context/AuthContext';
 import { fetchUserProfile, getDisplayIdentifier } from '../services/profile';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
-  header: ViewStyle;
+  pageContainer: ViewStyle;
+  pageHeader: ViewStyle;
+  backButton: ViewStyle;
+  title: TextStyle;
+  subtitle: TextStyle;
   avatarContainer: ViewStyle;
   avatar: ImageStyle;
   avatarPlaceholder: ViewStyle;
@@ -204,8 +209,20 @@ export default function ProfileScreen() {
         style={styles.scrollContent}
         contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
       >
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
+      <View style={styles.pageContainer}>
+      <View style={styles.pageHeader}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.replace('/home')}
+        >
+          <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+        </TouchableOpacity>
+        <View>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.subtitle}>Manage your personal information</Text>
+        </View>
+      </View>
+      <View style={styles.avatarContainer}>
           {profile.avatar_url && !imageLoadError ? (
             <Image 
               source={{ uri: profile.avatar_url }} 
@@ -262,13 +279,31 @@ const styles = StyleSheet.create<Styles>({
     flexGrow: 1,
     padding: 16,
   },
-  header: {
-    flexDirection: 'column',
+  pageContainer: {
+    flex: 1,
     alignItems: 'center',
     marginBottom: 30,
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#555555',
   },
   avatarContainer: {
     marginBottom: 15,

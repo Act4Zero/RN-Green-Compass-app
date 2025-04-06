@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import ProfileForm from '../components/profile/ProfileForm';
 import { fetchUserProfile, updateUserProfile } from '../services/profile';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -14,6 +15,11 @@ interface Styles {
   loadingText: TextStyle;
   errorContainer: ViewStyle;
   errorText: TextStyle;
+  pageContainer: ViewStyle;
+  pageHeader: ViewStyle;
+  backButton: ViewStyle;
+  title: TextStyle;
+  subtitle: TextStyle;
 }
 
 export default function EditProfileScreen() {
@@ -198,7 +204,20 @@ export default function EditProfileScreen() {
         style={styles.scrollContent}
         contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
       >
-        {profile && (
+      <View style={styles.pageContainer}>
+      <View style={styles.pageHeader}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.replace('/profile')}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.title}>Edit Profile</Text>
+              <Text style={styles.subtitle}>Update your personal information</Text>
+            </View>
+          </View>
+          {profile && (
           <ProfileForm
             initialValues={{
               display_name: profile.display_name || '',
@@ -211,6 +230,7 @@ export default function EditProfileScreen() {
           error={error}
         />
       )}
+        </View>
     </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -247,5 +267,27 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 16,
     color: '#D32F2F',
     textAlign: 'center',
+  },
+  pageContainer: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#555555',
   },
 });

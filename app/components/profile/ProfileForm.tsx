@@ -227,8 +227,6 @@ export default function ProfileForm({
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         <View style={[styles.formContainer, isTabletOrLarger && { maxWidth: 600, alignSelf: 'center' }]}>
-          <Text style={styles.heading}>Your Profile</Text>
-              
           {/* Avatar Upload */}
           <View style={styles.avatarContainer}>
             {avatarUrl ? (

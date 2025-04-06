@@ -220,7 +220,7 @@ export default function Home() {
             <View style={homeStyles.headerButtons}>
               <TouchableOpacity
                 style={homeStyles.headerButton}
-                onPress={() => router.push('/profile')}
+                onPress={() => router.replace('/profile')}
               >
                 <Ionicons name="person-outline" size={24} color="#2E7D32" />
               </TouchableOpacity>
