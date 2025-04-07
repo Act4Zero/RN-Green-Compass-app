@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import useHabitStats from './hooks/useHabitStats';
 import analyticsService from './services/analyticsService';
 import useGoalsManager from './hooks/useGoalsManager';
@@ -27,11 +27,14 @@ import { homeStyles } from './styles/Home.styles';
 
 // Import types
 import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types';
+import { Profile } from './services/profile/types';
+import { fetchUserProfile, getDisplayIdentifier } from './services/profile';
 
 export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, signOut, loading: authLoading } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const router = useRouter();
   
   // State for UI
@@ -40,8 +43,60 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Guard state to prevent accidental "pop" or back navigation
-  const [shouldPreventBack, setShouldPreventBack] = useState(true);
+  // Define loadProfile as a regular function to avoid dependency cycles
+    const loadProfile = async () => {
+      try {
+        if (!user) {
+          console.log('No user available to load profile');
+          return;
+        }
+  
+        // Only set loading to true if we don't already have a profile
+        if (!profile) {
+          setLoading(true);
+        }
+        
+        // Fetch profile data
+        console.log('Fetching profile data for user:', user.id);
+        const profileData = await fetchUserProfile(user.id);
+        
+        if (profileData) {
+          console.log('Profile data received:', JSON.stringify(profileData, null, 2));
+          
+          // Ensure all required fields are present with defaults if needed
+          // Parse interests if it's a string (this is a backup in case it wasn't parsed in profileService)
+          let interests = profileData.interests || [];
+          if (typeof interests === 'string') {
+            try {
+              interests = JSON.parse(interests);
+              console.log('Parsed interests in component from string to array:', interests);
+            } catch (parseErr) {
+              console.error('Error parsing interests JSON string in component:', parseErr);
+              interests = [];
+            }
+          }
+          
+          const processedProfile = {
+            ...profileData,
+            display_name: profileData.display_name || '',
+            interests: interests,
+            avatar_url: profileData.avatar_url || null,
+            is_anonymous: typeof profileData.is_anonymous === 'boolean' ? profileData.is_anonymous : false
+          };
+          
+          console.log('Processed profile data:', JSON.stringify(processedProfile, null, 2));
+          setProfile(processedProfile);
+          console.log('Profile state updated with processed data');
+        } else {
+          console.warn('No profile data returned from fetchUserProfile');
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        setError('Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // Add authentication redirect using useFocusEffect
   useFocusEffect(
@@ -53,6 +108,8 @@ export default function Home() {
             await router.replace('/auth/signin');
           } else if (!authLoading && user) {
             console.log('Authenticated user:', user.id);
+            // Load profile data
+            await loadProfile();
           }
         } catch (error) {
           console.error('Navigation error:', error);
@@ -81,11 +138,12 @@ export default function Home() {
   const { totalCO2Saved, totalActions, overallStreak, refreshStats } = useHabitStats();
   const { 
     goals, 
-    loading: goalsLoading, 
     updateGoal, 
     deleteGoal, 
     refreshGoals 
   } = useGoalsManager();
+
+  const displayIdentifier = profile ? getDisplayIdentifier(profile) : '';
 
   // Refresh data when screen comes into focus with debounce to prevent infinite loops
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -189,7 +247,6 @@ export default function Home() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      setShouldPreventBack(false);
       router.replace('/');
     } catch (err) {
       Alert.alert('Error', 'Failed to sign out. Please try again.');
@@ -215,7 +272,7 @@ export default function Home() {
           <View style={homeStyles.header}>
             <View>
               <Text style={homeStyles.welcomeText}>Welcome back,</Text>
-              <Text style={homeStyles.userName}>{user?.email?.split('@')[0] || 'User'}</Text>
+              <Text style={homeStyles.userName}>{displayIdentifier || ''}</Text>
             </View>
             <View style={homeStyles.headerButtons}>
               <TouchableOpacity
