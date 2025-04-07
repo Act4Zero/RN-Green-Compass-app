@@ -1,26 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator, Text, ViewStyle, TextStyle, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { View, Alert, ActivityIndicator, Text, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity, Image } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import ProfileForm from '../components/profile/ProfileForm';
+import ProfileForm from './components/ProfileForm';
 import { fetchUserProfile, updateUserProfile } from '../services/profile';
 import { Profile } from '../types/profiles';
 import analyticsService from '../services/analyticsService';
 import { Ionicons } from '@expo/vector-icons';
-
-interface Styles {
-  keyboardAvoidingContainer: ViewStyle;
-  scrollContent: ViewStyle;
-  loadingContainer: ViewStyle;
-  loadingText: TextStyle;
-  errorContainer: ViewStyle;
-  errorText: TextStyle;
-  pageContainer: ViewStyle;
-  pageHeader: ViewStyle;
-  backButton: ViewStyle;
-  title: TextStyle;
-  subtitle: TextStyle;
-}
+import profileEditStyles from '../profile/styles/ProfileEdit.styles';
 
 export default function EditProfileScreen() {
   const { width } = useWindowDimensions();
@@ -32,6 +19,7 @@ export default function EditProfileScreen() {
   const [fetchError, setFetchError] = useState<string | undefined>();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const styles = profileEditStyles;
 
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -235,59 +223,3 @@ export default function EditProfileScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create<Styles>({
-  keyboardAvoidingContainer: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#555555',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#F5F5F5',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#D32F2F',
-    textAlign: 'center',
-  },
-  pageContainer: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  pageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#555555',
-  },
-});
