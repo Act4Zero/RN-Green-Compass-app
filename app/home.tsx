@@ -27,76 +27,35 @@ import { homeStyles } from './styles/Home.styles';
 
 // Import types
 import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types';
-import { Profile } from './services/profile/types';
-import { fetchUserProfile, getDisplayIdentifier } from './services/profile';
+import useProfileManager from './hooks/useProfileManager';
 
 export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, signOut, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
   const router = useRouter();
   
   // State for UI
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  // Define loadProfile as a regular function to avoid dependency cycles
-    const loadProfile = async () => {
-      try {
-        if (!user) {
-          console.log('No user available to load profile');
-          return;
-        }
+  // Use the profile manager hook
+  const {
+    profile,
+    isLoading: profileLoading,
+    error: profileError,
+    loadProfile,
+    getProfileDisplayIdentifier
+  } = useProfileManager();
   
-        // Only set loading to true if we don't already have a profile
-        if (!profile) {
-          setLoading(true);
-        }
-        
-        // Fetch profile data
-        console.log('Fetching profile data for user:', user.id);
-        const profileData = await fetchUserProfile(user.id);
-        
-        if (profileData) {
-          console.log('Profile data received:', JSON.stringify(profileData, null, 2));
-          
-          // Ensure all required fields are present with defaults if needed
-          // Parse interests if it's a string (this is a backup in case it wasn't parsed in profileService)
-          let interests = profileData.interests || [];
-          if (typeof interests === 'string') {
-            try {
-              interests = JSON.parse(interests);
-              console.log('Parsed interests in component from string to array:', interests);
-            } catch (parseErr) {
-              console.error('Error parsing interests JSON string in component:', parseErr);
-              interests = [];
-            }
-          }
-          
-          const processedProfile = {
-            ...profileData,
-            display_name: profileData.display_name || '',
-            interests: interests,
-            avatar_url: profileData.avatar_url || null,
-            is_anonymous: typeof profileData.is_anonymous === 'boolean' ? profileData.is_anonymous : false
-          };
-          
-          console.log('Processed profile data:', JSON.stringify(processedProfile, null, 2));
-          setProfile(processedProfile);
-          console.log('Profile state updated with processed data');
-        } else {
-          console.warn('No profile data returned from fetchUserProfile');
-        }
-      } catch (err) {
-        console.error('Error loading profile:', err);
-        setError('Failed to load profile data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // For compatibility with existing code
+  const loading = profileLoading;
+  const error = profileError;
+  // Dummy functions for compatibility with existing code
+  const setLoading = (value: boolean) => {};
+  const setError = (value: string | null) => {};
+  
+  // The loadProfile function is now provided by useProfileManager
 
   // Add authentication redirect using useFocusEffect
   useFocusEffect(
@@ -143,7 +102,7 @@ export default function Home() {
     refreshGoals 
   } = useGoalsManager();
 
-  const displayIdentifier = profile ? getDisplayIdentifier(profile) : '';
+  const displayIdentifier = profile ? getProfileDisplayIdentifier() : '';
 
   // Refresh data when screen comes into focus with debounce to prevent infinite loops
   const [isRefreshing, setIsRefreshing] = useState(false);
