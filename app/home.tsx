@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from './context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import useHabitStats from './hooks/useHabitStats';
 import analyticsService from './services/analyticsService';
 import useGoalsManager from './hooks/useGoalsManager';
@@ -27,21 +27,35 @@ import { homeStyles } from './styles/Home.styles';
 
 // Import types
 import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types';
+import useProfileManager from './hooks/useProfileManager';
 
 export default function Home() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
-  const { user, signOut, authLoading } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
   
   // State for UI
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  // Guard state to prevent accidental "pop" or back navigation
-  const [shouldPreventBack, setShouldPreventBack] = useState(true);
+  // Use the profile manager hook
+  const {
+    profile,
+    isLoading: profileLoading,
+    error: profileError,
+    loadProfile,
+    getProfileDisplayIdentifier
+  } = useProfileManager();
+  
+  // For compatibility with existing code
+  const loading = profileLoading;
+  const error = profileError;
+  // Dummy functions for compatibility with existing code
+  const setLoading = (value: boolean) => {};
+  const setError = (value: string | null) => {};
+  
+  // The loadProfile function is now provided by useProfileManager
 
   // Add authentication redirect using useFocusEffect
   useFocusEffect(
@@ -53,6 +67,8 @@ export default function Home() {
             await router.replace('/auth/signin');
           } else if (!authLoading && user) {
             console.log('Authenticated user:', user.id);
+            // Load profile data
+            await loadProfile();
           }
         } catch (error) {
           console.error('Navigation error:', error);
@@ -81,11 +97,12 @@ export default function Home() {
   const { totalCO2Saved, totalActions, overallStreak, refreshStats } = useHabitStats();
   const { 
     goals, 
-    loading: goalsLoading, 
     updateGoal, 
     deleteGoal, 
     refreshGoals 
   } = useGoalsManager();
+
+  const displayIdentifier = profile ? getProfileDisplayIdentifier() : '';
 
   // Refresh data when screen comes into focus with debounce to prevent infinite loops
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -189,7 +206,6 @@ export default function Home() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      setShouldPreventBack(false);
       router.replace('/');
     } catch (err) {
       Alert.alert('Error', 'Failed to sign out. Please try again.');
@@ -215,14 +231,22 @@ export default function Home() {
           <View style={homeStyles.header}>
             <View>
               <Text style={homeStyles.welcomeText}>Welcome back,</Text>
-              <Text style={homeStyles.userName}>{user?.email?.split('@')[0] || 'User'}</Text>
+              <Text style={homeStyles.userName}>{displayIdentifier || ''}</Text>
             </View>
-            <TouchableOpacity
-              style={homeStyles.logoutButton}
-              onPress={handleSignOut}
-            >
-              <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
-            </TouchableOpacity>
+            <View style={homeStyles.headerButtons}>
+              <TouchableOpacity
+                style={homeStyles.headerButton}
+                onPress={() => router.replace('/profile')}
+              >
+                <Ionicons name="person-outline" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={homeStyles.headerButton}
+                onPress={handleSignOut}
+              >
+                <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Dashboard Stats */}
