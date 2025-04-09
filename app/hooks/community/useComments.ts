@@ -1,0 +1,251 @@
+import { useState, useCallback } from 'react';
+import { commentService } from '../../services/community';
+import { analyticsService } from '../../services/analyticsService';
+import { Comment, PaginationParams, CommentsState, UseCommentsProps } from './types';
+import useCurrentUser from './useCurrentUser';
+
+/**
+ * Hook for managing comments on a discussion
+ */
+const useComments = ({ 
+  discussionId, 
+  initialPage = 1, 
+  pageSize = 20 
+}: UseCommentsProps) => {
+  const { currentUser } = useCurrentUser();
+  
+  // State for comments
+  const [state, setState] = useState<CommentsState>({
+    comments: [],
+    count: 0,
+    page: initialPage,
+    hasMore: false,
+    isLoading: false,
+    error: null
+  });
+
+  /**
+   * Load comments for a discussion with pagination
+   */
+  const loadComments = useCallback(async (
+    page: number = 1,
+    limit: number = pageSize
+  ) => {
+    if (state.isLoading) return null;
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const params: PaginationParams = { page, limit };
+      const result = await commentService.getComments(
+        discussionId, 
+        params, 
+        currentUser?.id
+      );
+
+      setState(prev => ({
+        comments: page === 1 ? result.data : [...prev.comments, ...result.data],
+        count: result.count,
+        page,
+        hasMore: result.hasMore,
+        isLoading: false,
+        error: null
+      }));
+
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load comments';
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+      console.error(`Error loading comments for discussion ${discussionId}:`, error);
+      return null;
+    }
+  }, [state.isLoading, discussionId, currentUser, pageSize]);
+
+  /**
+   * Load more comments (pagination)
+   */
+  const loadMore = useCallback(() => {
+    if (state.hasMore && !state.isLoading) {
+      return loadComments(state.page + 1);
+    }
+    return null;
+  }, [state.hasMore, state.isLoading, state.page, loadComments]);
+
+  /**
+   * Refresh comments (pull to refresh)
+   */
+  const refresh = useCallback(() => {
+    return loadComments(1);
+  }, [loadComments]);
+
+  /**
+   * Create a new comment on a discussion
+   */
+  const createComment = useCallback(async (content: string) => {
+    if (!currentUser) {
+      setState(prev => ({ ...prev, error: 'You must be logged in to comment' }));
+      return null;
+    }
+
+    if (!content.trim()) {
+      setState(prev => ({ ...prev, error: 'Comment cannot be empty' }));
+      return null;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const newComment = await commentService.createComment(
+        currentUser.id,
+        discussionId,
+        content
+      );
+
+      // Add to comments list
+      setState(prev => ({
+        ...prev,
+        comments: [...prev.comments, newComment],
+        count: prev.count + 1,
+        isLoading: false
+      }));
+
+      // Track in analytics
+      analyticsService.trackEvent('create_comment', {
+        discussion_id: discussionId,
+        content_length: content.length
+      });
+
+      return newComment;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create comment';
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+      console.error(`Error creating comment for discussion ${discussionId}:`, error);
+      return null;
+    }
+  }, [currentUser, discussionId]);
+
+  /**
+   * Update an existing comment
+   */
+  const updateComment = useCallback(async (
+    commentId: string,
+    content: string
+  ) => {
+    if (!currentUser) {
+      setState(prev => ({ ...prev, error: 'You must be logged in to update a comment' }));
+      return null;
+    }
+
+    if (!content.trim()) {
+      setState(prev => ({ ...prev, error: 'Comment cannot be empty' }));
+      return null;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const updatedComment = await commentService.updateComment(
+        commentId,
+        content
+      );
+
+      // Update in comments list
+      setState(prev => ({
+        ...prev,
+        comments: prev.comments.map(c => 
+          c.id === commentId ? { ...c, content } : c
+        ),
+        isLoading: false
+      }));
+
+      // Track in analytics
+      analyticsService.trackEvent('update_comment', {
+        comment_id: commentId,
+        content_length: content.length
+      });
+
+      return updatedComment;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update comment';
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+      console.error(`Error updating comment ${commentId}:`, error);
+      return null;
+    }
+  }, [currentUser]);
+
+  /**
+   * Delete a comment
+   */
+  const deleteComment = useCallback(async (commentId: string) => {
+    if (!currentUser) {
+      setState(prev => ({ ...prev, error: 'You must be logged in to delete a comment' }));
+      return false;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      await commentService.deleteComment(commentId);
+
+      // Remove from comments list
+      setState(prev => ({
+        ...prev,
+        comments: prev.comments.filter(c => c.id !== commentId),
+        count: prev.count - 1,
+        isLoading: false
+      }));
+
+      // Track in analytics
+      analyticsService.trackEvent('delete_comment', {
+        comment_id: commentId,
+        discussion_id: discussionId
+      });
+
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete comment';
+      setState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+      console.error(`Error deleting comment ${commentId}:`, error);
+      return false;
+    }
+  }, [currentUser, discussionId]);
+
+  /**
+   * Update a comment in the state after a reaction
+   */
+  const updateCommentReaction = useCallback((
+    commentId: string,
+    isReactionAdded: boolean
+  ) => {
+    setState(prev => ({
+      ...prev,
+      comments: prev.comments.map(c => {
+        if (c.id === commentId) {
+          const newReactionCount = isReactionAdded 
+            ? (c.reaction_count || 0) + 1 
+            : Math.max((c.reaction_count || 0) - 1, 0);
+          
+          return { 
+            ...c, 
+            reaction_count: newReactionCount,
+            user_has_reacted: isReactionAdded
+          };
+        }
+        return c;
+      })
+    }));
+  }, []);
+
+  return {
+    ...state,
+    loadComments,
+    loadMore,
+    refresh,
+    createComment,
+    updateComment,
+    deleteComment,
+    updateCommentReaction
+  };
+};
+
+export default useComments;
