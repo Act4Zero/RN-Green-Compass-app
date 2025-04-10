@@ -5,6 +5,7 @@ export interface FeedStyles {
   scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
+  backButton: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
   postsContainer: ViewStyle;
@@ -42,7 +43,13 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     padding: 16,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 16,
+    padding: 4,
   },
   title: {
     fontSize: 24,

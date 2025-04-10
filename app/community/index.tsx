@@ -119,9 +119,15 @@ export default function CommunityFeed() {
       >
         <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
           <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            </TouchableOpacity>
             <Text style={styles.title}>Community</Text>
-            <Text style={styles.subtitle}>Share and learn with fellow eco-enthusiasts</Text>
           </View>
+          <Text style={styles.subtitle}>Share and learn with fellow eco-enthusiasts</Text>
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
