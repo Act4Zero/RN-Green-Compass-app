@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import FeedStyles from './styles/FeedStyles';
 import Markdown from 'react-native-markdown-display';
+import { sanitizeMarkdownInput } from './utils/sanitizeMarkdownInput';
 
 // Styles for this component
 const styles = FeedStyles;
@@ -144,9 +145,16 @@ export default function CommunityFeed() {
                   <Markdown style={{
                     body: styles.postContent,
                     bullet: { color: '#2E7D32' },
-                    strong: { fontWeight: 'bold' }
+                    strong: { fontWeight: 'bold' },
+                    heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
+                    heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
+                    heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
+                    code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
+                    code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
+                    link: { color: '#1976D2', textDecorationLine: 'underline' },
+                    image: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 8, borderRadius: 8 }
                   }}>
-                    {post.content}
+                    {sanitizeMarkdownInput(post.content, 'post')}
                   </Markdown>
                   <View style={styles.divider} />
                   <View style={styles.postFooter}>

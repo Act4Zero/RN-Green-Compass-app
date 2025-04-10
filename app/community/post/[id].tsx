@@ -15,6 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import Markdown from 'react-native-markdown-display';
 import PostDetailStyles from '../styles/PostDetailStyles';
+import { sanitizeMarkdownInput, getCharacterInfo } from '../utils/sanitizeMarkdownInput';
 
 // Mock data for initial development
 const MOCK_POSTS = [
@@ -59,8 +60,10 @@ export default function PostDetail() {
   const [post, setPost] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [comment, setComment] = useState('');
+  const characterInfo = getCharacterInfo(comment, true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Success!');
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -87,16 +90,20 @@ export default function PostDetail() {
   };
 
   const handleSubmitComment = () => {
-    if (!comment.trim()) return;
+    // Check if comment is empty or exceeds character limit
+    if (!comment.trim() || characterInfo.isAtLimit) return;
     
     setIsSubmitting(true);
     
     // Simulate API call
     setTimeout(() => {
+      // Ensure the comment respects the 300 character limit
+      const limitedComment = comment.length > 300 ? comment.substring(0, 300) : comment;
+      
       const newComment = {
         id: Date.now().toString(),
         author: user?.email?.split('@')[0] || 'Anonymous',
-        content: comment,
+        content: sanitizeMarkdownInput(limitedComment, 'comment'),
         timestamp: 'Just now'
       };
       
@@ -111,7 +118,8 @@ export default function PostDetail() {
     }, 1000);
   };
 
-  const showToastMessage = () => {
+  const showToastMessage = (message: string = 'Success!') => {
+    setToastMessage(message);
     setShowToast(true);
     setTimeout(() => {
       setShowToast(false);
@@ -169,9 +177,16 @@ export default function PostDetail() {
             <Markdown style={{
               body: styles.postContent,
               bullet: { color: '#2E7D32' },
-              strong: { fontWeight: 'bold' }
+              strong: { fontWeight: 'bold' },
+              heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
+              heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
+              heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
+              code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
+              code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
+              link: { color: '#1976D2', textDecorationLine: 'underline' },
+              image: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 8, borderRadius: 8 }
             }}>
-              {post.content}
+              {sanitizeMarkdownInput(post.content, 'post')}
             </Markdown>
             <View style={styles.postFooter}>
               <TouchableOpacity 
@@ -196,7 +211,18 @@ export default function PostDetail() {
                     <Text style={styles.commentAuthor}>{comment.author}</Text>
                     <Text style={styles.commentTimestamp}>{comment.timestamp}</Text>
                   </View>
-                  <Text style={styles.commentContent}>{comment.content}</Text>
+                  {comment.content.length > 300 ? (
+                    <View>
+                      <Text style={styles.commentContent}>
+                        {sanitizeMarkdownInput(comment.content.substring(0, 297) + '...', 'comment')}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: '#ff9800', fontStyle: 'italic', marginTop: 4 }}>
+                        Comment truncated to 300 characters
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.commentContent}>{sanitizeMarkdownInput(comment.content, 'comment')}</Text>
+                  )}
                 </View>
               ))
             ) : (
@@ -207,13 +233,40 @@ export default function PostDetail() {
           </View>
 
           <View style={styles.newCommentContainer}>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Add a comment..."
-              value={comment}
-              onChangeText={setComment}
-              multiline
-            />
+            <View style={{ position: 'relative', width: '100%' }}>
+              <TextInput
+                style={[styles.commentInput, characterInfo.isAtLimit && { borderColor: '#ff6b6b' }]}
+                placeholder="Add a comment..."
+                value={comment}
+                onChangeText={(text) => {
+                  // Strictly enforce the 300 character limit
+                  if (text.length <= 300) {
+                    setComment(text);
+                  } else {
+                    setComment(text.slice(0, 300));
+                    // Show a toast message when limit is reached
+                    setShowToast(true);
+                    setToastMessage('Comment limited to 300 characters');
+                    setTimeout(() => setShowToast(false), 3000);
+                  }
+                }}
+                multiline
+                maxLength={300}
+              />
+              <View style={{ 
+                position: 'absolute', 
+                bottom: -20, 
+                right: 8,
+                backgroundColor: 'transparent'
+              }}>
+                <Text style={{
+                  fontSize: 12,
+                  color: characterInfo.isNearLimit ? (characterInfo.isAtLimit ? '#ff6b6b' : '#ff9800') : '#757575'
+                }}>
+                  {characterInfo.remaining} characters remaining
+                </Text>
+              </View>
+            </View>
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -236,7 +289,7 @@ export default function PostDetail() {
         <View style={styles.toastWrapper}>
           <View style={styles.toastContainer}>
             <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-            <Text style={styles.toastText}>Success!</Text>
+            <Text style={styles.toastText}>{toastMessage}</Text>
           </View>
         </View>
       )}

@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Markdown, { MarkdownIt } from 'react-native-markdown-display';
 import NewPostStyles, { markdownStyles } from './styles/NewPostStyles';
+import { sanitizeMarkdownInput, getCharacterInfo } from './utils/sanitizeMarkdownInput';
 
 export default function NewPost() {
   const { width } = useWindowDimensions();
@@ -32,10 +33,9 @@ export default function NewPost() {
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
-  // Calculate remaining characters
-  const remainingChars = MAX_CHARACTERS - postContent.length;
-  const isNearLimit = remainingChars <= 200;
-  const isAtLimit = remainingChars <= 0;
+  // Calculate remaining characters using the utility function
+  const characterInfo = getCharacterInfo(postContent);
+  const { remaining: remainingChars, isNearLimit, isAtLimit } = characterInfo;
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -55,6 +55,9 @@ export default function NewPost() {
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
+      // Sanitize the markdown input before submission to ensure it's safe
+      const formattedContent = sanitizeMarkdownInput(postContent, 'post');
+      console.log('Submitting formatted post:', formattedContent);
       // Navigate back to the feed with a success parameter
       router.replace({
         pathname: '/community',
@@ -133,6 +136,7 @@ export default function NewPost() {
                   {postContent.trim() ? (
                     <Markdown 
                       style={markdownStyles}
+                      // Using the formatted text to preserve Markdown and remove harmful content
                       // Custom renderers for images and links
                       rules={{
                         image: (node, children, parent, styles) => {
@@ -186,7 +190,7 @@ export default function NewPost() {
                         }
                       }}
                     >
-                      {postContent}
+                      {sanitizeMarkdownInput(postContent, 'post')}
                     </Markdown>
                   ) : (
                     <Text style={styles.previewPlaceholder}>
