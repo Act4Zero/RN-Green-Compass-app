@@ -9,11 +9,14 @@ import {
   useWindowDimensions,
   TextInput,
   ActivityIndicator,
+  Image,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import NewPostStyles from './styles/NewPostStyles';
+import Markdown, { MarkdownIt } from 'react-native-markdown-display';
+import NewPostStyles, { markdownStyles } from './styles/NewPostStyles';
 
 export default function NewPost() {
   const { width } = useWindowDimensions();
@@ -21,9 +24,18 @@ export default function NewPost() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
+  // Character limit for posts
+  const MAX_CHARACTERS = 2000;
+  
   const [postContent, setPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+  // Calculate remaining characters
+  const remainingChars = MAX_CHARACTERS - postContent.length;
+  const isNearLimit = remainingChars <= 200;
+  const isAtLimit = remainingChars <= 0;
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -36,7 +48,7 @@ export default function NewPost() {
   }, [user, authLoading, router]);
 
   const handleSubmitPost = () => {
-    if (!postContent.trim()) return;
+    if (!postContent.trim() || isAtLimit) return;
     
     setIsSubmitting(true);
     
@@ -53,6 +65,10 @@ export default function NewPost() {
 
   const toggleMarkdownHelp = () => {
     setShowMarkdownHelp(!showMarkdownHelp);
+  };
+
+  const togglePreviewMode = () => {
+    setIsPreviewMode(!isPreviewMode);
   };
 
   if (authLoading) {
@@ -87,22 +103,129 @@ export default function NewPost() {
           <View style={styles.inputContainer}>
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Share your thoughts or question</Text>
-              <TouchableOpacity 
-                style={styles.markdownHelpButton}
-                onPress={toggleMarkdownHelp}
-              >
-                <Ionicons name="information-circle-outline" size={20} color="#2E7D32" />
-                <Text style={styles.markdownHelpText}>Markdown</Text>
-              </TouchableOpacity>
+              <View style={styles.inputActions}>
+                <TouchableOpacity 
+                  style={styles.markdownHelpButton}
+                  onPress={toggleMarkdownHelp}
+                >
+                  <Ionicons name="information-circle-outline" size={20} color="#2E7D32" />
+                  <Text style={styles.markdownHelpText}>Markdown</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.previewButton}
+                  onPress={togglePreviewMode}
+                >
+                  <Ionicons 
+                    name={isPreviewMode ? "create-outline" : "eye-outline"} 
+                    size={20} 
+                    color="#2E7D32" 
+                  />
+                  <Text style={styles.previewButtonText}>
+                    {isPreviewMode ? "Edit" : "Preview"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <TextInput
-              style={styles.postInput}
-              placeholder="What's on your mind? Share your sustainability journey, ask questions, or post tips..."
-              value={postContent}
-              onChangeText={setPostContent}
-              multiline
-              textAlignVertical="top"
-            />
+            
+            {isPreviewMode ? (
+              <View style={styles.previewContainer}>
+                <ScrollView style={styles.previewScroll}>
+                  {postContent.trim() ? (
+                    <Markdown 
+                      style={markdownStyles}
+                      // Custom renderers for images and links
+                      rules={{
+                        image: (node, children, parent, styles) => {
+                          return (
+                            <Image 
+                              key={node.key} 
+                              source={{ uri: node.attributes.src }}
+                              style={{
+                                width: '100%',
+                                height: 200,
+                                resizeMode: 'contain',
+                                marginVertical: 8,
+                                borderRadius: 8,
+                              }}
+                            />
+                          );
+                        },
+                        link: (node, children, parent, styles) => {
+                          return (
+                            <Text 
+                              key={node.key}
+                              style={markdownStyles.link}
+                              onPress={() => {
+                                // Handle external URLs properly
+                                let url = node.attributes.href;
+                                
+                                // Handle URLs without protocol
+                                if (url && !url.match(/^(https?|mailto|tel):\/\//i)) {
+                                  // Check if it's likely a web URL (contains domain-like structure)
+                                  if (url.match(/^[\w-]+(\.[\w-]+)+/)) {
+                                    url = `https://${url}`;
+                                  } else if (url.startsWith('/')) {
+                                    // Relative path within the app - could be handled differently
+                                    console.log('Relative path detected:', url);
+                                    return;
+                                  }
+                                }
+                                
+                                // Open the URL if it seems valid
+                                if (url) {
+                                  console.log('Opening URL:', url);
+                                  Linking.openURL(url).catch(err => {
+                                    console.error('An error occurred opening the URL:', err);
+                                  });
+                                }
+                              }}
+                            >
+                              {children}
+                            </Text>
+                          );
+                        }
+                      }}
+                    >
+                      {postContent}
+                    </Markdown>
+                  ) : (
+                    <Text style={styles.previewPlaceholder}>
+                      Your preview will appear here. Start typing in edit mode to see the preview.
+                    </Text>
+                  )}
+                </ScrollView>
+              </View>
+            ) : (
+              <View>
+                <TextInput
+                  style={[styles.postInput, isAtLimit && styles.inputLimitReached]}
+                  placeholder="What's on your mind? Share your sustainability journey, ask questions, or post tips..."
+                  value={postContent}
+                  onChangeText={(text) => {
+                    // Limit text input to MAX_CHARACTERS
+                    if (text.length <= MAX_CHARACTERS) {
+                      setPostContent(text);
+                    } else {
+                      setPostContent(text.slice(0, MAX_CHARACTERS));
+                    }
+                  }}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={MAX_CHARACTERS}
+                />
+                <View style={styles.characterCountContainer}>
+                  <Text 
+                    style={[
+                      styles.characterCount,
+                      isNearLimit && styles.characterCountWarning,
+                      isAtLimit && styles.characterCountLimit
+                    ]}
+                  >
+                    {remainingChars} characters remaining
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
 
           {showMarkdownHelp && (
@@ -124,16 +247,20 @@ export default function NewPost() {
                 <Text style={styles.markdownHelpCode}>[link](url)</Text>
                 <Text style={styles.markdownHelpDescription}>Hyperlink</Text>
               </View>
+              <View style={styles.markdownHelpItem}>
+                <Text style={styles.markdownHelpCode}>![alt text](image_url)</Text>
+                <Text style={styles.markdownHelpDescription}>Image</Text>
+              </View>
             </View>
           )}
 
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!postContent.trim() || isSubmitting) && styles.submitButtonDisabled
+              (!postContent.trim() || isSubmitting || isAtLimit) && styles.submitButtonDisabled
             ]}
             onPress={handleSubmitPost}
-            disabled={!postContent.trim() || isSubmitting}
+            disabled={!postContent.trim() || isSubmitting || isAtLimit}
           >
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />

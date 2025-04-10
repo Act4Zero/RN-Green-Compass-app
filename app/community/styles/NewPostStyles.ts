@@ -1,5 +1,64 @@
 import { ViewStyle, TextStyle, StyleSheet, Platform } from 'react-native';
 
+// Define markdown styles separately to avoid TypeScript errors with the Markdown component
+export const markdownStyles = StyleSheet.create({
+  // Text styles
+  body: {
+    color: '#333333',
+    fontSize: 16,
+  },
+  heading1: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 8,
+  },
+  heading2: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 8,
+  },
+  heading3: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 8,
+  },
+  link: {
+    color: '#2E7D32',
+    textDecorationLine: 'underline',
+  },
+  // Block styles
+  paragraph: {
+    marginVertical: 8,
+    paddingHorizontal: 0,
+  },
+  blockquote: {
+    backgroundColor: '#F5F5F5',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2E7D32',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginVertical: 8,
+  },
+  code_block: {
+    backgroundColor: '#F5F5F5',
+    padding: 8,
+    borderRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+  },
+  code_inline: {
+    backgroundColor: '#F5F5F5',
+    padding: 4,
+    borderRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+  },
+  // We need to handle images separately in the component
+});
+
 export interface NewPostStyles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
@@ -10,9 +69,20 @@ export interface NewPostStyles {
   inputContainer: ViewStyle;
   inputHeader: ViewStyle;
   inputLabel: TextStyle;
+  inputActions: ViewStyle;
   markdownHelpButton: ViewStyle;
   markdownHelpText: TextStyle;
+  previewButton: ViewStyle;
+  previewButtonText: TextStyle;
   postInput: TextStyle;
+  inputLimitReached: TextStyle;
+  characterCountContainer: ViewStyle;
+  characterCount: TextStyle;
+  characterCountWarning: TextStyle;
+  characterCountLimit: TextStyle;
+  previewContainer: ViewStyle;
+  previewScroll: ViewStyle;
+  previewPlaceholder: TextStyle;
   submitButton: ViewStyle;
   submitButtonDisabled: ViewStyle;
   submitButtonText: TextStyle;
@@ -69,12 +139,27 @@ const NewPostStyles = StyleSheet.create<NewPostStyles>({
     fontWeight: '500',
     color: '#333333',
   },
+  inputActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   markdownHelpButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 4,
+    marginRight: 12,
   },
   markdownHelpText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    marginLeft: 4,
+  },
+  previewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+  },
+  previewButtonText: {
     fontSize: 14,
     color: '#2E7D32',
     marginLeft: 4,
@@ -88,6 +173,43 @@ const NewPostStyles = StyleSheet.create<NewPostStyles>({
     borderColor: '#E0E0E0',
     borderRadius: 8,
   },
+  inputLimitReached: {
+    borderColor: '#D32F2F',
+  },
+  characterCountContainer: {
+    alignItems: 'flex-end',
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  characterCount: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  characterCountWarning: {
+    color: '#FF9800',
+  },
+  characterCountLimit: {
+    color: '#D32F2F',
+    fontWeight: 'bold',
+  },
+  previewContainer: {
+    minHeight: 150,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  previewScroll: {
+    maxHeight: 300,
+  },
+  previewPlaceholder: {
+    fontSize: 16,
+    color: '#999999',
+    fontStyle: 'italic',
+    padding: 8,
+  },
+
   submitButton: {
     backgroundColor: '#2E7D32',
     borderRadius: 12,
