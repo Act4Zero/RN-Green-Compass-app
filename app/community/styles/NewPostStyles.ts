@@ -254,7 +254,7 @@ const NewPostStyles = StyleSheet.create<NewPostStyles>({
     padding: 4,
     borderRadius: 4,
     marginRight: 12,
-    width: 100,
+    width: 200,
   },
   markdownHelpDescription: {
     fontSize: 14,
