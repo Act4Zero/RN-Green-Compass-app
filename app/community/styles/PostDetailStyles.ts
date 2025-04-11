@@ -11,11 +11,14 @@ export interface PostDetailStyles {
   postHeader: ViewStyle;
   postAuthor: TextStyle;
   postTimestamp: TextStyle;
+  postTitle: TextStyle;
   postContent: TextStyle;
   postFooter: ViewStyle;
   likeButton: ViewStyle;
+  likeButtonActive: ViewStyle;
   likeText: TextStyle;
-  commentsSection: ViewStyle;
+  likeTextActive: TextStyle;
+  commentsContainer: ViewStyle;
   commentsTitle: TextStyle;
   commentItem: ViewStyle;
   commentHeader: ViewStyle;
@@ -24,8 +27,17 @@ export interface PostDetailStyles {
   commentContent: TextStyle;
   noCommentsContainer: ViewStyle;
   noCommentsText: TextStyle;
-  newCommentContainer: ViewStyle;
+  loadingCommentsContainer: ViewStyle;
+  loadingCommentsText: TextStyle;
+  errorCommentsContainer: ViewStyle;
+  errorCommentsText: TextStyle;
+  addCommentContainer: ViewStyle;
   commentInput: TextStyle;
+  commentInputAtLimit: TextStyle;
+  commentInputFooter: ViewStyle;
+  characterCount: TextStyle;
+  characterCountNearLimit: TextStyle;
+  characterCountAtLimit: TextStyle;
   submitButton: ViewStyle;
   submitButtonDisabled: ViewStyle;
   submitButtonText: TextStyle;
@@ -87,6 +99,12 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     fontSize: 14,
     color: '#757575',
   },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
   postContent: {
     fontSize: 16,
     color: '#333333',
@@ -104,13 +122,52 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     alignItems: 'center',
     padding: 8,
   },
+  likeButtonActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
   likeText: {
     fontSize: 14,
     color: '#757575',
     marginLeft: 4,
   },
-  commentsSection: {
+  likeTextActive: {
+    fontSize: 14,
+    color: '#2E7D32',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  commentsContainer: {
     marginBottom: 16,
+  },
+  loadingCommentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  loadingCommentsText: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 8,
+  },
+  errorCommentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  errorCommentsText: {
+    fontSize: 14,
+    color: '#D32F2F',
+    textAlign: 'center',
   },
   commentsTitle: {
     fontSize: 18,
@@ -160,13 +217,26 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     color: '#757575',
     textAlign: 'center',
   },
-  newCommentContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+  addCommentContainer: {
     marginBottom: 32,
   },
+  commentInputFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  characterCount: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  characterCountNearLimit: {
+    color: '#FFA000',
+  },
+  characterCountAtLimit: {
+    color: '#D32F2F',
+  },
   commentInput: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
@@ -175,6 +245,9 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     fontSize: 14,
     minHeight: 48,
     maxHeight: 120,
+  },
+  commentInputAtLimit: {
+    borderColor: '#D32F2F',
   },
   submitButton: {
     backgroundColor: '#2E7D32',

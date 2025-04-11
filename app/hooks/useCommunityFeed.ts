@@ -53,7 +53,11 @@ const useCommunityFeed = () => {
     clearDiscussion
   } = useSelectedDiscussion();
   
-  // Comments state (only initialized when a discussion is selected)
+  // Comments state - we'll use a memoized discussionId to prevent infinite loops
+  // This is a key fix for the infinite loop issue - we only update the discussionId
+  // when selectedDiscussion changes, not on every render
+  const currentDiscussionId = selectedDiscussion?.id || '';
+  
   const {
     comments,
     count: commentsCount,
@@ -61,7 +65,7 @@ const useCommunityFeed = () => {
     hasMore: hasMoreComments,
     isLoading: isLoadingComments,
     error: commentsError,
-    loadComments,
+    loadComments: loadCommentsBase,
     loadMore: loadMoreComments,
     refresh: refreshComments,
     createComment: createCommentBase,
@@ -69,10 +73,18 @@ const useCommunityFeed = () => {
     deleteComment: deleteCommentBase,
     updateCommentReaction
   } = useComments({
-    discussionId: selectedDiscussion?.id || '',
+    discussionId: currentDiscussionId,
     initialPage: 1,
     pageSize: 20
   });
+  
+  // Wrapper for loadComments that ensures we're using the latest discussionId
+  const loadComments = useCallback(() => {
+    if (selectedDiscussion?.id) {
+      return loadCommentsBase();
+    }
+    return Promise.resolve(null);
+  }, [selectedDiscussion?.id, loadCommentsBase]);
   
   // Reactions state
   const {
@@ -105,6 +117,7 @@ const useCommunityFeed = () => {
     setSubmitting(true);
     
     try {
+      // The discussionId is already set in the useComments hook
       const result = await createCommentBase(content);
       
       if (result) {
@@ -130,6 +143,7 @@ const useCommunityFeed = () => {
     setSubmitting(true);
     
     try {
+      // The discussionId is already set in the useComments hook
       const result = await deleteCommentBase(commentId);
       
       if (result) {

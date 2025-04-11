@@ -13,10 +13,13 @@ export interface FeedStyles {
   postHeader: ViewStyle;
   postAuthor: TextStyle;
   postTimestamp: TextStyle;
+  postTitle: TextStyle;
   postContent: TextStyle;
   postFooter: ViewStyle;
   reactionButton: ViewStyle;
+  reactionButtonActive: ViewStyle;
   reactionText: TextStyle;
+  reactionTextActive: TextStyle;
   commentButton: ViewStyle;
   commentText: TextStyle;
   divider: ViewStyle;
@@ -25,6 +28,10 @@ export interface FeedStyles {
   noPostsContainer: ViewStyle;
   noPostsText: TextStyle;
   loadingContainer: ViewStyle;
+  errorContainer: ViewStyle;
+  errorText: TextStyle;
+  retryButton: ViewStyle;
+  retryButtonText: TextStyle;
   toastWrapper: ViewStyle;
   toastContainer: ViewStyle;
   toastText: TextStyle;
@@ -88,6 +95,12 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     fontSize: 14,
     color: '#757575',
   },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
   postContent: {
     fontSize: 16,
     color: '#333333',
@@ -104,10 +117,21 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     alignItems: 'center',
     padding: 8,
   },
+  reactionButtonActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
   reactionText: {
     fontSize: 14,
     color: '#757575',
     marginLeft: 4,
+  },
+  reactionTextActive: {
+    fontSize: 14,
+    color: '#2E7D32',
+    marginLeft: 4,
+    fontWeight: '500',
   },
   commentButton: {
     flexDirection: 'row',
@@ -166,6 +190,31 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#D32F2F',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 8,
+    padding: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   toastWrapper: {
     position: 'absolute',

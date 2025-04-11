@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { reactionService } from '../../services/community';
-import { analyticsService } from '../../services/analyticsService';
 import { ToggleResult } from './types';
 import useCurrentUser from './useCurrentUser';
 
@@ -29,11 +28,7 @@ const useReactions = () => {
         discussionId
       );
 
-      // Track in analytics
-      analyticsService.trackEvent('toggle_discussion_reaction', {
-        discussion_id: discussionId,
-        action: isReactionAdded ? 'add' : 'remove'
-      });
+      // Analytics tracking removed
 
       return {
         success: true,
@@ -67,11 +62,7 @@ const useReactions = () => {
         commentId
       );
 
-      // Track in analytics
-      analyticsService.trackEvent('toggle_comment_reaction', {
-        comment_id: commentId,
-        action: isReactionAdded ? 'add' : 'remove'
-      });
+      // Analytics tracking removed
 
       return {
         success: true,

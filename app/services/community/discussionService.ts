@@ -46,17 +46,28 @@ export const discussionService = {
     }
 
     // Transform the data to match our interface
-    const discussions = data.map((item: any): Discussion => ({
-      id: item.id,
-      user_id: item.user_id,
-      title: item.title,
-      content: item.content,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      user: item.profiles,
-      comment_count: item.comments,
-      reaction_count: item.reactions
-    }));
+    const discussions = data.map((item: any): Discussion => {
+      // Extract count values from the objects returned by Supabase
+      const commentCount = typeof item.comments === 'object' && item.comments !== null
+        ? item.comments.count || 0
+        : item.comments || 0;
+        
+      const reactionCount = typeof item.reactions === 'object' && item.reactions !== null
+        ? item.reactions.count || 0
+        : item.reactions || 0;
+        
+      return {
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        content: item.content,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        user: item.profiles,
+        comment_count: commentCount,
+        reaction_count: reactionCount
+      };
+    });
 
     return {
       data: discussions,
@@ -103,6 +114,15 @@ export const discussionService = {
       }
     }
 
+    // Extract count values from the objects returned by Supabase
+    const commentCount = typeof data.comments === 'object' && data.comments !== null
+      ? data.comments.count || 0
+      : data.comments || 0;
+      
+    const reactionCount = typeof data.reactions === 'object' && data.reactions !== null
+      ? data.reactions.count || 0
+      : data.reactions || 0;
+
     return {
       id: data.id,
       user_id: data.user_id,
@@ -111,8 +131,8 @@ export const discussionService = {
       created_at: data.created_at,
       updated_at: data.updated_at,
       user: data.profiles,
-      comment_count: data.comments,
-      reaction_count: data.reactions,
+      comment_count: commentCount,
+      reaction_count: reactionCount,
       user_has_reacted: userHasReacted
     };
   },
@@ -140,10 +160,11 @@ export const discussionService = {
       throw error;
     }
 
+    // Ensure we return a properly formatted Discussion object
     return {
       ...data,
-      comment_count: 0,
-      reaction_count: 0,
+      comment_count: 0,  // New discussions have no comments
+      reaction_count: 0, // New discussions have no reactions
       user_has_reacted: false
     };
   },

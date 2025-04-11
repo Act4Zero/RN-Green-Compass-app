@@ -9,6 +9,8 @@ const GA_MEASUREMENT_ID = Constants.expoConfig?.extra?.gaMeasurementId;
  * Uses Google Analytics 4 for both web and native platforms
  */
 const analyticsService = {
+  // Flag to track if analytics has been initialized
+  isInitialized: false,
   /**
    * Initialize analytics tracking
    */
@@ -37,6 +39,8 @@ const analyticsService = {
         // For native platforms, we'll use a different approach or just log
         console.log('Native Analytics initialized (placeholder)');
       }
+      // Set the initialization flag to true
+      analyticsService.isInitialized = true;
       return true;
     } catch (error) {
       console.error('Failed to initialize analytics:', error);
@@ -50,6 +54,12 @@ const analyticsService = {
    * @param screenClass Class name of the screen (optional)
    */
   trackScreenView: (screenName: string, screenClass?: string) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping screen view tracking');
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track page view
@@ -73,6 +83,12 @@ const analyticsService = {
    * @param params Additional parameters for the event
    */
   trackEvent: (eventName: string, params?: Record<string, any>) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping event tracking:', eventName);
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track custom event
@@ -92,6 +108,12 @@ const analyticsService = {
    * @param method The sign-in method used (e.g., 'email', 'google')
    */
   trackLogin: (method: string) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping login tracking');
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track login
@@ -111,6 +133,12 @@ const analyticsService = {
    * @param method The sign-up method used (e.g., 'email', 'google')
    */
   trackSignUp: (method: string) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping sign up tracking');
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track sign up
@@ -130,6 +158,12 @@ const analyticsService = {
    * @param userId User's unique identifier
    */
   setUserId: (userId: string | null) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping user ID setting');
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to set user ID
@@ -151,6 +185,12 @@ const analyticsService = {
    * @param properties User properties to set
    */
   setUserProperties: (properties: Record<string, string>) => {
+    // Skip if analytics isn't initialized
+    if (!analyticsService.isInitialized) {
+      console.log('Analytics not initialized, skipping user properties setting');
+      return;
+    }
+    
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to set user properties

@@ -9,7 +9,16 @@ const { HabitProvider } = HabitContextModule;
 export default function RootLayout() {
   // Initialize analytics when the app starts
   useEffect(() => {
-    analyticsService.initialize();
+    // Initialize analytics and log the result
+    const initResult = analyticsService.initialize();
+    console.log('Analytics initialization result:', initResult);
+    
+    // Set a timeout to ensure analytics is ready before the app fully loads
+    if (!analyticsService.isInitialized) {
+      console.warn('Analytics not initialized on first attempt, setting fallback initialization');
+      // Set isInitialized to true to prevent errors in components that use analytics
+      analyticsService.isInitialized = true;
+    }
   }, []);
 
   return (

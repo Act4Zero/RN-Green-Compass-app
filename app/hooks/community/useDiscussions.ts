@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { discussionService } from '../../services/community';
-import { analyticsService } from '../../services/analyticsService';
 import { Discussion, PaginationParams, DiscussionsState, UseDiscussionsProps } from './types';
 import useCurrentUser from './useCurrentUser';
 
@@ -24,9 +23,20 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
    * Load discussions with pagination
    */
   const loadDiscussions = useCallback(async (page: number = 1, limit: number = pageSize) => {
-    if (state.isLoading) return null;
+    // Use a function to get the current state value instead of referencing state directly
+    let shouldContinue = true;
+    
+    setState(prev => {
+      // Check isLoading inside the state update function
+      if (prev.isLoading) {
+        shouldContinue = false;
+        return prev; // No change if already loading
+      }
+      return { ...prev, isLoading: true, error: null };
+    });
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    // Early return if we determined we shouldn't continue
+    if (!shouldContinue) return null;
 
     try {
       const params: PaginationParams = { page, limit };
@@ -41,13 +51,6 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         error: null
       }));
 
-      // Track view in analytics
-      analyticsService.trackEvent('view_community_feed', {
-        page_number: page,
-        items_count: result.data.length,
-        total_count: result.count
-      });
-
       return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load discussions';
@@ -55,7 +58,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
       console.error('Error loading discussions:', error);
       return null;
     }
-  }, [state.isLoading, pageSize]);
+  }, [pageSize]); // Removed state.isLoading from dependencies
 
   /**
    * Load more discussions (pagination)
@@ -108,11 +111,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('create_discussion', {
-        has_title: !!title,
-        content_length: content.length
-      });
+      // Analytics tracking removed
 
       return newDiscussion;
     } catch (error) {
@@ -157,11 +156,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('update_discussion', {
-        discussion_id: discussionId,
-        updated_fields: Object.keys(updates)
-      });
+      // Analytics tracking removed
 
       return updatedDiscussion;
     } catch (error) {
@@ -194,10 +189,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('delete_discussion', {
-        discussion_id: discussionId
-      });
+      // Analytics tracking removed
 
       return true;
     } catch (error) {
@@ -232,12 +224,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         error: null
       }));
 
-      // Track view in analytics
-      analyticsService.trackEvent('view_user_discussions', {
-        page_number: page,
-        items_count: result.data.length,
-        total_count: result.count
-      });
+      // Analytics tracking removed
 
       return result;
     } catch (error) {

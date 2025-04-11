@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,53 +10,61 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import useCommunityFeed from '../hooks/useCommunityFeed';
 import FeedStyles from './styles/FeedStyles';
 import Markdown from 'react-native-markdown-display';
 import { sanitizeMarkdownInput } from './utils/sanitizeMarkdownInput';
 
+
+
 // Styles for this component
 const styles = FeedStyles;
-
-// Mock data for initial development
-const MOCK_POSTS = [
-  {
-    id: '1',
-    author: 'EcoFriend123',
-    timestamp: '2 hours ago',
-    content: 'Any tips for composting indoors? I live in an apartment and want to reduce my food waste.',
-    likes: 5,
-    comments: 2,
-  },
-  {
-    id: '2',
-    author: 'GreenThumb',
-    timestamp: '1 day ago',
-    content: 'Just switched to a bamboo toothbrush and it\'s amazing! **Highly recommend** for reducing plastic waste. Has anyone tried other bamboo products?',
-    likes: 12,
-    comments: 8,
-  },
-  {
-    id: '3',
-    author: 'SustainableLiving',
-    timestamp: '3 days ago',
-    content: 'I\'ve been tracking my carbon footprint using this app for a month now. It\'s incredible to see how small changes add up! \n\n- Reduced meat consumption by 50%\n- Started biking to work 3x a week\n- Switched to reusable shopping bags',
-    likes: 24,
-    comments: 15,
-  },
-];
 
 export default function CommunityFeed() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
   
-  const [posts, setPosts] = useState(MOCK_POSTS);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    // Discussions state
+    discussions,
+    isLoadingDiscussions,
+    discussionsError,
+    
+    // Methods - Discussions
+    loadDiscussions,
+    refreshDiscussions,
+    
+    // Methods - Reactions
+    toggleDiscussionReaction,
+  } = useCommunityFeed();
+  
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Check for success message from new post creation
+  useEffect(() => {
+    if (params.success === 'true') {
+      showToastMessage('Post created successfully!');
+    }
+  }, [params]);
+
+  // Use a ref to track if discussions have been loaded
+  const discussionsLoadedRef = useRef(false);
+
+  // Load discussions when component mounts (only once)
+  useEffect(() => {
+    if (!authLoading && user && !discussionsLoadedRef.current) {
+      console.log('Loading discussions for the first time');
+      loadDiscussions().then(() => {
+        discussionsLoadedRef.current = true;
+      });
+    }
+  }, [authLoading, user]); // Removed loadDiscussions from dependencies
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -66,20 +74,14 @@ export default function CommunityFeed() {
       router.replace('/auth/signin');
     } else if (!authLoading && user) {
       console.log('Authenticated user in community feed:', user.id);
-      // Simulate loading posts
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
     }
   }, [user, authLoading, router]);
 
-  const handleLike = (postId: string) => {
-    setPosts(prevPosts => 
-      prevPosts.map(post => 
-        post.id === postId ? { ...post, likes: post.likes + 1 } : post
-      )
-    );
-    showToastMessage('Post liked!');
+  const handleLike = async (postId: string) => {
+    const success = await toggleDiscussionReaction(postId);
+    if (success) {
+      showToastMessage('Post liked!');
+    }
   };
 
   const handleComment = (postId: string) => {
@@ -107,6 +109,20 @@ export default function CommunityFeed() {
       </View>
     );
   }
+  
+  if (discussionsError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error loading posts: {discussionsError}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => refreshDiscussions()}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -130,18 +146,25 @@ export default function CommunityFeed() {
           </View>
           <Text style={styles.subtitle}>Share and learn with fellow eco-enthusiasts</Text>
 
-          {isLoading ? (
+          {isLoadingDiscussions ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#2E7D32" />
             </View>
-          ) : posts.length > 0 ? (
+          ) : discussions.length > 0 ? (
             <View style={styles.postsContainer}>
-              {posts.map(post => (
-                <View key={post.id} style={styles.postItem}>
+              {discussions.map(discussion => (
+                <View key={discussion.id} style={styles.postItem}>
                   <View style={styles.postHeader}>
-                    <Text style={styles.postAuthor}>{post.author}</Text>
-                    <Text style={styles.postTimestamp}>{post.timestamp}</Text>
+                    <Text style={styles.postAuthor}>
+                      {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
+                    </Text>
+                    <Text style={styles.postTimestamp}>
+                      {new Date(discussion.created_at).toLocaleDateString()}
+                    </Text>
                   </View>
+                  {discussion.title && (
+                    <Text style={styles.postTitle}>{discussion.title}</Text>
+                  )}
                   <Markdown style={{
                     body: styles.postContent,
                     bullet: { color: '#2E7D32' },
@@ -154,23 +177,29 @@ export default function CommunityFeed() {
                     link: { color: '#1976D2', textDecorationLine: 'underline' },
                     image: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 8, borderRadius: 8 }
                   }}>
-                    {sanitizeMarkdownInput(post.content, 'post')}
+                    {sanitizeMarkdownInput(discussion.content, 'post')}
                   </Markdown>
                   <View style={styles.divider} />
                   <View style={styles.postFooter}>
                     <TouchableOpacity 
-                      style={styles.reactionButton}
-                      onPress={() => handleLike(post.id)}
+                      style={[styles.reactionButton, discussion.user_has_reacted && styles.reactionButtonActive]}
+                      onPress={() => handleLike(discussion.id)}
                     >
-                      <Ionicons name="heart-outline" size={20} color="#757575" />
-                      <Text style={styles.reactionText}>{post.likes}</Text>
+                      <Ionicons 
+                        name={discussion.user_has_reacted ? "heart" : "heart-outline"} 
+                        size={20} 
+                        color={discussion.user_has_reacted ? "#2E7D32" : "#757575"} 
+                      />
+                      <Text style={[styles.reactionText, discussion.user_has_reacted && styles.reactionTextActive]}>
+                        {discussion.reaction_count || 0}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={styles.commentButton}
-                      onPress={() => handleComment(post.id)}
+                      onPress={() => handleComment(discussion.id)}
                     >
                       <Ionicons name="chatbubble-outline" size={20} color="#757575" />
-                      <Text style={styles.commentText}>{post.comments}</Text>
+                      <Text style={styles.commentText}>{discussion.comment_count || 0}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>

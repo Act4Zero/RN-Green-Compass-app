@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { discussionService } from '../../services/community';
-import { analyticsService } from '../../services/analyticsService';
 import { Discussion, SelectedDiscussionState } from './types';
 import useCurrentUser from './useCurrentUser';
 
@@ -21,9 +20,20 @@ const useSelectedDiscussion = () => {
    * Load a specific discussion by ID
    */
   const loadDiscussion = useCallback(async (discussionId: string) => {
-    if (state.isLoading) return null;
+    // Use a function to get the current state value instead of referencing state directly
+    let shouldContinue = true;
+    
+    setState(prev => {
+      // Check isLoading inside the state update function
+      if (prev.isLoading) {
+        shouldContinue = false;
+        return prev; // No change if already loading
+      }
+      return { ...prev, isLoading: true, error: null };
+    });
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    // Early return if we determined we shouldn't continue
+    if (!shouldContinue) return null;
 
     try {
       const discussion = await discussionService.getDiscussionById(
@@ -37,11 +47,7 @@ const useSelectedDiscussion = () => {
         isLoading: false
       }));
 
-      // Track view in analytics
-      analyticsService.trackEvent('view_discussion_detail', {
-        discussion_id: discussionId,
-        has_comments: discussion.comment_count > 0
-      });
+      // Analytics tracking removed
 
       return discussion;
     } catch (error) {
@@ -54,7 +60,7 @@ const useSelectedDiscussion = () => {
       console.error(`Error loading discussion ${discussionId}:`, error);
       return null;
     }
-  }, [state.isLoading, currentUser]);
+  }, [currentUser]); // Removed state.isLoading from dependencies
 
   /**
    * Update the selected discussion after a comment is added or removed

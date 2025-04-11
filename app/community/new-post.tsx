@@ -11,13 +11,15 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import Markdown, { MarkdownIt } from 'react-native-markdown-display';
+import Markdown from 'react-native-markdown-display';
 import NewPostStyles, { markdownStyles } from './styles/NewPostStyles';
 import { sanitizeMarkdownInput, getCharacterInfo } from './utils/sanitizeMarkdownInput';
+import useCommunityFeed from '../hooks/useCommunityFeed';
 
 export default function NewPost() {
   const { width } = useWindowDimensions();
@@ -25,16 +27,29 @@ export default function NewPost() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
+  // Get community feed functionality
+  const {
+    // Form state
+    newPostContent,
+    setNewPostContent,
+    newPostTitle,
+    setNewPostTitle,
+    resetPostForm,
+    isSubmitting,
+    submitError,
+    // Methods
+    createDiscussion
+  } = useCommunityFeed();
+  
   // Character limit for posts
   const MAX_CHARACTERS = 2000;
   
-  const [postContent, setPostContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [postTitle, setPostTitle] = useState('');
   
   // Calculate remaining characters using the utility function
-  const characterInfo = getCharacterInfo(postContent);
+  const characterInfo = getCharacterInfo(newPostContent || '');
   const { remaining: remainingChars, isNearLimit, isAtLimit } = characterInfo;
 
   // Redirect to signin if user is not authenticated
@@ -47,23 +62,34 @@ export default function NewPost() {
     }
   }, [user, authLoading, router]);
 
-  const handleSubmitPost = () => {
-    if (!postContent.trim() || isAtLimit) return;
+  const handleSubmitPost = async () => {
+    if (!newPostContent?.trim() || isAtLimit) return;
     
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
       // Sanitize the markdown input before submission to ensure it's safe
-      const formattedContent = sanitizeMarkdownInput(postContent, 'post');
+      const formattedContent = sanitizeMarkdownInput(newPostContent, 'post');
       console.log('Submitting formatted post:', formattedContent);
-      // Navigate back to the feed with a success parameter
-      router.replace({
-        pathname: '/community',
-        params: { success: 'true' }
-      });
-    }, 1000);
+      
+      // Use the createDiscussion method from useCommunityFeed
+      const result = await createDiscussion(formattedContent, postTitle.trim() || undefined);
+      
+      if (result) {
+        // Reset the form
+        resetPostForm();
+        setPostTitle('');
+        
+        // Navigate back to the feed with a success parameter
+        router.replace({
+          pathname: '/community',
+          params: { success: 'true' }
+        });
+      } else if (submitError) {
+        Alert.alert('Error', `Failed to create post: ${submitError}`);
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      Alert.alert('Error', 'Failed to create post. Please try again.');
+    }
   };
 
   const toggleMarkdownHelp = () => {
@@ -133,7 +159,7 @@ export default function NewPost() {
             {isPreviewMode ? (
               <View style={styles.previewContainer}>
                 <ScrollView style={styles.previewScroll}>
-                  {postContent.trim() ? (
+                  {newPostContent?.trim() ? (
                     <Markdown 
                       style={markdownStyles}
                       // Using the formatted text to preserve Markdown and remove harmful content
@@ -190,7 +216,7 @@ export default function NewPost() {
                         }
                       }}
                     >
-                      {sanitizeMarkdownInput(postContent, 'post')}
+                      {sanitizeMarkdownInput(newPostContent || '', 'post')}
                     </Markdown>
                   ) : (
                     <Text style={styles.previewPlaceholder}>
@@ -202,15 +228,22 @@ export default function NewPost() {
             ) : (
               <View>
                 <TextInput
+                  style={styles.titleInput}
+                  placeholder="Title (optional)"
+                  value={postTitle}
+                  onChangeText={setPostTitle}
+                  maxLength={100}
+                />
+                <TextInput
                   style={[styles.postInput, isAtLimit && styles.inputLimitReached]}
                   placeholder="What's on your mind? Share your sustainability journey, ask questions, or post tips..."
-                  value={postContent}
+                  value={newPostContent}
                   onChangeText={(text) => {
                     // Limit text input to MAX_CHARACTERS
                     if (text.length <= MAX_CHARACTERS) {
-                      setPostContent(text);
+                      setNewPostContent(text);
                     } else {
-                      setPostContent(text.slice(0, MAX_CHARACTERS));
+                      setNewPostContent(text.slice(0, MAX_CHARACTERS));
                     }
                   }}
                   multiline
@@ -261,10 +294,10 @@ export default function NewPost() {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!postContent.trim() || isSubmitting || isAtLimit) && styles.submitButtonDisabled
+              (!newPostContent?.trim() || isSubmitting || isAtLimit) && styles.submitButtonDisabled
             ]}
             onPress={handleSubmitPost}
-            disabled={!postContent.trim() || isSubmitting || isAtLimit}
+            disabled={!newPostContent?.trim() || isSubmitting || isAtLimit}
           >
             {isSubmitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { commentService } from '../../services/community';
-import { analyticsService } from '../../services/analyticsService';
 import { Comment, PaginationParams, CommentsState, UseCommentsProps } from './types';
 import useCurrentUser from './useCurrentUser';
 
@@ -31,9 +30,20 @@ const useComments = ({
     page: number = 1,
     limit: number = pageSize
   ) => {
-    if (state.isLoading) return null;
+    // Use a function to get the current state value instead of referencing state directly
+    let shouldContinue = true;
+    
+    setState(prev => {
+      // Check isLoading inside the state update function
+      if (prev.isLoading) {
+        shouldContinue = false;
+        return prev; // No change if already loading
+      }
+      return { ...prev, isLoading: true, error: null };
+    });
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    // Early return if we determined we shouldn't continue
+    if (!shouldContinue) return null;
 
     try {
       const params: PaginationParams = { page, limit };
@@ -59,7 +69,7 @@ const useComments = ({
       console.error(`Error loading comments for discussion ${discussionId}:`, error);
       return null;
     }
-  }, [state.isLoading, discussionId, currentUser, pageSize]);
+  }, [discussionId, currentUser, pageSize]); // Removed state.isLoading from dependencies
 
   /**
    * Load more comments (pagination)
@@ -109,11 +119,7 @@ const useComments = ({
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('create_comment', {
-        discussion_id: discussionId,
-        content_length: content.length
-      });
+      // Analytics tracking removed
 
       return newComment;
     } catch (error) {
@@ -158,11 +164,7 @@ const useComments = ({
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('update_comment', {
-        comment_id: commentId,
-        content_length: content.length
-      });
+      // Analytics tracking removed
 
       return updatedComment;
     } catch (error) {
@@ -195,11 +197,7 @@ const useComments = ({
         isLoading: false
       }));
 
-      // Track in analytics
-      analyticsService.trackEvent('delete_comment', {
-        comment_id: commentId,
-        discussion_id: discussionId
-      });
+      // Analytics tracking removed
 
       return true;
     } catch (error) {

@@ -74,6 +74,7 @@ export interface NewPostStyles {
   markdownHelpText: TextStyle;
   previewButton: ViewStyle;
   previewButtonText: TextStyle;
+  titleInput: TextStyle;
   postInput: TextStyle;
   inputLimitReached: TextStyle;
   characterCountContainer: ViewStyle;
@@ -163,6 +164,15 @@ const NewPostStyles = StyleSheet.create<NewPostStyles>({
     fontSize: 14,
     color: '#2E7D32',
     marginLeft: 4,
+  },
+  titleInput: {
+    fontSize: 16,
+    color: '#333333',
+    padding: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
   },
   postInput: {
     fontSize: 16,
