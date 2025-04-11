@@ -9,7 +9,8 @@ export const discussionService = {
    * Get paginated discussions/posts for the community feed
    */
   getDiscussions: async (
-    params: PaginationParams
+    params: PaginationParams,
+    userId?: string
   ): Promise<PaginatedResult<Discussion>> => {
     const { page, limit } = params;
     const from = (page - 1) * limit;
@@ -25,7 +26,7 @@ export const discussionService = {
       throw countError;
     }
 
-    // Then get the paginated discussions with related data
+    // Then get the paginated discussions with user profiles
     const { data, error } = await supabase
       .from('discussions')
       .select(`
@@ -33,9 +34,7 @@ export const discussionService = {
         profiles:user_id (
           full_name,
           avatar_url
-        ),
-        comments:comments (count),
-        reactions:reactions (count)
+        )
       `)
       .order('created_at', { ascending: false })
       .range(from, to);
@@ -45,17 +44,68 @@ export const discussionService = {
       throw error;
     }
 
+    // Get discussion IDs for batch operations
+    const discussionIds = data.map(item => item.id);
+    
+    // Get comment counts for all discussions
+    let commentCountMap: Record<string, number> = {};
+    
+    // For each discussion, count its comments
+    for (const discussionId of discussionIds) {
+      const { count, error } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('discussion_id', discussionId);
+        
+      if (error) {
+        console.error(`Error counting comments for discussion ${discussionId}:`, error);
+      } else {
+        commentCountMap[discussionId] = count || 0;
+      }
+    }
+      
+
+    
+    // Get reaction counts for all discussions
+    let reactionCountMap: Record<string, number> = {};
+    
+    // For each discussion, count its reactions
+    for (const discussionId of discussionIds) {
+      const { count, error } = await supabase
+        .from('reactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('discussion_id', discussionId);
+        
+      if (error) {
+        console.error(`Error counting reactions for discussion ${discussionId}:`, error);
+      } else {
+        reactionCountMap[discussionId] = count || 0;
+      }
+    }
+      
+
+    
+    // If userId is provided, check which discussions the user has reacted to
+    let userReactionsMap: Record<string, boolean> = {};
+    if (userId) {
+      const { data: userReactions, error: userReactionsError } = await supabase
+        .from('reactions')
+        .select('discussion_id')
+        .eq('user_id', userId)
+        .in('discussion_id', discussionIds);
+        
+      if (userReactionsError) {
+        console.error('Error fetching user reactions:', userReactionsError);
+      } else {
+        userReactionsMap = (userReactions || []).reduce((map: Record<string, boolean>, item: any) => {
+          map[item.discussion_id] = true;
+          return map;
+        }, {} as Record<string, boolean>);
+      }
+    }
+
     // Transform the data to match our interface
     const discussions = data.map((item: any): Discussion => {
-      // Extract count values from the objects returned by Supabase
-      const commentCount = typeof item.comments === 'object' && item.comments !== null
-        ? item.comments.count || 0
-        : item.comments || 0;
-        
-      const reactionCount = typeof item.reactions === 'object' && item.reactions !== null
-        ? item.reactions.count || 0
-        : item.reactions || 0;
-        
       return {
         id: item.id,
         user_id: item.user_id,
@@ -64,8 +114,9 @@ export const discussionService = {
         created_at: item.created_at,
         updated_at: item.updated_at,
         user: item.profiles,
-        comment_count: commentCount,
-        reaction_count: reactionCount
+        comment_count: commentCountMap[item.id] || 0,
+        reaction_count: reactionCountMap[item.id] || 0,
+        user_has_reacted: userId ? !!userReactionsMap[item.id] : false
       };
     });
 
@@ -87,9 +138,7 @@ export const discussionService = {
         profiles:user_id (
           full_name,
           avatar_url
-        ),
-        comments:comments (count),
-        reactions:reactions (count)
+        )
       `)
       .eq('id', discussionId)
       .single();
@@ -99,29 +148,40 @@ export const discussionService = {
       throw error;
     }
 
+    // Get comment count for this discussion
+    const { count: commentCount, error: commentError } = await supabase
+      .from('comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('discussion_id', discussionId);
+      
+    if (commentError) {
+      console.error(`Error counting comments for discussion ${discussionId}:`, commentError);
+    }
+    
+    // Get reaction count for this discussion
+    const { count: reactionCount, error: reactionError } = await supabase
+      .from('reactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('discussion_id', discussionId);
+      
+    if (reactionError) {
+      console.error(`Error counting reactions for discussion ${discussionId}:`, reactionError);
+    }
+
     // Check if the current user has reacted to this discussion
     let userHasReacted = false;
     if (userId) {
-      const { data: reactionData, error: reactionError } = await supabase
+      const { data: userReactionData, error: userReactionError } = await supabase
         .from('reactions')
         .select('id')
         .eq('discussion_id', discussionId)
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (!reactionError) {
-        userHasReacted = !!reactionData;
+      if (!userReactionError) {
+        userHasReacted = !!userReactionData;
       }
     }
-
-    // Extract count values from the objects returned by Supabase
-    const commentCount = typeof data.comments === 'object' && data.comments !== null
-      ? data.comments.count || 0
-      : data.comments || 0;
-      
-    const reactionCount = typeof data.reactions === 'object' && data.reactions !== null
-      ? data.reactions.count || 0
-      : data.reactions || 0;
 
     return {
       id: data.id,
@@ -131,8 +191,8 @@ export const discussionService = {
       created_at: data.created_at,
       updated_at: data.updated_at,
       user: data.profiles,
-      comment_count: commentCount,
-      reaction_count: reactionCount,
+      comment_count: commentCount || 0,
+      reaction_count: reactionCount || 0,
       user_has_reacted: userHasReacted
     };
   },

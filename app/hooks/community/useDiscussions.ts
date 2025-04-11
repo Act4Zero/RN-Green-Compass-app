@@ -40,7 +40,8 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
 
     try {
       const params: PaginationParams = { page, limit };
-      const result = await discussionService.getDiscussions(params);
+      // Pass the current user ID to track which posts the user has liked
+      const result = await discussionService.getDiscussions(params, currentUser?.id);
 
       setState(prev => ({
         discussions: page === 1 ? result.data : [...prev.discussions, ...result.data],
