@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -66,6 +67,8 @@ export default function CommunityFeed() {
     // Methods - Discussions
     loadDiscussions,
     refreshDiscussions,
+    updateDiscussion,
+    deleteDiscussion,
     
     // Methods - Reactions
     toggleDiscussionReaction,
@@ -73,11 +76,15 @@ export default function CommunityFeed() {
   
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [postOptionsMap, setPostOptionsMap] = useState<Record<string, boolean>>({});
+  const [activePostId, setActivePostId] = useState<string | null>(null);
 
-  // Check for success message from new post creation
+  // Check for success message from post operations
   useEffect(() => {
     if (params.success === 'true') {
-      showToastMessage('Post created successfully!');
+      // Use custom message if provided, otherwise use default
+      const message = params.message as string || 'Post created successfully!';
+      showToastMessage(message);
     }
   }, [params]);
 
@@ -113,13 +120,81 @@ export default function CommunityFeed() {
   };
 
   const handleComment = (postId: string) => {
-    // Navigate to post detail screen (to be implemented)
+    // Navigate to post detail screen
     router.push(`/community/post/${postId}`);
   };
 
   const handleNewPost = () => {
-    // Navigate to new post screen (to be implemented)
+    // Navigate to new post screen
     router.push('/community/new-post');
+  };
+  
+  const togglePostOptions = (postId: string) => {
+    // Close any other open menus first
+    const isCurrentlyOpen = postOptionsMap[postId];
+    
+    // Reset all options to closed
+    setPostOptionsMap({});
+    
+    // If this menu wasn't already open, open it
+    if (!isCurrentlyOpen) {
+      setPostOptionsMap({ [postId]: true });
+      setActivePostId(postId);
+    } else {
+      setActivePostId(null);
+    }
+  };
+  
+  // Close the options menu when clicking outside
+  const handleCloseAllMenus = () => {
+    setPostOptionsMap({});
+    setActivePostId(null);
+  };
+  
+  const handleEditPost = (postId: string) => {
+    // Close the options menu
+    togglePostOptions(postId);
+    
+    // Find the post to edit
+    const postToEdit = discussions.find(discussion => discussion.id === postId);
+    if (!postToEdit) return;
+    
+    // Navigate to new-post screen with edit parameters
+    router.push({
+      pathname: '/community/new-post',
+      params: { 
+        edit: 'true',
+        postId: postId,
+        title: postToEdit.title || '',
+        content: postToEdit.content
+      }
+    });
+  };
+  
+  const handleDeletePost = (postId: string) => {
+    // Close the options menu
+    togglePostOptions(postId);
+    
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteDiscussion(postId);
+            if (success) {
+              showToastMessage('Post deleted!');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const showToastMessage = (message: string) => {
@@ -158,6 +233,14 @@ export default function CommunityFeed() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
+      {/* Overlay to detect clicks outside the menu */}
+      {Object.values(postOptionsMap).some(Boolean) && (
+        <TouchableOpacity 
+          style={styles.menuOverlay} 
+          activeOpacity={0} 
+          onPress={handleCloseAllMenus}
+        />
+      )}
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -205,9 +288,48 @@ export default function CommunityFeed() {
                         {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
                       </Text>
                     </View>
-                    <Text style={styles.postTimestamp}>
-                      {new Date(discussion.created_at).toLocaleDateString()}
-                    </Text>
+                    <View style={styles.postHeaderRight}>
+                      <Text style={styles.postTimestamp}>
+                        {new Date(discussion.created_at).toLocaleDateString()}
+                      </Text>
+                      {/* Show options button if the post belongs to the current user */}
+                      {discussion.user_id === user?.id && (
+                        <TouchableOpacity
+                          style={styles.optionsButton}
+                          onPress={(e) => {
+                            e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
+                            togglePostOptions(discussion.id);
+                          }}
+                        >
+                          <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
+                        </TouchableOpacity>
+                      )}
+                      {/* Post options menu */}
+                      {postOptionsMap[discussion.id] && (
+                        <View style={styles.optionsMenu}>
+                          <TouchableOpacity 
+                            style={styles.optionItem}
+                            onPress={(e) => {
+                              e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
+                              handleEditPost(discussion.id);
+                            }}
+                          >
+                            <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
+                            <Text style={styles.optionText}>Edit</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={styles.optionItem}
+                            onPress={(e) => {
+                              e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
+                              handleDeletePost(discussion.id);
+                            }}
+                          >
+                            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
+                            <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   </View>
                   {discussion.title && (
                     <Text style={styles.postTitle}>{discussion.title}</Text>

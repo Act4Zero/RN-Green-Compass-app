@@ -11,6 +11,7 @@ export interface FeedStyles {
   postsContainer: ViewStyle;
   postItem: ViewStyle;
   postHeader: ViewStyle;
+  postHeaderRight: ViewStyle;
   authorContainer: ViewStyle;
   authorAvatar: ImageStyle;
   defaultAvatar: ViewStyle;
@@ -27,6 +28,14 @@ export interface FeedStyles {
   commentButton: ViewStyle;
   commentText: TextStyle;
   divider: ViewStyle;
+  
+  // Post options
+  menuOverlay: ViewStyle;
+  optionsButton: ViewStyle;
+  optionsMenu: ViewStyle;
+  optionItem: ViewStyle;
+  optionText: TextStyle;
+  
   newPostButton: ViewStyle;
   newPostButtonText: TextStyle;
   noPostsContainer: ViewStyle;
@@ -89,6 +98,53 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  postHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  
+  // Post options
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 5,
+  },
+  optionsButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  optionsMenu: {
+    position: 'absolute',
+    top: 30,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 10,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  optionText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#2E7D32',
   },
   authorContainer: {
     flexDirection: 'row',

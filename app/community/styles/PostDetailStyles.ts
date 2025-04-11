@@ -9,6 +9,7 @@ export interface PostDetailStyles {
   title: TextStyle;
   postContainer: ViewStyle;
   postHeader: ViewStyle;
+  postHeaderRight: ViewStyle;
   authorContainer: ViewStyle;
   authorAvatar: ImageStyle;
   defaultAvatar: ViewStyle;
@@ -22,10 +23,32 @@ export interface PostDetailStyles {
   likeButtonActive: ViewStyle;
   likeText: TextStyle;
   likeTextActive: TextStyle;
+  
+  // Post options
+  menuOverlay: ViewStyle;
+  optionsButton: ViewStyle;
+  optionsMenu: ViewStyle;
+  optionItem: ViewStyle;
+  optionText: TextStyle;
+  
+  // Post editing
+  editPostContainer: ViewStyle;
+  editPostTitleInput: TextStyle;
+  editPostContentInput: TextStyle;
+  editPostFooter: ViewStyle;
+  editPostButtons: ViewStyle;
+  inputAtLimit: TextStyle;
+  saveButton: ViewStyle;
+  saveButtonDisabled: ViewStyle;
+  saveButtonText: TextStyle;
+  cancelButton: ViewStyle;
+  cancelButtonText: TextStyle;
+  
   commentsContainer: ViewStyle;
   commentsTitle: TextStyle;
   commentItem: ViewStyle;
   commentHeader: ViewStyle;
+  commentHeaderRight: ViewStyle;
   commentAuthorContainer: ViewStyle;
   commentAuthorAvatar: ImageStyle;
   commentDefaultAvatar: ViewStyle;
@@ -33,6 +56,17 @@ export interface PostDetailStyles {
   commentAuthor: TextStyle;
   commentTimestamp: TextStyle;
   commentContent: TextStyle;
+  
+  // Comment options
+  commentOptions: ViewStyle;
+  commentOptionButton: ViewStyle;
+  
+  // Comment editing
+  editCommentContainer: ViewStyle;
+  editCommentInput: TextStyle;
+  editCommentFooter: ViewStyle;
+  editCommentButtons: ViewStyle;
+  
   noCommentsContainer: ViewStyle;
   noCommentsText: TextStyle;
   loadingCommentsContainer: ViewStyle;
@@ -97,6 +131,121 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  postHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  
+  // Post options
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 5,
+  },
+  optionsButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  optionsMenu: {
+    position: 'absolute',
+    top: 30,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 10,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  optionText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#2E7D32',
+  },
+  
+  // Post editing
+  editPostContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  editPostTitleInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 16,
+    color: '#212121',
+    marginBottom: 8,
+  },
+  editPostContentInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 16,
+    color: '#212121',
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  inputAtLimit: {
+    borderColor: '#D32F2F',
+  },
+  editPostFooter: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editPostButtons: {
+    flexDirection: 'row',
+  },
+  saveButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+    opacity: 0.7,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  cancelButton: {
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    color: '#757575',
+    fontSize: 14,
   },
   authorContainer: {
     flexDirection: 'row',
@@ -220,6 +369,46 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  commentHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  // Comment options
+  commentOptions: {
+    flexDirection: 'row',
+    marginLeft: 8,
+  },
+  commentOptionButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  
+  // Comment editing
+  editCommentContainer: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  editCommentInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 14,
+    color: '#212121',
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  editCommentFooter: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editCommentButtons: {
+    flexDirection: 'row',
   },
   commentAuthorContainer: {
     flexDirection: 'row',

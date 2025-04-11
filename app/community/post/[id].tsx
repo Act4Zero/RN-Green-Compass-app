@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -58,6 +60,9 @@ export default function PostDetail() {
   const discussionId = typeof id === 'string' ? id : '';
   
   const {
+    // User state
+    currentUser,
+    
     // Selected discussion state
     selectedDiscussion,
     isLoadingSelectedDiscussion,
@@ -76,8 +81,14 @@ export default function PostDetail() {
     isSubmitting,
     submitError,
     
+    // Methods - Discussions
+    updateDiscussion,
+    deleteDiscussion,
+    
     // Methods - Comments
     createComment,
+    updateComment,
+    deleteComment,
     
     // Methods - Reactions
     toggleDiscussionReaction,
@@ -85,9 +96,17 @@ export default function PostDetail() {
   
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Success!');
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editPostContent, setEditPostContent] = useState('');
+  const [editPostTitle, setEditPostTitle] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
+  const [showPostOptions, setShowPostOptions] = useState(false);
   
   // Calculate character info for comment
   const characterInfo = getCharacterInfo(newCommentContent, true);
+  const editPostCharacterInfo = getCharacterInfo(editPostContent, false);
+  const editCommentCharacterInfo = getCharacterInfo(editCommentContent, true);
 
   // Load discussion and comments when component mounts
   useEffect(() => {
@@ -96,6 +115,19 @@ export default function PostDetail() {
       loadComments();
     }
   }, [authLoading, user, discussionId, loadDiscussion, loadComments]);
+  
+  // Initialize edit form when starting to edit post
+  useEffect(() => {
+    if (isEditingPost && selectedDiscussion) {
+      setEditPostContent(selectedDiscussion.content);
+      setEditPostTitle(selectedDiscussion.title || '');
+    }
+  }, [isEditingPost, selectedDiscussion]);
+  
+  // Close the options menu when clicking outside
+  const handleClosePostOptions = () => {
+    setShowPostOptions(false);
+  };
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
@@ -129,6 +161,121 @@ export default function PostDetail() {
     if (result) {
       showToastMessage('Comment added!');
     }
+  };
+  
+  const handleEditPost = () => {
+    setShowPostOptions(false);
+    
+    if (!selectedDiscussion) return;
+    
+    // Navigate to new-post screen with edit parameters
+    router.push({
+      pathname: '/community/new-post',
+      params: { 
+        edit: 'true',
+        postId: selectedDiscussion.id,
+        title: selectedDiscussion.title || '',
+        content: selectedDiscussion.content
+      }
+    });
+  };
+  
+  const handleDeletePost = () => {
+    setShowPostOptions(false);
+    
+    if (!selectedDiscussion) return;
+    
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteDiscussion(selectedDiscussion.id);
+            if (success) {
+              showToastMessage('Post deleted!');
+              // The router.back() is handled in the deleteDiscussion function
+            }
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleSavePostEdit = async () => {
+    if (!editPostContent.trim() || editPostCharacterInfo.isAtLimit || !selectedDiscussion) return;
+    
+    const updates = {
+      content: sanitizeMarkdownInput(editPostContent, 'post'),
+      title: editPostTitle.trim() || undefined
+    };
+    
+    const result = await updateDiscussion(selectedDiscussion.id, updates);
+    
+    if (result) {
+      setIsEditingPost(false);
+      showToastMessage('Post updated!');
+      // Reload the discussion to show the updated content
+      loadDiscussion(selectedDiscussion.id);
+    }
+  };
+  
+  const handleCancelPostEdit = () => {
+    setIsEditingPost(false);
+  };
+  
+  const handleEditComment = (commentId: string, content: string) => {
+    setEditingCommentId(commentId);
+    setEditCommentContent(content);
+  };
+  
+  const handleSaveCommentEdit = async () => {
+    if (!editingCommentId || !editCommentContent.trim() || editCommentCharacterInfo.isAtLimit) return;
+    
+    // Ensure the comment respects the 300 character limit
+    const limitedComment = editCommentContent.length > 300 ? editCommentContent.substring(0, 300) : editCommentContent;
+    
+    const result = await updateComment(editingCommentId, sanitizeMarkdownInput(limitedComment, 'comment'));
+    
+    if (result) {
+      setEditingCommentId(null);
+      setEditCommentContent('');
+      showToastMessage('Comment updated!');
+    }
+  };
+  
+  const handleCancelCommentEdit = () => {
+    setEditingCommentId(null);
+    setEditCommentContent('');
+  };
+  
+  const handleDeleteComment = (commentId: string) => {
+    Alert.alert(
+      'Delete Comment',
+      'Are you sure you want to delete this comment? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteComment(commentId);
+            if (success) {
+              showToastMessage('Comment deleted!');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const showToastMessage = (message: string = 'Success!') => {
@@ -181,6 +328,14 @@ export default function PostDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
+      {/* Overlay to detect clicks outside the menu */}
+      {showPostOptions && (
+        <TouchableOpacity 
+          style={styles.menuOverlay} 
+          activeOpacity={0} 
+          onPress={handleClosePostOptions}
+        />
+      )}
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -215,34 +370,112 @@ export default function PostDetail() {
                   {selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
                 </Text>
               </View>
-              <Text style={styles.postTimestamp}>
-                {new Date(selectedDiscussion.created_at).toLocaleDateString()}
-              </Text>
+              <View style={styles.postHeaderRight}>
+                <Text style={styles.postTimestamp}>
+                  {new Date(selectedDiscussion.created_at).toLocaleDateString()}
+                </Text>
+                {/* Show options button if the post belongs to the current user */}
+                {selectedDiscussion.user_id === user?.id && (
+                  <TouchableOpacity
+                    style={styles.optionsButton}
+                    onPress={() => setShowPostOptions(!showPostOptions)}
+                  >
+                    <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
+                  </TouchableOpacity>
+                )}
+                {/* Post options menu */}
+                {showPostOptions && (
+                  <View style={styles.optionsMenu}>
+                    <TouchableOpacity 
+                      style={styles.optionItem}
+                      onPress={handleEditPost}
+                    >
+                      <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
+                      <Text style={styles.optionText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.optionItem}
+                      onPress={handleDeletePost}
+                    >
+                      <Ionicons name="trash-outline" size={16} color="#D32F2F" />
+                      <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
-            {selectedDiscussion.title && (
-              <Text style={styles.postTitle}>{selectedDiscussion.title}</Text>
+            {!isEditingPost ? (
+              <>
+                {selectedDiscussion.title && (
+                  <Text style={styles.postTitle}>{selectedDiscussion.title}</Text>
+                )}
+                <Markdown 
+                  style={{
+                    body: styles.postContent,
+                    bullet: { color: '#2E7D32' },
+                    strong: { fontWeight: 'bold' },
+                    heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
+                    heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
+                    heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
+                    code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
+                    code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
+                    link: { color: '#1976D2', textDecorationLine: 'underline' },
+                    image: { width: 300, height: 300, marginVertical: 8, borderRadius: 8 }
+                  }}
+                  rules={rules}
+                  onLinkPress={(url: string) => {
+                    Linking.openURL(url);
+                    return false;
+                  }}
+                >
+                  {sanitizeMarkdownInput(selectedDiscussion.content, 'post')}
+                </Markdown>
+              </>
+            ) : (
+              <View style={styles.editPostContainer}>
+                <TextInput
+                  style={styles.editPostTitleInput}
+                  placeholder="Title (optional)"
+                  placeholderTextColor="#757575"
+                  value={editPostTitle}
+                  onChangeText={setEditPostTitle}
+                  maxLength={100}
+                />
+                <TextInput
+                  style={[styles.editPostContentInput, editPostCharacterInfo.isAtLimit ? styles.inputAtLimit : undefined]}
+                  placeholder="What's on your mind?"
+                  placeholderTextColor="#757575"
+                  value={editPostContent}
+                  onChangeText={setEditPostContent}
+                  multiline
+                  maxLength={1000}
+                />
+                <View style={styles.editPostFooter}>
+                  <Text style={[styles.characterCount, editPostCharacterInfo.isNearLimit ? styles.characterCountNearLimit : undefined, editPostCharacterInfo.isAtLimit ? styles.characterCountAtLimit : undefined]}>
+                    {editPostCharacterInfo.remaining} characters left
+                  </Text>
+                  <View style={styles.editPostButtons}>
+                    <TouchableOpacity 
+                      style={styles.cancelButton}
+                      onPress={handleCancelPostEdit}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.saveButton, (!editPostContent.trim() || editPostCharacterInfo.isAtLimit || isSubmitting) ? styles.saveButtonDisabled : undefined]}
+                      onPress={handleSavePostEdit}
+                      disabled={!editPostContent.trim() || editPostCharacterInfo.isAtLimit || isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.saveButtonText}>Save</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
             )}
-            <Markdown 
-              style={{
-                body: styles.postContent,
-                bullet: { color: '#2E7D32' },
-                strong: { fontWeight: 'bold' },
-                heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
-                heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
-                heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
-                code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
-                code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
-                link: { color: '#1976D2', textDecorationLine: 'underline' },
-                image: { width: 300, height: 300, marginVertical: 8, borderRadius: 8 }
-              }}
-              rules={rules}
-              onLinkPress={(url: string) => {
-                Linking.openURL(url);
-                return false;
-              }}
-            >
-              {sanitizeMarkdownInput(selectedDiscussion.content, 'post')}
-            </Markdown>
             <View style={styles.postFooter}>
               <TouchableOpacity 
                 style={[styles.likeButton, selectedDiscussion.user_has_reacted && styles.likeButtonActive]}
@@ -295,11 +528,68 @@ export default function PostDetail() {
                         {comment.user?.full_name || comment.user_id.substring(0, 8)}
                       </Text>
                     </View>
-                    <Text style={styles.commentTimestamp}>
-                      {new Date(comment.created_at).toLocaleDateString()}
-                    </Text>
+                    <View style={styles.commentHeaderRight}>
+                      <Text style={styles.commentTimestamp}>
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </Text>
+                      {/* Show options for user's own comments */}
+                      {comment.user_id === user?.id && (
+                        <View style={styles.commentOptions}>
+                          <TouchableOpacity 
+                            style={styles.commentOptionButton}
+                            onPress={() => handleEditComment(comment.id, comment.content)}
+                          >
+                            <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={styles.commentOptionButton}
+                            onPress={() => handleDeleteComment(comment.id)}
+                          >
+                            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                  <Text style={styles.commentContent}>{comment.content}</Text>
+                  {editingCommentId === comment.id ? (
+                    <View style={styles.editCommentContainer}>
+                      <TextInput
+                        style={[styles.editCommentInput, editCommentCharacterInfo.isAtLimit ? styles.inputAtLimit : undefined]}
+                        placeholder="Edit your comment..."
+                        placeholderTextColor="#757575"
+                        value={editCommentContent}
+                        onChangeText={setEditCommentContent}
+                        multiline
+                        maxLength={300}
+                      />
+                      <View style={styles.editCommentFooter}>
+                        <Text style={[styles.characterCount, editCommentCharacterInfo.isNearLimit ? styles.characterCountNearLimit : undefined, editCommentCharacterInfo.isAtLimit ? styles.characterCountAtLimit : undefined]}>
+                          {editCommentCharacterInfo.remaining} characters left
+                        </Text>
+                        <View style={styles.editCommentButtons}>
+                          <TouchableOpacity 
+                            style={styles.cancelButton}
+                            onPress={handleCancelCommentEdit}
+                          >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={[styles.saveButton, (!editCommentContent.trim() || editCommentCharacterInfo.isAtLimit || isSubmitting) ? styles.saveButtonDisabled : undefined]}
+                            onPress={handleSaveCommentEdit}
+                            disabled={!editCommentContent.trim() || editCommentCharacterInfo.isAtLimit || isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                              <Text style={styles.saveButtonText}>Save</Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text style={styles.commentContent}>{comment.content}</Text>
+                  )}
                 </View>
               ))
             ) : (
