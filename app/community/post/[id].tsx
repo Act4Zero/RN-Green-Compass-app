@@ -9,14 +9,42 @@ import {
   useWindowDimensions,
   TextInput,
   ActivityIndicator,
+  Linking,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/useCommunityFeed';
-import Markdown from 'react-native-markdown-display';
+import Markdown, { RenderRules } from 'react-native-markdown-display';
 import PostDetailStyles from '../styles/PostDetailStyles';
 import { sanitizeMarkdownInput, getCharacterInfo } from '../utils/sanitizeMarkdownInput';
+
+// Custom renderer for Markdown images to make them clickable
+const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
+  const { src } = node.attributes;
+  
+  return (
+    <View style={{ width: '100%', alignItems: 'center', marginVertical: 8 }}>
+      <TouchableOpacity 
+        key={node.key} 
+        onPress={() => Linking.openURL(src)}
+        activeOpacity={0.8}
+      >
+        <Image 
+          source={{ uri: src }} 
+          style={[styles.image]} 
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+// Custom rules for Markdown rendering
+const rules: RenderRules = {
+  image: renderImage,
+};
 
 // Styles for this component
 const styles = PostDetailStyles;
@@ -180,18 +208,25 @@ export default function PostDetail() {
             {selectedDiscussion.title && (
               <Text style={styles.postTitle}>{selectedDiscussion.title}</Text>
             )}
-            <Markdown style={{
-              body: styles.postContent,
-              bullet: { color: '#2E7D32' },
-              strong: { fontWeight: 'bold' },
-              heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
-              heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
-              heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
-              code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
-              code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
-              link: { color: '#1976D2', textDecorationLine: 'underline' },
-              image: { width: '100%', height: 200, resizeMode: 'contain', marginVertical: 8, borderRadius: 8 }
-            }}>
+            <Markdown 
+              style={{
+                body: styles.postContent,
+                bullet: { color: '#2E7D32' },
+                strong: { fontWeight: 'bold' },
+                heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
+                heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
+                heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
+                code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
+                code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
+                link: { color: '#1976D2', textDecorationLine: 'underline' },
+                image: { width: 300, height: 300, marginVertical: 8, borderRadius: 8 }
+              }}
+              rules={rules}
+              onLinkPress={(url: string) => {
+                Linking.openURL(url);
+                return false;
+              }}
+            >
               {sanitizeMarkdownInput(selectedDiscussion.content, 'post')}
             </Markdown>
             <View style={styles.postFooter}>
