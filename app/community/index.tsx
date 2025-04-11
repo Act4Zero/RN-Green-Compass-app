@@ -188,9 +188,23 @@ export default function CommunityFeed() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.postHeader}>
-                    <Text style={styles.postAuthor}>
-                      {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
-                    </Text>
+                    <View style={styles.authorContainer}>
+                      {discussion.user?.avatar_url ? (
+                        <Image 
+                          source={{ uri: discussion.user.avatar_url }} 
+                          style={styles.authorAvatar} 
+                        />
+                      ) : (
+                        <View style={styles.defaultAvatar}>
+                          <Text style={styles.defaultAvatarText}>
+                            {(discussion.user?.full_name || '?').charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <Text style={styles.postAuthor}>
+                        {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
+                      </Text>
+                    </View>
                     <Text style={styles.postTimestamp}>
                       {new Date(discussion.created_at).toLocaleDateString()}
                     </Text>

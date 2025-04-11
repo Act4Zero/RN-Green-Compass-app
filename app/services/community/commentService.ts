@@ -34,7 +34,8 @@ export const commentService = {
       .select(`
         *,
         profiles:user_id (
-          full_name,
+          id,
+          display_name,
           avatar_url
         ),
         reactions:reactions (count)
@@ -65,14 +66,46 @@ export const commentService = {
       }
     }
 
+    // Process avatar URLs to get signed URLs
+    const processedData = await Promise.all(data.map(async (item: any) => {
+      let avatarUrl = item.profiles?.avatar_url;
+      
+      // If there's an avatar_url, get a signed URL
+      if (avatarUrl) {
+        try {
+          const { data: signedData, error: signedUrlError } = await supabase.storage
+            .from('profiles')
+            .createSignedUrl(avatarUrl, 60 * 60); // 1 hour
+          
+          if (!signedUrlError && signedData?.signedUrl) {
+            avatarUrl = signedData.signedUrl;
+          }
+        } catch (err) {
+          console.error(`Error creating signed URL for avatar of user ${item.user_id}:`, err);
+        }
+      }
+      
+      return {
+        ...item,
+        profiles: {
+          ...item.profiles,
+          avatar_url: avatarUrl
+        }
+      };
+    }));
+
     // Transform the data to match our interface
-    const comments = data.map((item: any): Comment => ({
+    const comments = processedData.map((item: any): Comment => ({
       id: item.id,
       discussion_id: item.discussion_id,
       user_id: item.user_id,
       content: item.content,
       created_at: item.created_at,
-      user: item.profiles,
+      user: {
+        id: item.profiles?.id,
+        full_name: item.profiles?.display_name,
+        avatar_url: item.profiles?.avatar_url
+      },
       reaction_count: item.reactions,
       user_has_reacted: userReactions[item.id] || false
     }));

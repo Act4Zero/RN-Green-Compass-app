@@ -198,9 +198,23 @@ export default function PostDetail() {
 
           <View style={styles.postContainer}>
             <View style={styles.postHeader}>
-              <Text style={styles.postAuthor}>
-                {selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
-              </Text>
+              <View style={styles.authorContainer}>
+                {selectedDiscussion.user?.avatar_url ? (
+                  <Image 
+                    source={{ uri: selectedDiscussion.user.avatar_url }} 
+                    style={styles.authorAvatar} 
+                  />
+                ) : (
+                  <View style={styles.defaultAvatar}>
+                    <Text style={styles.defaultAvatarText}>
+                      {(selectedDiscussion.user?.full_name || '?').charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.postAuthor}>
+                  {selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
+                </Text>
+              </View>
               <Text style={styles.postTimestamp}>
                 {new Date(selectedDiscussion.created_at).toLocaleDateString()}
               </Text>
@@ -264,9 +278,23 @@ export default function PostDetail() {
               comments.map(comment => (
                 <View key={comment.id} style={styles.commentItem}>
                   <View style={styles.commentHeader}>
-                    <Text style={styles.commentAuthor}>
-                      {comment.user?.full_name || comment.user_id.substring(0, 8)}
-                    </Text>
+                    <View style={styles.commentAuthorContainer}>
+                      {comment.user?.avatar_url ? (
+                        <Image 
+                          source={{ uri: comment.user.avatar_url }} 
+                          style={styles.commentAuthorAvatar} 
+                        />
+                      ) : (
+                        <View style={styles.commentDefaultAvatar}>
+                          <Text style={styles.commentDefaultAvatarText}>
+                            {(comment.user?.full_name || '?').charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
+                      <Text style={styles.commentAuthor}>
+                        {comment.user?.full_name || comment.user_id.substring(0, 8)}
+                      </Text>
+                    </View>
                     <Text style={styles.commentTimestamp}>
                       {new Date(comment.created_at).toLocaleDateString()}
                     </Text>

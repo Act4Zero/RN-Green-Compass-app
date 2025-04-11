@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle, StyleSheet } from 'react-native';
+import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
 
 export interface FeedStyles {
   keyboardAvoidingContainer: ViewStyle;
@@ -11,6 +11,10 @@ export interface FeedStyles {
   postsContainer: ViewStyle;
   postItem: ViewStyle;
   postHeader: ViewStyle;
+  authorContainer: ViewStyle;
+  authorAvatar: ImageStyle;
+  defaultAvatar: ViewStyle;
+  defaultAvatarText: TextStyle;
   postAuthor: TextStyle;
   postTimestamp: TextStyle;
   postTitle: TextStyle;
@@ -85,6 +89,30 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  authorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  defaultAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2E7D32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  defaultAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   postAuthor: {
     fontSize: 16,

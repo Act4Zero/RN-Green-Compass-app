@@ -10,6 +10,7 @@ export interface Discussion {
   updated_at: string;
   // Joined fields
   user?: {
+    id?: string;
     full_name: string | null;
     avatar_url: string | null;
   };
@@ -27,6 +28,7 @@ export interface Comment {
   created_at: string;
   // Joined fields
   user?: {
+    id?: string;
     full_name: string | null;
     avatar_url: string | null;
   };
