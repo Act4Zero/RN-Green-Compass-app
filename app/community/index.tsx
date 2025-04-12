@@ -8,8 +8,6 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
-  Linking,
-  Image,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,36 +15,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import useCommunityFeed from '../hooks/useCommunityFeed';
 import FeedStyles from './styles/FeedStyles';
-import Markdown, { MarkdownProps, RenderRules } from 'react-native-markdown-display';
-import { sanitizeMarkdownInput } from './utils/sanitizeMarkdownInput';
 
-
-
-// Custom renderer for Markdown images to make them clickable
-const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
-  const { src } = node.attributes;
-  
-  return (
-    <View style={{ width: '100%', alignItems: 'center', marginVertical: 8 }}>
-      <TouchableOpacity 
-        key={node.key} 
-        onPress={() => Linking.openURL(src)}
-        activeOpacity={0.8}
-      >
-        <Image 
-          source={{ uri: src }} 
-          style={[styles.image]} 
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-// Custom rules for Markdown rendering
-const rules: RenderRules = {
-  image: renderImage,
-};
+// Import our extracted components
+import PostItem from './components/PostItem';
+import { Toast } from './components/Toast';
 
 // Styles for this component
 const styles = FeedStyles;
@@ -74,6 +46,7 @@ export default function CommunityFeed() {
     toggleDiscussionReaction,
   } = useCommunityFeed();
   
+  // UI state management
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [postOptionsMap, setPostOptionsMap] = useState<Record<string, boolean>>({});
@@ -264,132 +237,17 @@ export default function CommunityFeed() {
           ) : discussions.length > 0 ? (
             <View style={styles.postsContainer}>
               {discussions.map(discussion => (
-                <TouchableOpacity 
-                  key={discussion.id} 
-                  style={styles.postItem}
-                  onPress={() => router.push(`/community/post/${discussion.id}`)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.postHeader}>
-                    <View style={styles.authorContainer}>
-                      {discussion.user?.avatar_url ? (
-                        <Image 
-                          source={{ uri: discussion.user.avatar_url }} 
-                          style={styles.authorAvatar} 
-                        />
-                      ) : (
-                        <View style={styles.defaultAvatar}>
-                          <Text style={styles.defaultAvatarText}>
-                            {(discussion.user?.full_name || '?').charAt(0).toUpperCase()}
-                          </Text>
-                        </View>
-                      )}
-                      <Text style={styles.postAuthor}>
-                        {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
-                      </Text>
-                    </View>
-                    <View style={styles.postHeaderRight}>
-                      <Text style={styles.postTimestamp}>
-                        {new Date(discussion.created_at).toLocaleDateString()}
-                      </Text>
-                      {/* Show options button if the post belongs to the current user */}
-                      {discussion.user_id === user?.id && (
-                        <TouchableOpacity
-                          style={styles.optionsButton}
-                          onPress={(e) => {
-                            e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                            togglePostOptions(discussion.id);
-                          }}
-                        >
-                          <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
-                        </TouchableOpacity>
-                      )}
-                      {/* Post options menu */}
-                      {postOptionsMap[discussion.id] && (
-                        <View style={styles.optionsMenu}>
-                          <TouchableOpacity 
-                            style={styles.optionItem}
-                            onPress={(e) => {
-                              e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                              handleEditPost(discussion.id);
-                            }}
-                          >
-                            <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
-                            <Text style={styles.optionText}>Edit</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
-                            style={styles.optionItem}
-                            onPress={(e) => {
-                              e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                              handleDeletePost(discussion.id);
-                            }}
-                          >
-                            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
-                            <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  {discussion.title && (
-                    <Text style={styles.postTitle}>{discussion.title}</Text>
-                  )}
-                  <Markdown 
-                    style={{
-                      body: styles.postContent,
-                      bullet: { color: '#2E7D32' },
-                      strong: { fontWeight: 'bold' },
-                      heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
-                      heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
-                      heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
-                      code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
-                      code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
-                      link: { color: '#1976D2', textDecorationLine: 'underline' },
-                      image: { 
-                        width: 300, 
-                        height: 300, 
-                        marginVertical: 8, 
-                        borderRadius: 8
-                      }
-                    }}
-                    rules={rules}
-                    onLinkPress={(url: string) => {
-                      Linking.openURL(url);
-                      return false;
-                    }}
-                  >
-                    {sanitizeMarkdownInput(discussion.content, 'post')}
-                  </Markdown>
-                  <View style={styles.divider} />
-                  <View style={styles.postFooter}>
-                    <TouchableOpacity 
-                      style={[styles.reactionButton, discussion.user_has_reacted && styles.reactionButtonActive]}
-                      onPress={(e) => {
-                        e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                        handleLike(discussion.id);
-                      }}
-                    >
-                      <Ionicons 
-                        name={discussion.user_has_reacted ? "heart" : "heart-outline"} 
-                        size={20} 
-                        color={discussion.user_has_reacted ? "#2E7D32" : "#757575"} 
-                      />
-                      <Text style={[styles.reactionText, discussion.user_has_reacted && styles.reactionTextActive]}>
-                        {discussion.reaction_count || 0}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.commentButton}
-                      onPress={(e) => {
-                        e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                        handleComment(discussion.id);
-                      }}
-                    >
-                      <Ionicons name="chatbubble-outline" size={20} color="#757575" />
-                      <Text style={styles.commentText}>{discussion.comment_count || 0}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
+                <PostItem
+                  key={discussion.id}
+                  discussion={discussion}
+                  userId={user?.id || ''}
+                  postOptionsMap={postOptionsMap}
+                  togglePostOptions={togglePostOptions}
+                  handleEditPost={handleEditPost}
+                  handleDeletePost={handleDeletePost}
+                  handleLike={handleLike}
+                  handleComment={handleComment}
+                />
               ))}
             </View>
           ) : (
@@ -407,14 +265,7 @@ export default function CommunityFeed() {
         <Text style={styles.newPostButtonText}>+</Text>
       </TouchableOpacity>
 
-      {showToast && (
-        <View style={styles.toastWrapper}>
-          <View style={styles.toastContainer}>
-            <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-            <Text style={styles.toastText}>{toastMessage}</Text>
-          </View>
-        </View>
-      )}
+      <Toast message={toastMessage} visible={showToast} />
     </KeyboardAvoidingView>
   );
 }
