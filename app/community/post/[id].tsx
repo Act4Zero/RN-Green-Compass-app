@@ -19,6 +19,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/useCommunityFeed';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
+import PostOptionsMenu from '../components/PostOptionsMenu';
 import PostDetailStyles from '../styles/PostDetailStyles';
 import { sanitizeMarkdownInput, getCharacterInfo } from '../utils/sanitizeMarkdownInput';
 
@@ -329,13 +330,13 @@ export default function PostDetail() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       {/* Overlay to detect clicks outside the menu */}
-      {showPostOptions && (
-        <TouchableOpacity 
-          style={styles.menuOverlay} 
-          activeOpacity={0} 
-          onPress={handleClosePostOptions}
-        />
-      )}
+      <PostOptionsMenu
+        postId={discussionId}
+        isOpen={showPostOptions}
+        onClose={handleClosePostOptions}
+        onEdit={handleEditPost}
+        onDelete={handleDeletePost}
+      />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -383,25 +384,7 @@ export default function PostDetail() {
                     <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
                   </TouchableOpacity>
                 )}
-                {/* Post options menu */}
-                {showPostOptions && (
-                  <View style={styles.optionsMenu}>
-                    <TouchableOpacity 
-                      style={styles.optionItem}
-                      onPress={handleEditPost}
-                    >
-                      <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
-                      <Text style={styles.optionText}>Edit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.optionItem}
-                      onPress={handleDeletePost}
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#D32F2F" />
-                      <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                {/* No inline options menu anymore - using the PostOptionsMenu component */}
               </View>
             </View>
             {!isEditingPost ? (
