@@ -58,12 +58,12 @@ function PostItem({
   const router = useRouter();
 
   return (
-    <TouchableOpacity 
-      key={discussion.id} 
-      style={styles.postItem}
-      onPress={() => router.push(`/community/post/${discussion.id}`)}
-      activeOpacity={0.7}
-    >
+    <View key={discussion.id}>
+      <TouchableOpacity 
+        style={styles.postItem}
+        onPress={() => router.push(`/community/post/${discussion.id}`)}
+        activeOpacity={0.7}
+      >
       {/* Post Header */}
       <View style={styles.postHeader}>
         <View style={styles.authorContainer}>
@@ -99,31 +99,7 @@ function PostItem({
               <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
             </TouchableOpacity>
           )}
-          {/* Post options menu */}
-          {postOptionsMap[discussion.id] && (
-            <View style={styles.optionsMenu}>
-              <TouchableOpacity 
-                style={styles.optionItem}
-                onPress={(e) => {
-                  e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                  handleEditPost(discussion.id);
-                }}
-              >
-                <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
-                <Text style={styles.optionText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.optionItem}
-                onPress={(e) => {
-                  e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-                  handleDeletePost(discussion.id);
-                }}
-              >
-                <Ionicons name="trash-outline" size={16} color="#D32F2F" />
-                <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {/* Options menu will appear as an overlay */}
         </View>
       </View>
       
@@ -192,7 +168,12 @@ function PostItem({
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
+    
+    {/* Menu options are now rendered in the parent component */}
+  </View>
   );
 }
+
+
 
 export default PostItem;
