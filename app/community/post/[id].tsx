@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/useCommunityFeed';
+import { discussionService } from '../../services/community';
+import { confirmAndDeletePost } from '../../utils/deletePost';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
 import PostOptionsMenu from '../components/PostOptionsMenu';
 import PostDetailStyles from '../styles/PostDetailStyles';
@@ -183,29 +185,37 @@ export default function PostDetail() {
   
   const handleDeletePost = () => {
     setShowPostOptions(false);
+    console.log('[POST DETAIL] Delete post button clicked');
     
-    if (!selectedDiscussion) return;
+    if (!selectedDiscussion) {
+      console.error('[POST DETAIL] Cannot delete post: No selected discussion');
+      return;
+    }
     
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await deleteDiscussion(selectedDiscussion.id);
-            if (success) {
-              showToastMessage('Post deleted!');
-              // The router.back() is handled in the deleteDiscussion function
-            }
-          }
-        }
-      ]
+    if (!user) {
+      console.error('[POST DETAIL] No user found for delete operation');
+      showToastMessage('Error: You must be logged in to delete a post');
+      return;
+    }
+    
+    // Use the new direct deletion utility
+    confirmAndDeletePost(
+      selectedDiscussion.id,
+      user.id,
+      // On success callback
+      () => {
+        console.log(`[POST DETAIL] Post ${selectedDiscussion.id} deleted successfully`);
+        showToastMessage('Post deleted successfully!');
+        
+        // Navigate back to community feed
+        console.log('[POST DETAIL] Navigating back to community feed');
+        router.push('/community');
+      },
+      // On error callback
+      (errorMsg) => {
+        console.error(`[POST DETAIL] Error deleting post: ${errorMsg}`);
+        showToastMessage(`Error: ${errorMsg}`);
+      }
     );
   };
   

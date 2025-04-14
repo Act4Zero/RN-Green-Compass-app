@@ -3,6 +3,8 @@ import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/useCommunityFeed';
+import { discussionService } from '../../services/community';
+import { confirmAndDeletePost } from '../../utils/deletePost';
 
 /**
  * Custom hook to manage community feed state and logic
@@ -141,26 +143,33 @@ function useCommunityFeedState() {
   const handleDeletePost = (postId: string) => {
     // Close the options menu
     togglePostOptions(postId);
+    console.log('[FEED] Delete post button clicked for post ID:', postId);
     
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await deleteDiscussion(postId);
-            if (success) {
-              showToastMessage('Post deleted!');
-            }
-          }
-        }
-      ]
+    if (!user) {
+      console.error('[FEED] No user found for delete operation');
+      showToastMessage('Error: You must be logged in to delete a post');
+      return;
+    }
+    
+    // Use the new utility function for deletion
+    confirmAndDeletePost(
+      postId,
+      user.id,
+      // On success
+      () => {
+        console.log(`[FEED] Post ${postId} deleted successfully`);
+        showToastMessage('Post deleted successfully!');
+        
+        // Force refresh to update the UI
+        refreshDiscussions().then(() => {
+          console.log('[FEED] UI refreshed after deletion');
+        });
+      },
+      // On error
+      (errorMsg) => {
+        console.error(`[FEED] Error deleting post: ${errorMsg}`);
+        showToastMessage(`Error: ${errorMsg}`);
+      }
     );
   };
 

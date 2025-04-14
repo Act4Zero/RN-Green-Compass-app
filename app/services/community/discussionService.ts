@@ -328,15 +328,59 @@ export const discussionService = {
 
   /**
    * Delete a discussion/post
+   * @param discussionId - ID of the discussion to delete
+   * @param userId - ID of the user attempting to delete (for ownership verification)
    */
-  deleteDiscussion: async (discussionId: string): Promise<void> => {
-    const { error } = await supabase
-      .from('discussions')
-      .delete()
-      .eq('id', discussionId);
+  deleteDiscussion: async (discussionId: string, userId: string): Promise<void> => {
+    console.log(`[SERVICE] deleteDiscussion called with discussionId: ${discussionId}, userId: ${userId}`);
 
-    if (error) {
-      console.error(`Error deleting discussion ${discussionId}:`, error);
+    try {
+      // First verify that the user owns this post
+      console.log(`[SERVICE] Fetching discussion to verify ownership`);
+      const { data: discussion, error: fetchError } = await supabase
+        .from('discussions')
+        .select('user_id')
+        .eq('id', discussionId)
+        .single();
+
+      console.log(`[SERVICE] Fetch result:`, discussion, `Error:`, fetchError);
+
+      if (fetchError) {
+        console.error(`[SERVICE] Error fetching discussion ${discussionId} for deletion:`, fetchError);
+        throw fetchError;
+      }
+
+      if (!discussion) {
+        const notFoundError = new Error(`Discussion ${discussionId} not found`);
+        console.error(`[SERVICE] ${notFoundError.message}`);
+        throw notFoundError;
+      }
+
+      // Verify ownership
+      console.log(`[SERVICE] Verifying ownership: post owner ${discussion.user_id} vs requester ${userId}`);
+      if (discussion.user_id !== userId) {
+        const permissionError = new Error('You do not have permission to delete this post');
+        console.error(`[SERVICE] User ${userId} attempted to delete post ${discussionId} owned by ${discussion.user_id}`);
+        throw permissionError;
+      }
+
+      // If verification passed, delete the discussion
+      console.log(`[SERVICE] Verification passed, deleting discussion ${discussionId}`);
+      const { error: deleteError } = await supabase
+        .from('discussions')
+        .delete()
+        .eq('id', discussionId);
+
+      console.log(`[SERVICE] Delete result: Error:`, deleteError);
+
+      if (deleteError) {
+        console.error(`[SERVICE] Error deleting discussion ${discussionId}:`, deleteError);
+        throw deleteError;
+      }
+
+      console.log(`[SERVICE] Successfully deleted discussion ${discussionId} by user ${userId}`);
+    } catch (error) {
+      console.error(`[SERVICE] Caught error in deleteDiscussion:`, error);
       throw error;
     }
   },

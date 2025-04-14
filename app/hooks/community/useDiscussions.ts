@@ -185,7 +185,8 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      await discussionService.deleteDiscussion(discussionId);
+      // Pass both the discussionId and userId to the service
+      await discussionService.deleteDiscussion(discussionId, currentUser.id);
 
       // Remove from the discussions list
       setState(prev => ({
@@ -195,7 +196,8 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
         isLoading: false
       }));
 
-      // Analytics tracking removed
+      // Show success message in console
+      console.log(`Discussion ${discussionId} successfully deleted by user ${currentUser.id}`);
 
       return true;
     } catch (error) {

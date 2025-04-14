@@ -196,14 +196,26 @@ const useCommunityFeed = () => {
   }, [toggleCommentReactionBase, updateCommentReaction]);
 
   /**
-   * Handle navigation after deleting a discussion
+   * Handle discussion deletion with proper cleanup
    */
   const handleDeleteDiscussion = useCallback(async (discussionId: string) => {
+    // Call the original deleteDiscussion function from useDiscussions
+    // This will now correctly pass the userId through the chain of functions
     const success = await deleteDiscussion(discussionId);
     
-    if (success && selectedDiscussion?.id === discussionId) {
-      clearDiscussion();
-      router.back();
+    // If success and we're currently viewing this discussion, navigate back
+    if (success) {
+      // If this is the currently selected discussion we're viewing
+      if (selectedDiscussion?.id === discussionId) {
+        // Clear the selected discussion data
+        clearDiscussion();
+        // Navigate back to the feed
+        router.push('/community');
+      }
+      
+      console.log(`Successfully deleted discussion ${discussionId}`);
+    } else {
+      console.error(`Failed to delete discussion ${discussionId}`);
     }
     
     return success;
@@ -252,7 +264,7 @@ const useCommunityFeed = () => {
     loadDiscussion,
     createDiscussion,
     updateDiscussion,
-    deleteDiscussion: handleDeleteDiscussion,
+    deleteDiscussion,
     loadUserDiscussions,
     
     // Methods - Comments
