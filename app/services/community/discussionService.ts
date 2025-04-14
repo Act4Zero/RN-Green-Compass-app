@@ -285,11 +285,29 @@ export const discussionService = {
 
   /**
    * Update an existing discussion/post
+   * @param discussionId - ID of the discussion to update
+   * @param updates - Object containing content and/or title updates
+   * @param userId - ID of the user attempting to update the discussion (for ownership verification)
    */
   updateDiscussion: async (
     discussionId: string,
-    updates: { content?: string; title?: string }
+    updates: { content?: string; title?: string },
+    userId: string
   ): Promise<Discussion> => {
+    // First check if the discussion exists and belongs to the user
+    const { data: existingDiscussion, error: fetchError } = await supabase
+      .from('discussions')
+      .select('id, user_id')
+      .eq('id', discussionId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (fetchError) {
+      console.error(`Error fetching discussion ${discussionId} for update validation:`, fetchError);
+      throw new Error('Discussion not found or you do not have permission to edit it');
+    }
+    
+    // If we get here, the discussion exists and belongs to the user, so we can update it
     const { data, error } = await supabase
       .from('discussions')
       .update({
@@ -297,7 +315,7 @@ export const discussionService = {
         updated_at: new Date().toISOString()
       })
       .eq('id', discussionId)
-      .select()
+      .select('*')
       .single();
 
     if (error) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import Markdown from 'react-native-markdown-display';
 import NewPostStyles, { markdownStyles } from './styles/NewPostStyles';
@@ -22,6 +22,9 @@ import { sanitizeMarkdownInput, getCharacterInfo } from './utils/sanitizeMarkdow
 import useCommunityFeed from '../hooks/useCommunityFeed';
 
 export default function NewPost() {
+  // Get post ID from URL parameters if in edit mode
+  const { postId } = useLocalSearchParams<{ postId: string }>();
+  const isEditMode = Boolean(postId);
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, loading: authLoading } = useAuth();
@@ -38,7 +41,12 @@ export default function NewPost() {
     isSubmitting,
     submitError,
     // Methods
-    createDiscussion
+    createDiscussion,
+    updateDiscussion,
+    // Discussion data
+    selectedDiscussion,
+    isLoadingSelectedDiscussion,
+    loadDiscussion
   } = useCommunityFeed();
   
   // Character limit for posts
@@ -62,33 +70,85 @@ export default function NewPost() {
     }
   }, [user, authLoading, router]);
 
+  // Load existing post data if in edit mode
+  useEffect(() => {
+    const loadPostData = async () => {
+      if (isEditMode && postId && user) {
+        try {
+          console.log('Loading post data for editing, postId:', postId);
+          await loadDiscussion(postId);
+        } catch (error) {
+          console.error('Error loading post for editing:', error);
+          Alert.alert('Error', 'Failed to load post data for editing.');
+          router.back();
+        }
+      }
+    };
+    
+    loadPostData();
+    
+    // Cleanup when leaving the page
+    return () => {
+      // No cleanup needed, the selected discussion will be replaced 
+      // when another discussion is loaded
+    };
+  }, [isEditMode, postId, user, loadDiscussion, router]);
+  
+  // Update form when post data is loaded
+  useEffect(() => {
+    if (isEditMode && selectedDiscussion) {
+      setNewPostContent(selectedDiscussion.content);
+      setPostTitle(selectedDiscussion.title || '');
+    }
+  }, [isEditMode, selectedDiscussion, setNewPostContent]);
+
   const handleSubmitPost = async () => {
     if (!newPostContent?.trim() || isAtLimit) return;
     
     try {
       // Sanitize the markdown input before submission to ensure it's safe
       const formattedContent = sanitizeMarkdownInput(newPostContent, 'post');
-      console.log('Submitting formatted post:', formattedContent);
+      let result;
       
-      // Use the createDiscussion method from useCommunityFeed
-      const result = await createDiscussion(formattedContent, postTitle.trim() || undefined);
-      
-      if (result) {
-        // Reset the form
-        resetPostForm();
-        setPostTitle('');
-        
-        // Navigate back to the feed with a success parameter
-        router.replace({
-          pathname: '/community',
-          params: { success: 'true' }
+      if (isEditMode && postId) {
+        // Update existing post
+        console.log('Updating existing post:', postId);
+        result = await updateDiscussion(postId, {
+          content: formattedContent,
+          title: postTitle.trim() || undefined
         });
-      } else if (submitError) {
-        Alert.alert('Error', `Failed to create post: ${submitError}`);
+        
+        if (result) {
+          // Navigate back to the post detail with a success parameter
+          router.replace({
+            pathname: '/community/post/[id]',
+            params: { id: postId, updated: 'true' }
+          });
+        } else if (submitError) {
+          Alert.alert('Error', `Failed to update post: ${submitError}`);
+        }
+      } else {
+        // Create new post
+        console.log('Creating new post');
+        result = await createDiscussion(formattedContent, postTitle.trim() || undefined);
+        
+        if (result) {
+          // Reset the form
+          resetPostForm();
+          setPostTitle('');
+          
+          // Navigate back to the feed with a success parameter
+          router.replace({
+            pathname: '/community',
+            params: { success: 'true' }
+          });
+        } else if (submitError) {
+          Alert.alert('Error', `Failed to create post: ${submitError}`);
+        }
       }
     } catch (error) {
-      console.error('Error creating post:', error);
-      Alert.alert('Error', 'Failed to create post. Please try again.');
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} post:`, error);
+      Alert.alert('Error', `Failed to ${isEditMode ? 'update' : 'create'} post. Please try again.`);
     }
   };
 
@@ -100,12 +160,22 @@ export default function NewPost() {
     setIsPreviewMode(!isPreviewMode);
   };
 
-  if (authLoading) {
+  if (authLoading || (isEditMode && isLoadingSelectedDiscussion)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
       </View>
     );
+  }
+  
+  // Check if we have permission to edit this post
+  if (isEditMode && selectedDiscussion && selectedDiscussion.user_id !== user?.id) {
+    Alert.alert(
+      "Permission Denied",
+      "You don't have permission to edit this post.",
+      [{ text: "OK", onPress: () => router.back() }]
+    );
+    return null;
   }
 
   return (
@@ -126,7 +196,7 @@ export default function NewPost() {
             >
               <Ionicons name="arrow-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
-            <Text style={styles.title}>Create Post</Text>
+            <Text style={styles.title}>{isEditMode ? 'Edit Post' : 'Create Post'}</Text>
           </View>
 
           <View style={styles.inputContainer}>
@@ -304,7 +374,7 @@ export default function NewPost() {
             ) : (
               <>
                 <Ionicons name="send" size={20} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Post</Text>
+                <Text style={styles.submitButtonText}>{isEditMode ? 'Update' : 'Post'}</Text>
               </>
             )}
           </TouchableOpacity>

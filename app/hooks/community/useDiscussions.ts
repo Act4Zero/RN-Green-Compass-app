@@ -143,9 +143,14 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      if (!currentUser || !currentUser.id) {
+        throw new Error('User ID is required to update a discussion');
+      }
+
       const updatedDiscussion = await discussionService.updateDiscussion(
         discussionId,
-        updates
+        updates,
+        currentUser.id
       );
 
       // Update the discussions list
