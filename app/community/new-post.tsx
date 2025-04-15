@@ -20,6 +20,7 @@ import Markdown from 'react-native-markdown-display';
 import NewPostStyles, { markdownStyles } from './styles/NewPostStyles';
 import { sanitizeMarkdownInput, getCharacterInfo } from './utils/sanitizeMarkdownInput';
 import useCommunityFeed from '../hooks/useCommunityFeed';
+import useCommunityFeedState from './hooks/useCommunityFeedState';
 
 export default function NewPost() {
   // Get post ID from URL parameters if in edit mode
@@ -48,6 +49,9 @@ export default function NewPost() {
     isLoadingSelectedDiscussion,
     loadDiscussion
   } = useCommunityFeed();
+
+  // Get toast handler from feed state
+  const { showToastMessage } = useCommunityFeedState();
   
   // Character limit for posts
   const MAX_CHARACTERS = 2000;
@@ -136,12 +140,12 @@ export default function NewPost() {
           // Reset the form
           resetPostForm();
           setPostTitle('');
-          
-          // Navigate back to the feed with a success parameter
-          router.replace({
-            pathname: '/community',
-            params: { success: 'true' }
-          });
+
+          // Show toast for successful creation
+          showToastMessage('Post created successfully!');
+
+          // Navigate back to the feed (no params)
+          router.replace('/community');
         } else if (submitError) {
           Alert.alert('Error', `Failed to create post: ${submitError}`);
         }

@@ -41,14 +41,6 @@ function useCommunityFeedState() {
   // Use a ref to track if discussions have been loaded
   const discussionsLoadedRef = useRef(false);
 
-  // Check for success message from post operations
-  useEffect(() => {
-    if (params.success === 'true') {
-      // Use custom message if provided, otherwise use default
-      const message = params.message as string || 'Post created successfully!';
-      showToastMessage(message);
-    }
-  }, [params]);
 
   // Load discussions when component mounts (only once)
   useEffect(() => {
@@ -77,7 +69,7 @@ function useCommunityFeedState() {
     setShowToast(true);
     setTimeout(() => {
       setShowToast(false);
-    }, 3000);
+    }, 2000);
   };
 
   // Post interaction handlers
@@ -197,6 +189,7 @@ function useCommunityFeedState() {
     handleCloseAllMenus,
     handleEditPost,
     handleDeletePost,
+    showToastMessage, // Expose toast handler
   };
 }
 
