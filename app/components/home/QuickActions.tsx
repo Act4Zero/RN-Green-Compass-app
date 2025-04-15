@@ -28,6 +28,16 @@ export default function QuickActions() {
         </View>
         <Text style={quickActionsStyles.quickActionText}>View History</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={quickActionsStyles.quickActionItem}
+        onPress={() => router.push('/community' as any)}
+      >
+        <View style={quickActionsStyles.quickActionIcon}>
+          <Ionicons name="people-outline" size={24} color="#2E7D32" />
+        </View>
+        <Text style={quickActionsStyles.quickActionText}>Community</Text>
+      </TouchableOpacity>
     </View>
   );
 }

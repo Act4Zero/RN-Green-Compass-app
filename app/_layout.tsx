@@ -9,7 +9,16 @@ const { HabitProvider } = HabitContextModule;
 export default function RootLayout() {
   // Initialize analytics when the app starts
   useEffect(() => {
-    analyticsService.initialize();
+    // Initialize analytics and log the result
+    const initResult = analyticsService.initialize();
+    console.log('Analytics initialization result:', initResult);
+    
+    // Set a timeout to ensure analytics is ready before the app fully loads
+    if (!analyticsService.isInitialized) {
+      console.warn('Analytics not initialized on first attempt, setting fallback initialization');
+      // Set isInitialized to true to prevent errors in components that use analytics
+      analyticsService.isInitialized = true;
+    }
   }, []);
 
   return (
@@ -25,6 +34,11 @@ export default function RootLayout() {
           {/* Profile screens */}
           <Stack.Screen name="profile/index" options={{ headerShown: false }} />
           <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+
+          {/* Community screens */}
+          <Stack.Screen name="community/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
+          <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

@@ -1,0 +1,650 @@
+import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
+
+export interface PostDetailStyles {
+  keyboardAvoidingContainer: ViewStyle;
+  scrollContent: ViewStyle;
+  content: ViewStyle;
+  header: ViewStyle;
+  backButton: ViewStyle;
+  title: TextStyle;
+  postContainer: ViewStyle;
+  postHeader: ViewStyle;
+  postHeaderRight: ViewStyle;
+  authorContainer: ViewStyle;
+  authorAvatar: ImageStyle;
+  defaultAvatar: ViewStyle;
+  defaultAvatarText: TextStyle;
+  postAuthor: TextStyle;
+  postTimestamp: TextStyle;
+  postTitle: TextStyle;
+  postContent: TextStyle;
+  postFooter: ViewStyle;
+  likeButton: ViewStyle;
+  likeButtonActive: ViewStyle;
+  likeText: TextStyle;
+  likeTextActive: TextStyle;
+  
+  // Post options
+  menuOverlay: ViewStyle;
+  optionsButton: ViewStyle;
+  optionsMenu: ViewStyle;
+  optionItem: ViewStyle;
+  optionText: TextStyle;
+  
+  // Modal styles
+  modalOverlay: ViewStyle;
+  modalContent: ViewStyle;
+  modalTitle: TextStyle;
+  modalMessage: TextStyle;
+  modalButtons: ViewStyle;
+  modalCancelButton: ViewStyle;
+  modalCancelButtonText: TextStyle;
+  modalDeleteButton: ViewStyle;
+  modalDeleteButtonText: TextStyle;
+  
+  // Post editing
+  editPostContainer: ViewStyle;
+  editPostTitleInput: TextStyle;
+  editPostContentInput: TextStyle;
+  editPostFooter: ViewStyle;
+  editPostButtons: ViewStyle;
+  inputAtLimit: TextStyle;
+  saveButton: ViewStyle;
+  saveButtonDisabled: ViewStyle;
+  saveButtonText: TextStyle;
+  cancelButton: ViewStyle;
+  cancelButtonText: TextStyle;
+  
+  commentsContainer: ViewStyle;
+  commentsTitle: TextStyle;
+  commentItem: ViewStyle;
+  commentHeader: ViewStyle;
+  commentHeaderRight: ViewStyle;
+  commentAuthorContainer: ViewStyle;
+  commentAuthorAvatar: ImageStyle;
+  commentDefaultAvatar: ViewStyle;
+  commentDefaultAvatarText: TextStyle;
+  commentAuthor: TextStyle;
+  commentTimestamp: TextStyle;
+  commentContent: TextStyle;
+  
+  // Comment options
+  commentOptions: ViewStyle;
+  commentOptionButton: ViewStyle;
+  
+  // Comment editing
+  editCommentContainer: ViewStyle;
+  editCommentInput: TextStyle;
+  editCommentFooter: ViewStyle;
+  editCommentButtons: ViewStyle;
+  
+  noCommentsContainer: ViewStyle;
+  noCommentsText: TextStyle;
+  loadingCommentsContainer: ViewStyle;
+  loadingCommentsText: TextStyle;
+  errorCommentsContainer: ViewStyle;
+  errorCommentsText: TextStyle;
+  addCommentContainer: ViewStyle;
+  commentInput: TextStyle;
+  commentInputAtLimit: TextStyle;
+  commentInputFooter: ViewStyle;
+  characterCount: TextStyle;
+  characterCountNearLimit: TextStyle;
+  characterCountAtLimit: TextStyle;
+  submitButton: ViewStyle;
+  submitButtonDisabled: ViewStyle;
+  submitButtonText: TextStyle;
+  toastWrapper: ViewStyle;
+  toastContainer: ViewStyle;
+  toastText: TextStyle;
+  loadingContainer: ViewStyle;
+  errorContainer: ViewStyle;
+  errorText: TextStyle;
+  backButtonText: TextStyle;
+}
+
+const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
+  keyboardAvoidingContainer: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  content: {
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backButton: {
+    marginRight: 16,
+    padding: 4,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  postContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 16,
+    marginBottom: 16,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  postHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  
+  // Post options
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 5,
+  },
+  optionsButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  optionsMenu: {
+    position: 'absolute',
+    top: 30,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 10,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  optionText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#2E7D32',
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  modalCancelButtonText: {
+    color: '#757575',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalDeleteButton: {
+    backgroundColor: '#D32F2F',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginLeft: 10,
+  },
+  modalDeleteButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  
+  // Post editing
+  editPostContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  editPostTitleInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 16,
+    color: '#212121',
+    marginBottom: 8,
+  },
+  editPostContentInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 16,
+    color: '#212121',
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  inputAtLimit: {
+    borderColor: '#D32F2F',
+  },
+  editPostFooter: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editPostButtons: {
+    flexDirection: 'row',
+  },
+  saveButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+    opacity: 0.7,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  cancelButton: {
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    color: '#757575',
+    fontSize: 14,
+  },
+  authorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  defaultAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2E7D32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  defaultAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  postAuthor: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  postTimestamp: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  postContent: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 16,
+    lineHeight: 22,
+  },
+  postFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  likeButtonActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  likeText: {
+    fontSize: 14,
+    color: '#757575',
+    marginLeft: 4,
+  },
+  likeTextActive: {
+    fontSize: 14,
+    color: '#2E7D32',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  commentsContainer: {
+    marginBottom: 16,
+  },
+  loadingCommentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  loadingCommentsText: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 8,
+  },
+  errorCommentsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  errorCommentsText: {
+    fontSize: 14,
+    color: '#D32F2F',
+    textAlign: 'center',
+  },
+  commentsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  commentItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 16,
+    marginBottom: 12,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  commentHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  
+  // Comment options
+  commentOptions: {
+    flexDirection: 'row',
+    marginLeft: 8,
+  },
+  commentOptionButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  
+  // Comment editing
+  editCommentContainer: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  editCommentInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 14,
+    color: '#212121',
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  editCommentFooter: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editCommentButtons: {
+    flexDirection: 'row',
+  },
+  commentAuthorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentAuthorAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  commentDefaultAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#2E7D32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  commentDefaultAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  commentAuthor: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  commentTimestamp: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  commentContent: {
+    fontSize: 14,
+    color: '#333333',
+    lineHeight: 20,
+  },
+  noCommentsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noCommentsText: {
+    fontSize: 14,
+    color: '#757575',
+    textAlign: 'center',
+  },
+  addCommentContainer: {
+    marginBottom: 32,
+  },
+  commentInputFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  characterCount: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  characterCountNearLimit: {
+    color: '#FFA000',
+  },
+  characterCountAtLimit: {
+    color: '#D32F2F',
+  },
+  commentInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 12,
+    fontSize: 14,
+    minHeight: 48,
+    maxHeight: 120,
+  },
+  commentInputAtLimit: {
+    borderColor: '#D32F2F',
+  },
+  submitButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 12,
+    padding: 12,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 70,
+    height: 48,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+  },
+  submitButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  toastWrapper: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  toastContainer: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    width: '85%',
+    maxWidth: 500,
+  },
+  toastText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#757575',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+  },
+});
+
+export default PostDetailStyles;
