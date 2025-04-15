@@ -1,57 +1,32 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
   useWindowDimensions,
-  TextInput,
-  ActivityIndicator,
-  Linking,
-  Image,
-  Alert,
-  Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/useCommunityFeed';
-import { discussionService } from '../../services/community';
 import { confirmAndDeletePost } from '../../utils/deletePost';
-import Markdown, { RenderRules } from 'react-native-markdown-display';
-import PostOptionsMenu from '../components/PostOptionsMenu';
-import PostDetailStyles from '../styles/PostDetailStyles';
 import { sanitizeMarkdownInput, getCharacterInfo } from '../utils/sanitizeMarkdownInput';
 
-// Custom renderer for Markdown images to make them clickable
-const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
-  const { src } = node.attributes;
-  
-  return (
-    <View style={{ width: '100%', alignItems: 'center', marginVertical: 8 }}>
-      <TouchableOpacity 
-        key={node.key} 
-        onPress={() => Linking.openURL(src)}
-        activeOpacity={0.8}
-      >
-        <Image 
-          source={{ uri: src }} 
-          style={[styles.image]} 
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-// Custom rules for Markdown rendering
-const rules: RenderRules = {
-  image: renderImage,
-};
+// Import UI components
+import PostDetailHeader from '../components/PostDetailHeader';
+import PostContent from '../components/PostContent';
+import PostEditForm from '../components/PostEditForm';
+import CommentsSection from '../components/CommentsSection';
+import CommentForm from '../components/CommentForm';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
+import PostOptionsMenu from '../components/PostOptionsMenu';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import NotFoundState from '../components/NotFoundState';
+import { Toast } from '../components/Toast';
 
 // Styles for this component
+import PostDetailStyles from '../styles/PostDetailStyles';
 const styles = PostDetailStyles;
 
 export default function PostDetail() {
@@ -97,14 +72,25 @@ export default function PostDetail() {
     toggleDiscussionReaction,
   } = useCommunityFeed();
   
+  // UI state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Success!');
+  
+  // Post editing state
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [editPostContent, setEditPostContent] = useState('');
   const [editPostTitle, setEditPostTitle] = useState('');
+  
+  // Comment editing state
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
+  
+  // Options menu state
   const [showPostOptions, setShowPostOptions] = useState(false);
+  
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   
   // Calculate character info for comment
   const characterInfo = getCharacterInfo(newCommentContent, true);
@@ -266,9 +252,7 @@ export default function PostDetail() {
     setEditCommentContent('');
   };
   
-  // State for modal-based confirmation dialog (as an alternative to Alert)  
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
 
   const handleDeleteComment = (commentId: string) => {
     console.log('[POST DETAIL] Delete comment button clicked for comment:', commentId);
@@ -304,39 +288,15 @@ export default function PostDetail() {
   };
 
   if (authLoading || isLoadingSelectedDiscussion) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
-    );
+    return <LoadingState />;
   }
 
   if (selectedDiscussionError) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error: {selectedDiscussionError}</Text>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <ErrorState error={selectedDiscussionError} onRetry={() => router.back()} />;
   }
   
   if (!selectedDiscussion) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Post not found</Text>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <NotFoundState />;
   }
 
   return (
@@ -345,35 +305,16 @@ export default function PostDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      {/* Custom Delete Confirmation Modal */}
-      <Modal
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
         visible={showDeleteModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Delete Comment</Text>
-            <Text style={styles.modalMessage}>Are you sure you want to delete this comment? This action cannot be undone.</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.modalCancelButton}
-                onPress={() => setShowDeleteModal(false)}
-              >
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.modalDeleteButton}
-                onPress={confirmDeleteComment}
-              >
-                <Text style={styles.modalDeleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      {/* Overlay to detect clicks outside the menu */}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteComment}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+      />
+      
+      {/* Post Options Menu */}
       <PostOptionsMenu
         postId={discussionId}
         isOpen={showPostOptions}
@@ -381,292 +322,75 @@ export default function PostDetail() {
         onEdit={handleEditPost}
         onDelete={handleDeletePost}
       />
+      
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
-            </TouchableOpacity>
-            <Text style={styles.title}>Post Detail</Text>
-          </View>
+          {/* Header */}
+          <PostDetailHeader />
 
-          <View style={styles.postContainer}>
-            <View style={styles.postHeader}>
-              <View style={styles.authorContainer}>
-                {selectedDiscussion.user?.avatar_url ? (
-                  <Image 
-                    source={{ uri: selectedDiscussion.user.avatar_url }} 
-                    style={styles.authorAvatar} 
-                  />
-                ) : (
-                  <View style={styles.defaultAvatar}>
-                    <Text style={styles.defaultAvatarText}>
-                      {(selectedDiscussion.user?.full_name || '?').charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-                <Text style={styles.postAuthor}>
-                  {selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
-                </Text>
-              </View>
-              <View style={styles.postHeaderRight}>
-                <Text style={styles.postTimestamp}>
-                  {new Date(selectedDiscussion.created_at).toLocaleDateString()}
-                </Text>
-                {/* Show options button if the post belongs to the current user */}
-                {selectedDiscussion.user_id === user?.id && (
-                  <TouchableOpacity
-                    style={styles.optionsButton}
-                    onPress={() => setShowPostOptions(!showPostOptions)}
-                  >
-                    <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
-                  </TouchableOpacity>
-                )}
-                {/* No inline options menu anymore - using the PostOptionsMenu component */}
-              </View>
-            </View>
-            {!isEditingPost ? (
-              <>
-                {selectedDiscussion.title && (
-                  <Text style={styles.postTitle}>{selectedDiscussion.title}</Text>
-                )}
-                <Markdown 
-                  style={{
-                    body: styles.postContent,
-                    bullet: { color: '#2E7D32' },
-                    strong: { fontWeight: 'bold' },
-                    heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
-                    heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
-                    heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
-                    code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
-                    code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
-                    link: { color: '#1976D2', textDecorationLine: 'underline' },
-                    image: { width: 300, height: 300, marginVertical: 8, borderRadius: 8 }
-                  }}
-                  rules={rules}
-                  onLinkPress={(url: string) => {
-                    Linking.openURL(url);
-                    return false;
-                  }}
-                >
-                  {sanitizeMarkdownInput(selectedDiscussion.content, 'post')}
-                </Markdown>
-              </>
-            ) : (
-              <View style={styles.editPostContainer}>
-                <TextInput
-                  style={styles.editPostTitleInput}
-                  placeholder="Title (optional)"
-                  placeholderTextColor="#757575"
-                  value={editPostTitle}
-                  onChangeText={setEditPostTitle}
-                  maxLength={100}
-                />
-                <TextInput
-                  style={[styles.editPostContentInput, editPostCharacterInfo.isAtLimit ? styles.inputAtLimit : undefined]}
-                  placeholder="What's on your mind?"
-                  placeholderTextColor="#757575"
-                  value={editPostContent}
-                  onChangeText={setEditPostContent}
-                  multiline
-                  maxLength={1000}
-                />
-                <View style={styles.editPostFooter}>
-                  <Text style={[styles.characterCount, editPostCharacterInfo.isNearLimit ? styles.characterCountNearLimit : undefined, editPostCharacterInfo.isAtLimit ? styles.characterCountAtLimit : undefined]}>
-                    {editPostCharacterInfo.remaining} characters left
-                  </Text>
-                  <View style={styles.editPostButtons}>
-                    <TouchableOpacity 
-                      style={styles.cancelButton}
-                      onPress={handleCancelPostEdit}
-                    >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.saveButton, (!editPostContent.trim() || editPostCharacterInfo.isAtLimit || isSubmitting) ? styles.saveButtonDisabled : undefined]}
-                      onPress={handleSavePostEdit}
-                      disabled={!editPostContent.trim() || editPostCharacterInfo.isAtLimit || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <ActivityIndicator size="small" color="#FFFFFF" />
-                      ) : (
-                        <Text style={styles.saveButtonText}>Save</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
-            <View style={styles.postFooter}>
-              <TouchableOpacity 
-                style={[styles.likeButton, selectedDiscussion.user_has_reacted && styles.likeButtonActive]}
-                onPress={handleLike}
-              >
-                <Ionicons 
-                  name={selectedDiscussion.user_has_reacted ? "heart" : "heart-outline"} 
-                  size={20} 
-                  color={selectedDiscussion.user_has_reacted ? "#2E7D32" : "#757575"} 
-                />
-                <Text style={[styles.likeText, selectedDiscussion.user_has_reacted && styles.likeTextActive]}>
-                  {selectedDiscussion.reaction_count || 0} likes
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.commentsContainer}>
-            <Text style={styles.commentsTitle}>
-              Comments ({comments.length})
-            </Text>
-            
-            {isLoadingComments ? (
-              <View style={styles.loadingCommentsContainer}>
-                <ActivityIndicator size="small" color="#2E7D32" />
-                <Text style={styles.loadingCommentsText}>Loading comments...</Text>
-              </View>
-            ) : commentsError ? (
-              <View style={styles.errorCommentsContainer}>
-                <Text style={styles.errorCommentsText}>Error loading comments: {commentsError}</Text>
-              </View>
-            ) : comments.length > 0 ? (
-              comments.map(comment => (
-                <View key={comment.id} style={styles.commentItem}>
-                  <View style={styles.commentHeader}>
-                    <View style={styles.commentAuthorContainer}>
-                      {comment.user?.avatar_url ? (
-                        <Image 
-                          source={{ uri: comment.user.avatar_url }} 
-                          style={styles.commentAuthorAvatar} 
-                        />
-                      ) : (
-                        <View style={styles.commentDefaultAvatar}>
-                          <Text style={styles.commentDefaultAvatarText}>
-                            {(comment.user?.full_name || '?').charAt(0).toUpperCase()}
-                          </Text>
-                        </View>
-                      )}
-                      <Text style={styles.commentAuthor}>
-                        {comment.user?.full_name || comment.user_id.substring(0, 8)}
-                      </Text>
-                    </View>
-                    <View style={styles.commentHeaderRight}>
-                      <Text style={styles.commentTimestamp}>
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </Text>
-                      {/* Show options for user's own comments */}
-                      {comment.user_id === user?.id && (
-                        <View style={styles.commentOptions}>
-                          <TouchableOpacity 
-                            style={styles.commentOptionButton}
-                            onPress={() => handleEditComment(comment.id, comment.content)}
-                          >
-                            <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
-                          </TouchableOpacity>
-                          <TouchableOpacity 
-                            style={styles.commentOptionButton}
-                            onPress={() => handleDeleteComment(comment.id)}
-                          >
-                            <Ionicons name="trash-outline" size={16} color="#D32F2F" />
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  {editingCommentId === comment.id ? (
-                    <View style={styles.editCommentContainer}>
-                      <TextInput
-                        style={[styles.editCommentInput, editCommentCharacterInfo.isAtLimit ? styles.inputAtLimit : undefined]}
-                        placeholder="Edit your comment..."
-                        placeholderTextColor="#757575"
-                        value={editCommentContent}
-                        onChangeText={setEditCommentContent}
-                        multiline
-                        maxLength={300}
-                      />
-                      <View style={styles.editCommentFooter}>
-                        <Text style={[styles.characterCount, editCommentCharacterInfo.isNearLimit ? styles.characterCountNearLimit : undefined, editCommentCharacterInfo.isAtLimit ? styles.characterCountAtLimit : undefined]}>
-                          {editCommentCharacterInfo.remaining} characters left
-                        </Text>
-                        <View style={styles.editCommentButtons}>
-                          <TouchableOpacity 
-                            style={styles.cancelButton}
-                            onPress={handleCancelCommentEdit}
-                          >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
-                            style={[styles.saveButton, (!editCommentContent.trim() || editCommentCharacterInfo.isAtLimit || isSubmitting) ? styles.saveButtonDisabled : undefined]}
-                            onPress={handleSaveCommentEdit}
-                            disabled={!editCommentContent.trim() || editCommentCharacterInfo.isAtLimit || isSubmitting}
-                          >
-                            {isSubmitting ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <Text style={styles.saveButtonText}>Save</Text>
-                            )}
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </View>
-                  ) : (
-                    <Text style={styles.commentContent}>{comment.content}</Text>
-                  )}
-                </View>
-              ))
-            ) : (
-              <View style={styles.noCommentsContainer}>
-                <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.addCommentContainer}>
-            <TextInput
-              style={[styles.commentInput, characterInfo.isAtLimit ? styles.commentInputAtLimit : undefined]}
-              placeholder="Add a comment..."
-              placeholderTextColor="#757575"
-              value={newCommentContent}
-              onChangeText={setNewCommentContent}
-              multiline
-              maxLength={300}
+          {/* Post Content */}
+          {!isEditingPost ? (
+            <PostContent
+              userId={user?.id || ''}
+              discussionId={discussionId}
+              title={selectedDiscussion.title || null}
+              content={selectedDiscussion.content}
+              authorName={selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
+              authorAvatarUrl={selectedDiscussion.user?.avatar_url || null}
+              timestamp={new Date(selectedDiscussion.created_at).toLocaleDateString()}
+              reactionCount={selectedDiscussion.reaction_count || 0}
+              userHasReacted={!!selectedDiscussion.user_has_reacted}
+              isAuthor={selectedDiscussion.user_id === user?.id}
+              onLike={handleLike}
+              onToggleOptions={() => setShowPostOptions(!showPostOptions)}
             />
-            <View style={styles.commentInputFooter}>
-              <Text style={[styles.characterCount, characterInfo.isNearLimit ? styles.characterCountNearLimit : undefined, characterInfo.isAtLimit ? styles.characterCountAtLimit : undefined]}>
-                {characterInfo.remaining} characters left
-              </Text>
-              <TouchableOpacity 
-                style={[styles.submitButton, (!newCommentContent.trim() || characterInfo.isAtLimit || isSubmitting) ? styles.submitButtonDisabled : undefined]}
-                onPress={handleSubmitComment}
-                disabled={!newCommentContent.trim() || characterInfo.isAtLimit || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Post</Text>
-                )}
-              </TouchableOpacity>
-              {submitError && (
-                <Text style={styles.errorText}>{submitError}</Text>
-              )}
-            </View>
-          </View>
+          ) : (
+            <PostEditForm
+              title={editPostTitle}
+              content={editPostContent}
+              onTitleChange={setEditPostTitle}
+              onContentChange={setEditPostContent}
+              onSave={handleSavePostEdit}
+              onCancel={handleCancelPostEdit}
+              isSubmitting={isSubmitting}
+              characterInfo={editPostCharacterInfo}
+            />
+          )}
+
+          {/* Comments Section */}
+          <CommentsSection
+            comments={comments}
+            isLoading={isLoadingComments}
+            error={commentsError || undefined}
+            currentUserId={user?.id || ''}
+            editingCommentId={editingCommentId}
+            editCommentContent={editCommentContent}
+            editCommentCharacterInfo={editCommentCharacterInfo}
+            isSubmitting={isSubmitting}
+            onEditComment={handleEditComment}
+            onDeleteComment={handleDeleteComment}
+            onEditContentChange={setEditCommentContent}
+            onSaveEdit={handleSaveCommentEdit}
+            onCancelEdit={handleCancelCommentEdit}
+          />
+
+          {/* Add Comment Form */}
+          <CommentForm
+            content={newCommentContent}
+            onContentChange={setNewCommentContent}
+            onSubmit={handleSubmitComment}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
+            characterInfo={characterInfo}
+          />
         </View>
       </ScrollView>
 
-      {showToast && (
-        <View style={styles.toastWrapper}>
-          <View style={styles.toastContainer}>
-            <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-            <Text style={styles.toastText}>{toastMessage}</Text>
-          </View>
-        </View>
-      )}
+      {/* Toast Notification */}
+      <Toast message={toastMessage} visible={showToast} />
     </KeyboardAvoidingView>
   );
 }
