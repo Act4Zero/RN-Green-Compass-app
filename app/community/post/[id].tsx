@@ -12,16 +12,16 @@ import { useLocalSearchParams } from 'expo-router';
 import usePostDetailState from '../hooks/usePostDetailState';
 
 // Import UI components
-import PostDetailHeader from '../components/PostDetailHeader';
-import PostContent from '../components/PostContent';
-import PostEditForm from '../components/PostEditForm';
-import CommentsSection from '../components/CommentsSection';
-import CommentForm from '../components/CommentForm';
-import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
-import PostOptionsMenu from '../components/PostOptionsMenu';
+import PostDetailHeader from '../components/postdetails/PostDetailHeader';
+import PostContent from '../components/postdetails/PostContent';
+import PostEditForm from '../components/postdetails/PostEditForm';
+import CommentsSection from '../components/postdetails/CommentsSection';
+import CommentForm from '../components/postdetails/CommentForm';
+import DeleteConfirmationModal from '../components/postdetails/DeleteConfirmationModal';
+import PostOptionsMenu from '../components/postdetails/PostOptionsMenu';
+import NotFoundState from '../components/postdetails/NotFoundState';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
-import NotFoundState from '../components/NotFoundState';
 import { Toast } from '../components/Toast';
 
 // Styles for this component

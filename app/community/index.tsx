@@ -19,7 +19,7 @@ import ErrorState from './components/ErrorState';
 import EmptyState from './components/EmptyState';
 import FeedHeader from './components/FeedHeader';
 import NewPostButton from './components/NewPostButton';
-import PostOptionsMenu from './components/PostOptionsMenu';
+import PostOptionsMenu from './components/postdetails/PostOptionsMenu';
 
 // Styles for this component
 const styles = FeedStyles;

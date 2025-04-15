@@ -37,7 +37,7 @@ export default function RootLayout() {
 
           {/* Community screens */}
           <Stack.Screen name="community/index" options={{ headerShown: false }} />
-          <Stack.Screen name="community/new-post" options={{ headerShown: false }} />
+          <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
 
           {/* Home screen override: hide back button explicitly */}

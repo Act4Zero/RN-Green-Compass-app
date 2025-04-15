@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
-import { sanitizeMarkdownInput } from '../utils/sanitizeMarkdownInput';
-import PostDetailStyles from '../styles/PostDetailStyles';
+import { sanitizeMarkdownInput } from '../../utils/sanitizeMarkdownInput';
+import PostDetailStyles from '../../styles/PostDetailStyles';
 
 const styles = PostDetailStyles;
 

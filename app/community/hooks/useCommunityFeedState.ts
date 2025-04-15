@@ -87,7 +87,7 @@ function useCommunityFeedState() {
 
   const handleNewPost = () => {
     // Navigate to new post screen
-    router.push('/community/new-post');
+    router.push('/community/post/new-post');
   };
   
   const togglePostOptions = (postId: string) => {
@@ -122,7 +122,7 @@ function useCommunityFeedState() {
     
     // Navigate to new-post screen with edit parameters
     router.push({
-      pathname: '/community/new-post',
+      pathname: '/community/post/new-post',
       params: { 
         edit: 'true',
         postId: postId,

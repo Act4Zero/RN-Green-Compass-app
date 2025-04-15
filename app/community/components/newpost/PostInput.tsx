@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
-import { getCharacterInfo } from '../utils/sanitizeMarkdownInput';
+import { getCharacterInfo } from '../../utils/sanitizeMarkdownInput';
 
 interface PostInputProps {
   title: string;

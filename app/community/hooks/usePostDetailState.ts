@@ -140,7 +140,7 @@ function usePostDetailState(discussionId: string) {
     
     // Navigate to new-post screen with edit parameters
     router.push({
-      pathname: '/community/new-post',
+      pathname: '/community/post/new-post',
       params: { 
         edit: 'true',
         postId: selectedDiscussion.id,

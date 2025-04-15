@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { Linking } from 'react-native';
-import { markdownStyles } from '../styles/NewPostStyles';
+import { markdownStyles } from '../../styles/NewPostStyles';
 
 interface PostPreviewProps {
   content: string | undefined;
