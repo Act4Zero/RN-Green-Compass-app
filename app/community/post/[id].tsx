@@ -266,27 +266,33 @@ export default function PostDetail() {
     setEditCommentContent('');
   };
   
+  // State for modal-based confirmation dialog (as an alternative to Alert)  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
   const handleDeleteComment = (commentId: string) => {
-    Alert.alert(
-      'Delete Comment',
-      'Are you sure you want to delete this comment? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await deleteComment(commentId);
-            if (success) {
-              showToastMessage('Comment deleted!');
-            }
-          }
-        }
-      ]
-    );
+    console.log('[POST DETAIL] Delete comment button clicked for comment:', commentId);
+    
+    // Use the modal approach for delete confirmation
+    setCommentToDelete(commentId);
+    setShowDeleteModal(true);
+    console.log('[POST DETAIL] Delete modal should be visible now');
+  };
+  
+  // Function to handle actual deletion from the modal
+  const confirmDeleteComment = async () => {
+    if (!commentToDelete) return;
+    
+    console.log('[POST DETAIL] Confirming delete from modal for comment:', commentToDelete);
+    const success = await deleteComment(commentToDelete);
+    
+    if (success) {
+      showToastMessage('Comment deleted!');
+    }
+    
+    // Reset state
+    setShowDeleteModal(false);
+    setCommentToDelete(null);
   };
 
   const showToastMessage = (message: string = 'Success!') => {
@@ -339,6 +345,34 @@ export default function PostDetail() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
+      {/* Custom Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Comment</Text>
+            <Text style={styles.modalMessage}>Are you sure you want to delete this comment? This action cannot be undone.</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.modalCancelButton}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalDeleteButton}
+                onPress={confirmDeleteComment}
+              >
+                <Text style={styles.modalDeleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       {/* Overlay to detect clicks outside the menu */}
       <PostOptionsMenu
         postId={discussionId}

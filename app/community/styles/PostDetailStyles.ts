@@ -31,6 +31,17 @@ export interface PostDetailStyles {
   optionItem: ViewStyle;
   optionText: TextStyle;
   
+  // Modal styles
+  modalOverlay: ViewStyle;
+  modalContent: ViewStyle;
+  modalTitle: TextStyle;
+  modalMessage: TextStyle;
+  modalButtons: ViewStyle;
+  modalCancelButton: ViewStyle;
+  modalCancelButtonText: TextStyle;
+  modalDeleteButton: ViewStyle;
+  modalDeleteButtonText: TextStyle;
+  
   // Post editing
   editPostContainer: ViewStyle;
   editPostTitleInput: TextStyle;
@@ -178,6 +189,75 @@ const PostDetailStyles = StyleSheet.create<PostDetailStyles>({
     marginLeft: 8,
     fontSize: 14,
     color: '#2E7D32',
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelButton: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  modalCancelButtonText: {
+    color: '#757575',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalDeleteButton: {
+    backgroundColor: '#D32F2F',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginLeft: 10,
+  },
+  modalDeleteButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   
   // Post editing
