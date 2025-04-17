@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect } from 'react';
 import { useNavigation, useFocusEffect } from 'expo-router';
-import Welcome from './components/Welcome';
-import { useAuth } from './context/AuthContext';
-import analyticsService from './services/analyticsService';
+import Welcome from '@/components/Welcome';
+import { useAuth } from '@/context/AuthContext';
+import analyticsService from '@/services/analyticsService';
 
 export default function Index() {
   // This component renders the Green Compass Welcome page

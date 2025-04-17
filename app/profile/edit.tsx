@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Alert, ActivityIndicator, Text, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
-import ProfileForm from './components/ProfileForm';
+import { useAuth } from '@/context/AuthContext';
+import ProfileForm from '@/components/profile/ProfileForm';
 import { Ionicons } from '@expo/vector-icons';
-import profileEditStyles from '../profile/styles/ProfileEdit.styles';
-import useProfileManager from '../hooks/useProfileManager';
+import profileEditStyles from '@/styles/ProfileEdit.styles';
+import useProfileManager from '@/hooks/useProfileManager';
 
 export default function EditProfileScreen() {
   const { width } = useWindowDimensions();

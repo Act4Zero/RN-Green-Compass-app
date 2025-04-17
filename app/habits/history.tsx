@@ -9,15 +9,15 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StatsContainer } from './components/history/StatsContainer';
-import { StatsCalendar } from './components/history/StatsCalendar';
-import CategoryFilters from './components/history/CategoryFilters';
-import { HabitsHistory } from './components/history/HabitsHistory';
-import { HabitLog, UserGoal } from '../types/supabase';
-import { historyStyles } from './styles/historyStyles';
-import CompletedGoals from './components/history/CompletedGoals';
-import useHistoryManager from './hooks/useHistoryManager';
-import { useAuth } from '../context/AuthContext';
+import { StatsContainer } from '@/components/habits/history/StatsContainer';
+import { StatsCalendar } from '@/components/habits/history/StatsCalendar';
+import CategoryFilters from '@/components/habits/history/CategoryFilters';
+import { HabitsHistory } from '@/components/habits/history/HabitsHistory';
+import { HabitLog, UserGoal } from '@/types/supabase';
+import { historyStyles } from '@/styles/historyStyles';
+import CompletedGoals from '@/components/habits/history/CompletedGoals';
+import useHistoryManager from '@/hooks/habits/useHistoryManager';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
 const styles = historyStyles;

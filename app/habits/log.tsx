@@ -9,14 +9,14 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Habit } from '../types/supabase';
-import LogStyles from './styles/LogStyles';
-import CategoriesSection from './components/log/CategoriesSection';
-import SubcategoriesSection from './components/log/SubcategoriesSection';
-import HabitsSection from './components/log/HabitsSection';
-import SelectedHabitSection from './components/log/SelectedHabitSection';
-import useLogManager from './hooks/useLogManager';
-import { useAuth } from '../context/AuthContext';
+import { Habit } from '@/types/supabase';
+import LogStyles from '@/styles/LogStyles';
+import CategoriesSection from '@/components/habits/log/CategoriesSection';
+import SubcategoriesSection from '@/components/habits/log/SubcategoriesSection';
+import HabitsSection from '@/components/habits/log/HabitsSection';
+import SelectedHabitSection from '@/components/habits/log/SelectedHabitSection';
+import useLogManager from '@/hooks/habits/useLogManager';
+import { useAuth } from '@/context/AuthContext';
 
 // Styles for this component
 const styles = LogStyles;

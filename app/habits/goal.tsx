@@ -10,14 +10,14 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Button from '../components/Button';
-import { goalStyles } from './styles/Goal.styles';
-import { focusAreas } from '../components/home/types/goal.types';
-import FocusAreasComponent from './components/goal/FocusAreaComponent';
-import FrequencySelector from './components/goal/FrequencySelectorProps';
-import GoalInput from './components/goal/GoalInput';
-import { useAuth } from '../context/AuthContext';
-import useGoalManager from './hooks/useGoalManager';
+import Button from '@/components/Button';
+import { goalStyles } from '@/styles/Goal.styles';
+import { focusAreas } from '@/types/goal.types';
+import FocusAreasComponent from '@/components/habits/goal/FocusAreaComponent';
+import FrequencySelector from '@/components/habits/goal/FrequencySelectorProps';
+import GoalInput from '@/components/habits/goal/GoalInput';
+import { useAuth } from '@/context/AuthContext';
+import useGoalManager from '@/hooks/habits/useGoalManager';
 
 export default function Goal() {
   const { width } = useWindowDimensions();

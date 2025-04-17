@@ -11,10 +11,10 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import profileStyles from './styles/Profile.styles';
-import useProfileManager from '../hooks/useProfileManager';
+import profileStyles from '@/styles/Profile.styles';
+import useProfileManager from '@/hooks/useProfileManager';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();

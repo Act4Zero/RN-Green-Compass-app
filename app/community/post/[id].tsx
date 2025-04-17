@@ -9,23 +9,23 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 
 // Import custom hooks
-import usePostDetailState from '../hooks/usePostDetailState';
+import usePostDetailState from '@/hooks/community/usePostDetailState';
 
 // Import UI components
-import PostDetailHeader from '../components/postdetails/PostDetailHeader';
-import PostContent from '../components/postdetails/PostContent';
-import PostEditForm from '../components/postdetails/PostEditForm';
-import CommentsSection from '../components/postdetails/CommentsSection';
-import CommentForm from '../components/postdetails/CommentForm';
-import DeleteConfirmationModal from '../components/postdetails/DeleteConfirmationModal';
-import PostOptionsMenu from '../components/postdetails/PostOptionsMenu';
-import NotFoundState from '../components/postdetails/NotFoundState';
-import LoadingState from '../components/LoadingState';
-import ErrorState from '../components/ErrorState';
-import { Toast } from '../components/Toast';
+import PostDetailHeader from '@/components/community/postdetails/PostDetailHeader';
+import PostContent from '@/components/community/postdetails/PostContent';
+import PostEditForm from '@/components/community/postdetails/PostEditForm';
+import CommentsSection from '@/components/community/postdetails/CommentsSection';
+import CommentForm from '@/components/community/postdetails/CommentForm';
+import DeleteConfirmationModal from '@/components/community/postdetails/DeleteConfirmationModal';
+import PostOptionsMenu from '@/components/community/postdetails/PostOptionsMenu';
+import NotFoundState from '@/components/community/postdetails/NotFoundState';
+import LoadingState from '@/components/community/LoadingState';
+import ErrorState from '@/components/community/ErrorState';
+import { Toast } from '@/components/community/Toast';
 
 // Styles for this component
-import PostDetailStyles from '../styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/PostDetailStyles';
 const styles = PostDetailStyles;
 
 export default function PostDetail() {

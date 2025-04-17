@@ -1,8 +1,8 @@
 import { Stack } from "expo-router";
-import { AuthProvider } from "./context/AuthContext";
-import HabitContextModule from "./context/HabitContext/HabitContext";
+import { AuthProvider } from "@/context/AuthContext";
+import HabitContextModule from "@/context/HabitContext/HabitContext";
 import { useEffect } from 'react';
-import analyticsService from './services/analyticsService';
+import analyticsService from '@/services/analyticsService';
 
 const { HabitProvider } = HabitContextModule;
 

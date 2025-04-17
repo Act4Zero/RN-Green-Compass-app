@@ -17,13 +17,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Turnstile from '../components/Turnstile';
+import { useAuth } from '@/context/AuthContext';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+import Turnstile from '@/components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
-import supabase, { ensureValidSession } from '../lib/supabase';
-import analyticsService from '../services/analyticsService';
+import supabase, { ensureValidSession } from '@/lib/supabase';
+import analyticsService from '@/services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
