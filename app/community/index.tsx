@@ -115,7 +115,7 @@ export default function CommunityFeed() {
               shadowRadius: 4,
               elevation: 2,
             }} 
-            onPress={() => router.push('./challenges')}
+            onPress={() => router.push('/community/challenges')}
           >
             <Ionicons name="people" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
             <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
