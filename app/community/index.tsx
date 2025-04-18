@@ -5,8 +5,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
 import FeedStyles from '@/styles/FeedStyles';
+import { useRouter } from 'expo-router';
 
 // Import custom hooks
 import useCommunityFeedState from '@/hooks/community/useCommunityFeedState';
@@ -18,6 +21,7 @@ import LoadingState from '@/components/community/LoadingState';
 import ErrorState from '@/components/community/ErrorState';
 import EmptyState from '@/components/community/EmptyState';
 import FeedHeader from '@/components/community/FeedHeader';
+import { Ionicons } from '@expo/vector-icons';
 import NewPostButton from '@/components/community/NewPostButton';
 import PostOptionsMenu from '@/components/community/postdetails/PostOptionsMenu';
 
@@ -27,6 +31,9 @@ const styles = FeedStyles;
 export default function CommunityFeed() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  
+  // Use router for navigation
+  const router = useRouter();
   
   // Use our custom hook for all state management and event handlers
   const {
@@ -90,6 +97,31 @@ export default function CommunityFeed() {
         <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
           {/* Header */}
           <FeedHeader />
+          
+          {/* Challenges Button */}
+          <TouchableOpacity 
+            style={{
+              backgroundColor: '#2E7D32',
+              borderRadius: 8,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }} 
+            onPress={() => router.push('./challenges')}
+          >
+            <Ionicons name="people" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+              Sustainability Challenges
+            </Text>
+          </TouchableOpacity>
 
           {/* Content based on loading state */}
           {isLoadingDiscussions ? (

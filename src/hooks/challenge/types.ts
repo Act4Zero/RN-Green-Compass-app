@@ -53,10 +53,14 @@ export interface SubmitState {
   error: string | null;
 }
 
+// Filter types for challenges
+export type ChallengeFilter = 'all' | 'active' | 'participating' | 'completed';
+
 /**
  * Props for the useChallenges hook
  */
 export interface UseChallengesProps {
+  filter?: ChallengeFilter;
   initialPage?: number;
   pageSize?: number;
 }
