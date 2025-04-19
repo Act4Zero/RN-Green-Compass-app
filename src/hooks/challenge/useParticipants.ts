@@ -3,6 +3,7 @@ import supabase from '../../lib/supabase';
 import { ChallengeParticipant, PaginatedResult } from '../../types/challenge';
 import { ParticipantsState, UseParticipantsProps, JoinResult } from './types';
 import useCurrentUser from './useCurrentUser';
+import { PROFILES_BUCKET } from '@/services/profile/types';
 
 /**
  * Hook for managing challenge participants
@@ -25,6 +26,9 @@ function useParticipants({
     error: null
   });
 
+  // Simple cache to avoid redundant storage calls
+  const avatarCache: Record<string, string> = {};
+
   /**
    * Load participants for a challenge with pagination
    */
@@ -43,7 +47,7 @@ function useParticipants({
         .from('challenge_participants')
         .select(`
           *,
-          user:user_id(id, full_name, avatar_url)
+          user:user_id(id, display_name:full_name, avatar_url)
         `, { count: 'exact' })
         .eq('challenge_id', challengeId)
         .order('progress_metric', { ascending: false })
@@ -52,11 +56,33 @@ function useParticipants({
       if (error) throw error;
       
       const participants = data || [];
+      // Enrich participants with signed avatar URLs
+      const enhancedParticipants: ChallengeParticipant[] = await Promise.all(
+        participants.map(async p => {
+          const path = p.user?.avatar_url;
+          let signedUrl: string | null = null;
+          if (path) {
+            if (avatarCache[path]) {
+              signedUrl = avatarCache[path];
+            } else {
+              const { data: urlData, error: urlError } = await supabase
+                .storage
+                .from(PROFILES_BUCKET)
+                .createSignedUrl(path, 60);
+              if (!urlError && urlData?.signedUrl) {
+                signedUrl = urlData.signedUrl;
+                avatarCache[path] = signedUrl;
+              }
+            }
+          }
+          return { ...p, user: { ...p.user, avatar_signed_url: signedUrl } };
+        })
+      );
       const hasMore = count ? from + participants.length < count : false;
       
       setState(prev => ({
         ...prev,
-        participants: page === 1 ? participants : [...prev.participants, ...participants],
+        participants: page === 1 ? enhancedParticipants : [...prev.participants, ...enhancedParticipants],
         count: count || 0,
         page,
         hasMore,
@@ -64,7 +90,7 @@ function useParticipants({
       }));
       
       return {
-        data: participants,
+        data: enhancedParticipants,
         count: count || 0,
         hasMore
       } as PaginatedResult<ChallengeParticipant>;
@@ -149,7 +175,7 @@ function useParticipants({
         .from('challenge_participants')
         .select(`
           *,
-          user:user_id(id, full_name, avatar_url)
+          user:user_id(id, display_name:full_name, avatar_url)
         `)
         .eq('challenge_id', challengeId)
         .eq('user_id', userId)

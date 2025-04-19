@@ -12,7 +12,7 @@ export interface Challenge {
   // Joined fields
   creator?: {
     id?: string;
-    full_name: string | null;
+    display_name: string | null;
     avatar_url: string | null;
   };
   participant_count?: number;
@@ -31,8 +31,10 @@ export interface ChallengeParticipant {
   // Joined fields
   user?: {
     id?: string;
-    full_name: string | null;
+    display_name: string | null;
     avatar_url: string | null;
+    // Signed URL for avatar fetched server-side
+    avatar_signed_url?: string | null;
   };
 }
 

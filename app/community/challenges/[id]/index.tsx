@@ -171,7 +171,7 @@ export default function ChallengeDetail() {
             <View style={styles.creatorInfo}>
               <Ionicons name="person-circle-outline" size={24} color="#555555" />
               <Text style={styles.creatorName}>
-                Created by {challenge.creator?.full_name || 'Anonymous'}
+                Created by {challenge.creator?.display_name || 'Anonymous'}
               </Text>
             </View>
             
@@ -238,24 +238,7 @@ export default function ChallengeDetail() {
           </View>
           
           {/* Participants Section */}
-          <ChallengeParticipants 
-            challengeId={id} 
-            participants={[
-              // Temporary mock data until backend integration is complete
-              ...(challenge && challenge.participant_count && challenge.participant_count > 0 
-                ? Array(Math.min(5, challenge.participant_count || 0)).fill(0).map((_, index) => ({
-                  id: `participant-${index}`,
-                  user: {
-                    id: `user-${index}`,
-                    name: `Participant ${index + 1}`
-                  },
-                  contribution: Math.floor(Math.random() * 100)
-                })) 
-                : [])
-            ]} 
-            isLoading={isLoading} 
-            loadParticipants={() => {/* Load participants function will be implemented in the hook */}} 
-          />
+          <ChallengeParticipants challengeId={id} />
           
           {/* Activity Logs Section - only show if user is participating */}
           {challenge.is_participant && (

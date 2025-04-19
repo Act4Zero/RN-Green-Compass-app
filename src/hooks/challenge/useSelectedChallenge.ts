@@ -30,7 +30,7 @@ function useSelectedChallenge() {
         .from('challenges')
         .select(`
           *,
-          creator:creator_id(id, full_name, avatar_url),
+          creator:creator_id(id, display_name:full_name, avatar_url),
           participant_count:challenge_participants(count)
         `)
         .eq('id', challengeId)
