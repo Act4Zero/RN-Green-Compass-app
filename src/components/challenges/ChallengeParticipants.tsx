@@ -37,8 +37,8 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
   };
 
   // Component for individual participant items with cached avatar URLs
-  function ParticipantItem({ user, progress_metric }: { user?: { display_name: string | null; avatar_url: string | null }, progress_metric: number }) {
-    const displayName = user?.display_name || 'Unknown';
+  function ParticipantItem({ user, progress_metric }: { user?: { display_name: string | null; full_name?: string | null; avatar_url: string | null }, progress_metric: number }) {
+    const displayName = user?.display_name || user?.full_name || 'Unknown';
     const initial = displayName.charAt(0) || '?';
     const { url: avatarUrl, loading: avatarLoading } = useAvatarUrl(user?.avatar_url);
     return (
@@ -55,7 +55,9 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
           )}
           <Text style={styles.participantName}>{displayName}</Text>
         </View>
-        <Text style={{ color: '#2E7D32' }}>{progress_metric}</Text>
+        <Text style={{ color: '#2E7D32', marginLeft: 8 }}>
+          {progress_metric}
+        </Text>
       </View>
     );
   }

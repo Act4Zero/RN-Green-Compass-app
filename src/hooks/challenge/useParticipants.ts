@@ -47,7 +47,7 @@ function useParticipants({
         .from('challenge_participants')
         .select(`
           *,
-          user:user_id(id, display_name:full_name, avatar_url)
+          user:user_id(id, display_name, avatar_url)
         `, { count: 'exact' })
         .eq('challenge_id', challengeId)
         .order('progress_metric', { ascending: false })
@@ -175,7 +175,7 @@ function useParticipants({
         .from('challenge_participants')
         .select(`
           *,
-          user:user_id(id, display_name:full_name, avatar_url)
+          user:user_id(id, full_name, avatar_url)
         `)
         .eq('challenge_id', challengeId)
         .eq('user_id', userId)
