@@ -46,12 +46,16 @@ function useSelectedChallenge() {
       
       // If user is logged in, check if they're participating
       if (userId) {
-        const { data: participation } = await supabase
+        // Fetch participation as an array to always return 200 OK
+        const { data: participants, error: participationError } = await supabase
           .from('challenge_participants')
           .select('id, progress_metric')
           .eq('challenge_id', challengeId)
           .eq('user_id', userId)
-          .single();
+          .range(0, 0);
+        
+        if (participationError) console.error('Error fetching participation:', participationError);
+        const participation = participants?.[0] ?? null;
         
         challengeWithDetails = {
           ...challengeWithDetails,

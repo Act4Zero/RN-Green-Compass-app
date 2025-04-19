@@ -15,10 +15,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import ChallengeStyles from '@/styles/ChallengeStyles';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
-import ChallengeParticipants from '../../../src/components/challenges/ChallengeParticipants';
-import ChallengeProgress from '../../../src/components/challenges/ChallengeProgress';
-import ActivityLogsList from '../../../src/components/challenges/ActivityLogsList';
-import formatDate from '../../../src/utils/formatDate';
+import ChallengeParticipants from '@/components/challenges/ChallengeParticipants';
+import ChallengeProgress from '@/components/challenges/ChallengeProgress';
+import ActivityLogsList from '@/components/challenges/ActivityLogsList';
+import formatDate from '@/utils/formatDate';
 
 // Styles for this component
 const styles = ChallengeStyles;
