@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   View,
   Text,
@@ -14,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import ChallengeStyles from '@/styles/ChallengeStyles';
+import { Toast } from '@/components/community/Toast';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useActivityLogs from '@/hooks/challenge/useActivityLogs';
@@ -33,6 +35,7 @@ export default function LogActivity() {
   const [activityDescription, setActivityDescription] = useState('');
   const [progress, setProgress] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   
   // Use our selected challenge hook to get challenge details
   const {
@@ -65,6 +68,7 @@ export default function LogActivity() {
     if (!challenge || !user) return;
     
     if (!activityTitle.trim()) {
+      // Still use Alert for error (optional: can convert to toast if desired)
       Alert.alert('Error', 'Please enter an activity title');
       return;
     }
@@ -73,23 +77,16 @@ export default function LogActivity() {
     
     try {
       setIsSubmitting(true);
-      
       // Combine title and description into one field for logging
       const fullDescription = activityDescription
         ? `${activityTitle}: ${activityDescription}`
         : activityTitle;
       await logActivity(fullDescription, progressValue);
-      
-      Alert.alert(
-        'Success',
-        'Your activity has been logged successfully!',
-        [
-          { 
-            text: 'OK', 
-            onPress: () => router.replace(`../`) 
-          }
-        ]
-      );
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        router.replace('/community/challenges');
+      }, 2000);
     } catch (error) {
       console.error('Error logging activity:', error);
       Alert.alert('Error', 'Failed to log your activity. Please try again.');
@@ -97,6 +94,7 @@ export default function LogActivity() {
       setIsSubmitting(false);
     }
   };
+
 
   // If still loading auth, show loading indicator
   if (authLoading) {
@@ -117,29 +115,31 @@ export default function LogActivity() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <>
+      <Toast message="Your activity has been logged successfully!" visible={showToast} />
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>Log Activity</Text>
-              <Text style={styles.subtitle}>{challenge.title}</Text>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => router.back()}
+              >
+                <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+              </TouchableOpacity>
+              <View>
+                <Text style={styles.title}>Log Activity</Text>
+                <Text style={styles.subtitle}>{challenge.title}</Text>
+              </View>
             </View>
-          </View>
 
           {/* Form */}
           <View style={styles.detailCard}>
@@ -251,9 +251,10 @@ export default function LogActivity() {
                 <Text style={styles.joinButtonText}>Log Activity</Text>
               )}
             </TouchableOpacity>
-          </View>
-        </View>
+          </View> {/* close detailCard */}
+        </View> {/* close content */}
       </ScrollView>
     </KeyboardAvoidingView>
+    </>
   );
 }
