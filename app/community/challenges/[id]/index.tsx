@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import ChallengeStyles from '@/styles/ChallengeStyles';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
+import useParticipants from '@/hooks/challenge/useParticipants';
 import ChallengeParticipants from '@/components/challenges/ChallengeParticipants';
 import ChallengeProgress from '@/components/challenges/ChallengeProgress';
 import ActivityLogsList from '@/components/challenges/ActivityLogsList';
@@ -33,6 +34,7 @@ export default function ChallengeDetail() {
   
   // Use our selected challenge hook
   const { loadChallenge, updateParticipantCount, updateProgressMetrics, clearChallenge, challenge, isLoading, error } = useSelectedChallenge();
+  const { joinChallenge: joinChallengeBackend, leaveChallenge: leaveChallengeBackend } = useParticipants({ challengeId: id });
   useEffect(() => {
     if (id && typeof id === 'string') {
       loadChallenge(id);
@@ -53,13 +55,13 @@ export default function ChallengeDetail() {
       Alert.alert('Authentication Required', 'Please sign in to join this challenge.');
       return;
     }
-    
     try {
-      // TODO: Implement joinChallenge functionality in the hook
-      // For now, just update the UI to simulate joining
-      if (challenge) {
+      const result = await joinChallengeBackend();
+      if (result.success && result.isJoined) {
         updateParticipantCount(true);
         Alert.alert('Success', 'You have joined the challenge!');
+      } else if (!result.success) {
+        Alert.alert('Error', 'Failed to join the challenge. The challenge may have ended or you have already joined.');
       }
     } catch (error) {
       console.error('Error joining challenge:', error);
@@ -69,12 +71,14 @@ export default function ChallengeDetail() {
   
   const handleLeaveChallenge = async () => {
     if (!challenge) return;
-    
     try {
-      // TODO: Implement leaveChallenge functionality in the hook
-      // For now, just update the UI to simulate leaving
-      updateParticipantCount(false);
-      Alert.alert('Success', 'You have left the challenge.');
+      const result = await leaveChallengeBackend();
+      if (result.success && result.isJoined === false) {
+        updateParticipantCount(false);
+        Alert.alert('Success', 'You have left the challenge.');
+      } else {
+        Alert.alert('Error', 'Failed to leave the challenge. Please try again.');
+      }
     } catch (error) {
       console.error('Error leaving challenge:', error);
       Alert.alert('Error', 'Failed to leave the challenge. Please try again.');

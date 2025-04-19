@@ -3,15 +3,7 @@ import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ChallengeStyles from '@/styles/ChallengeStyles';
 import useParticipants from '@/hooks/challenge/useParticipants';
-
-interface ParticipantItem {
-  id?: string;
-  user: {
-    id?: string;
-    name: string;
-  };
-  contribution: string | number;
-}
+import { ChallengeParticipant } from '@/types/challenge';
 
 interface ChallengeParticipantsProps {
   challengeId: string;
@@ -45,8 +37,10 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
     // Currently just a placeholder for future implementation
   };
 
-  const renderParticipant = ({ item }: { item: ParticipantItem }) => {
-    const { user, contribution } = item;
+  const renderParticipant = ({ item }: { item: ChallengeParticipant }) => {
+    const { user, progress_metric } = item;
+    const displayName = user?.full_name || '';
+    const initial = displayName.length > 0 ? displayName.charAt(0) : '?';
     return (
       <View style={styles.participantItem}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -59,11 +53,11 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
             justifyContent: 'center',
             marginRight: 8
           }}>
-            <Text style={{ fontWeight: 'bold' }}>{user.name.charAt(0)}</Text>
+            <Text style={{ fontWeight: 'bold' }}>{initial}</Text>
           </View>
-          <Text style={styles.participantName}>{user.name}</Text>
+          <Text style={styles.participantName}>{displayName || 'Unknown'}</Text>
         </View>
-        <Text style={{ color: '#2E7D32' }}>{contribution}</Text>
+        <Text style={{ color: '#2E7D32' }}>{progress_metric}</Text>
       </View>
     );
   };
