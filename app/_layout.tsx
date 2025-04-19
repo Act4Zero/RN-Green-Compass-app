@@ -40,6 +40,12 @@ export default function RootLayout() {
           <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
 
+          {/* Challenges screens */}
+          <Stack.Screen name="community/challenges/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/challenges/[id]/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/challenges/[id]/log" options={{ headerShown: false }} />
+
+
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen
             name="home"
