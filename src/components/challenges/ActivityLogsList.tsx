@@ -14,13 +14,14 @@ interface ActivityLogsListProps {
 const styles = ChallengeStyles;
 
 function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
+  console.log('[ActivityLogsList] challengeId:', challengeId, 'userId:', userId);
   // Use the activity logs hook to get logs data
   const { logs: activityLogs, loadActivityLogs, isLoading, error } = useActivityLogs({ challengeId, userId });
   
   // Load logs on mount
   useEffect(() => {
     if (challengeId) loadActivityLogs();
-  }, [challengeId, userId, loadActivityLogs]);
+  }, [challengeId, loadActivityLogs]);
   
   // Render an activity log item
   const renderLogItem = ({ item }: { item: ActivityLog }) => {

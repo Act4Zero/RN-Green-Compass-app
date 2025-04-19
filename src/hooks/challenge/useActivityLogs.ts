@@ -60,16 +60,21 @@ function useActivityLogs({
       if (error) throw error;
       
       const logs = data || [];
+      console.log('[ActivityLogs] Supabase returned:', logs.map(l => l.id));
       const hasMore = count ? from + logs.length < count : false;
       
-      setState(prev => ({
-        ...prev,
-        logs: page === 1 ? logs : [...prev.logs, ...logs],
-        count: count || 0,
-        page,
-        hasMore,
-        isLoading: false
-      }));
+      setState(prev => {
+        const newLogs = page === 1 ? logs : [...prev.logs, ...logs];
+        console.log('[ActivityLogs] New logs state:', newLogs.map(l => l.id));
+        return {
+          ...prev,
+          logs: newLogs,
+          count: count || 0,
+          page,
+          hasMore,
+          isLoading: false
+        };
+      });
       
       return {
         data: logs,
