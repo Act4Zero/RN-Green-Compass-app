@@ -15,9 +15,6 @@ interface ParticipantItem {
 
 interface ChallengeParticipantsProps {
   challengeId: string;
-  participants: ParticipantItem[];
-  isLoading: boolean;
-  loadParticipants: (challengeId: string) => void;
 }
 
 const styles = ChallengeStyles;
@@ -33,12 +30,12 @@ const imageStyles = {
 };
 
 function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
-  const { participants, isLoading, error, loadParticipants } = useParticipants();
+  const { participants, isLoading, error, loadParticipants } = useParticipants({ challengeId });
   
   // Load participants when the component mounts
   useEffect(() => {
     if (challengeId) {
-      loadParticipants(challengeId);
+      loadParticipants();
     }
   }, [challengeId, loadParticipants]);
 

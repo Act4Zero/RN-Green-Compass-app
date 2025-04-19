@@ -116,7 +116,7 @@ export default function ChallengesList() {
                 <ChallengeCard
                   key={challenge.id}
                   challenge={challenge}
-                  onPress={() => router.push(`./${challenge.id}`)}
+                  onPress={() => router.push(`./challenges/${challenge.id}`)}
                 />
               ))}
               
