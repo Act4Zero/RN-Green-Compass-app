@@ -129,12 +129,22 @@ function useActivityLogs({
       
       if (error) throw error;
       
-      // Update the participant's progress metric
-      await supabase.rpc('update_participant_progress', {
-        p_challenge_id: challengeId,
-        p_user_id: currentUserId,
-        p_increment: impactValue
-      });
+      // Manually update the participant's progress metric
+      const { data: partRow, error: partError } = await supabase
+        .from('challenge_participants')
+        .select('progress_metric')
+        .eq('challenge_id', challengeId)
+        .eq('user_id', currentUserId)
+        .single();
+      if (partError) throw partError;
+
+      const newProgress = (partRow?.progress_metric || 0) + impactValue;
+      const { error: updateError } = await supabase
+        .from('challenge_participants')
+        .update({ progress_metric: newProgress })
+        .eq('challenge_id', challengeId)
+        .eq('user_id', currentUserId);
+      if (updateError) throw updateError;
       
       // Update state with the new log
       setState(prev => ({
@@ -176,12 +186,22 @@ function useActivityLogs({
       
       if (error) throw error;
       
-      // Decrement the participant's progress metric
-      await supabase.rpc('update_participant_progress', {
-        p_challenge_id: challengeId,
-        p_user_id: currentUserId,
-        p_increment: -log.impact_value // Negative to decrement
-      });
+      // Manually update the participant's progress metric
+      const { data: partRow, error: partError } = await supabase
+        .from('challenge_participants')
+        .select('progress_metric')
+        .eq('challenge_id', challengeId)
+        .eq('user_id', currentUserId)
+        .single();
+      if (partError) throw partError;
+
+      const newProgress = (partRow?.progress_metric || 0) - log.impact_value;
+      const { error: updateError } = await supabase
+        .from('challenge_participants')
+        .update({ progress_metric: newProgress })
+        .eq('challenge_id', challengeId)
+        .eq('user_id', currentUserId);
+      if (updateError) throw updateError;
       
       // Update state
       setState(prev => ({

@@ -43,7 +43,7 @@ export default function LogActivity() {
   } = useSelectedChallenge();
   
   // Use activity logs hook to add a log
-  const { addActivityLog } = useActivityLogs();
+  const { logActivity } = useActivityLogs({ challengeId: id as string });
 
   // Load challenge on mount
   useEffect(() => {
@@ -74,13 +74,11 @@ export default function LogActivity() {
     try {
       setIsSubmitting(true);
       
-      await addActivityLog({
-        challengeId: challenge.id,
-        userId: user.id,
-        title: activityTitle,
-        description: activityDescription,
-        progressIncrement: progressValue
-      });
+      // Combine title and description into one field for logging
+      const fullDescription = activityDescription
+        ? `${activityTitle}: ${activityDescription}`
+        : activityTitle;
+      await logActivity(fullDescription, progressValue);
       
       Alert.alert(
         'Success',

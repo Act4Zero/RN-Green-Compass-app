@@ -88,7 +88,8 @@ export default function ChallengeDetail() {
   // Handle logging activity
   const handleLogActivity = () => {
     if (!challenge) return;
-    router.push(`./log`);
+    // Navigate explicitly with challenge ID for the log screen
+    router.push({ pathname: '/community/challenges/[id]/log', params: { id } });
   };
 
   // If still loading auth, show loading indicator
