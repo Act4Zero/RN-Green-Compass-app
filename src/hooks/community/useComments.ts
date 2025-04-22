@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { commentService } from '../../services/community';
-import { Comment, PaginationParams, CommentsState, UseCommentsProps } from './types';
+import { PaginationParams, CommentsState, UseCommentsProps } from './types';
 import useCurrentUser from './useCurrentUser';
 
 /**
@@ -22,6 +22,15 @@ const useComments = ({
     isLoading: false,
     error: null
   });
+
+  /**
+   * Only fetch comments when currentUser and discussionId are available
+   */
+  useEffect(() => {
+    if (currentUser && discussionId) {
+      loadComments();
+    }
+  }, [currentUser, discussionId]);
 
   /**
    * Load comments for a discussion with pagination
