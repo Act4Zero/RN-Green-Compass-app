@@ -1,6 +1,8 @@
 import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
 
 export interface FeedStyles {
+  challengesButton: ViewStyle;
+  challengesButtonText: TextStyle;
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
@@ -51,6 +53,31 @@ export interface FeedStyles {
 }
 
 const FeedStyles = StyleSheet.create<FeedStyles>({
+  challengesButton: {
+    backgroundColor: '#43A047', // More vibrant green
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 28,
+    marginTop: 10,
+    marginHorizontal: 0,
+    shadowColor: '#43A047',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#A5D6A7', // Accent border
+  },
+  challengesButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',

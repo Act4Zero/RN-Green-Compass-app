@@ -99,26 +99,13 @@ export default function CommunityFeed() {
           <FeedHeader />
           
           {/* Challenges Button */}
-          <TouchableOpacity 
-            style={{
-              backgroundColor: '#2E7D32',
-              borderRadius: 8,
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 16,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }} 
+          <TouchableOpacity
+            style={styles.challengesButton}
+            activeOpacity={0.85}
             onPress={() => router.push('/community/challenges')}
           >
-            <Ionicons name="people" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+            <Ionicons name="people" size={26} color="#FFFFFF" style={{ marginRight: 12 }} />
+            <Text style={styles.challengesButtonText}>
               Sustainability Challenges
             </Text>
           </TouchableOpacity>
