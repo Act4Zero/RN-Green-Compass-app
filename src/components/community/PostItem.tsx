@@ -68,20 +68,24 @@ function PostItem({
       <View style={styles.postHeader}>
         <View style={styles.authorContainer}>
           {discussion.user?.avatar_url ? (
-            <Image 
-              source={{ uri: discussion.user.avatar_url }} 
-              style={styles.authorAvatar} 
-            />
-          ) : (
-            <View style={styles.defaultAvatar}>
-              <Text style={styles.defaultAvatarText}>
-                {(discussion.user?.full_name || '?').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
+  <Image 
+    source={{ uri: discussion.user.avatar_url }} 
+    style={styles.authorAvatar} 
+  />
+) : (
+  <View style={styles.defaultAvatar}>
+    <Text style={styles.defaultAvatarText}>
+      {discussion.user?.full_name
+        ? discussion.user.full_name.charAt(0).toUpperCase()
+        : '❓'}
+    </Text>
+  </View>
+)}
           <Text style={styles.postAuthor}>
-            {discussion.user?.full_name || discussion.user_id.substring(0, 8)}
-          </Text>
+  {discussion.user?.full_name?.trim()
+    ? discussion.user.full_name
+    : 'Anonymous'}
+</Text>
         </View>
         <View style={styles.postHeaderRight}>
           <Text style={styles.postTimestamp}>

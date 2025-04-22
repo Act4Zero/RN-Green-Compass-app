@@ -147,8 +147,10 @@ export default function PostDetail() {
               discussionId={discussionId}
               title={selectedDiscussion.title || null}
               content={selectedDiscussion.content}
-              authorName={selectedDiscussion.user?.full_name || selectedDiscussion.user_id.substring(0, 8)}
-              authorAvatarUrl={selectedDiscussion.user?.avatar_url || null}
+              authorName={selectedDiscussion.user?.full_name?.trim() ? selectedDiscussion.user.full_name : 'Anonymous'}
+              authorAvatarUrl={selectedDiscussion.user?.full_name?.trim() && selectedDiscussion.user?.avatar_url
+                ? selectedDiscussion.user.avatar_url
+                : null}
               timestamp={new Date(selectedDiscussion.created_at).toLocaleDateString()}
               reactionCount={selectedDiscussion.reaction_count || 0}
               userHasReacted={!!selectedDiscussion.user_has_reacted}
