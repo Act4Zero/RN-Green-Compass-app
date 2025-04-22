@@ -28,12 +28,42 @@ export default function ChallengesList() {
   const { user, loading: authLoading } = useAuth();
   
   // Use our challenge hook  // State and handlers
-  const { challenges, isLoading, error, loadChallenges, loadMore } = useChallenges();
+  const { challenges, isLoading, error, loadChallenges, loadMore, hasMore } = useChallenges();
   
-  // Since these properties don't exist in the hook yet, we'll create local state for them
   type ChallengeFilterType = 'all' | 'active' | 'participating' | 'completed';
   const [filter, setFilter] = React.useState<ChallengeFilterType>('all');
-  const [hasMore, setHasMore] = React.useState(true);
+
+  // Platform-dependent minimum visible challenges for Load More button
+  const minVisibleChallenges = Platform.OS === 'web'
+    ? (isTabletOrLarger ? 10 : 8)
+    : 6;
+
+  // Filter challenges based on the selected filter
+  const now = new Date();
+  const filteredChallenges = React.useMemo(() => {
+    if (filter === 'active') {
+      return challenges.filter(challenge => {
+        const start = new Date(challenge.start_date);
+        const end = new Date(challenge.end_date);
+        return now >= start && now <= end;
+      });
+    } else if (filter === 'completed') {
+      return challenges.filter(challenge => {
+        const end = new Date(challenge.end_date);
+        return now > end;
+      });
+    } else if (filter === 'participating') {
+      return challenges.filter(challenge => {
+        const start = new Date(challenge.start_date);
+        const end = new Date(challenge.end_date);
+        return challenge.is_participant && now >= start && now <= end;
+      });
+    }
+    return challenges;
+  }, [challenges, filter]);
+
+  // Only show Load More if there are fewer than the threshold and hasMore is true
+  const shouldShowLoadMore = hasMore && filteredChallenges.length < minVisibleChallenges;
   
   // Function to refresh challenges
   const refreshChallenges = React.useCallback(() => {
@@ -112,54 +142,32 @@ export default function ChallengesList() {
             />
           ) : (
             <View style={styles.challengesContainer}>
-              {(() => {
-                const now = new Date();
-                let filteredChallenges = challenges;
-                if (filter === 'active') {
-                  filteredChallenges = challenges.filter(challenge => {
-                    const start = new Date(challenge.start_date);
-                    const end = new Date(challenge.end_date);
-                    return now >= start && now <= end;
-                  });
-                } else if (filter === 'completed') {
-                  filteredChallenges = challenges.filter(challenge => {
-                    const end = new Date(challenge.end_date);
-                    return now > end;
-                  });
-                } else if (filter === 'participating') {
-                  filteredChallenges = challenges.filter(challenge => {
-                    const start = new Date(challenge.start_date);
-                    const end = new Date(challenge.end_date);
-                    return challenge.is_participant && now >= start && now <= end;
-                  });
-                }
-                return filteredChallenges.length > 0 ? (
-                  filteredChallenges.map(challenge => (
-                    <ChallengeCard
-                      key={challenge.id}
-                      challenge={challenge}
-                      onPress={() => router.push(`./challenges/${challenge.id}`)}
-                    />
-                  ))
-                ) : (
-                  <EmptyState
-                    message={
-                      filter === 'active'
-                        ? 'No active challenges found.'
-                        : filter === 'completed'
-                        ? 'No completed challenges found.'
-                        : filter === 'participating'
-                        ? "You're not participating in any active challenges."
-                        : 'No challenges found.'
-                    }
-                    buttonText="Refresh"
-                    onButtonPress={refreshChallenges}
+              {filteredChallenges.length > 0 ? (
+                filteredChallenges.map(challenge => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onPress={() => router.push(`./challenges/${challenge.id}`)}
                   />
-                );
-              })()}
+                ))
+              ) : (
+                <EmptyState
+                  message={
+                    filter === 'active'
+                      ? 'No active challenges found.'
+                      : filter === 'completed'
+                      ? 'No completed challenges found.'
+                      : filter === 'participating'
+                      ? "You're not participating in any active challenges."
+                      : 'No challenges found.'
+                  }
+                  buttonText="Refresh"
+                  onButtonPress={refreshChallenges}
+                />
+              )}
               
               {/* Load More Button */}
-              {hasMore && (
+              {shouldShowLoadMore && (
                 <TouchableOpacity 
                   style={[styles.joinButton, { backgroundColor: '#81C784' }]} 
                   onPress={loadMoreChallenges}
