@@ -19,7 +19,14 @@ function EmptyState({ message, buttonText, onButtonPress }: EmptyStateProps) {
       
       {buttonText && onButtonPress && (
         <TouchableOpacity 
-          style={[styles.joinButton, { marginTop: 24 }]} 
+          style={[
+            styles.joinButton,
+            {
+              marginTop: 24,
+              paddingVertical: 12,
+              paddingHorizontal: 24,
+            }
+          ]} 
           onPress={onButtonPress}
         >
           <Text style={styles.joinButtonText}>{buttonText}</Text>
