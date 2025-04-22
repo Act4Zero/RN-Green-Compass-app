@@ -77,11 +77,8 @@ export default function LogActivity() {
     
     try {
       setIsSubmitting(true);
-      // Combine title and description into one field for logging
-      const fullDescription = activityDescription
-        ? `${activityTitle}: ${activityDescription}`
-        : activityTitle;
-      await logActivity(fullDescription, progressValue);
+      // Send title and description as separate fields
+      await logActivity(activityTitle, activityDescription, progressValue);
       setShowToast(true);
       setTimeout(() => {
         setShowToast(false);

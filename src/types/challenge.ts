@@ -44,6 +44,7 @@ export interface ActivityLog {
   id: string;
   challenge_id: string;
   user_id: string;
+  title: string; // New field for activity title
   description: string;
   impact_value: number;
   created_at: string;

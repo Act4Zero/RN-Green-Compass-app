@@ -29,7 +29,7 @@ function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
     
     return (
       <View style={styles.logItem}>
-        <Text style={styles.logTitle}>{item.user?.full_name || 'Unknown'}</Text>
+        <Text style={styles.logTitle}>{item.title || item.description || item.user?.full_name || 'Unknown'}</Text>
         <Text style={styles.logDescription}>{item.description}</Text>
         <Text style={styles.logDate}>
           {formatDate(logDate)} • {item.impact_value} points

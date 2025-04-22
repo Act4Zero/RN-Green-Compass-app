@@ -43,7 +43,13 @@ function useActivityLogs({
       let query = supabase
         .from('activity_logs')
         .select(`
-          *,
+          id,
+          challenge_id,
+          user_id,
+          title,
+          description,
+          impact_value,
+          created_at,
           user:user_id(id, full_name, avatar_url)
         `, { count: 'exact' })
         .eq('challenge_id', challengeId)
@@ -59,13 +65,17 @@ function useActivityLogs({
       
       if (error) throw error;
       
-      const logs = data || [];
-      console.log('[ActivityLogs] Supabase returned:', logs.map(l => l.id));
-      const hasMore = count ? from + logs.length < count : false;
+      // Fix user field: Supabase join may return user as array if not aliased properly
+      const normalizedLogs = (data || []).map((log: any) => ({
+        ...log,
+        user: Array.isArray(log.user) ? log.user[0] : log.user
+      }));
+      console.log('[ActivityLogs] Supabase returned:', (data || []).map((l: any) => l.id));
+      const hasMore = count ? from + normalizedLogs.length < count : false;
       
       setState(prev => {
-        const newLogs = page === 1 ? logs : [...prev.logs, ...logs];
-        console.log('[ActivityLogs] New logs state:', newLogs.map(l => l.id));
+        const newLogs = page === 1 ? normalizedLogs : [...prev.logs, ...normalizedLogs];
+        console.log('[ActivityLogs] New logs state:', newLogs.map((l: any) => l.id));
         return {
           ...prev,
           logs: newLogs,
@@ -77,7 +87,7 @@ function useActivityLogs({
       });
       
       return {
-        data: logs,
+        data: normalizedLogs,
         count: count || 0,
         hasMore
       } as PaginatedResult<ActivityLog>;
@@ -111,6 +121,7 @@ function useActivityLogs({
    * Log a new activity
    */
   const logActivity = useCallback(async (
+    title: string,
     description: string,
     impactValue: number
   ) => {
@@ -123,6 +134,7 @@ function useActivityLogs({
         .insert({
           challenge_id: challengeId,
           user_id: currentUserId,
+          title,
           description,
           impact_value: impactValue
         })
