@@ -130,6 +130,10 @@ function usePostDetailState(discussionId: string) {
     
     if (result) {
       showToastMessage('Comment added!');
+      // Refresh comments to display the new comment and its user details
+      loadComments();
+      // Optionally clear the comment input for better UX
+      setNewCommentContent('');
     }
   };
   

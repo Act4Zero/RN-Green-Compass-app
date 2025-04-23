@@ -34,7 +34,7 @@ export default function ChallengeDetail() {
   
   // Use our selected challenge hook
   const { loadChallenge, updateParticipantCount, updateProgressMetrics, clearChallenge, challenge, isLoading, error } = useSelectedChallenge();
-  const { joinChallenge: joinChallengeBackend, leaveChallenge: leaveChallengeBackend } = useParticipants({ challengeId: id });
+  const { joinChallenge: joinChallengeBackend, leaveChallenge: leaveChallengeBackend, refresh } = useParticipants({ challengeId: id });
   useEffect(() => {
     if (id && typeof id === 'string') {
       loadChallenge(id);
@@ -59,6 +59,9 @@ export default function ChallengeDetail() {
       const result = await joinChallengeBackend();
       if (result.success && result.isJoined) {
         updateParticipantCount(true);
+        // Refresh challenge details and participants to update avatars instantly
+        loadChallenge(id as string);
+        refresh();
         Alert.alert('Success', 'You have joined the challenge!');
       } else if (!result.success) {
         Alert.alert('Error', 'Failed to join the challenge. The challenge may have ended or you have already joined.');
@@ -75,6 +78,9 @@ export default function ChallengeDetail() {
       const result = await leaveChallengeBackend();
       if (result.success && result.isJoined === false) {
         updateParticipantCount(false);
+        // Refresh challenge details and participants to update avatars instantly
+        loadChallenge(id as string);
+        refresh();
         Alert.alert('Success', 'You have left the challenge.');
       } else {
         Alert.alert('Error', 'Failed to leave the challenge. Please try again.');
