@@ -45,21 +45,17 @@ function useCommunityFeedState() {
   // Load discussions when component mounts (only once)
   useEffect(() => {
     if (!authLoading && user && !discussionsLoadedRef.current) {
-      console.log('Loading discussions for the first time');
       loadDiscussions().then(() => {
         discussionsLoadedRef.current = true;
       });
     }
-  }, [authLoading, user]); // Removed loadDiscussions from dependencies
+  }, [authLoading, user]);
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
     // Only check after auth loading is complete
     if (!authLoading && !user) {
-      console.log('No authenticated user found in community feed, redirecting to signin');
       router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in community feed:', user.id);
     }
   }, [user, authLoading, router]);
 
@@ -135,8 +131,6 @@ function useCommunityFeedState() {
   const handleDeletePost = (postId: string) => {
     // Close the options menu
     togglePostOptions(postId);
-    console.log('[FEED] Delete post button clicked for post ID:', postId);
-    
     if (!user) {
       console.error('[FEED] No user found for delete operation');
       showToastMessage('Error: You must be logged in to delete a post');
@@ -149,12 +143,10 @@ function useCommunityFeedState() {
       user.id,
       // On success
       () => {
-        console.log(`[FEED] Post ${postId} deleted successfully`);
         showToastMessage('Post deleted successfully!');
         
         // Force refresh to update the UI
         refreshDiscussions().then(() => {
-          console.log('[FEED] UI refreshed after deletion');
         });
       },
       // On error

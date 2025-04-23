@@ -38,7 +38,6 @@ export default function EditProfileScreen() {
         console.log('No authenticated user found in profile, redirecting to signin');
         router.replace('/auth/signin');
       } else if (!authLoading && user) {
-        console.log('Authenticated user in profile:', user.id);
         // Initial profile load when component mounts and user is authenticated
         // Only load if we don't already have the profile
         if (!profile && !isLoading) {
@@ -59,7 +58,6 @@ export default function EditProfileScreen() {
       // Only load profile on focus if we don't have one yet
       // This prevents infinite loops while ensuring data is available
       if (user && !profile && !isLoading) {
-        console.log('Loading profile data on edit screen focus - profile not loaded yet');
         loadProfile();
       }
 

@@ -49,14 +49,12 @@ function PostPreview({ content, sanitizeMarkdown }: PostPreviewProps) {
                           url = `https://${url}`;
                         } else if (url.startsWith('/')) {
                           // Relative path within the app - could be handled differently
-                          console.log('Relative path detected:', url);
                           return;
                         }
                       }
                       
                       // Open the URL if it seems valid
                       if (url) {
-                        console.log('Opening URL:', url);
                         Linking.openURL(url).catch(err => {
                           console.error('An error occurred opening the URL:', err);
                         });

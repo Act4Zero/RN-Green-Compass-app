@@ -306,14 +306,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return null;
     }
     
-    console.log('Creating goal in HabitContext:', {
-      userId: user.id,
-      title,
-      targetValue,
-      category,
-      description
-    });
-    
     try {
       // Create the goal and get the result
       const newGoal = await goalService.createUserGoal(
@@ -326,8 +318,6 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description,
         endDate
       );
-      
-      console.log('Goal created successfully:', newGoal);
       
       // Refresh the goals list
       await refreshGoals();
@@ -344,14 +334,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     goalId: string,
     updates: Partial<UserGoal>
   ): Promise<UserGoal | null> => {
-    console.log('Updating goal in HabitContext:', goalId, updates);
-    
     try {
       // Update the goal and get the result
-      const updatedGoal = await goalService.updateUserGoal(goalId, updates);
-      
-      console.log('Goal updated successfully:', updatedGoal);
-      
+      const updatedGoal = await goalService.updateUserGoal(goalId, updates);    
       // Refresh the goals list
       await refreshGoals();
       

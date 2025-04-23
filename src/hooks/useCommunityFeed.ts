@@ -212,8 +212,6 @@ const useCommunityFeed = () => {
         // Navigate back to the feed
         router.push('/community');
       }
-      
-      console.log(`Successfully deleted discussion ${discussionId}`);
     } else {
       console.error(`Failed to delete discussion ${discussionId}`);
     }

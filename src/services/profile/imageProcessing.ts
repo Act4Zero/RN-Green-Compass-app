@@ -77,8 +77,6 @@ export async function compressImageNative(
   const width = options.width || DEFAULT_IMAGE_WIDTH;
   const format = options.format || ImageManipulator.SaveFormat.JPEG;
   
-  console.log(`Initial compression attempt with width=${width}, quality=${quality}`);
-  
   // First compression attempt
   let compressedImage = await ImageManipulator.manipulateAsync(
     uri,
@@ -93,7 +91,6 @@ export async function compressImageNative(
   }
   
   let blob = await response.blob();
-  console.log(`First compression result: ${blob.size} bytes`);
   
   // If the image is still too large, try more aggressive compression
   if (blob.size > TARGET_FILE_SIZE) {
@@ -101,8 +98,6 @@ export async function compressImageNative(
     const sizeRatio = TARGET_FILE_SIZE / blob.size;
     // Adjust quality more aggressively for larger files
     quality = Math.max(0.1, Math.min(0.6, quality * sizeRatio * 1.2));
-    
-    console.log(`Second compression attempt with quality=${quality}`);
     
     compressedImage = await ImageManipulator.manipulateAsync(
       compressedImage.uri,
@@ -116,7 +111,6 @@ export async function compressImageNative(
     }
     
     blob = await response.blob();
-    console.log(`Second compression result: ${blob.size} bytes`);
   }
   
   return { blob, uri: compressedImage.uri };
@@ -136,8 +130,6 @@ export async function compressImageWeb(
   
   let quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
   const width = options.width || DEFAULT_IMAGE_WIDTH;
-  
-  console.log(`Initial web compression with width=${width}, quality=${quality}`);
   
   try {
     // Create an image bitmap from the file
@@ -179,15 +171,11 @@ export async function compressImageWeb(
       });
     }
     
-    console.log(`First web compression result: ${compressedBlob.size} bytes`);
-    
     // If the image is still too large, try more aggressive compression
     if (compressedBlob.size > TARGET_FILE_SIZE) {
       // Calculate a more aggressive quality setting
       const sizeRatio = TARGET_FILE_SIZE / compressedBlob.size;
       quality = Math.max(0.1, Math.min(0.5, quality * sizeRatio * 1.2));
-      
-      console.log(`Second web compression attempt with quality=${quality}`);
       
       // Second compression pass
       if (canvas instanceof OffscreenCanvas) {
@@ -203,8 +191,6 @@ export async function compressImageWeb(
           }, 'image/jpeg', quality);
         });
       }
-      
-      console.log(`Second web compression result: ${compressedBlob.size} bytes`);
     }
     
     return compressedBlob;
@@ -257,8 +243,6 @@ export async function compressImageWebFallback(
     const quality = options.quality || DEFAULT_COMPRESSION_QUALITY;
     const width = options.width || DEFAULT_IMAGE_WIDTH;
     
-    console.log(`Using fallback web compression with width=${width}, quality=${quality}`);
-    
     // Create an image element
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -291,15 +275,11 @@ export async function compressImageWebFallback(
           return;
         }
         
-        console.log(`First fallback compression result: ${blob.size} bytes`);
-        
         // If the image is still too large, try more aggressive compression
         if (blob.size > TARGET_FILE_SIZE) {
           // Calculate a more aggressive quality setting
           const sizeRatio = TARGET_FILE_SIZE / blob.size;
           const newQuality = Math.max(0.1, Math.min(0.5, quality * sizeRatio * 1.2));
-          
-          console.log(`Second fallback compression attempt with quality=${newQuality}`);
           
           // Second compression pass
           canvas.toBlob((secondBlob) => {
@@ -308,7 +288,6 @@ export async function compressImageWebFallback(
               return;
             }
             
-            console.log(`Second fallback compression result: ${secondBlob.size} bytes`);
             resolve(secondBlob);
           }, 'image/jpeg', newQuality);
         } else {
@@ -333,8 +312,6 @@ export async function processBase64Image(
   userId: string, 
   dataUri: string
 ): Promise<{ url?: string; error?: string }> {
-  console.log('Processing base64 data URI');
-  
   const parsedData = parseBase64DataUri(dataUri);
   if (!parsedData) {
     return { error: 'Invalid base64 data URI format' };
@@ -389,8 +366,6 @@ export async function processFileUri(
   userId: string, 
   uri: string
 ): Promise<{ url?: string; error?: string }> {
-  console.log('Processing file with URI:', uri);
-  
   const fileExt = extractFileExtension(uri);
   const filePath = generateFilePath(userId, fileExt);
   const isImage = /^(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(fileExt);
@@ -400,7 +375,6 @@ export async function processFileUri(
     if (isImage && Platform.OS !== 'web') {
       try {
         const { blob } = await compressImageNative(uri);
-        console.log(`Final compressed size: ${blob.size} bytes`);
         return await uploadToSupabase(filePath, blob, 'image/jpeg');
       } catch (compressError) {
         console.error('Error compressing image:', compressError);
@@ -441,8 +415,6 @@ export async function processWebFile(
   userId: string, 
   file: File
 ): Promise<{ url?: string; error?: string }> {
-  console.log('Processing web File object:', file.name);
-  
   const fileExt = extractFileExtension(file.name);
   const filePath = generateFilePath(userId, fileExt);
   
@@ -451,7 +423,6 @@ export async function processWebFile(
     try {
       // Try to compress the image
       const compressedBlob = await compressImageWeb(file);
-      console.log(`Final compressed size: ${compressedBlob.size} bytes`);
       return await uploadToSupabase(filePath, compressedBlob, 'image/jpeg');
     } catch (compressError) {
       console.error('Error compressing web image:', compressError);

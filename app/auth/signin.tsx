@@ -150,8 +150,6 @@ export default function SignIn() {
         return;
       }
       
-      if (DEBUG) console.log('Successfully signed in:', data?.user?.email);
-      
       // Ensure we have a valid session by explicitly refreshing it
       await ensureValidSession();
       

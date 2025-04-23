@@ -62,8 +62,6 @@ export default function LogHabit() {
       if (!authLoading && !user) {
         console.log('No authenticated user found in log habit, redirecting to signin');
         router.replace('/auth/signin');
-      } else if (!authLoading && user) {
-        console.log('Authenticated user in log habit:', user.id);
       }
     }, [user, authLoading, router]);
 

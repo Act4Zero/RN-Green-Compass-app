@@ -518,16 +518,6 @@ export const goalService = {
     // Create timestamps for created_at and updated_at fields
     const now = new Date().toISOString();
     
-    // Log the goal data being inserted
-    console.log('Creating user goal with data:', {
-      user_id: userId,
-      goal_name: title, // Using goal_name instead of title to match DB schema
-      category,
-      target_value: targetValue,
-      created_at: now,
-      updated_at: now
-    });
-    
     const { data, error } = await supabase
       .from('user_goals')
       .insert({
@@ -568,8 +558,6 @@ export const goalService = {
       ...updates,
       updated_at: updates.updated_at || new Date().toISOString()
     };
-    
-    console.log('Updating user goal with ID:', goalId, 'Data:', updatedData);
     
     const { data, error } = await supabase
       .from('user_goals')

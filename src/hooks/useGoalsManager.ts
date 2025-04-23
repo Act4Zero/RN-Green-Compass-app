@@ -301,12 +301,9 @@ export default function useGoalsManager() {
     setError(null);
     
     try {
-      console.log('Calling deleteExistingGoal with ID:', goalId);
       const success = await deleteExistingGoal(goalId);
-      console.log('Delete result:', success);
       
       if (success) {
-        console.log('Goal deleted successfully');
         // Force refresh goals after deletion
         refreshGoals();
         return { success: true, error: null };

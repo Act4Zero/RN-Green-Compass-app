@@ -46,10 +46,7 @@ function useNewPost() {
   // Redirect to signin if user is not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      console.log('No authenticated user found in new post, redirecting to signin');
       router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in new post:', user.id);
     }
   }, [user, authLoading, router]);
 
@@ -58,7 +55,6 @@ function useNewPost() {
     const loadPostData = async () => {
       if (isEditMode && postId && user) {
         try {
-          console.log('Loading post data for editing, postId:', postId);
           await loadDiscussion(postId);
         } catch (error) {
           console.error('Error loading post for editing:', error);

@@ -11,7 +11,7 @@ export default function RootLayout() {
   useEffect(() => {
     // Initialize analytics and log the result
     const initResult = analyticsService.initialize();
-    console.log('Analytics initialization result:', initResult);
+
     
     // Set a timeout to ensure analytics is ready before the app fully loads
     if (!analyticsService.isInitialized) {

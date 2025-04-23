@@ -82,7 +82,6 @@ const Button: React.FC<ButtonProps> = ({
 
   // Add debug logging for button press
   const handlePress = () => {
-    console.log(`Button pressed: ${title}`);
     if (onPress) {
       onPress();
     }

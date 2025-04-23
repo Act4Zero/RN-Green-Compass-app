@@ -14,7 +14,6 @@ interface ActivityLogsListProps {
 const styles = ChallengeStyles;
 
 function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
-  console.log('[ActivityLogsList] challengeId:', challengeId, 'userId:', userId);
   // Use the activity logs hook to get logs data
   const { logs: activityLogs, loadActivityLogs, isLoading, error } = useActivityLogs({ challengeId, userId });
   

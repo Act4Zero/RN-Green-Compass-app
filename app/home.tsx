@@ -66,7 +66,6 @@ export default function Home() {
             console.log('No authenticated user found, redirecting to signin');
             await router.replace('/auth/signin');
           } else if (!authLoading && user) {
-            console.log('Authenticated user:', user.id);
             // Load profile data
             await loadProfile();
           }

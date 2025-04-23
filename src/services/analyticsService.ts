@@ -34,10 +34,10 @@ const analyticsService = {
           window.gtag('js', new Date());
           window.gtag('config', GA_MEASUREMENT_ID);
         }
-        console.log('Web Analytics initialized successfully');
+        
       } else {
         // For native platforms, we'll use a different approach or just log
-        console.log('Native Analytics initialized (placeholder)');
+        
       }
       // Set the initialization flag to true
       analyticsService.isInitialized = true;
@@ -56,7 +56,7 @@ const analyticsService = {
   trackScreenView: (screenName: string, screenClass?: string) => {
     // Skip if analytics isn't initialized
     if (!analyticsService.isInitialized) {
-      console.log('Analytics not initialized, skipping screen view tracking');
+      
       return;
     }
     
@@ -67,10 +67,10 @@ const analyticsService = {
           page_title: screenName,
           page_location: screenName
         });
-        console.log(`Screen view tracked: ${screenName}`);
+        
       } else {
         // For native platforms, just log for now
-        console.log(`Screen view would be tracked: ${screenName}`);
+        
       }
     } catch (error) {
       console.error('Failed to track screen view:', error);
@@ -85,7 +85,7 @@ const analyticsService = {
   trackEvent: (eventName: string, params?: Record<string, any>) => {
     // Skip if analytics isn't initialized
     if (!analyticsService.isInitialized) {
-      console.log('Analytics not initialized, skipping event tracking:', eventName);
+      
       return;
     }
     
@@ -93,10 +93,10 @@ const analyticsService = {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track custom event
         window.gtag('event', eventName, params || {});
-        console.log(`Event tracked: ${eventName}`);
+        
       } else {
         // For native platforms, just log for now
-        console.log(`Event would be tracked: ${eventName}`, params || {});
+        
       }
     } catch (error) {
       console.error(`Failed to track event ${eventName}:`, error);
@@ -110,7 +110,7 @@ const analyticsService = {
   trackLogin: (method: string) => {
     // Skip if analytics isn't initialized
     if (!analyticsService.isInitialized) {
-      console.log('Analytics not initialized, skipping login tracking');
+      
       return;
     }
     
@@ -118,10 +118,7 @@ const analyticsService = {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track login
         window.gtag('event', 'login', { method });
-        console.log(`Login tracked with method: ${method}`);
-      } else {
-        // For native platforms, just log for now
-        console.log(`Login would be tracked with method: ${method}`);
+        
       }
     } catch (error) {
       console.error('Failed to track login:', error);
@@ -143,10 +140,6 @@ const analyticsService = {
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
         // For web, use gtag to track sign up
         window.gtag('event', 'sign_up', { method });
-        console.log(`Sign up tracked with method: ${method}`);
-      } else {
-        // For native platforms, just log for now
-        console.log(`Sign up would be tracked with method: ${method}`);
       }
     } catch (error) {
       console.error('Failed to track sign up:', error);
@@ -170,10 +163,6 @@ const analyticsService = {
         window.gtag('config', GA_MEASUREMENT_ID, {
           user_id: userId
         });
-        console.log('User ID set successfully');
-      } else {
-        // For native platforms, just log for now
-        console.log(`User ID would be set: ${userId}`);
       }
     } catch (error) {
       console.error('Failed to set user ID:', error);
@@ -196,10 +185,6 @@ const analyticsService = {
         // For web, use gtag to set user properties
         // Convert properties to Google Analytics user_properties format
         window.gtag('set', 'user_properties', properties);
-        console.log('User properties set successfully');
-      } else {
-        // For native platforms, just log for now
-        console.log('User properties would be set:', properties);
       }
     } catch (error) {
       console.error('Failed to set user properties:', error);

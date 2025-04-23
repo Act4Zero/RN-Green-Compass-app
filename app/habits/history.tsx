@@ -55,8 +55,6 @@ export default function HabitHistory() {
     if (!authLoading && !user) {
       console.log('No authenticated user found in history, redirecting to signin');
       router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in history:', user.id);
     }
   }, [user, authLoading, router]);
   

@@ -94,8 +94,6 @@ function usePostDetailState(discussionId: string) {
     if (!authLoading && !user) {
       console.log('No authenticated user found in post detail, redirecting to signin');
       router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in post detail:', user.id);
     }
   }, [user, authLoading, router]);
 
@@ -156,7 +154,6 @@ function usePostDetailState(discussionId: string) {
   
   const handleDeletePost = () => {
     setShowPostOptions(false);
-    console.log('[POST DETAIL] Delete post button clicked');
     
     if (!selectedDiscussion) {
       console.error('[POST DETAIL] Cannot delete post: No selected discussion');
@@ -175,11 +172,9 @@ function usePostDetailState(discussionId: string) {
       user.id,
       // On success callback
       () => {
-        console.log(`[POST DETAIL] Post ${selectedDiscussion.id} deleted successfully`);
         showToastMessage('Post deleted successfully!');
         
         // Navigate back to community feed
-        console.log('[POST DETAIL] Navigating back to community feed');
         router.push('/community');
       },
       // On error callback
@@ -238,19 +233,15 @@ function usePostDetailState(discussionId: string) {
   };
   
   const handleDeleteComment = (commentId: string) => {
-    console.log('[POST DETAIL] Delete comment button clicked for comment:', commentId);
-    
     // Use the modal approach for delete confirmation
     setCommentToDelete(commentId);
     setShowDeleteModal(true);
-    console.log('[POST DETAIL] Delete modal should be visible now');
   };
   
   // Function to handle actual deletion from the modal
   const confirmDeleteComment = async () => {
     if (!commentToDelete) return;
     
-    console.log('[POST DETAIL] Confirming delete from modal for comment:', commentToDelete);
     const success = await deleteComment(commentToDelete);
     
     if (success) {

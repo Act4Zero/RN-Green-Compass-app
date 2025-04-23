@@ -47,8 +47,6 @@ export default function Goal() {
     if (!authLoading && !user) {
       console.log('No authenticated user found in onboarding, redirecting to signin');
       router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-      console.log('Authenticated user in onboarding:', user.id);
     }
   }, [user, authLoading, router]);
 

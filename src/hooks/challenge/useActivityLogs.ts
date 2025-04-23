@@ -70,12 +70,10 @@ function useActivityLogs({
         ...log,
         user: Array.isArray(log.user) ? log.user[0] : log.user
       }));
-      console.log('[ActivityLogs] Supabase returned:', (data || []).map((l: any) => l.id));
       const hasMore = count ? from + normalizedLogs.length < count : false;
       
       setState(prev => {
         const newLogs = page === 1 ? normalizedLogs : [...prev.logs, ...normalizedLogs];
-        console.log('[ActivityLogs] New logs state:', newLogs.map((l: any) => l.id));
         return {
           ...prev,
           logs: newLogs,

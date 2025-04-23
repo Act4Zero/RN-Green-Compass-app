@@ -52,7 +52,6 @@ const getTurnstileHTML = (siteKey: string) => `
       window.turnstile.render('#turnstile-container', {
         sitekey: '${siteKey}',
         callback: function(token) {
-          console.log('Turnstile token:', token);
           window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'verify', token: token }));
         },
         'theme': 'light',
@@ -122,8 +121,6 @@ const WebTurnstile: React.FC<TurnstileProps> = ({ onVerify, style }) => {
           size: 'invisible',
           action: 'auth',
         });
-        
-        console.log('Turnstile widget rendered with ID:', widgetId);
       } catch (error) {
         console.error('Error rendering Turnstile widget:', error);
       }
