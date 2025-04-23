@@ -5,21 +5,25 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  TouchableOpacity,
+  Text,
 } from 'react-native';
-import FeedStyles from './styles/FeedStyles';
+import FeedStyles from '@/styles/FeedStyles';
+import { useRouter } from 'expo-router';
 
 // Import custom hooks
-import useCommunityFeedState from './hooks/useCommunityFeedState';
+import useCommunityFeedState from '@/hooks/community/useCommunityFeedState';
 
 // Import components
-import PostItem from './components/PostItem';
-import { Toast } from './components/Toast';
-import LoadingState from './components/LoadingState';
-import ErrorState from './components/ErrorState';
-import EmptyState from './components/EmptyState';
-import FeedHeader from './components/FeedHeader';
-import NewPostButton from './components/NewPostButton';
-import PostOptionsMenu from './components/postdetails/PostOptionsMenu';
+import PostItem from '@/components/community/PostItem';
+import { Toast } from '@/components/community/Toast';
+import LoadingState from '@/components/community/LoadingState';
+import ErrorState from '@/components/community/ErrorState';
+import EmptyState from '@/components/community/EmptyState';
+import FeedHeader from '@/components/community/FeedHeader';
+import { Ionicons } from '@expo/vector-icons';
+import NewPostButton from '@/components/community/NewPostButton';
+import PostOptionsMenu from '@/components/community/postdetails/PostOptionsMenu';
 
 // Styles for this component
 const styles = FeedStyles;
@@ -27,6 +31,9 @@ const styles = FeedStyles;
 export default function CommunityFeed() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  
+  // Use router for navigation
+  const router = useRouter();
   
   // Use our custom hook for all state management and event handlers
   const {
@@ -90,6 +97,18 @@ export default function CommunityFeed() {
         <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
           {/* Header */}
           <FeedHeader />
+          
+          {/* Challenges Button */}
+          <TouchableOpacity
+            style={styles.challengesButton}
+            activeOpacity={0.85}
+            onPress={() => router.push('/community/challenges')}
+          >
+            <Ionicons name="people" size={26} color="#FFFFFF" style={{ marginRight: 12 }} />
+            <Text style={styles.challengesButtonText}>
+              Sustainability Challenges
+            </Text>
+          </TouchableOpacity>
 
           {/* Content based on loading state */}
           {isLoadingDiscussions ? (

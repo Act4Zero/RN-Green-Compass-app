@@ -1,8 +1,8 @@
 import { Stack } from "expo-router";
-import { AuthProvider } from "./context/AuthContext";
-import HabitContextModule from "./context/HabitContext/HabitContext";
+import { AuthProvider } from "@/context/AuthContext";
+import HabitContextModule from "@/context/HabitContext/HabitContext";
 import { useEffect } from 'react';
-import analyticsService from './services/analyticsService';
+import analyticsService from '@/services/analyticsService';
 
 const { HabitProvider } = HabitContextModule;
 
@@ -11,7 +11,7 @@ export default function RootLayout() {
   useEffect(() => {
     // Initialize analytics and log the result
     const initResult = analyticsService.initialize();
-    console.log('Analytics initialization result:', initResult);
+
     
     // Set a timeout to ensure analytics is ready before the app fully loads
     if (!analyticsService.isInitialized) {
@@ -39,6 +39,12 @@ export default function RootLayout() {
           <Stack.Screen name="community/index" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
+
+          {/* Challenges screens */}
+          <Stack.Screen name="community/challenges/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/challenges/[id]/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/challenges/[id]/log" options={{ headerShown: false }} />
+
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

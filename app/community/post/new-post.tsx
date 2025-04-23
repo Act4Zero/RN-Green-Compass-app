@@ -6,20 +6,20 @@ import {
   Platform,
   useWindowDimensions,
 } from 'react-native';
-import NewPostStyles from '../styles/NewPostStyles';
-import { sanitizeMarkdownInput } from '../utils/sanitizeMarkdownInput';
+import NewPostStyles from '@/styles/NewPostStyles';
+import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 
 // Import custom hook for screen logic
-import useNewPost from '../hooks/useNewPost';
+import useNewPost from '@/hooks/community/useNewPost';
 
 // Import components
-import NewPostHeader from '../components/newpost/NewPostHeader';
-import PostInput from '../components/newpost/PostInput';
-import MarkdownHelp from '../components/newpost/MarkdownHelp';
-import PostPreview from '../components/newpost/PostPreview';
-import SubmitButton from '../components/newpost/SubmitButton';
-import LoadingIndicator from '../components/newpost/LoadingIndicator';
-import ToggleButton from '../components/newpost/ToggleButton';
+import NewPostHeader from '@/components/community/newpost/NewPostHeader';
+import PostInput from '@/components/community/newpost/PostInput';
+import MarkdownHelp from '@/components/community/newpost/MarkdownHelp';
+import PostPreview from '@/components/community/newpost/PostPreview';
+import SubmitButton from '@/components/community/newpost/SubmitButton';
+import LoadingIndicator from '@/components/community/newpost/LoadingIndicator';
+import ToggleButton from '@/components/community/newpost/ToggleButton';
 
 // Components
 function LoadingState() {

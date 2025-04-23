@@ -11,10 +11,10 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import profileStyles from './styles/Profile.styles';
-import useProfileManager from '../hooks/useProfileManager';
+import profileStyles from '@/styles/Profile.styles';
+import useProfileManager from '@/hooks/useProfileManager';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
@@ -42,10 +42,10 @@ export default function ProfileScreen() {
   useEffect(() => {
     // Only check after auth loading is complete
     if (!authLoading && !user) {
-      console.log('No authenticated user found in profile, redirecting to signin');
+
       router.replace('/auth/signin');
     } else if (!authLoading && user) {
-      console.log('Authenticated user in profile:', user.id);
+
       // Initial profile load when component mounts and user is authenticated
       // Only load if we don't already have the profile
       if (!profile && !isLoading) {
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
       // Only load profile on focus if we don't have one yet
       // This prevents infinite loops while ensuring data is available
       if (!authLoading && user && !profile && !isLoading) {
-        console.log('Loading profile data on screen focus - profile not loaded yet');
+
         loadProfile();
       }
 
@@ -115,11 +115,11 @@ export default function ProfileScreen() {
   }
 
   if (!profile) {
-    console.log('Profile is null in render, returning null component');
+
     return null;
   }
 
-  console.log('Rendering profile screen with data:', JSON.stringify(profile, null, 2));
+
   const displayIdentifier = getProfileDisplayIdentifier();
 
   return (

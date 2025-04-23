@@ -15,12 +15,12 @@ import {
   BackHandler,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Turnstile from '../components/Turnstile';
-import { ensureValidSession } from '../lib/supabase';
-import analyticsService from '../services/analyticsService';
+import { useAuth } from '@/context/AuthContext';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+import Turnstile from '@/components/Turnstile';
+import { ensureValidSession } from '@/lib/supabase';
+import analyticsService from '@/services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -149,8 +149,6 @@ export default function SignIn() {
         }
         return;
       }
-      
-      if (DEBUG) console.log('Successfully signed in:', data?.user?.email);
       
       // Ensure we have a valid session by explicitly refreshing it
       await ensureValidSession();

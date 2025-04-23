@@ -17,13 +17,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import Turnstile from '../components/Turnstile';
+import { useAuth } from '@/context/AuthContext';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+import Turnstile from '@/components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
-import supabase, { ensureValidSession } from '../lib/supabase';
-import analyticsService from '../services/analyticsService';
+import supabase, { ensureValidSession } from '@/lib/supabase';
+import analyticsService from '@/services/analyticsService';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -220,12 +220,8 @@ export default function SignUp() {
         return;
       }
       
-      if (DEBUG) console.log('Successfully signed up:', data?.user?.email);
-      
       // For new users, explicitly check if we have a session
       if (!data?.session) {
-        if (DEBUG) console.log('No session returned after signup - attempting to create one');
-        
         // Try to sign in immediately after signup to establish a session
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: sanitizedEmail,
@@ -233,10 +229,10 @@ export default function SignUp() {
         });
         
         if (signInError) {
-          if (DEBUG) console.warn('Auto sign-in after signup failed:', signInError.message);
+          setError('An unexpected error occurred. Please try again.');
+          console.error('Auto sign-in after signup failed:', signInError);
+          return;
         } else if (signInData.session) {
-          if (DEBUG) console.log('Auto sign-in after signup successful');
-          
           // Explicitly set the session to ensure it's properly stored
           await supabase.auth.setSession({
             access_token: signInData.session.access_token,
@@ -251,22 +247,22 @@ export default function SignUp() {
       // Double-check session state with a manual refresh
       const { error: refreshError } = await refreshSession();
       if (refreshError) {
-        if (DEBUG) console.warn('Session refresh after signup failed:', refreshError.message);
-        // Continue anyway as this is just an extra precaution
+        setError('An unexpected error occurred. Please try again.');
+        console.error('Session refresh after signup failed:', refreshError);
+        return;
       }
       
       // Final verification of session existence
       const { data: finalSessionCheck } = await supabase.auth.getSession();
       if (!finalSessionCheck.session) {
-        if (DEBUG) console.warn('Still no session after all attempts - user may need to sign in manually');
-      } else {
-        if (DEBUG) console.log('Final session check successful - user is authenticated');
+        setError('An unexpected error occurred. Please try again.');
+        console.warn('Still no session after all attempts - user may need to sign in manually');
+        return;
       }
       
       // If fullName is provided, we would update the user profile here
       // This would typically be done in a separate function that calls the Supabase profiles table
       if (fullName) {
-        if (DEBUG) console.log('Would update profile with name:', fullName);
         // Future implementation: Update user profile with fullName
       }
       

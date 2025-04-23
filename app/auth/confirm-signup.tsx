@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import supabase from '../lib/supabase';
-import Button from '../components/Button';
+import supabase from '@/lib/supabase';
+import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Alert, ActivityIndicator, Text, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
-import ProfileForm from './components/ProfileForm';
+import { useAuth } from '@/context/AuthContext';
+import ProfileForm from '@/components/profile/ProfileForm';
 import { Ionicons } from '@expo/vector-icons';
-import profileEditStyles from '../profile/styles/ProfileEdit.styles';
-import useProfileManager from '../hooks/useProfileManager';
+import profileEditStyles from '@/styles/ProfileEdit.styles';
+import useProfileManager from '@/hooks/useProfileManager';
 
 export default function EditProfileScreen() {
   const { width } = useWindowDimensions();
@@ -38,7 +38,6 @@ export default function EditProfileScreen() {
         console.log('No authenticated user found in profile, redirecting to signin');
         router.replace('/auth/signin');
       } else if (!authLoading && user) {
-        console.log('Authenticated user in profile:', user.id);
         // Initial profile load when component mounts and user is authenticated
         // Only load if we don't already have the profile
         if (!profile && !isLoading) {
@@ -59,7 +58,6 @@ export default function EditProfileScreen() {
       // Only load profile on focus if we don't have one yet
       // This prevents infinite loops while ensuring data is available
       if (user && !profile && !isLoading) {
-        console.log('Loading profile data on edit screen focus - profile not loaded yet');
         loadProfile();
       }
 

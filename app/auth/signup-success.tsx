@@ -10,7 +10,7 @@ import {
   ImageStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Button from '../components/Button';
+import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Styles {

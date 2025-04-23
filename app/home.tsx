@@ -9,25 +9,25 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
-import useHabitStats from './hooks/useHabitStats';
-import analyticsService from './services/analyticsService';
-import useGoalsManager from './hooks/useGoalsManager';
+import useHabitStats from '@/hooks/useHabitStats';
+import analyticsService from '@/services/analyticsService';
+import useGoalsManager from '@/hooks/useGoalsManager';
 
 // Import components
-import { DashboardStats } from './components/home/DashboardStats';
-import QuickActions from './components/home/QuickActions';
-import { GoalsList, GoalsHeader } from './components/home/GoalsList';
-import EditGoalModal from './components/modals/EditGoalModal';
+import { DashboardStats } from '@/components/home/DashboardStats';
+import QuickActions from '@/components/home/QuickActions';
+import { GoalsList, GoalsHeader } from '@/components/home/GoalsList';
+import EditGoalModal from '@/components/modals/EditGoalModal';
 
 // Import styles
-import { homeStyles } from './styles/Home.styles';
+import { homeStyles } from '@/styles/Home.styles';
 
 // Import types
-import { EnhancedGoal, TimeFrequency } from './components/home/types/goal.types';
-import useProfileManager from './hooks/useProfileManager';
+import { EnhancedGoal, TimeFrequency } from '@/types/goal.types';
+import useProfileManager from '@/hooks/useProfileManager';
 
 export default function Home() {
   const { width } = useWindowDimensions();
@@ -66,7 +66,6 @@ export default function Home() {
             console.log('No authenticated user found, redirecting to signin');
             await router.replace('/auth/signin');
           } else if (!authLoading && user) {
-            console.log('Authenticated user:', user.id);
             // Load profile data
             await loadProfile();
           }
