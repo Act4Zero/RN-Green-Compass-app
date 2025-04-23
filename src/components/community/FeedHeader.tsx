@@ -14,7 +14,13 @@ function FeedHeader() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => {
+            if (typeof router.canGoBack === 'function' ? router.canGoBack() : false) {
+              router.back();
+            } else {
+              router.replace('/home');
+            }
+          }}
         >
           <Ionicons name="arrow-back" size={24} color="#2E7D32" />
         </TouchableOpacity>

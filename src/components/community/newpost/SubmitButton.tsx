@@ -40,7 +40,7 @@ function SubmitButton({
 const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: '#2E7D32',
-    borderRadius: 24,
+    borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
     flexDirection: 'row',

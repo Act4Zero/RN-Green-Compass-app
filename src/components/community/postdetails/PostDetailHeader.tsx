@@ -17,7 +17,13 @@ function PostDetailHeader({ title = "Post Detail" }: PostDetailHeaderProps) {
     <View style={styles.header}>
       <TouchableOpacity 
         style={styles.backButton}
-        onPress={() => router.back()}
+        onPress={() => {
+          if (typeof router.canGoBack === 'function' ? router.canGoBack() : false) {
+            router.back();
+          } else {
+            router.replace('/community');
+          }
+        }}
       >
         <Ionicons name="arrow-back" size={24} color="#2E7D32" />
       </TouchableOpacity>

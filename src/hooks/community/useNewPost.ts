@@ -176,7 +176,13 @@ function useNewPost() {
     handleSubmitPost,
     toggleMarkdownHelp,
     togglePreviewMode,
-    goBack: () => router.back(),
+    goBack: () => {
+      if (typeof router.canGoBack === 'function' ? router.canGoBack() : false) {
+        router.back();
+      } else {
+        router.replace('/community');
+      }
+    },
   };
 }
 
