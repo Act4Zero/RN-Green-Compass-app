@@ -48,13 +48,30 @@ interface Styles {
   dividerContainer: ViewStyle;
   divider: ViewStyle;
   dividerText: TextStyle;
+  googleButtonNative: ViewStyle;
+  googleButtonImage: ImageStyle;
+  googleButtonText: TextStyle;
 }
 
 export default function SignUp() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signUp, refreshSession } = useAuth();
+  const { signUp, refreshSession, signInWithGoogle } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Handler for Google sign up
+  const handleGoogleSignUp = async () => {
+    try {
+      setGoogleLoading(true);
+      await signInWithGoogle();
+    } catch (error) {
+      // Optionally show error feedback
+      console.error('Google sign up error:', error);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
   
   // Track screen view when component mounts
   useEffect(() => {
@@ -392,6 +409,32 @@ export default function SignUp() {
               <Text style={styles.dividerText}>or</Text>
               <View style={styles.divider} />
             </View>
+
+            {/* Sign up with Google button */}
+            {googleLoading ? (
+              <View style={{ marginTop: 16, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color="#DB4437" />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.googleButtonNative}
+                onPress={handleGoogleSignUp}
+                activeOpacity={0.85}
+                disabled={googleLoading}
+                accessibilityRole="button"
+                accessibilityLabel="Sign up with Google"
+              >
+                <Image
+                  source={require('../../assets/images/google-logo.png')}
+                  style={styles.googleButtonImage}
+                  resizeMode="contain"
+                  accessible
+                  accessibilityLabel="Google logo"
+                />
+                <Text style={styles.googleButtonText}>Sign up with Google</Text>
+              </TouchableOpacity>
+            )}
+
           </View>
 
           <View style={styles.footer}>
@@ -410,6 +453,34 @@ const styles = StyleSheet.create<Styles>({
   keyboardAvoidingContainer: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  googleButtonNative: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  googleButtonImage: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
   scrollContent: {
     flexGrow: 1,

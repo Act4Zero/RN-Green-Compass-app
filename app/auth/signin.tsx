@@ -13,6 +13,7 @@ import {
   ViewStyle,
   TextStyle,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -41,13 +42,16 @@ interface Styles {
   dividerContainer: ViewStyle;
   divider: ViewStyle;
   dividerText: TextStyle;
+  googleButtonNative: ViewStyle;
+  googleButtonImage: ImageStyle;
+  googleButtonText: TextStyle;
 }
 
 export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { signIn, refreshSession } = useAuth();
+  const { signIn, signInWithGoogle, refreshSession } = useAuth();
   
   // Track screen view when component mounts
   useEffect(() => {
@@ -60,6 +64,7 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
@@ -165,6 +170,28 @@ export default function SignIn() {
       setLoading(false);
     }
   };
+  
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+      setError(undefined);
+      
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        setError('Failed to start Google sign in. Please try again.');
+        console.error('Google sign in error:', error);
+      }
+      
+      // Note: For OAuth we don't navigate here - the user will be redirected and handled by the OAuth flow
+      // The deep link handler will manage the redirect to the home screen
+    } catch (err) {
+      setError('An unexpected error occurred with Google sign in.');
+      console.error('Google sign in error:', err);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -245,6 +272,30 @@ export default function SignIn() {
               <Text style={styles.dividerText}>or</Text>
               <View style={styles.divider} />
             </View>
+
+            {googleLoading ? (
+              <View style={{ marginTop: 16, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color="#DB4437" />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.googleButtonNative}
+                onPress={handleGoogleSignIn}
+                activeOpacity={0.85}
+                disabled={googleLoading}
+                accessibilityRole="button"
+                accessibilityLabel="Sign in with Google"
+              >
+                <Image
+                  source={require('../../assets/images/google-logo.png')}
+                  style={styles.googleButtonImage}
+                  resizeMode="contain"
+                  accessible
+                  accessibilityLabel="Google logo"
+                />
+                <Text style={styles.googleButtonText}>Sign in with Google</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.footer}>
@@ -344,6 +395,34 @@ const styles = StyleSheet.create<Styles>({
     paddingHorizontal: 16,
     color: '#757575',
     fontSize: 14,
+  },
+  googleButtonNative: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  googleButtonImage: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
 
 });

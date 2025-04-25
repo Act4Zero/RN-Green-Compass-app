@@ -18,6 +18,10 @@ type AuthContextType = {
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
+  signInWithGoogle: () => Promise<{
+    error: Error | null;
+    data: { user: User | null; session: Session | null } | null;
+  }>;
   signOut: () => Promise<{ error: Error | null }>;
   refreshSession: () => Promise<{
     error: Error | null;
@@ -256,6 +260,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  // Function to sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+      // Handle both local and production URLs for web
+      let redirectTo: string | undefined;
+      if (Platform.OS === 'web') {
+        redirectTo = `${window.location.origin}/home`;
+      } else {
+        // Mobile deep link
+        redirectTo = 'com.act4zero.greencompass://home';
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo }
+      });
+      
+      // For mobile, we'll redirect the user to the OAuth URL
+      // We won't get data.session immediately since the auth happens in a browser
+      if (error) {
+        console.error('Google sign in error:', error.message);
+        return { data: null, error };
+      }
+      
+      // For OAuth flows, we generally get a URL instead of session data
+      // We'll track the login event when the user returns with the session
+      // This is primarily for analytics of the initial OAuth attempt
+      analyticsService.trackEvent('oauth_google_initiated');
+      
+      // Return a standardized response matching the type definition
+      return { 
+        data: { user: null, session: null },
+        error: null 
+      };
+    } catch (error) {
+      console.error('Unexpected error during Google sign in:', error);
+      return { data: null, error: error as Error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // The context value exposing auth functions and state
   const value = {
     user,
@@ -264,6 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionError,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     refreshSession,
   };
