@@ -51,6 +51,8 @@ export interface Styles {
       padding: 16,
     },
     content: {
+      width: '100%',
+      maxWidth: 500,
       padding: 24,
     },
     backButton: {

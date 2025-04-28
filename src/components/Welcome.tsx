@@ -103,6 +103,7 @@ const styles = StyleSheet.create<Styles>({
   content: {
     width: '100%',
     alignItems: 'center',
+    maxWidth: 500,
   },
   logoContainer: {
     marginBottom: 24,
