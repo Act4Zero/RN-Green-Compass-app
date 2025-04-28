@@ -223,7 +223,7 @@ export default function Home() {
     >
       <ScrollView
         style={homeStyles.scrollContent}
-        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+        contentContainerStyle={homeStyles.scrollContent}
       >
         <View style={[homeStyles.content, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
           {/* Header with welcome message and logout */}

@@ -45,8 +45,6 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
     width: '100%',
     maxWidth: 700,
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
