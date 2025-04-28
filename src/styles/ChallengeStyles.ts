@@ -85,6 +85,8 @@ const ChallengeStyles = StyleSheet.create<ChallengeStyles>({
     padding: 16,
   },
   content: {
+    width: '100%',
+    maxWidth: 500,
     padding: 16,
   },
   header: {

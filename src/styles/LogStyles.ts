@@ -1,7 +1,7 @@
 import { ViewStyle, TextStyle, StyleSheet } from 'react-native';
 
 export interface LogStyles {
-    keyboardAvoidingContainer: ViewStyle;
+  keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
@@ -61,6 +61,8 @@ export const LogStyles = StyleSheet.create<LogStyles>({
       padding: 16,
     },
     content: {
+      width: '100%',
+      maxWidth: 500,
       padding: 24,
     },
     header: {

@@ -66,6 +66,7 @@ const styles = StyleSheet.create<Styles>({
   },
   content: {
     width: '100%',
+    maxWidth: 500,
     alignItems: 'center',
     padding: 24,
     backgroundColor: '#FFFFFF',

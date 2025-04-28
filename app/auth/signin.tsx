@@ -323,6 +323,7 @@ const styles = StyleSheet.create<Styles>({
   },
   content: {
     width: '100%',
+    maxWidth: 500,
     padding: 24,
     alignItems: 'center',
   },

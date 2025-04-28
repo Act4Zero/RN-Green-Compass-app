@@ -43,6 +43,7 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
   },
   content: {
     width: '100%',
+    maxWidth: 500,
     padding: 16,
   },
   header: {

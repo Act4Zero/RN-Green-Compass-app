@@ -87,7 +87,9 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     padding: 16,
   },
   content: {
-    padding: 16,
+    width: '100%',
+    maxWidth: 500,
+    padding: 16
   },
   header: {
     flexDirection: 'row',
