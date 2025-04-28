@@ -40,6 +40,7 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
   scrollContent: {
     flexGrow: 1,
     padding: 16,
+    alignItems: 'center',
   },
   content: {
     width: '100%',
