@@ -3,6 +3,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import HabitContextModule from "@/context/HabitContext/HabitContext";
 import { useEffect } from 'react';
 import analyticsService from '@/services/analyticsService';
+import { FeatureFlagsProvider } from '@/context/FeatureFlagsContext';
 
 const { HabitProvider } = HabitContextModule;
 
@@ -22,8 +23,9 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AuthProvider>
-      <HabitProvider>
+    <FeatureFlagsProvider>
+      <AuthProvider>
+        <HabitProvider>
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -56,7 +58,8 @@ export default function RootLayout() {
             }}
           />
         </Stack>
-      </HabitProvider>
-    </AuthProvider>
+        </HabitProvider>
+      </AuthProvider>
+    </FeatureFlagsProvider>
   );
 }
