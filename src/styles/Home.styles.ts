@@ -2,7 +2,8 @@ import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export interface HomeStyles {
   keyboardAvoidingContainer: ViewStyle;
-  scrollContent: ViewStyle;
+  scrollView: ViewStyle;
+  scrollContentContainer: ViewStyle;
   content: ViewStyle;
   header: ViewStyle;
   welcomeText: TextStyle;
@@ -37,7 +38,10 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  scrollContent: {
+  scrollView: {
+    flexGrow: 1,
+  },
+  scrollContentContainer: {
     flexGrow: 1,
     padding: 16,
     alignItems: 'center',
