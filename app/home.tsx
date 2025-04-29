@@ -222,8 +222,8 @@ export default function Home() {
       style={homeStyles.keyboardAvoidingContainer}
     >
       <ScrollView
-        style={homeStyles.scrollContent}
-        contentContainerStyle={homeStyles.scrollContent}
+        style={homeStyles.scrollView}
+        contentContainerStyle={homeStyles.scrollContentContainer}
       >
         <View style={[homeStyles.content, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
           {/* Header with welcome message and logout */}
