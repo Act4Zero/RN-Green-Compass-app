@@ -83,35 +83,53 @@ export default function ProfileScreen() {
     if (!authLoading) {
       if (!user) {
         router.replace('/auth/signin');
-      } else if (user && !profile && !isLoading) {
-        // Initial profile load when component mounts and user is authenticated
-        // Only load if we don't already have the profile
-        loadProfile();
-      }
+        return; // Exit early if no user
+      } 
+      
+      // Only load profile once when component mounts or user changes
+      const initializeProfile = async () => {
+        if (user && !profile && !isLoading) {
+          try {
+            await loadProfile();
+          } catch (error) {
+            console.error('Failed to load profile during initialization:', error);
+          }
+        }
+      };
+      
+      initializeProfile();
     }
-  }, [user, authLoading, router]);  // Removed profile and isLoading from dependencies to prevent loops
+    // This effect should only run when these dependencies change
+    // Intentionally excluding profile and isLoading to prevent re-render loops
+  }, [user, authLoading, router, loadProfile]);
 
 
 
-  // Use useFocusEffect to track screen view and load points data when the screen comes into focus
+  // Initial data loading on focus
   useFocusEffect(
     useCallback(() => {
-      // Only run if user is authenticated
-      if (!authLoading && user) {
-        // Only track screen view once per session
-        if (!hasTrackedView) {
-          trackProfileView('Profile');
-          setHasTrackedView(true);
-        }
-        
-        // Load points data when screen is focused - streak functionality disabled
-        refreshBalance();
-        refreshHistory();
-        // fetchLoginStreak has been removed to resolve the 'from' error
+      let isMounted = true;
+      // Track view only once
+      if (!hasTrackedView && user) {
+        trackProfileView('Profile');
+        setHasTrackedView(true);
       }
-
+      // Initial data loading when screen comes into focus
+      const initialLoad = async () => {
+        if (!authLoading && user && isMounted) {
+          try {
+            await Promise.all([
+              refreshBalance(),
+              refreshHistory()
+            ]);
+          } catch (err) {
+            console.error('Error loading initial data:', err);
+          }
+        }
+      };
+      initialLoad();
       return () => {
-        // Cleanup function if needed
+        isMounted = false;
       };
     }, [
       user, 
@@ -120,8 +138,7 @@ export default function ProfileScreen() {
       trackProfileView, 
       refreshBalance,
       refreshHistory
-      // fetchLoginStreak removed from dependencies
-    ])  // Removed profile and isLoading from dependencies to prevent loops
+    ])
   );
 
   const handleEditProfile = () => {
@@ -342,17 +359,7 @@ export default function ProfileScreen() {
                 </View>
               )}
               
-              {/* Refresh Button */}
-              <TouchableOpacity 
-                style={styles.refreshButton}
-                onPress={() => {
-                  refreshBalance();
-                  refreshHistory();
-                  fetchLoginStreak();
-                }}
-              >
-                <Text style={styles.refreshButtonText}>Refresh Points</Text>
-              </TouchableOpacity>
+
             </View>
           </View>
 

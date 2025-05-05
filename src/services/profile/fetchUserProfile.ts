@@ -20,25 +20,35 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
   // Check for avatar_url and try to get a signed URL
   if (data?.avatar_url) {
     try {
-      // data.avatar_url is something like "userId/profile.jpeg"
-      const { data: signedData, error: signedUrlError } = await supabase.storage
-        .from('profiles')
-        .createSignedUrl(data.avatar_url, 60 * 60 * 24); // 1 day
-    
-      if (signedUrlError) {
-        console.error('Error creating signed URL for avatar:', signedUrlError);
-        // Keep the original avatar_url as a fallback
-      } else if (signedData?.signedUrl) {
-        data.avatar_url = signedData.signedUrl;
+      // Validate avatar_url format
+      // It should be something like "userId/profile.jpeg"
+      if (!data.avatar_url.includes('/')) {
+        console.warn('Invalid avatar_url format:', data.avatar_url);
+        data.avatar_url = null;
       } else {
-        console.warn('No signed URL returned for avatar');
+        // Create signed URL with error handling
+        const { data: signedData, error: signedUrlError } = await supabase.storage
+          .from('profiles')
+          .createSignedUrl(data.avatar_url, 60 * 60 * 24); // 1 day
+      
+        if (signedUrlError) {
+          console.error('Error creating signed URL for avatar:', signedUrlError);
+          data.avatar_url = null;
+        } else if (signedData?.signedUrl) {
+          data.avatar_url = signedData.signedUrl;
+        } else {
+          console.warn('No signed URL returned for avatar');
+          data.avatar_url = null;
+        }
       }
     } catch (err) {
       console.error('Exception while creating signed URL:', err);
-      // Keep the original avatar_url as a fallback
+      // Set to null rather than keeping possibly invalid URL
+      data.avatar_url = null;
     }
   } else {
     console.log('No avatar_url found in profile data');
+    data.avatar_url = null;
     
     // Try to check if there's an avatar in storage for this user
     try {
@@ -56,11 +66,13 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
         
         if (imageFile) {
           const avatarPath = `${userId}/${imageFile.name}`;
-          const { data: signedData } = await supabase.storage
+          const { data: signedData, error: signedUrlError } = await supabase.storage
             .from('profiles')
             .createSignedUrl(avatarPath, 60 * 60 * 24); // 1 day
           
-          if (signedData?.signedUrl) {
+          if (signedUrlError) {
+            console.error('Error creating signed URL for found avatar:', signedUrlError);
+          } else if (signedData?.signedUrl) {
             data.avatar_url = signedData.signedUrl;
           }
         }
