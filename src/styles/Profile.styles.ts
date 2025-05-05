@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from "react-native";
+import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
 
 interface ProfileStyles {
   keyboardAvoidingContainer: ViewStyle;
@@ -26,6 +26,37 @@ interface ProfileStyles {
   errorText: TextStyle;
   signOutButton: ViewStyle;
   signOutButtonText: TextStyle;
+  
+  // Points section styles
+  pointsSection: ViewStyle;
+  pointsSummaryCard: ViewStyle;
+  pointsRow: ViewStyle;
+  pointsCol: ViewStyle;
+  pointsValue: TextStyle;
+  pointsLabel: TextStyle;
+  pointsDivider: ViewStyle;
+  streakValue: TextStyle;
+  streakLabel: TextStyle;
+  pointsHistoryContainer: ViewStyle;
+  filterContainer: ViewStyle;
+  filterScrollView: ViewStyle;
+  filterChip: ViewStyle;
+  filterChipActive: ViewStyle;
+  filterChipText: TextStyle;
+  filterChipTextActive: TextStyle;
+  historyList: ViewStyle;
+  historyItem: ViewStyle;
+  historyItemHeader: ViewStyle;
+  historyItemContent: ViewStyle;
+  pointSourceIcon: ViewStyle;
+  pointsAmount: TextStyle;
+  pointsDescription: TextStyle;
+  historyDate: TextStyle;
+  historyItemDate: TextStyle;
+  emptyState: ViewStyle;
+  emptyStateText: TextStyle;
+  refreshButton: ViewStyle;
+  refreshButtonText: TextStyle;
 }
 
 const profileStyles = StyleSheet.create<ProfileStyles>({
@@ -166,6 +197,170 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       fontSize: 16,
       fontWeight: '600',
     },
+  // Points section styles
+  pointsSection: {
+    marginTop: 20,
+    marginBottom: 16,
+    width: '100%',
+  },
+  pointsSummaryCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 16,
+  },
+  pointsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  pointsCol: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointsValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  pointsLabel: {
+    fontSize: 14,
+    color: '#555555',
+    marginTop: 4,
+  },
+  pointsDivider: {
+    width: 1,
+    height: '80%',
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 16,
+  },
+  streakValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FF6F00',
+  },
+  streakLabel: {
+    fontSize: 14,
+    color: '#555555',
+    marginTop: 4,
+  },
+  pointsHistoryContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 16,
+    width: '100%',
+  },
+  filterContainer: {
+    marginBottom: 16,
+  },
+  filterScrollView: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#F0F0F0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  filterChipActive: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#2E7D32',
+  },
+  filterChipText: {
+    color: '#555555',
+  },
+  filterChipTextActive: {
+    color: '#2E7D32',
+    fontWeight: 'bold',
+  },
+  historyList: {
+    width: '100%',
+  },
+  historyItem: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    paddingVertical: 12,
+  },
+  historyItemHeader: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  historyItemContent: {
+    flex: 1,
+  },
+  pointSourceIcon: {
+    marginRight: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointsAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  pointsDescription: {
+    fontSize: 14,
+    color: '#555555',
+  },
+  historyDate: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginVertical: 12,
+  },
+  historyItemDate: {
+    fontSize: 12,
+    color: '#888888',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#888888',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  refreshButton: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 16,
+    alignSelf: 'center',
+  },
+  refreshButtonText: {
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
   });
 
   export default profileStyles;

@@ -8,12 +8,27 @@
  * @param relativeTo The reference date (defaults to today)
  * @returns True if the date is yesterday
  */
-export function isYesterday(date: Date, relativeTo: Date = new Date()): boolean {
-  const yesterday = new Date(relativeTo);
-  yesterday.setDate(yesterday.getDate() - 1);
+export function isYesterday(date: Date | null | undefined, relativeTo: Date = new Date()): boolean {
+  // Check for null or undefined
+  if (!date) {
+    return false;
+  }
   
-  // Compare dates without time component
-  return isSameDay(date, yesterday);
+  try {
+    // Ensure we have a valid Date object
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return false;
+    }
+    
+    const yesterday = new Date(relativeTo);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Compare dates without time component
+    return isSameDay(date, yesterday);
+  } catch (error) {
+    console.error('Error in isYesterday:', error);
+    return false;
+  }
 }
 
 /**
@@ -21,8 +36,23 @@ export function isYesterday(date: Date, relativeTo: Date = new Date()): boolean 
  * @param date The date to check
  * @returns True if the date is today
  */
-export function isToday(date: Date): boolean {
-  return isSameDay(date, new Date());
+export function isToday(date: Date | null | undefined): boolean {
+  // Check for null or undefined
+  if (!date) {
+    return false;
+  }
+  
+  try {
+    // Ensure we have a valid Date object
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      return false;
+    }
+    
+    return isSameDay(date, new Date());
+  } catch (error) {
+    console.error('Error in isToday:', error);
+    return false;
+  }
 }
 
 /**
@@ -31,12 +61,28 @@ export function isToday(date: Date): boolean {
  * @param date2 Second date to compare
  * @returns True if dates are the same day
  */
-export function isSameDay(date1: Date, date2: Date): boolean {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+export function isSameDay(date1: Date | null | undefined, date2: Date | null | undefined): boolean {
+  // Check for null or undefined values
+  if (!date1 || !date2) {
+    return false;
+  }
+  
+  try {
+    // Validate both dates
+    if (!(date1 instanceof Date) || isNaN(date1.getTime()) ||
+        !(date2 instanceof Date) || isNaN(date2.getTime())) {
+      return false;
+    }
+    
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  } catch (error) {
+    console.error('Error in isSameDay:', error);
+    return false;
+  }
 }
 
 /**
@@ -63,26 +109,38 @@ export function calculateStreak(
     return { streak: 1, maintained: true };
   }
   
-  // Convert string date to Date object if needed
-  const lastDate = typeof lastActivityDate === 'string' 
-    ? new Date(lastActivityDate) 
-    : lastActivityDate;
-  
-  // If activity was already done today, maintain current streak
-  if (isToday(lastDate)) {
-    return { 
-      streak: Math.max(currentStreak, 1),  // Ensure streak is at least 1
-      maintained: true 
-    };
+  try {
+    // Convert string date to Date object if needed
+    const lastDate = typeof lastActivityDate === 'string' 
+      ? new Date(lastActivityDate) 
+      : lastActivityDate;
+    
+    // Validate date object
+    if (!(lastDate instanceof Date) || isNaN(lastDate.getTime())) {
+      console.warn('Invalid date object in calculateStreak:', lastActivityDate);
+      return { streak: 1, maintained: false };
+    }
+    
+    // If activity was already done today, maintain current streak
+    if (isToday(lastDate)) {
+      return { 
+        streak: Math.max(currentStreak, 1),  // Ensure streak is at least 1
+        maintained: true 
+      };
+    }
+    
+    // If activity was done yesterday, increment streak
+    if (isYesterday(lastDate)) {
+      return { streak: currentStreak + 1, maintained: true };
+    }
+    
+    // Otherwise reset streak to 1
+    return { streak: 1, maintained: false };
+  } catch (error) {
+    console.error('Error in calculateStreak:', error);
+    // Return safe default if we hit any errors
+    return { streak: 1, maintained: false };
   }
-  
-  // If activity was done yesterday, increment streak
-  if (isYesterday(lastDate)) {
-    return { streak: currentStreak + 1, maintained: true };
-  }
-  
-  // Otherwise reset streak to 1
-  return { streak: 1, maintained: false };
 }
 
 /**
