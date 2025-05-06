@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Challenge } from '@/types/challenge';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import formatDate from '../../utils/formatDate';
 
 interface ChallengeCardProps {

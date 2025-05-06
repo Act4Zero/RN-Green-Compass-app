@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
-import PostDetailStyles from '@/styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/community/PostDetailStyles';
 
 const styles = PostDetailStyles;
 

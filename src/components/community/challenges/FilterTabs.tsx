@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import { ChallengeFilter } from '@/hooks/challenge/types';
 
 interface FilterTabsProps {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { usePoints } from '../context/PointsContext';
+import { usePoints } from '../../../context/PointsContext';
 
 /**
  * Hook for handling point rewards and related animations

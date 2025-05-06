@@ -3,7 +3,7 @@ import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
-import useCommunityFeed from '../../hooks/useCommunityFeed';
+import useCommunityFeed from '../community/useCommunityFeed';
 import useCommunityFeedState from './useCommunityFeedState';
 
 /**

@@ -15,12 +15,12 @@ import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
-import usePointsBalance from '@/hooks/usePointsBalance';
-import usePointsHistory from '@/hooks/usePointsHistory';
+import usePointsBalance from '@/hooks/community/points/usePointsBalance';
+import usePointsHistory from '@/hooks/community/points/usePointsHistory';
 // Temporarily disabled to fix error
 // import useStreaks from '@/hooks/useStreaks';
 import PointsSummary from '@/components/points/PointsSummary';
-import { PointSource } from '@/types/points';
+import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 
 export default function ProfileScreen() {

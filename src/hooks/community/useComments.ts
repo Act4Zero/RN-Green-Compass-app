@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { commentService } from '../../services/community';
-import { PaginationParams, CommentsState, UseCommentsProps } from './types';
+import { PaginationParams, CommentsState, UseCommentsProps } from '../../types/community/types';
 import useCurrentUser from './useCurrentUser';
 
 /**

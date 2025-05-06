@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import PostDetailStyles from '@/styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/community/PostDetailStyles';
 import CommentItem from '../CommentItem';
 import CommentEditForm from '../CommentEditForm';
 

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import pointsService from '../services/pointsService';
-import { PointEvent, PointBalance } from '../types/points';
+import pointsService from '../services/community/pointsService';
+import { PointEvent, PointBalance } from '../types/community/points';
 import analyticsService from '../services/analyticsService';
 
 // Define the context shape

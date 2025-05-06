@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { usePoints } from '../context/PointsContext';
-import { PointBalance } from '../types/points';
+import { usePoints } from '../../../context/PointsContext';
+import { PointBalance } from '../../../types/community/points';
 
 /**
  * Hook for accessing and refreshing a user's point balance

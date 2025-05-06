@@ -25,7 +25,7 @@ import ErrorState from '@/components/community/ErrorState';
 import { Toast } from '@/components/community/Toast';
 
 // Styles for this component
-import PostDetailStyles from '@/styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/community/PostDetailStyles';
 const styles = PostDetailStyles;
 
 export default function PostDetail() {

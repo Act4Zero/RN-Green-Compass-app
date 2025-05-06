@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { reactionService } from '../../services/community';
-import { ToggleResult } from './types';
+import { ToggleResult } from '../../types/community/types';
 import useCurrentUser from './useCurrentUser';
 
 /**

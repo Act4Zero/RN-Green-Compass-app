@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useParticipants from '@/hooks/challenge/useParticipants';

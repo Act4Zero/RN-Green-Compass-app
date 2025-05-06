@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { usePoints } from '../context/PointsContext';
-import { PointEvent, PointSource } from '../types/points';
+import { usePoints } from '../../../context/PointsContext';
+import { PointEvent, PointSource } from '../../../types/community/points';
 
 /**
  * Hook for accessing and filtering a user's point history

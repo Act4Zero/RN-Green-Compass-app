@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useChallenges from '@/hooks/challenge/useChallenges';
 import ChallengeCard from '../../../src/components/challenges/ChallengeCard';
 import { useAuth } from '@/context/AuthContext';

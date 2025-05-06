@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import PostDetailStyles from '@/styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/community/PostDetailStyles';
 
 const styles = PostDetailStyles;
 

@@ -1,4 +1,4 @@
-import { PointEvent, PointSource } from '../types/points';
+import { PointEvent, PointSource } from '../types/community/points';
 
 /**
  * Utilities for formatting point data for display

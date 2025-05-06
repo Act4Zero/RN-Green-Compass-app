@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import {
   AwardPointsParams,
   PointEvent,
@@ -6,7 +6,7 @@ import {
   UpdateLoginStreakParams,
   UpdateHabitStreakParams,
   PointBalance,
-} from '../types/points';
+} from '../../types/community/points';
 
 /**
  * Service for handling Green Points operations
