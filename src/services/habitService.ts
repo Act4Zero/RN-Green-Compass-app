@@ -1,5 +1,7 @@
 import supabase from '../lib/supabase';
 import { Habit, UserHabit, HabitLog, UserGoal } from '../types/supabase';
+import pointsService from './community/pointsService';
+import { PointsResponse } from '../types/community/points';
 
 /**
  * Service for interacting with habits in Supabase
@@ -403,6 +405,34 @@ export const habitService = {
     }
     
     return streak;
+  },
+
+  /**
+   * Calculate and register a point for overall streak if a new day is added
+   * @param userId The user's ID
+   * @returns The updated streak and point event info if a point was awarded
+   */
+  registerOverallStreakAndPoint: async (
+    userId: string
+  ): Promise<{ streak: number; pointResponse?: PointsResponse }> => {
+    // Calculate current streak
+    const streak = await habitService.calculateOverallStreak(userId);
+
+    // Fetch last point event for overall streak (optional: implement if you want to avoid duplicate awards)
+    // For now, always award a point for a new streak day
+    // You may want to check the last log date or last awarded date for more robust logic
+
+    let pointResponse: PointsResponse | undefined;
+    if (streak > 0) {
+      // Award a point for maintaining the overall streak today
+      pointResponse = await pointsService.awardPoints({
+        userId,
+        source: 'habit_log', // Consider using a new source like 'overall_streak' if you want to distinguish
+        points: 1, // Adjust the points value as needed
+      });
+    }
+
+    return { streak, pointResponse };
   },
 
   /**

@@ -16,9 +16,9 @@ import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useParticipants from '@/hooks/challenge/useParticipants';
-import ChallengeParticipants from '@/components/challenges/ChallengeParticipants';
-import ChallengeProgress from '@/components/challenges/ChallengeProgress';
-import ActivityLogsList from '@/components/challenges/ActivityLogsList';
+import ChallengeParticipants from '@/components/community/challenges/ChallengeParticipants';
+import ChallengeProgress from '@/components/community/challenges/ChallengeProgress';
+import ActivityLogsList from '@/components/community/challenges/ActivityLogsList';
 import formatDate from '@/utils/formatDate';
 
 // Styles for this component

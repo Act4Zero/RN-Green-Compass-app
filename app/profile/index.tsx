@@ -19,7 +19,7 @@ import usePointsBalance from '@/hooks/community/points/usePointsBalance';
 import usePointsHistory from '@/hooks/community/points/usePointsHistory';
 // Temporarily disabled to fix error
 // import useStreaks from '@/hooks/useStreaks';
-import PointsSummary from '@/components/points/PointsSummary';
+import PointsSummary from '@/components/community/points/PointsSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 

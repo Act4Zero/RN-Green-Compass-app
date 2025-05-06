@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import profileStyles from '../../styles/Profile.styles';
+import profileStyles from '@/styles/Profile.styles';
 
 interface PointsSummaryProps {
   points: string;

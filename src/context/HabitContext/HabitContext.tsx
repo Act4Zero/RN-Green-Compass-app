@@ -203,8 +203,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const actions = await habitService.calculateTotalActions(user.id);
       setTotalActions(actions);
       
-      const streak = await habitService.calculateOverallStreak(user.id);
-      setOverallStreak(streak);
+      const streakAndPoint = await habitService.registerOverallStreakAndPoint(user.id);
+      setOverallStreak(streakAndPoint.streak);
     } catch (error) {
       console.error('Error refreshing stats:', error);
       setErrorStats('Failed to load statistics. Please try again.');

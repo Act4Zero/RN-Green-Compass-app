@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useActivityLogs from '@/hooks/challenge/useActivityLogs';
-import { ActivityLog } from '@/types/challenge';
-import formatDate from '../../utils/formatDate';
+import { ActivityLog } from '@/types/community/challenge';
+import formatDate from '@/utils/formatDate';
 
 interface ActivityLogsListProps {
   challengeId: string;
