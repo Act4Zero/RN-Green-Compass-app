@@ -3,7 +3,7 @@
  */
 
 // Point event sources
-export type PointSource = 'daily_login' | 'habit_log' | 'discussion_participation';
+export type PointSource = 'daily_login' | 'habit_log' | 'discussion_participation' | 'habit_streak';
 
 // Point event record stored in database
 export interface PointEvent {

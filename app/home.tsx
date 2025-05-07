@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
+import { usePoints } from '@/context/PointsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import useHabitStats from '@/hooks/useHabitStats';
@@ -91,6 +92,35 @@ export default function Home() {
       });
     }
   }, [user]);
+  
+  // Get points context to handle daily check-ins
+  const { awardDailyCheckIn } = usePoints();
+
+  // Listen for firstDailyActivity events to process daily check-ins
+  useEffect(() => {
+    if (!user) return;
+    
+    // Handler for the firstDailyActivity event
+    const handleFirstActivity = async (event: any) => {
+      try {
+        // Only process if the user ID matches
+        if (event.detail?.userId === user.id && awardDailyCheckIn) {
+          console.log('Processing daily check-in from event');
+          await awardDailyCheckIn();
+        }
+      } catch (error) {
+        console.error('Error processing daily check-in from event:', error);
+      }
+    };
+    
+    // Add event listener
+    document.addEventListener('firstDailyActivity', handleFirstActivity);
+    
+    // Cleanup function to remove the event listener
+    return () => {
+      document.removeEventListener('firstDailyActivity', handleFirstActivity);
+    };
+  }, [user, awardDailyCheckIn]);
 
   // Get stats and goals data from custom hooks
   const { totalCO2Saved, totalActions, overallStreak, refreshStats } = useHabitStats();

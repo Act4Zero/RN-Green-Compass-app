@@ -204,7 +204,7 @@ const pointsService = {
       }
       
       // Award points for logging the habit
-      const points = 50; // Base points for logging a habit
+      const points = 1; // Base points for logging a habit
       
       const pointsResult = await pointsService.awardPoints({
         userId,
