@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+console.log('ProfileScreen rendered');
 import {
   View,
   Text,
@@ -15,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
-import usePointsBalance from '@/hooks/community/points/usePointsBalance';
+import pointsService from '@/services/community/pointsService';
 import usePointsHistory from '@/hooks/community/points/usePointsHistory';
 import useHabitStats from '@/hooks/useHabitStats';
 import PointsSummary from '@/components/community/points/PointsSummary';
@@ -42,8 +43,28 @@ export default function ProfileScreen() {
     trackProfileView
   } = useProfileManager();
   
-  // Points related hooks
-  const { formattedPoints, refresh: refreshBalance, isLoading: isBalanceLoading } = usePointsBalance();
+  // Points state managed locally
+  const [points, setPoints] = useState<string>('0');
+const [isPointsLoading, setIsPointsLoading] = useState<boolean>(true);
+
+useEffect(() => {
+  let isMounted = true;
+  async function fetchPoints() {
+    setIsPointsLoading(true);
+    try {
+      if (user?.id) {
+        const balance = await pointsService.getUserPointBalance(user.id);
+        if (isMounted) setPoints(balance.total.toLocaleString());
+      }
+    } catch (e) {
+      if (isMounted) setPoints('0');
+    } finally {
+      if (isMounted) setIsPointsLoading(false);
+    }
+  }
+  fetchPoints();
+  return () => { isMounted = false; };
+}, [user?.id]);
   const { 
     historyByDate, 
     activeFilters, 
@@ -60,9 +81,7 @@ export default function ProfileScreen() {
     .map(event => event.source)
     .filter((value, index, self) => self.indexOf(value) === index) as PointSource[];
     
-  // Track if points data is loading - now including streak loading
-  const isPointsLoading = isBalanceLoading || isHistoryLoading || isStreakLoading;
-
+  
 
 
   // Redirect to signin if user is not authenticated and manage initial profile loading
@@ -112,10 +131,7 @@ export default function ProfileScreen() {
         if (!authLoading && user && isMounted) {
           try {
             // Load points and history data in parallel
-            await Promise.all([
-              refreshBalance(),
-              refreshHistory()
-            ]);
+            await refreshHistory();
             
             // Intentionally NOT refreshing streak here to avoid loops
             // The fixed streak value (3) from the hook will be used instead
@@ -135,7 +151,7 @@ export default function ProfileScreen() {
       authLoading, 
       hasTrackedView, 
       trackProfileView, 
-      refreshBalance,
+      
       refreshHistory
     ])
   );
@@ -244,19 +260,11 @@ export default function ProfileScreen() {
 
           {/* Points Section */}
           <Text style={styles.sectionTitle}>Green Points</Text>
-          <View style={styles.pointsSection}>
-            {isPointsLoading ? (
-              <ActivityIndicator size="small" color="#2E7D32" />
-            ) : (
-              <PointsSummary 
-                points={formattedPoints} 
-                streak={loginStreak} 
-              />
-            )}
-
-            {/* Points History */}
-            <View style={styles.pointsHistoryContainer}>
-              <Text style={styles.sectionTitle}>Points History</Text>
+              {isPointsLoading ? (
+                <ActivityIndicator size="small" color="#2E7D32" />
+              ) : (
+                <PointsSummary points={points} streak={loginStreak} />
+              )}
               
               {/* Filters */}
               <View style={styles.filterContainer}>
@@ -351,16 +359,11 @@ export default function ProfileScreen() {
                     </View>
                   ))
               ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>
-                    No points history found. Start earning points by logging in daily and tracking sustainable habits!
-                  </Text>
-                </View>
+                <Text style={styles.emptyStateText}>
+                  No points history found. Start earning points by logging in daily and tracking sustainable habits!
+                </Text>
               )}
               
-
-            </View>
-          </View>
 
           <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
             <Text style={styles.signOutButtonText}>Sign Out</Text>

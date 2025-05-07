@@ -47,7 +47,13 @@ interface PointsProviderProps {
   children: ReactNode;
 }
 
+// Type guard for point balance shape
+function isPointBalanceObject(obj: any): obj is { total: number } {
+  return obj && typeof obj === 'object' && 'total' in obj;
+}
+
 // Provider component that wraps parts of the app needing points data
+console.log('PointsProvider rendered');
 export const PointsProvider = ({ children }: PointsProviderProps) => {
   // State for points data
   const [pointBalance, setPointBalance] = useState<PointBalance>({ total: 0, lastUpdated: '' });
@@ -68,6 +74,7 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   
   // Refresh point balance from the server
   const refreshBalance = async () => {
+  console.log('refreshBalance called with user?.id:', user?.id);
     if (!user?.id) return;
     
     // Use the dedicated balance loading state
@@ -76,6 +83,7 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
     
     try {
       const balance = await pointsService.getUserPointBalance(user.id);
+      console.log('refreshBalance got balance:', balance);
       setPointBalance(balance);
     } catch (error) {
       console.error('Error fetching point balance:', error);
@@ -119,10 +127,13 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       if (result.success && result.data) {
         // Update balance
         if (result.data.pointBalance) {
-          setPointBalance({
-            total: result.data.pointBalance,
-            lastUpdated: new Date().toISOString(),
-          });
+          const total = isPointBalanceObject(result.data.pointBalance)
+  ? result.data.pointBalance.total
+  : result.data.pointBalance;
+setPointBalance({
+  total,
+  lastUpdated: new Date().toISOString(),
+});
         }
         
         // Set last awarded points for animation
@@ -176,10 +187,13 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       if (result.success && result.data) {
         // Update balance
         if (result.data.pointBalance) {
-          setPointBalance({
-            total: result.data.pointBalance,
-            lastUpdated: new Date().toISOString(),
-          });
+          const total = isPointBalanceObject(result.data.pointBalance)
+  ? result.data.pointBalance.total
+  : result.data.pointBalance;
+setPointBalance({
+  total,
+  lastUpdated: new Date().toISOString(),
+});
         }
         
         // Set last awarded points for animation
@@ -241,10 +255,13 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       if (result.success && result.data) {
         // Update balance
         if (result.data.pointBalance) {
-          setPointBalance({
-            total: result.data.pointBalance,
-            lastUpdated: new Date().toISOString(),
-          });
+          const total = isPointBalanceObject(result.data.pointBalance)
+  ? result.data.pointBalance.total
+  : result.data.pointBalance;
+setPointBalance({
+  total,
+  lastUpdated: new Date().toISOString(),
+});
         }
         
         // Set last awarded points for animation

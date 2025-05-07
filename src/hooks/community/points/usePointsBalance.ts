@@ -6,6 +6,7 @@ import { PointBalance } from '../../../types/community/points';
  * Hook for accessing and refreshing a user's point balance
  * @returns Object with point balance, loading state, and refresh function
  */
+console.log('usePointsBalance hook called');
 function usePointsBalance() {
   const { pointBalance, isBalanceLoading, hasError, refreshBalance } = usePoints();
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
