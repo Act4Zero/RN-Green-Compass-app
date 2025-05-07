@@ -1,5 +1,6 @@
 import supabase from '../../lib/supabase';
 import { Comment, PaginationParams, PaginatedResult } from './types';
+import pointsService from '../community/pointsService';
 
 /**
  * Service for managing comments in the community feed
@@ -138,6 +139,14 @@ export const commentService = {
     if (error) {
       console.error(`Error creating comment for discussion ${discussionId}:`, error);
       throw error;
+    }
+    
+    // Award points for community participation (comment)
+    try {
+      await pointsService.processCommunityParticipation(userId, 'comment', data.id);
+    } catch (pointsError) {
+      // Log the error but don't fail the comment creation
+      console.error(`Error awarding points for comment ${data.id}:`, pointsError);
     }
 
     return {

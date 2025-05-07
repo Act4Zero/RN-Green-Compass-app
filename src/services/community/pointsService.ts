@@ -245,7 +245,7 @@ const pointsService = {
   ): Promise<PointsResponse> => {
     try {
       // Different point values based on participation type
-      const points = contentType === 'post' ? 30 : 10;
+      const points = contentType === 'post' ? 5 : 1;
       
       const pointsResult = await pointsService.awardPoints({
         userId,
