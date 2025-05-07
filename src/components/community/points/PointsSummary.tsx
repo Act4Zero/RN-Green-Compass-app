@@ -9,9 +9,6 @@ interface PointsSummaryProps {
 }
 
 function PointsSummary({ points, streak }: PointsSummaryProps) {
-  // Use a safe default value to prevent rendering issues
-  const safeStreak = typeof streak === 'number' && !isNaN(streak) ? streak : 0;
-  
   return (
     <View style={profileStyles.pointsSummaryCard}>
       <View style={profileStyles.pointsCol}>
@@ -20,13 +17,12 @@ function PointsSummary({ points, streak }: PointsSummaryProps) {
         <Text style={profileStyles.pointsLabel}>Green Points</Text>
       </View>
       
-      {/* Temporarily disable streak display to prevent errors */}
       <View style={profileStyles.pointsDivider} />
       
       <View style={profileStyles.pointsCol}>
-        <Ionicons name="star" size={20} color="#FFD700" />
-        <Text style={profileStyles.streakValue}>⭐</Text>
-        <Text style={profileStyles.streakLabel}>Rewards</Text>
+        <Ionicons name="medal" size={20} color="#FFD700" />
+        <Text style={profileStyles.streakValue}>{streak}</Text>
+        <Text style={profileStyles.streakLabel}>Habits Streak</Text>
       </View>
     </View>
   );

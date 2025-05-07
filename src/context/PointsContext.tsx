@@ -9,7 +9,9 @@ interface PointsContextType {
   // State
   pointBalance: PointBalance;
   pointHistory: PointEvent[];
-  isLoading: boolean;
+  isLoading: boolean; // General loading state (for backward compatibility)
+  isBalanceLoading: boolean; // Specific to balance loading
+  isHistoryLoading: boolean; // Specific to history loading
   hasError: boolean;
   lastAwardedPoints: { amount: number; source: string } | null;
   
@@ -26,6 +28,8 @@ const PointsContext = createContext<PointsContextType>({
   pointBalance: { total: 0, lastUpdated: '' },
   pointHistory: [],
   isLoading: false,
+  isBalanceLoading: false,
+  isHistoryLoading: false,
   hasError: false,
   lastAwardedPoints: null,
   
@@ -48,7 +52,14 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   // State for points data
   const [pointBalance, setPointBalance] = useState<PointBalance>({ total: 0, lastUpdated: '' });
   const [pointHistory, setPointHistory] = useState<PointEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Separate loading states to prevent race conditions
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  
+  // Computed general loading state for backward compatibility
+  const isLoading = isBalanceLoading || isHistoryLoading;
+  
   const [hasError, setHasError] = useState(false);
   const [lastAwardedPoints, setLastAwardedPoints] = useState<{ amount: number; source: string } | null>(null);
   
@@ -59,7 +70,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   const refreshBalance = async () => {
     if (!user?.id) return;
     
-    setIsLoading(true);
+    // Use the dedicated balance loading state
+    setIsBalanceLoading(true);
     setHasError(false);
     
     try {
@@ -69,7 +81,7 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       console.error('Error fetching point balance:', error);
       setHasError(true);
     } finally {
-      setIsLoading(false);
+      setIsBalanceLoading(false);
     }
   };
   
@@ -77,7 +89,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   const refreshHistory = async () => {
     if (!user?.id) return;
     
-    setIsLoading(true);
+    // Use the dedicated history loading state
+    setIsHistoryLoading(true);
     setHasError(false);
     
     try {
@@ -87,7 +100,7 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       console.error('Error fetching point history:', error);
       setHasError(true);
     } finally {
-      setIsLoading(false);
+      setIsHistoryLoading(false);
     }
   };
   
@@ -95,7 +108,9 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   const awardDailyCheckIn = async (): Promise<boolean> => {
     if (!user?.id) return false;
     
-    setIsLoading(true);
+    // Use both loading states since this affects both balance and history
+    setIsBalanceLoading(true);
+    setIsHistoryLoading(true);
     setHasError(false);
     
     try {
@@ -141,7 +156,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       setHasError(true);
       return false;
     } finally {
-      setIsLoading(false);
+      setIsBalanceLoading(false);
+      setIsHistoryLoading(false);
     }
   };
   
@@ -149,7 +165,9 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   const logHabit = async (habitId: string): Promise<boolean> => {
     if (!user?.id) return false;
     
-    setIsLoading(true);
+    // Use both loading states since this affects both balance and history
+    setIsBalanceLoading(true);
+    setIsHistoryLoading(true);
     setHasError(false);
     
     try {
@@ -196,7 +214,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       setHasError(true);
       return false;
     } finally {
-      setIsLoading(false);
+      setIsBalanceLoading(false);
+      setIsHistoryLoading(false);
     }
   };
   
@@ -207,7 +226,9 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   ): Promise<boolean> => {
     if (!user?.id) return false;
     
-    setIsLoading(true);
+    // Use both loading states since this affects both balance and history
+    setIsBalanceLoading(true);
+    setIsHistoryLoading(true);
     setHasError(false);
     
     try {
@@ -258,7 +279,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
       setHasError(true);
       return false;
     } finally {
-      setIsLoading(false);
+      setIsBalanceLoading(false);
+      setIsHistoryLoading(false);
     }
   };
   
@@ -280,6 +302,8 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
     pointBalance,
     pointHistory,
     isLoading,
+    isBalanceLoading,
+    isHistoryLoading,
     hasError,
     lastAwardedPoints,
     

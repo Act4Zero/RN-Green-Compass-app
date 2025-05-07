@@ -3,8 +3,6 @@ import {
   AwardPointsParams,
   PointEvent,
   PointsResponse,
-  UpdateLoginStreakParams,
-  UpdateHabitStreakParams,
   PointBalance,
 } from '../../types/community/points';
 
@@ -407,6 +405,31 @@ const pointsService = {
     } catch (error) {
       console.error('Failed to get user point history:', error);
       return [];
+    }
+  },
+  /**
+   * Get a user's login streak information
+   * @param userId The user's ID
+   * @returns Object containing login_streak count
+   */
+  getUserLoginStreak: async (userId: string): Promise<{ login_streak: number }> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('login_streak')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return {
+        login_streak: data?.login_streak || 0
+      };
+    } catch (error) {
+      console.error('Failed to get login streak:', error);
+      return { login_streak: 0 };
     }
   },
 };

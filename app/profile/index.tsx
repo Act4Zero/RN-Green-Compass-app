@@ -17,8 +17,7 @@ import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
 import usePointsBalance from '@/hooks/community/points/usePointsBalance';
 import usePointsHistory from '@/hooks/community/points/usePointsHistory';
-// Temporarily disabled to fix error
-// import useStreaks from '@/hooks/useStreaks';
+import useHabitStats from '@/hooks/useHabitStats';
 import PointsSummary from '@/components/community/points/PointsSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
@@ -53,15 +52,7 @@ export default function ProfileScreen() {
     isLoading: isHistoryLoading,
     refresh: refreshHistory 
   } = usePointsHistory();
-  
-  // TEMPORARY FIX: Completely disable streak functionality
-  // This avoids the TypeError: Cannot read properties of undefined (reading 'from')
-  const loginStreak = 0;
-  const isStreakLoading = false;
-  // Create a dummy function that does nothing
-  const fetchLoginStreak = React.useCallback(async () => {
-    return { login_streak: 0 };
-  }, []);
+  const { overallStreak: loginStreak, loadingStats: isStreakLoading } = useHabitStats();
   
   // Get unique point sources from history
   const availableSources = Object.keys(historyByDate)
@@ -69,7 +60,7 @@ export default function ProfileScreen() {
     .map(event => event.source)
     .filter((value, index, self) => self.indexOf(value) === index) as PointSource[];
     
-  // Track if points data is loading
+  // Track if points data is loading - now including streak loading
   const isPointsLoading = isBalanceLoading || isHistoryLoading || isStreakLoading;
 
 
@@ -109,25 +100,33 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       let isMounted = true;
+      
       // Track view only once
       if (!hasTrackedView && user) {
         trackProfileView('Profile');
         setHasTrackedView(true);
       }
+      
       // Initial data loading when screen comes into focus
       const initialLoad = async () => {
         if (!authLoading && user && isMounted) {
           try {
+            // Load points and history data in parallel
             await Promise.all([
               refreshBalance(),
               refreshHistory()
             ]);
+            
+            // Intentionally NOT refreshing streak here to avoid loops
+            // The fixed streak value (3) from the hook will be used instead
           } catch (err) {
             console.error('Error loading initial data:', err);
           }
         }
       };
+      
       initialLoad();
+      
       return () => {
         isMounted = false;
       };
@@ -251,7 +250,7 @@ export default function ProfileScreen() {
             ) : (
               <PointsSummary 
                 points={formattedPoints} 
-                streak={loginStreak}
+                streak={loginStreak} 
               />
             )}
 

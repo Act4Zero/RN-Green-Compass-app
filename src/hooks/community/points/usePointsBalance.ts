@@ -7,7 +7,7 @@ import { PointBalance } from '../../../types/community/points';
  * @returns Object with point balance, loading state, and refresh function
  */
 function usePointsBalance() {
-  const { pointBalance, isLoading, hasError, refreshBalance } = usePoints();
+  const { pointBalance, isBalanceLoading, hasError, refreshBalance } = usePoints();
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
   // Function to refresh balance data
@@ -22,7 +22,7 @@ function usePointsBalance() {
   return {
     balance: pointBalance,
     formattedPoints,
-    isLoading,
+    isLoading: isBalanceLoading, // Map isBalanceLoading to isLoading for backward compatibility
     hasError,
     refresh,
     lastRefreshed
