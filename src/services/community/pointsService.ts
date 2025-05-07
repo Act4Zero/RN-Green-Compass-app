@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import supabase from '../../lib/supabase';
 import {
   AwardPointsParams,
   PointEvent,
@@ -22,6 +22,19 @@ const pointsService = {
     try {
       const { userId, source, points, referenceId } = params;
       
+      // Validate required parameters
+      if (!userId) {
+        throw new Error('userId is required to award points');
+      }
+      
+      if (!source) {
+        throw new Error('source is required to award points');
+      }
+      
+      if (points === undefined || points === null) {
+        throw new Error('points value is required to award points');
+      }
+      
       // Create a point event record
       const { data, error } = await supabase
         .from('user_points')
@@ -30,6 +43,7 @@ const pointsService = {
           source,
           points,
           reference_id: referenceId,
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();

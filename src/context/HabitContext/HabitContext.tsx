@@ -203,8 +203,9 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const actions = await habitService.calculateTotalActions(user.id);
       setTotalActions(actions);
       
-      const streakAndPoint = await habitService.registerOverallStreakAndPoint(user.id);
-      setOverallStreak(streakAndPoint.streak);
+      // Just get the streak without awarding points during regular refresh
+      const streak = await habitService.calculateOverallStreak(user.id);
+      setOverallStreak(streak);
     } catch (error) {
       console.error('Error refreshing stats:', error);
       setErrorStats('Failed to load statistics. Please try again.');
@@ -279,11 +280,25 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
     
     try {
+      // Log the habit
       await habitService.logHabit(user.id, habitId, quantity, notes, logDate);
+      
+      // After logging a habit, we can award streak points
+      // This ensures points are only awarded when a user actually logs a habit,
+      // not on every stats refresh
+      try {
+        const streakAndPoint = await habitService.registerOverallStreakAndPoint(user.id);
+        // Update streak in state with the returned value
+        setOverallStreak(streakAndPoint.streak);
+      } catch (pointsError) {
+        // Just log the error if awarding points fails, but don't break the habit logging
+        console.error('Error awarding streak points:', pointsError);
+      }
       
       // Refresh relevant data
       await refreshHabitLogs();
       await refreshGoals();
+      // Use the regular stats refresh without streak point awards
       await refreshStats();
     } catch (error) {
       console.error('Error logging habit:', error);
