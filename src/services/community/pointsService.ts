@@ -398,11 +398,9 @@ const pointsService = {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
-      
       if (error) {
         throw error;
       }
-      
       return data as PointEvent[];
     } catch (error) {
       console.error('Failed to get user point history:', error);

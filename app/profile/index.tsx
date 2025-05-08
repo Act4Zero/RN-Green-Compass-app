@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 console.log('ProfileScreen rendered');
 import {
   View,
@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
 import pointsService from '@/services/community/pointsService';
-import usePointsHistory from '@/hooks/community/points/usePointsHistory';
+import useSimplePointHistory from '@/hooks/useSimplePointHistory';
 import useHabitStats from '@/hooks/useHabitStats';
 import PointsSummary from '@/components/community/points/PointsSummary';
 import { PointSource } from '@/types/community/points';
@@ -71,8 +71,8 @@ useEffect(() => {
     toggleFilter, 
     clearFilters, 
     isLoading: isHistoryLoading,
-    refresh: refreshHistory 
-  } = usePointsHistory();
+    fetchHistory 
+  } = useSimplePointHistory();
   const { overallStreak: loginStreak, loadingStats: isStreakLoading } = useHabitStats();
   
   // Get unique point sources from history
@@ -80,9 +80,25 @@ useEffect(() => {
     .flatMap(date => historyByDate[date])
     .map(event => event.source)
     .filter((value, index, self) => self.indexOf(value) === index) as PointSource[];
-    
-  
 
+  // Use ref to track if we've already loaded history on this focus
+  const historyLoadedRef = useRef(false);
+  
+  // Ensure point history is loaded when profile screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only fetch history if we haven't already and user exists
+      if (user?.id && !historyLoadedRef.current) {
+        historyLoadedRef.current = true;
+        fetchHistory();
+      }
+      
+      // Reset flag when screen loses focus
+      return () => {
+        historyLoadedRef.current = false;
+      };
+    }, [user?.id, fetchHistory])
+  );
 
   // Redirect to signin if user is not authenticated and manage initial profile loading
   useEffect(() => {
@@ -131,7 +147,7 @@ useEffect(() => {
         if (!authLoading && user && isMounted) {
           try {
             // Load points and history data in parallel
-            await refreshHistory();
+            await fetchHistory();
             
             // Intentionally NOT refreshing streak here to avoid loops
             // The fixed streak value (3) from the hook will be used instead
@@ -152,7 +168,7 @@ useEffect(() => {
       hasTrackedView, 
       trackProfileView, 
       
-      refreshHistory
+      fetchHistory
     ])
   );
 

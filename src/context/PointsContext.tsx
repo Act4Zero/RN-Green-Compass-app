@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import pointsService from '../services/community/pointsService';
 import { PointEvent, PointBalance } from '../types/community/points';
@@ -53,8 +53,9 @@ function isPointBalanceObject(obj: any): obj is { total: number } {
 }
 
 // Provider component that wraps parts of the app needing points data
-console.log('PointsProvider rendered');
 export const PointsProvider = ({ children }: PointsProviderProps) => {
+  // Use ref to track if initial data has been loaded for the current user
+  const initialLoadRef = useRef<string | null>(null);
   // State for points data
   const [pointBalance, setPointBalance] = useState<PointBalance>({ total: 0, lastUpdated: '' });
   const [pointHistory, setPointHistory] = useState<PointEvent[]>([]);
@@ -95,6 +96,7 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   
   // Refresh point history from the server
   const refreshHistory = async () => {
+    console.log('refreshHistory called with user?.id:', user?.id);
     if (!user?.id) return;
     
     // Use the dedicated history loading state
@@ -301,16 +303,24 @@ setPointBalance({
     }
   };
   
-  // Load initial data when user changes
+  // Load initial data when user changes, but only once per user
   useEffect(() => {
     if (user?.id) {
-      refreshBalance();
-      refreshHistory();
+      // Only load if we haven't loaded for this user yet
+      if (initialLoadRef.current !== user.id) {
+        // Set the ref to current user id to prevent duplicate loads
+        initialLoadRef.current = user.id;
+        // Load data
+        refreshBalance();
+        refreshHistory();
+      }
     } else {
       // Reset state when user logs out
       setPointBalance({ total: 0, lastUpdated: '' });
       setPointHistory([]);
       setLastAwardedPoints(null);
+      // Reset ref when user logs out
+      initialLoadRef.current = null;
     }
   }, [user?.id]);
   
