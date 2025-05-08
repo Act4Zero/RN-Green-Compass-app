@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-console.log('ProfileScreen rendered');
 import {
   View,
   Text,
@@ -10,6 +9,7 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -218,23 +218,30 @@ useEffect(() => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoidingContainer}
     >
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
       <ScrollView
         style={styles.scrollContent}
-        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.pageContainer}>
-          <View style={styles.pageHeader}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.replace('/home')}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.title}>Profile</Text>
-              <Text style={styles.subtitle}>Manage your personal information</Text>
-            </View>
+        <View style={[styles.contentContainer, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
+        {/* Header */}
+        <View style={styles.pageHeader}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.replace('/home')}
+          >
+            <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>Profile</Text>
+            <Text style={styles.subtitle}>Manage your personal information</Text>
           </View>
+        </View>
+
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          {/* Avatar and Name */}
           <View style={styles.avatarContainer}>
             {profile.avatar_url && !imageLoadError ? (
               <Image 
@@ -247,20 +254,26 @@ useEffect(() => {
               />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Text>{displayIdentifier.charAt(0).toUpperCase()}</Text>
+                <Text style={styles.avatarPlaceholderText}>{displayIdentifier.charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </View>
+
           <View style={styles.nameContainer}>
             <Text style={styles.displayName}>{displayIdentifier}</Text>
             {profile.is_anonymous && (
               <Text style={styles.anonymousIndicator}>Anonymous Mode</Text>
             )}
           </View>
+
           <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Ionicons name="pencil-outline" size={16} color="white" style={{ marginRight: 8 }} />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
+        </View>
 
+        {/* Interests Section */}
+        <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Your Sustainability Interests</Text>
           <View style={styles.interestsContainer}>
             {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
@@ -270,120 +283,135 @@ useEffect(() => {
                 </View>
               ))
             ) : (
-              <Text>No interests selected yet.</Text>
+              <Text style={styles.emptyInterestsText}>No interests selected yet.</Text>
             )}
           </View>
+        </View>
 
-          {/* Points Section */}
+        {/* Points Summary Section */}
+        <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Green Points</Text>
-              {isPointsLoading ? (
-                <ActivityIndicator size="small" color="#2E7D32" />
-              ) : (
-                <PointsSummary points={points} streak={loginStreak} />
-              )}
-              
-              {/* Filters */}
-              <View style={styles.filterContainer}>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
-                  style={styles.filterScrollView}
+          {isPointsLoading ? (
+            <View style={styles.loadingPoints}>
+              <ActivityIndicator size="small" color="#2E7D32" />
+            </View>
+          ) : (
+            <PointsSummary points={points} streak={loginStreak} />
+          )}
+        </View>
+        
+        {/* Points History Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Points History</Text>
+          
+          {/* Filters */}
+          <View style={styles.filterContainer}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.filterScrollView}
+            >
+              {/* All filter */}
+              <TouchableOpacity 
+                style={[
+                  styles.filterChip, 
+                  activeFilters.length === 0 && styles.filterChipActive
+                ]}
+                onPress={clearFilters}
+              >
+                <Text 
+                  style={[
+                    styles.filterChipText, 
+                    activeFilters.length === 0 && styles.filterChipTextActive
+                  ]}
                 >
-                  {/* All filter */}
-                  <TouchableOpacity 
+                  All
+                </Text>
+              </TouchableOpacity>
+
+              {/* Source-specific filters */}
+              {availableSources.map(source => (
+                <TouchableOpacity 
+                  key={source}
+                  style={[
+                    styles.filterChip, 
+                    activeFilters.includes(source) && styles.filterChipActive
+                  ]}
+                  onPress={() => toggleFilter(source)}
+                >
+                  <Text 
                     style={[
-                      styles.filterChip, 
-                      activeFilters.length === 0 && styles.filterChipActive
+                      styles.filterChipText, 
+                      activeFilters.includes(source) && styles.filterChipTextActive
                     ]}
-                    onPress={clearFilters}
                   >
-                    <Text 
-                      style={[
-                        styles.filterChipText, 
-                        activeFilters.length === 0 && styles.filterChipTextActive
-                      ]}
-                    >
-                      All
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Source-specific filters */}
-                  {availableSources.map(source => (
-                    <TouchableOpacity 
-                      key={source}
-                      style={[
-                        styles.filterChip, 
-                        activeFilters.includes(source) && styles.filterChipActive
-                      ]}
-                      onPress={() => toggleFilter(source)}
-                    >
-                      <Text 
-                        style={[
-                          styles.filterChipText, 
-                          activeFilters.includes(source) && styles.filterChipTextActive
-                        ]}
-                      >
-                        {formatPointSource(source)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-              
-              {/* History Items */}
-              {isHistoryLoading ? (
-                <ActivityIndicator size="small" color="#2E7D32" />
-              ) : Object.keys(historyByDate).length > 0 ? (
-                Object.entries(historyByDate)
-                  .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
-                  .map(([date, events]) => (
-                    <View key={date}>
-                      <Text style={styles.historyDate}>{date}</Text>
-                      {events.map(event => (
-                        <View key={event.id} style={styles.historyItem}>
-                          <View style={styles.pointSourceIcon}>
-                            <Ionicons 
-                              name={
-                                event.source === 'daily_login' ? 'calendar-outline' :
-                                event.source === 'habit_log' ? 'leaf-outline' :
-                                'chatbubbles-outline'
-                              } 
-                              size={20} 
-                              color="#2E7D32" 
-                            />
-                          </View>
-
-                          <View style={styles.historyItemContent}>
-                            <View style={styles.historyItemHeader}>
-                              <Text style={styles.pointsDescription}>
-                                {formatPointSource(event.source)}
-                              </Text>
-                              <Text style={styles.pointsAmount}>+{event.points}</Text>
-                            </View>
-                            <Text style={styles.pointsDescription}>
-                              {`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`}
-                            </Text>
-                            <Text style={styles.historyItemDate}>
-                              {new Date(event.created_at).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </Text>
-                          </View>
+                    {formatPointSource(source)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          {/* History List */}
+          <View style={styles.historyListContainer}>
+            {isHistoryLoading ? (
+              <ActivityIndicator size="small" color="#2E7D32" />
+            ) : Object.keys(historyByDate).length > 0 ? (
+              Object.entries(historyByDate)
+                .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+                .map(([date, events]) => (
+                  <View key={date} style={styles.historyDateGroup}>
+                    <Text style={styles.historyDate}>{date}</Text>
+                    {events.map(event => (
+                      <View key={event.id} style={styles.historyItem}>
+                        <View style={styles.pointSourceIcon}>
+                          <Ionicons 
+                            name={
+                              event.source === 'daily_login' ? 'calendar-outline' :
+                              event.source === 'habit_log' ? 'leaf-outline' :
+                              'chatbubbles-outline'
+                            } 
+                            size={20} 
+                            color="#2E7D32" 
+                          />
                         </View>
-                      ))}
-                    </View>
-                  ))
-              ) : (
+
+                        <View style={styles.historyItemContent}>
+                          <View style={styles.historyItemHeader}>
+                            <Text style={styles.pointsDescription}>
+                              {formatPointSource(event.source)}
+                            </Text>
+                            <Text style={styles.pointsAmount}>+{event.points}</Text>
+                          </View>
+                          <Text style={styles.pointsDescription}>
+                            {`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`}
+                          </Text>
+                          <Text style={styles.historyItemDate}>
+                            {new Date(event.created_at).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ))
+            ) : (
+              <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>
                   No points history found. Start earning points by logging in daily and tracking sustainable habits!
                 </Text>
-              )}
-              
+              </View>
+            )}
+          </View>
+        </View>
 
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
-          </TouchableOpacity>
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={18} color="#2E7D32" style={{ marginRight: 8 }} />
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
+        </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

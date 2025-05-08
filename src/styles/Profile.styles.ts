@@ -3,27 +3,43 @@ import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
 interface ProfileStyles {
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
-  pageContainer: ViewStyle;
+  scrollContentContainer: ViewStyle;
+  contentContainer: ViewStyle;
   pageHeader: ViewStyle;
   backButton: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
+  
+  // Profile Card
+  profileCard: ViewStyle;
   avatarContainer: ViewStyle;
   avatar: ImageStyle;
   avatarPlaceholder: ViewStyle;
+  avatarPlaceholderText: TextStyle;
   nameContainer: ViewStyle;
   displayName: TextStyle;
   anonymousIndicator: TextStyle;
   editButton: ViewStyle;
   editButtonText: TextStyle;
+  
+  // Section Containers
+  sectionContainer: ViewStyle;
   sectionTitle: TextStyle;
+  
+  // Interests
   interestsContainer: ViewStyle;
   interestItem: ViewStyle;
   interestText: TextStyle;
+  emptyInterestsText: TextStyle;
+  
+  // Loading & Error States
   loadingContainer: ViewStyle;
   loadingText: TextStyle;
+  loadingPoints: ViewStyle;
   errorContainer: ViewStyle;
   errorText: TextStyle;
+  
+  // Sign Out
   signOutButton: ViewStyle;
   signOutButtonText: TextStyle;
   
@@ -37,7 +53,11 @@ interface ProfileStyles {
   pointsDivider: ViewStyle;
   streakValue: TextStyle;
   streakLabel: TextStyle;
+  
+  // Points History
   pointsHistoryContainer: ViewStyle;
+  historyListContainer: ViewStyle;
+  historyDateGroup: ViewStyle;
   filterContainer: ViewStyle;
   filterScrollView: ViewStyle;
   filterChip: ViewStyle;
@@ -66,20 +86,22 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     },
     scrollContent: {
       flexGrow: 1,
-      padding: 16,
     },
-    pageContainer: {
-      flex: 1,
+    scrollContentContainer: {
+      flexGrow: 1,
+      padding: 16,
+      paddingBottom: 40,
       alignItems: 'center',
-      marginBottom: 30,
-      paddingBottom: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e0e0e0',
+    },
+    contentContainer: {
+      width: '100%',
+      maxWidth: 700,
     },
     pageHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 24,
+      width: '100%',
     },
     backButton: {
       marginRight: 16,
@@ -94,8 +116,24 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       fontSize: 16,
       color: '#555555',
     },
+    
+    // Profile Card
+    profileCard: {
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+      width: '100%',
+    },
     avatarContainer: {
       marginBottom: 15,
+      alignItems: 'center',
     },
     avatar: {
       width: 120,
@@ -109,6 +147,11 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       backgroundColor: 'rgba(46, 125, 50, 0.1)', // Match app green with opacity
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    avatarPlaceholderText: {
+      fontSize: 40,
+      fontWeight: 'bold',
+      color: '#2E7D32',
     },
     nameContainer: {
       alignItems: 'center',
@@ -128,6 +171,8 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     editButton: {
       backgroundColor: '#2E7D32',
       paddingHorizontal: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: 10,
       borderRadius: 20,
     },
@@ -135,16 +180,33 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       color: 'white',
       fontWeight: '600',
     },
+    // Section Containers
+    sectionContainer: {
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+      width: '100%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
     sectionTitle: {
       fontSize: 18,
       fontWeight: 'bold',
       marginBottom: 15,
       color: '#333333',
+      alignSelf: 'flex-start',
     },
+    
+    // Interests
     interestsContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginBottom: 30,
+      marginBottom: 10,
+      alignItems: 'flex-start',
     },
     interestItem: {
       backgroundColor: '#E8F5E9', 
@@ -158,6 +220,11 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     interestText: {
       color: '#2E7D32',
     },
+    emptyInterestsText: {
+      color: '#888888',
+      fontStyle: 'italic',
+    },
+    // Loading & Error States
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -169,6 +236,10 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       marginTop: 10,
       fontSize: 16,
       color: '#555555',
+    },
+    loadingPoints: {
+      padding: 20,
+      alignItems: 'center',
     },
     errorContainer: {
       flex: 1,
@@ -182,15 +253,21 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
       color: '#D32F2F',
       textAlign: 'center',
     },
+    
+    // Sign Out
     signOutButton: {
       backgroundColor: 'transparent',
       padding: 16,
       borderRadius: 8,
       alignItems: 'center',
-      marginTop: 20,
+      justifyContent: 'center',
+      marginTop: 10,
       marginBottom: 40,
       borderWidth: 1,
       borderColor: '#2E7D32',
+      flexDirection: 'row',
+      alignSelf: 'center',
+      width: '50%',
     },
     signOutButtonText: {
       color: '#2E7D32',
@@ -264,6 +341,13 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     elevation: 2,
     marginBottom: 16,
     width: '100%',
+  },
+  // Points History Section
+  historyListContainer: {
+    width: '100%',
+  },
+  historyDateGroup: {
+    marginBottom: 16,
   },
   filterContainer: {
     marginBottom: 16,
@@ -341,7 +425,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    padding: 20,
   },
   emptyStateText: {
     fontSize: 16,
