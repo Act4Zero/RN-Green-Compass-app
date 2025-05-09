@@ -362,7 +362,6 @@ const pointsService = {
    */
   getUserPointBalance: async (userId: string): Promise<PointBalance> => {
   const { data, error } = await supabase.rpc('get_user_points_total', { user_id_param: userId });
-  console.log('getUserPointBalance:', { userId, data, error });
     try {
       // Sum all points for the user
       const { data, error } = await supabase
