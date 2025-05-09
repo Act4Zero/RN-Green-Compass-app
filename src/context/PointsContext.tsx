@@ -13,7 +13,6 @@ interface PointsContextType {
   isBalanceLoading: boolean; // Specific to balance loading
   isHistoryLoading: boolean; // Specific to history loading
   hasError: boolean;
-  lastAwardedPoints: { amount: number; source: string } | null;
   
   // Actions
   refreshBalance: () => Promise<void>;
@@ -31,7 +30,6 @@ const PointsContext = createContext<PointsContextType>({
   isBalanceLoading: false,
   isHistoryLoading: false,
   hasError: false,
-  lastAwardedPoints: null,
   
   refreshBalance: async () => {},
   refreshHistory: async () => {},
@@ -68,7 +66,6 @@ export const PointsProvider = ({ children }: PointsProviderProps) => {
   const isLoading = isBalanceLoading || isHistoryLoading;
   
   const [hasError, setHasError] = useState(false);
-  const [lastAwardedPoints, setLastAwardedPoints] = useState<{ amount: number; source: string } | null>(null);
   
   // Get authentication context for user ID
   const { user } = useAuth();
@@ -138,19 +135,6 @@ setPointBalance({
 });
         }
         
-        // Set last awarded points for animation
-        if (result.data.pointEvent) {
-          setLastAwardedPoints({
-            amount: result.data.pointEvent.points,
-            source: 'daily_login',
-          });
-          
-          // Clear the last awarded points after animation (3 seconds)
-          setTimeout(() => {
-            setLastAwardedPoints(null);
-          }, 3000);
-        }
-        
         // Track event in analytics
         analyticsService.trackEvent('daily_check_in', {
           streak: result.data.streak,
@@ -196,19 +180,6 @@ setPointBalance({
   total,
   lastUpdated: new Date().toISOString(),
 });
-        }
-        
-        // Set last awarded points for animation
-        if (result.data.pointEvent) {
-          setLastAwardedPoints({
-            amount: result.data.pointEvent.points,
-            source: 'habit_log',
-          });
-          
-          // Clear the last awarded points after animation (3 seconds)
-          setTimeout(() => {
-            setLastAwardedPoints(null);
-          }, 3000);
         }
         
         // Track event in analytics
@@ -266,19 +237,6 @@ setPointBalance({
 });
         }
         
-        // Set last awarded points for animation
-        if (result.data.pointEvent) {
-          setLastAwardedPoints({
-            amount: result.data.pointEvent.points,
-            source: 'discussion_participation',
-          });
-          
-          // Clear the last awarded points after animation (3 seconds)
-          setTimeout(() => {
-            setLastAwardedPoints(null);
-          }, 3000);
-        }
-        
         // Track event in analytics
         analyticsService.trackEvent('community_participation', {
           type,
@@ -318,7 +276,6 @@ setPointBalance({
       // Reset state when user logs out
       setPointBalance({ total: 0, lastUpdated: '' });
       setPointHistory([]);
-      setLastAwardedPoints(null);
       // Reset ref when user logs out
       initialLoadRef.current = null;
     }
@@ -332,7 +289,6 @@ setPointBalance({
     isBalanceLoading,
     isHistoryLoading,
     hasError,
-    lastAwardedPoints,
     
     refreshBalance,
     refreshHistory,
