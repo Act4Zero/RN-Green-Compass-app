@@ -13,7 +13,7 @@ import {
   useComments,
   useReactions,
   useFormState
-} from './community';
+} from '../community';
 
 /**
  * Custom hook for community feed functionality

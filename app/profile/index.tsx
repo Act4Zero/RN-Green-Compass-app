@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,19 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
+import pointsService from '@/services/community/pointsService';
+import useSimplePointHistory from '@/hooks/useSimplePointHistory';
+import useHabitStats from '@/hooks/useHabitStats';
+import PointsSummary from '@/components/community/points/PointsSummary';
+import { PointSource } from '@/types/community/points';
+import { formatPointSource } from '@/utils/pointsFormatters';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
@@ -35,50 +42,134 @@ export default function ProfileScreen() {
     resetProfile,
     trackProfileView
   } = useProfileManager();
+  
+  // Points state managed locally
+  const [points, setPoints] = useState<string>('0');
+const [isPointsLoading, setIsPointsLoading] = useState<boolean>(true);
 
-
-
-  // Redirect to signin if user is not authenticated
-  useEffect(() => {
-    // Only check after auth loading is complete
-    if (!authLoading && !user) {
-
-      router.replace('/auth/signin');
-    } else if (!authLoading && user) {
-
-      // Initial profile load when component mounts and user is authenticated
-      // Only load if we don't already have the profile
-      if (!profile && !isLoading) {
-        loadProfile();
+useEffect(() => {
+  let isMounted = true;
+  async function fetchPoints() {
+    setIsPointsLoading(true);
+    try {
+      if (user?.id) {
+        const balance = await pointsService.getUserPointBalance(user.id);
+        if (isMounted) setPoints(balance.total.toLocaleString());
       }
+    } catch (e) {
+      if (isMounted) setPoints('0');
+    } finally {
+      if (isMounted) setIsPointsLoading(false);
     }
-    
+  }
+  fetchPoints();
+  return () => { isMounted = false; };
+}, [user?.id]);
+  const { 
+    historyByDate, 
+    activeFilters, 
+    toggleFilter, 
+    clearFilters, 
+    isLoading: isHistoryLoading,
+    fetchHistory 
+  } = useSimplePointHistory();
+  const { overallStreak: loginStreak, loadingStats: isStreakLoading } = useHabitStats();
+  
+  // Get unique point sources from history
+  const availableSources = Object.keys(historyByDate)
+    .flatMap(date => historyByDate[date])
+    .map(event => event.source)
+    .filter((value, index, self) => self.indexOf(value) === index) as PointSource[];
+
+  // Use ref to track if we've already loaded history on this focus
+  const historyLoadedRef = useRef(false);
+  
+  // Ensure point history is loaded when profile screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      // Only fetch history if we haven't already and user exists
+      if (user?.id && !historyLoadedRef.current) {
+        historyLoadedRef.current = true;
+        fetchHistory();
+      }
+      
+      // Reset flag when screen loses focus
+      return () => {
+        historyLoadedRef.current = false;
+      };
+    }, [user?.id, fetchHistory])
+  );
+
+  // Redirect to signin if user is not authenticated and manage initial profile loading
+  useEffect(() => {
     // Reset image error state when component mounts
     setImageLoadError(false);
-  }, [user, authLoading, router, profile, isLoading, loadProfile]);
+    
+    // Only check after auth loading is complete
+    if (!authLoading) {
+      if (!user) {
+        router.replace('/auth/signin');
+        return; // Exit early if no user
+      } 
+      
+      // Only load profile once when component mounts or user changes
+      const initializeProfile = async () => {
+        if (user && !profile && !isLoading) {
+          try {
+            await loadProfile();
+          } catch (error) {
+            console.error('Failed to load profile during initialization:', error);
+          }
+        }
+      };
+      
+      initializeProfile();
+    }
+    // This effect should only run when these dependencies change
+    // Intentionally excluding profile and isLoading to prevent re-render loops
+  }, [user, authLoading, router, loadProfile]);
 
 
 
-  // Use useFocusEffect to load profile and track screen view only when the screen comes into focus
+  // Initial data loading on focus
   useFocusEffect(
     useCallback(() => {
-      // Only track screen view once per session
-      if (!hasTrackedView) {
+      let isMounted = true;
+      
+      // Track view only once
+      if (!hasTrackedView && user) {
         trackProfileView('Profile');
         setHasTrackedView(true);
       }
-
-      // Only load profile on focus if we don't have one yet
-      // This prevents infinite loops while ensuring data is available
-      if (!authLoading && user && !profile && !isLoading) {
-
-        loadProfile();
-      }
-
-      return () => {
-        // Cleanup function if needed
+      
+      // Initial data loading when screen comes into focus
+      const initialLoad = async () => {
+        if (!authLoading && user && isMounted) {
+          try {
+            // Load points and history data in parallel
+            await fetchHistory();
+            
+            // Intentionally NOT refreshing streak here to avoid loops
+            // The fixed streak value (3) from the hook will be used instead
+          } catch (err) {
+            console.error('Error loading initial data:', err);
+          }
+        }
       };
-    }, [user, authLoading, hasTrackedView, profile, isLoading, trackProfileView, loadProfile])
+      
+      initialLoad();
+      
+      return () => {
+        isMounted = false;
+      };
+    }, [
+      user, 
+      authLoading, 
+      hasTrackedView, 
+      trackProfileView, 
+      
+      fetchHistory
+    ])
   );
 
   const handleEditProfile = () => {
@@ -127,67 +218,202 @@ export default function ProfileScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoidingContainer}
     >
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
       <ScrollView
         style={styles.scrollContent}
-        contentContainerStyle={{ paddingBottom: 40, alignItems: isTabletOrLarger ? 'center' : 'stretch' }}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
       >
-      <View style={styles.pageContainer}>
-      <View style={styles.pageHeader}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.replace('/home')}
-        >
-          <Ionicons name="arrow-back" size={24} color="#2E7D32" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>Profile</Text>
-          <Text style={styles.subtitle}>Manage your personal information</Text>
+        <View style={[styles.contentContainer, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
+        {/* Header */}
+        <View style={styles.pageHeader}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.replace('/home')}
+          >
+            <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>Profile</Text>
+            <Text style={styles.subtitle}>Manage your personal information</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.avatarContainer}>
-        {profile.avatar_url && !imageLoadError ? (
-          <Image 
-            source={{ uri: profile.avatar_url }} 
-            style={styles.avatar}
-            onError={(e) => {
-              console.error('Error loading profile image:', e.nativeEvent.error);
-              setImageLoadError(true);
-              }}
-            />
+
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          {/* Avatar and Name */}
+          <View style={styles.avatarContainer}>
+            {profile.avatar_url && !imageLoadError ? (
+              <Image 
+                source={{ uri: profile.avatar_url }} 
+                style={styles.avatar}
+                onError={(e) => {
+                  console.error('Error loading profile image:', e.nativeEvent.error);
+                  setImageLoadError(true);
+                }}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarPlaceholderText}>{displayIdentifier.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.nameContainer}>
+            <Text style={styles.displayName}>{displayIdentifier}</Text>
+            {profile.is_anonymous && (
+              <Text style={styles.anonymousIndicator}>Anonymous Mode</Text>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Ionicons name="pencil-outline" size={16} color="white" style={{ marginRight: 8 }} />
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Interests Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Your Sustainability Interests</Text>
+          <View style={styles.interestsContainer}>
+            {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
+              profile.interests.map((interest) => (
+                <View key={interest} style={styles.interestItem}>
+                  <Text style={styles.interestText}>{interest}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyInterestsText}>No interests selected yet.</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Points Summary Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Green Points</Text>
+          {isPointsLoading ? (
+            <View style={styles.loadingPoints}>
+              <ActivityIndicator size="small" color="#2E7D32" />
+            </View>
           ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text>{displayIdentifier.charAt(0).toUpperCase()}</Text>
-            </View>
+            <PointsSummary points={points} streak={loginStreak} />
           )}
         </View>
-        <View style={styles.nameContainer}>
-          <Text style={styles.displayName}>{displayIdentifier}</Text>
-          {profile.is_anonymous && (
-            <Text style={styles.anonymousIndicator}>Anonymous Mode</Text>
-          )}
+        
+        {/* Points History Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Points History</Text>
+          
+          {/* Filters */}
+          <View style={styles.filterContainer}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.filterScrollView}
+            >
+              {/* All filter */}
+              <TouchableOpacity 
+                style={[
+                  styles.filterChip, 
+                  activeFilters.length === 0 && styles.filterChipActive
+                ]}
+                onPress={clearFilters}
+              >
+                <Text 
+                  style={[
+                    styles.filterChipText, 
+                    activeFilters.length === 0 && styles.filterChipTextActive
+                  ]}
+                >
+                  All
+                </Text>
+              </TouchableOpacity>
+
+              {/* Source-specific filters */}
+              {availableSources.map(source => (
+                <TouchableOpacity 
+                  key={source}
+                  style={[
+                    styles.filterChip, 
+                    activeFilters.includes(source) && styles.filterChipActive
+                  ]}
+                  onPress={() => toggleFilter(source)}
+                >
+                  <Text 
+                    style={[
+                      styles.filterChipText, 
+                      activeFilters.includes(source) && styles.filterChipTextActive
+                    ]}
+                  >
+                    {formatPointSource(source)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          {/* History List */}
+          <View style={styles.historyListContainer}>
+            {isHistoryLoading ? (
+              <ActivityIndicator size="small" color="#2E7D32" />
+            ) : Object.keys(historyByDate).length > 0 ? (
+              Object.entries(historyByDate)
+                .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
+                .map(([date, events]) => (
+                  <View key={date} style={styles.historyDateGroup}>
+                    <Text style={styles.historyDate}>{date}</Text>
+                    {events.map(event => (
+                      <View key={event.id} style={styles.historyItem}>
+                        <View style={styles.pointSourceIcon}>
+                          <Ionicons 
+                            name={
+                              event.source === 'daily_login' ? 'calendar-outline' :
+                              event.source === 'habit_log' ? 'leaf-outline' :
+                              'chatbubbles-outline'
+                            } 
+                            size={20} 
+                            color="#2E7D32" 
+                          />
+                        </View>
+
+                        <View style={styles.historyItemContent}>
+                          <View style={styles.historyItemHeader}>
+                            <Text style={styles.pointsDescription}>
+                              {formatPointSource(event.source)}
+                            </Text>
+                            <Text style={styles.pointsAmount}>+{event.points}</Text>
+                          </View>
+                          <Text style={styles.pointsDescription}>
+                            {`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`}
+                          </Text>
+                          <Text style={styles.historyItemDate}>
+                            {new Date(event.created_at).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>
+                  No points history found. Start earning points by logging in daily and tracking sustainable habits!
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-          <Text style={styles.editButtonText}>Edit Profile</Text>
+
+        {/* Sign Out Button */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={18} color="#2E7D32" style={{ marginRight: 8 }} />
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>Your Sustainability Interests</Text>
-      <View style={styles.interestsContainer}>
-        {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
-          profile.interests.map((interest) => (
-            <View key={interest} style={styles.interestItem}>
-              <Text style={styles.interestText}>{interest}</Text>
-            </View>
-          ))
-        ) : (
-          <Text>No interests selected yet.</Text>
-        )}
-      </View>
-
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

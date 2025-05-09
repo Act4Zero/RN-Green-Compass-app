@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useChallenges from '@/hooks/challenge/useChallenges';
-import ChallengeCard from '../../../src/components/challenges/ChallengeCard';
+import ChallengeCard from '@/components/community/challenges/ChallengeCard';
 import { useAuth } from '@/context/AuthContext';
-import EmptyState from '../../../src/components/challenges/EmptyState';
-import FilterTabs from '../../../src/components/challenges/FilterTabs';
+import EmptyState from '@/components/community/challenges/EmptyState';
+import FilterTabs from '@/components/community/challenges/FilterTabs';
 
 // Styles for this component
 const styles = ChallengeStyles;

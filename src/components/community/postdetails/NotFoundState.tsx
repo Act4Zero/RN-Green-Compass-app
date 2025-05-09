@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import PostDetailStyles from '@/styles/PostDetailStyles';
+import PostDetailStyles from '@/styles/community/PostDetailStyles';
 
 const styles = PostDetailStyles;
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 
 interface ChallengeProgressProps {
   value: number;

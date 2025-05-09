@@ -1,5 +1,7 @@
 import supabase from '../lib/supabase';
 import { Habit, UserHabit, HabitLog, UserGoal } from '../types/supabase';
+import pointsService from './community/pointsService';
+import { PointsResponse } from '../types/community/points';
 
 /**
  * Service for interacting with habits in Supabase
@@ -201,6 +203,14 @@ export const habitService = {
 
     // Update any relevant goals
     await goalService.updateGoalsForHabitLog(userId, habitId, co2Saving || 0, quantity);
+    
+    // Award points for the habit log (1 point per habit logged)
+    try {
+      await pointsService.processHabitLog(userId, habitId);
+    } catch (pointsError) {
+      // Log the error but don't fail the habit logging
+      console.error(`Error awarding habit log points for habit ${habitId}:`, pointsError);
+    }
 
     return data;
   },
@@ -403,6 +413,65 @@ export const habitService = {
     }
     
     return streak;
+  },
+
+  /**
+   * Calculate and register a point for overall streak if a new day is added
+   * Also checks if this is the user's first activity today (for daily check-in coordination)
+   * 
+   * @param userId The user's ID
+   * @returns The updated streak, point event info, and whether this is the first activity today
+   */
+  registerOverallStreakAndPoint: async (
+    userId: string
+  ): Promise<{ streak: number; pointResponse?: PointsResponse; isFirstActivityToday: boolean }> => {
+    // Calculate current streak
+    const streak = await habitService.calculateOverallStreak(userId);
+
+    // Check if this is the first activity today by looking at today's logs
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const { data: todaysLogs, error: logsError } = await supabase
+      .from('habit_logs')
+      .select('created_at')
+      .eq('user_id', userId)
+      .gte('created_at', `${today}T00:00:00`)
+      .lte('created_at', `${today}T23:59:59`)
+      .order('created_at', { ascending: true });
+      
+    if (logsError) {
+      console.error('Error checking today\'s logs:', logsError);
+    }
+
+    // Determine if this is the first activity today based on log count
+    // This will be used by the UI layer to determine if a daily check-in should be awarded
+    const isFirstActivityToday = !todaysLogs || todaysLogs.length <= 1; // Count is 0 or 1 (the current log)
+
+    // Check if we've already awarded streak points today
+    const { data: todaysPoints, error: pointsError } = await supabase
+      .from('user_points')
+      .select('created_at')
+      .eq('user_id', userId)
+      .eq('source', 'habit_streak')
+      .gte('created_at', `${today}T00:00:00`)
+      .lte('created_at', `${today}T23:59:59`);
+      
+    if (pointsError) {
+      console.error('Error checking today\'s streak points:', pointsError);
+    }
+
+    let pointResponse: PointsResponse | undefined;
+    
+    // Only award streak points if we haven't already done so today and the streak is positive
+    if (streak > 0 && (!todaysPoints || todaysPoints.length === 0)) {
+      // Award a point for maintaining the overall streak today
+      pointResponse = await pointsService.awardPoints({
+        userId,
+        source: 'habit_streak', // Use a specific source to distinguish from regular habit points
+        points: 5, // Award 5 points for maintaining streaks
+      });
+    }
+
+    return { streak, pointResponse, isFirstActivityToday };
   },
 
   /**

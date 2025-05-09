@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import useCommunityFeed from '../../hooks/useCommunityFeed';
+import useCommunityFeed from '../../hooks/community/useCommunityFeed';
 import { discussionService } from '../../services/community';
 import { confirmAndDeletePost } from '../../utils/deletePost';
 

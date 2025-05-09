@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { discussionService } from '../../services/community';
-import { Discussion, PaginationParams, DiscussionsState, UseDiscussionsProps } from './types';
+import { Discussion, PaginationParams, DiscussionsState, UseDiscussionsProps } from '../../types/community/types';
 import useCurrentUser from './useCurrentUser';
 
 /**

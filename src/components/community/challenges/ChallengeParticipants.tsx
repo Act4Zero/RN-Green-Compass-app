@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ChallengeStyles from '@/styles/ChallengeStyles';
+import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useParticipants from '@/hooks/challenge/useParticipants';
 import { ChallengeParticipant } from '@/types/challenge';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import supabase from '../../lib/supabase';
-import { Challenge, PaginatedResult } from '../../types/challenge';
-import { ChallengesState, UseChallengesProps } from './types';
-import useCurrentUser from './useCurrentUser';
+import supabase from '@/lib/supabase';
+import { Challenge, PaginatedResult } from '@/types/community/challenge';
+import { ChallengesState, UseChallengesProps } from '@/hooks/challenge/types';
+import useCurrentUser from '@/hooks/challenge/useCurrentUser';
 
 /**
  * Hook for managing challenges

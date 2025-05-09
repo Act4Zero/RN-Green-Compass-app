@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { SubmitState } from './types';
+import { SubmitState } from '../../types/community/types';
 
 /**
  * Hook for managing form state in the community feed

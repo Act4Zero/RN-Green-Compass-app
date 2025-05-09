@@ -6,7 +6,7 @@ import {
   Platform,
   useWindowDimensions,
 } from 'react-native';
-import NewPostStyles from '@/styles/NewPostStyles';
+import NewPostStyles from '@/styles/community/NewPostStyles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 
 // Import custom hook for screen logic

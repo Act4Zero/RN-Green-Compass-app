@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
-import useCommunityFeed from '../../hooks/useCommunityFeed';
+import useCommunityFeed from '../community/useCommunityFeed';
 import { confirmAndDeletePost } from '../../utils/deletePost';
 import { sanitizeMarkdownInput, getCharacterInfo } from '@/utils/sanitizeMarkdownInput';
 

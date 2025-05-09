@@ -1,5 +1,6 @@
 import supabase from '../../lib/supabase';
 import { Discussion, PaginationParams, PaginatedResult } from './types';
+import pointsService from '../community/pointsService';
 
 /**
  * Service for managing discussions/posts in the community feed
@@ -272,6 +273,14 @@ export const discussionService = {
     if (error) {
       console.error('Error creating discussion:', error);
       throw error;
+    }
+    
+    // Award points for community participation (post)
+    try {
+      await pointsService.processCommunityParticipation(userId, 'post', data.id);
+    } catch (pointsError) {
+      // Log the error but don't fail the discussion creation
+      console.error(`Error awarding points for post ${data.id}:`, pointsError);
     }
 
     // Ensure we return a properly formatted Discussion object
