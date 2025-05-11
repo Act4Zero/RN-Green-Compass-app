@@ -18,15 +18,14 @@ export interface UserBadge {
   badge?: Badge; // Optional joined badge details
 }
 
-export enum BadgeCode {
-  FIRST_HABIT = 'first_habit',
-  SEVEN_DAY_STREAK = 'seven_day_streak',
-  FOURTEEN_DAY_STREAK = 'fourteen_day_streak',
-  THIRTY_DAY_STREAK = 'thirty_day_streak',
-  PLASTIC_FREE_CHAMPION = 'plastic_free_champion',
-  ECO_WARRIOR = 'eco_warrior',
-  SUSTAINABILITY_GURU = 'sustainability_guru',
-}
+export type BadgeCodeType =
+  | 'first_habit'
+  | 'seven_day_streak'
+  | 'fourteen_day_streak'
+  | 'thirty_day_streak'
+  | 'plastic_free_champion'
+  | 'eco_warrior'
+  | 'sustainability_guru';
 
 export interface BadgeNotification {
   badge: Badge;
@@ -37,12 +36,12 @@ export interface BadgeNotification {
 export interface StreakMilestone {
   days: number;
   message: string;
-  badgeCode?: BadgeCode;
+  badgeCode?: BadgeCodeType;
 }
 
 // Milestone definitions
 export const STREAK_MILESTONES: StreakMilestone[] = [
-  { days: 7, message: 'Congrats! You've maintained a 7-day streak!', badgeCode: BadgeCode.SEVEN_DAY_STREAK },
-  { days: 14, message: 'Amazing! 14 days of consistent sustainability habits!', badgeCode: BadgeCode.FOURTEEN_DAY_STREAK },
-  { days: 30, message: 'Incredible! Your 30-day streak shows real commitment!', badgeCode: BadgeCode.THIRTY_DAY_STREAK },
+  { days: 7, message: "Congrats! You've maintained a 7-day streak!", badgeCode: 'seven_day_streak' },
+  { days: 14, message: 'Amazing! 14 days of consistent sustainability habits!', badgeCode: 'fourteen_day_streak' },
+  { days: 30, message: 'Incredible! Your 30-day streak shows real commitment!', badgeCode: 'thirty_day_streak' },
 ];
