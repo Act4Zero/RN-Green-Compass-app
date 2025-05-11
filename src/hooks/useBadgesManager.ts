@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import badgesService from '@/services/community/badgesService';
-import { Badge, UserBadge, BadgeNotification } from '@/types/community/badges';
+import badgesService, { groupBadgesByCategory } from '@/services/community/badgesService';
+import { Badge, UserBadge, BadgeNotification, BadgeCategoryType } from '@/types/community/badges';
 import analyticsService from '@/services/analyticsService';
 
 /**
