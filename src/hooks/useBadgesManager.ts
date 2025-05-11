@@ -3,6 +3,8 @@ import { useAuth } from '@/context/AuthContext';
 import badgesService, { groupBadgesByCategory } from '@/services/community/badgesService';
 import { Badge, UserBadge, BadgeNotification, BadgeCategoryType } from '@/types/community/badges';
 import analyticsService from '@/services/analyticsService';
+import { processUserEvent, evaluateAndAwardBadges } from '@/badges/badgeEngine';
+import { BadgeTriggerContext } from '@/badges/types';
 
 /**
  * Hook for managing user badges
@@ -23,8 +25,8 @@ function useBadgesManager() {
   /**
    * Fetch all available badges in the system
    */
-  const loadAllBadges = useCallback(async () => {
-    if (!user) return;
+  const loadAllBadges = useCallback(async (): Promise<Badge[]> => {
+    if (!user) return [];
     
     try {
       const badges = await badgesService.getAllBadges();
@@ -103,7 +105,20 @@ function useBadgesManager() {
     if (!user) return false;
     
     try {
-      const newBadges = await badgesService.checkAndAwardStreakBadges(user.id, currentStreak);
+      // Prepare context for badge evaluation
+      const context: BadgeTriggerContext = {
+        userId: user.id,
+        profile: {
+          id: user.id,
+          streak_login: currentStreak,
+          login_count: 0, // Would be populated with actual data
+        },
+        activityLogs: [], // Would be populated with actual data
+        now: new Date()
+      };
+      
+      // Use the badge engine to evaluate and award badges
+      const newBadges = await evaluateAndAwardBadges(user.id, context, 'daily_flow');
       
       // If new badges were awarded, reload user badges and show notification
       if (newBadges.length > 0) {
@@ -145,22 +160,25 @@ function useBadgesManager() {
     if (!user) return false;
     
     try {
-      const badge = await badgesService.checkAndAwardFirstHabitBadge(user.id);
+      // Use the badge engine to process a habit logging event
+      const newBadges = await processUserEvent(user.id, 'habit_log');
       
-      if (badge) {
-        // Track badge earned in analytics
-        analyticsService.trackEvent('badge_earned', {
-          badge_code: badge.code,
-          badge_name: badge.name,
-          trigger: 'first_habit'
+      if (newBadges.length > 0) {
+        // Track badges earned in analytics
+        newBadges.forEach(badge => {
+          analyticsService.trackEvent('badge_earned', {
+            badge_code: badge.code,
+            badge_name: badge.name,
+            trigger: 'habit_log'
+          });
         });
         
         // Reload user badges
         await loadUserBadges();
         
-        // Show notification
+        // Show notification for the first awarded badge
         setNewBadgeNotification({
-          badge,
+          badge: newBadges[0],
           isNew: true, 
           awarded_at: new Date().toISOString()
         });
@@ -170,7 +188,7 @@ function useBadgesManager() {
       
       return false;
     } catch (err) {
-      console.error('Error checking first habit badge:', err);
+      console.error('Error checking habit badges:', err);
       return false;
     }
   }, [user, loadUserBadges]);
@@ -181,8 +199,71 @@ function useBadgesManager() {
       loadUserBadges().catch(err => {
         console.error('Failed to load user badges during initialization:', err);
       });
+      
+      // Check for login badges when user is authenticated
+      processUserEvent(user.id, 'login')
+        .then(newBadges => {
+          if (newBadges.length > 0) {
+            // Track badges earned in analytics
+            newBadges.forEach(badge => {
+              analyticsService.trackEvent('badge_earned', {
+                badge_code: badge.code,
+                badge_name: badge.name,
+                trigger: 'login'
+              });
+            });
+            
+            // Reload user badges and show notification
+            loadUserBadges();
+            setNewBadgeNotification({
+              badge: newBadges[0],
+              isNew: true,
+              awarded_at: new Date().toISOString()
+            });
+          }
+        })
+        .catch(err => {
+          console.error('Failed to process login event for badges:', err);
+        });
     }
   }, [user, loadUserBadges, userBadges.length]);
+  
+  // Generalized method to check and award badges for any event type
+  const processUserEventWithType = useCallback(async (eventType: 'login' | 'habit_log' | 'goal_completion' | 'community_activity', contextData: Partial<BadgeTriggerContext> = {}): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const newBadges = await processUserEvent(user.id, eventType, contextData);
+      
+      if (newBadges.length > 0) {
+        // Track badges earned in analytics
+        newBadges.forEach(badge => {
+          analyticsService.trackEvent('badge_earned', {
+            badge_code: badge.code,
+            badge_name: badge.name,
+            trigger: eventType
+          });
+        });
+        
+        // Reload user badges
+        await loadUserBadges();
+        
+        // Show notification for the first awarded badge
+        setNewBadgeNotification({
+          badge: newBadges[0],
+          isNew: true,
+          awarded_at: new Date().toISOString()
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (err) {
+      console.error(`Error processing ${eventType} for badges:`, err);
+      return false;
+    }
+  }, [user, loadUserBadges]);
   
   return {
     allBadges,
@@ -195,7 +276,9 @@ function useBadgesManager() {
     hasBadge,
     dismissBadgeNotification,
     checkAndAwardStreakBadges,
-    checkAndAwardFirstHabitBadge
+    checkAndAwardFirstHabitBadge,
+    // Add new generalized event processor for future use
+    processUserEventWithType
   };
 }
 
