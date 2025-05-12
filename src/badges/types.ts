@@ -88,6 +88,25 @@ export interface ModerationLog {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  type: string;
+  status: string;
+  timestamp?: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface LearningPathProgress {
+  id: string;
+  user_id: string;
+  status: string;
+  timestamp?: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
 export type BadgeTriggerContext = {
   userId: string;
   profile: Profile;
@@ -101,6 +120,8 @@ export type BadgeTriggerContext = {
   comments?: Comment[];
   posts?: Post[];
   moderationLogs?: ModerationLog[];
+  supportTickets?: SupportTicket[];
+  learningPathProgress?: LearningPathProgress[];
 };
 
 // A function that determines if a badge should be awarded
