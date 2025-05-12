@@ -1,6 +1,7 @@
 import { BadgeTriggerFn, BadgeRule } from './types';
 import { dailyFlowBadgeRules, nightOwlTrigger } from './triggers/dailyFlow';
 import { habitTrackerBadgeRules, hbtFirstTrigger, hbtSeedTrigger, hbtWasteRookieTrigger, hbtWasteProTrigger, hbtWasteMasterTrigger, hbtCo2CutterTrigger, hbtAllRounderTrigger } from './triggers/habitTracker';
+import { goalChallengesBadgeRules, goalFirstTrigger, goalAchieveBronzeTrigger, goalAchieveSilverTrigger, goalAchieveGoldTrigger, challengeJoinTrigger, challengeFinishTrigger, trailblazerTrigger, powerOfWeTrigger } from './triggers/goalChallenges';
 
 /**
  * Generic trigger generator for field/op/value rules
@@ -42,6 +43,16 @@ const customTriggers: Record<string, BadgeTriggerFn> = {
   'hbt_waste_master': hbtWasteMasterTrigger,
   'hbt_co2_cutter': hbtCo2CutterTrigger,
   'hbt_all_rounder': hbtAllRounderTrigger,
+
+  // Goal & Challenge triggers
+  'goal_first': goalFirstTrigger,
+  'goal_achieve_bronze': goalAchieveBronzeTrigger,
+  'goal_achieve_silver': goalAchieveSilverTrigger,
+  'goal_achieve_gold': goalAchieveGoldTrigger,
+  'challenge_join': challengeJoinTrigger,
+  'challenge_finish': challengeFinishTrigger,
+  'trailblazer': trailblazerTrigger,
+  'power_of_we': powerOfWeTrigger,
 };
 
 /**

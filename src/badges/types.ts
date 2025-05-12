@@ -24,11 +24,41 @@ export interface ActivityLog {
 }
 
 // The context passed to badge trigger functions
+export interface UserGoal {
+  id: string;
+  user_id: string;
+  current_value: number;
+  target: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface ChallengeParticipant {
+  id: string;
+  user_id: string;
+  status: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface ChallengeActivity {
+  userRank?: number;
+  totalParticipants?: number;
+  user_co2?: number;
+  team_co2?: number;
+  total_co2?: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
 export type BadgeTriggerContext = {
   userId: string;
   profile: Profile;
   activityLogs: ActivityLog[];
   now: Date;
+  userGoals?: UserGoal[];
+  challengeParticipants?: ChallengeParticipant[];
+  challengeActivity?: ChallengeActivity | ChallengeActivity[];
 };
 
 // A function that determines if a badge should be awarded
