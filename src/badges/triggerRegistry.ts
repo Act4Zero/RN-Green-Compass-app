@@ -32,7 +32,7 @@ export function makeFieldTrigger(field: string, op: string, value: number): Badg
  */
 const customTriggers: Record<string, BadgeTriggerFn> = {
   // Daily Flow triggers
-  'night_owl_login': nightOwlTrigger,
+  'login_night': nightOwlTrigger,
   
   // Habit Tracker triggers
   'first_habit': firstHabitTrigger,

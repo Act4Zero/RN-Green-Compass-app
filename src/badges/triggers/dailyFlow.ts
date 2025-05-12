@@ -5,12 +5,12 @@ import { BadgeTriggerFn, BadgeRule } from '../types';
  * Each rule maps to a badge in the DB with matching code
  */
 export const dailyFlowBadgeRules: BadgeRule[] = [
-  { code: 'first_login', field: 'login_count', op: '>=', value: 1 },
-  { code: 'streak_login_3', field: 'streak_login', op: '>=', value: 3 },
-  { code: 'streak_login_7', field: 'streak_login', op: '>=', value: 7 },
-  { code: 'streak_login_30', field: 'streak_login', op: '>=', value: 30 },
-  { code: 'streak_login_90', field: 'streak_login', op: '>=', value: 90 },
-  { code: 'night_owl_login', custom: true }, // Uses custom trigger function
+  { code: 'login_first', field: 'login_count', op: '>=', value: 1 },
+  { code: 'streak_bronze', field: 'streak_login', op: '>=', value: 3 },
+  { code: 'streak_silver', field: 'streak_login', op: '>=', value: 7 },
+  { code: 'streak_gold', field: 'streak_login', op: '>=', value: 30 },
+  { code: 'streak_platinum', field: 'streak_login', op: '>=', value: 90 },
+  { code: 'login_night', custom: true }, // Uses custom trigger function
 ];
 
 /**
@@ -18,18 +18,21 @@ export const dailyFlowBadgeRules: BadgeRule[] = [
  * Awarded when user logs in between 22:00-04:00
  */
 export const nightOwlTrigger: BadgeTriggerFn = ({ activityLogs, now }) => {
-  // Get only login activities from the last 24 hours
-  const recentLoginLogs = activityLogs
+  // Get all login activities, sorted by timestamp ascending
+  const loginLogs = activityLogs
     .filter(log => log.type === 'login')
-    .filter(log => {
-      const logTime = new Date(log.timestamp);
-      const timeDiff = now.getTime() - logTime.getTime();
-      return timeDiff <= 24 * 60 * 60 * 1000; // Last 24 hours
-    });
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-  // Check if any login was during night hours
-  return recentLoginLogs.some(log => {
+  // Find the first login that occurred between 22:00–04:00
+  const firstNightLogin = loginLogs.find(log => {
     const hour = new Date(log.timestamp).getHours();
     return hour >= 22 || hour < 4;
   });
+
+  // If there is no night login, do not trigger
+  if (!firstNightLogin) return false;
+
+  // Check if the most recent login is the first night login
+  const lastLogin = loginLogs[loginLogs.length - 1];
+  return lastLogin === firstNightLogin;
 };
