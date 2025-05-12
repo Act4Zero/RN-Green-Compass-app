@@ -5,41 +5,83 @@ import { BadgeTriggerFn, BadgeRule } from '../types';
  * Each rule maps to a badge in the DB with matching code
  */
 export const habitTrackerBadgeRules: BadgeRule[] = [
-  { code: 'first_habit', custom: true },
-  { code: 'five_habits', custom: true },
-  { code: 'habit_streak_7', custom: true },
-  // Add more habit badges as needed
+  { code: 'hbt_first', custom: true },
+  { code: 'hbt_seed', custom: true },
+  { code: 'hbt_waste_rookie', custom: true },
+  { code: 'hbt_waste_pro', custom: true },
+  { code: 'hbt_waste_master', custom: true },
+  { code: 'hbt_co2_cutter', custom: true },
+  { code: 'hbt_all_rounder', custom: true },
 ];
 
 /**
- * Custom trigger for first habit badge
- * Awarded when user logs their first habit
+ * hbt_first: Any single habit_logs entry
  */
-export const firstHabitTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+export const hbtFirstTrigger: BadgeTriggerFn = ({ activityLogs }) => {
   return activityLogs.some(log => log.type === 'habit_log');
 };
 
 /**
- * Custom trigger for five habits badge
- * Awarded when user has logged at least 5 unique habits
+ * hbt_seed: 7 distinct days with ≥1 log per day
  */
-export const fiveHabitsTrigger: BadgeTriggerFn = ({ activityLogs }) => {
-  // Count unique habit types
-  const uniqueHabits = new Set(
+export const hbtSeedTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const days = new Set(
     activityLogs
-      .filter(log => log.type === 'habit_log')
-      .map(log => log.habit_id || '')
+      .filter(log => log.type === 'habit_log' && log.timestamp)
+      .map(log => new Date(log.timestamp).toISOString().slice(0, 10))
   );
-  
-  return uniqueHabits.size >= 5;
+  return days.size >= 7;
 };
 
 /**
- * Custom trigger for 7-day habit streak badge
- * Awarded when user maintains same habit for 7 consecutive days
+ * hbt_waste_rookie: habits.subcategory = 'Recycling' count ≥ 10
  */
-export const habitStreak7Trigger: BadgeTriggerFn = ({ activityLogs }) => {
-  // This would require more complex logic to check consecutive days
-  // For simplicity, this is a placeholder
-  return false;
+export const hbtWasteRookieTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const count = activityLogs.filter(
+    log => log.type === 'habit_log' && log.subcategory === 'Recycling'
+  ).length;
+  return count >= 10;
 };
+
+/**
+ * hbt_waste_pro: habits.subcategory = 'Recycling' count ≥ 50
+ */
+export const hbtWasteProTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const count = activityLogs.filter(
+    log => log.type === 'habit_log' && log.subcategory === 'Recycling'
+  ).length;
+  return count >= 50;
+};
+
+/**
+ * hbt_waste_master: habits.subcategory = 'Recycling' count ≥ 100
+ */
+export const hbtWasteMasterTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const count = activityLogs.filter(
+    log => log.type === 'habit_log' && log.subcategory === 'Recycling'
+  ).length;
+  return count >= 100;
+};
+
+/**
+ * hbt_co2_cutter: sum(habit_logs.co2_saving) ≥ 50
+ */
+export const hbtCo2CutterTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const total = activityLogs
+    .filter(log => log.type === 'habit_log' && typeof log.co2_saving === 'number')
+    .reduce((sum, log) => sum + (log.co2_saving as number), 0);
+  return total >= 50;
+};
+
+/**
+ * hbt_all_rounder: count of distinct habit_logs.category ≥ 4
+ */
+export const hbtAllRounderTrigger: BadgeTriggerFn = ({ activityLogs }) => {
+  const categories = new Set(
+    activityLogs
+      .filter(log => log.type === 'habit_log' && log.category)
+      .map(log => log.category)
+  );
+  return categories.size >= 4;
+};
+

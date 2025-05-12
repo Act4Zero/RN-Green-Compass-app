@@ -1,6 +1,6 @@
 import { BadgeTriggerFn, BadgeRule } from './types';
 import { dailyFlowBadgeRules, nightOwlTrigger } from './triggers/dailyFlow';
-import { habitTrackerBadgeRules, firstHabitTrigger, fiveHabitsTrigger, habitStreak7Trigger } from './triggers/habitTracker';
+import { habitTrackerBadgeRules, hbtFirstTrigger, hbtSeedTrigger, hbtWasteRookieTrigger, hbtWasteProTrigger, hbtWasteMasterTrigger, hbtCo2CutterTrigger, hbtAllRounderTrigger } from './triggers/habitTracker';
 
 /**
  * Generic trigger generator for field/op/value rules
@@ -35,9 +35,13 @@ const customTriggers: Record<string, BadgeTriggerFn> = {
   'login_night': nightOwlTrigger,
   
   // Habit Tracker triggers
-  'first_habit': firstHabitTrigger,
-  'five_habits': fiveHabitsTrigger,
-  'habit_streak_7': habitStreak7Trigger,
+  'hbt_first': hbtFirstTrigger,
+  'hbt_seed': hbtSeedTrigger,
+  'hbt_waste_rookie': hbtWasteRookieTrigger,
+  'hbt_waste_pro': hbtWasteProTrigger,
+  'hbt_waste_master': hbtWasteMasterTrigger,
+  'hbt_co2_cutter': hbtCo2CutterTrigger,
+  'hbt_all_rounder': hbtAllRounderTrigger,
 };
 
 /**
