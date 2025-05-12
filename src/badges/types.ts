@@ -51,6 +51,43 @@ export interface ChallengeActivity {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface Discussion {
+  id: string;
+  user_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface Reaction {
+  id: string;
+  comment_id: string;
+  reaction_type: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface Comment {
+  id: string;
+  user_id: string;
+  upvotes?: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface Post {
+  id: string;
+  user_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface ModerationLog {
+  id: string;
+  target_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | undefined;
+}
+
 export type BadgeTriggerContext = {
   userId: string;
   profile: Profile;
@@ -59,6 +96,11 @@ export type BadgeTriggerContext = {
   userGoals?: UserGoal[];
   challengeParticipants?: ChallengeParticipant[];
   challengeActivity?: ChallengeActivity | ChallengeActivity[];
+  discussions?: Discussion[];
+  reactions?: Reaction[];
+  comments?: Comment[];
+  posts?: Post[];
+  moderationLogs?: ModerationLog[];
 };
 
 // A function that determines if a badge should be awarded
