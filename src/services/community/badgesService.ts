@@ -176,7 +176,6 @@ const badgesService = {
       throw error;
     }
   }
-};
 
 };
 
