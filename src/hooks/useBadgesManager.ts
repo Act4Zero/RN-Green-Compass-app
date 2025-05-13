@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import badgesService, { groupBadgesByCategory } from '@/services/community/badgesService';
 import { Badge, UserBadge, BadgeNotification, BadgeCategoryType } from '@/types/community/badges';
@@ -89,6 +89,36 @@ function useBadgesManager() {
   const hasBadge = useCallback((badgeCode: string): boolean => {
     return userBadges.some(ub => ub.badge?.code === badgeCode);
   }, [userBadges]);
+
+  /**
+   * Get all badges with a flag indicating if the user has earned them
+   * This is useful for UI rendering (e.g., colored vs grayscale)
+   */
+  const getAllBadgesWithEarnedStatus = useCallback((): (Badge & { isEarned: boolean })[] => {
+    return allBadges.map(badge => ({
+      ...badge,
+      isEarned: hasBadge(badge.code)
+    }));
+  }, [allBadges, hasBadge]);
+
+  /**
+   * Filter badges by category
+   * Works with both regular badges and badges with earned status
+   */
+  const getBadgesByCategory = useCallback(<T extends Badge>(badges: T[], category: BadgeCategoryType | 'all'): T[] => {
+    if (category === 'all') return badges;
+    return badges.filter(badge => badge.category === category);
+  }, []);
+
+  /**
+   * Get available badge categories from loaded badges
+   * Useful for building category filters in the UI
+   */
+  const availableCategories = useMemo((): BadgeCategoryType[] => {
+    const categories = new Set<BadgeCategoryType>();
+    allBadges.forEach(badge => categories.add(badge.category));
+    return Array.from(categories);
+  }, [allBadges]);
   
   /**
    * Handle badge notification dismissal
@@ -266,18 +296,25 @@ function useBadgesManager() {
   }, [user, loadUserBadges]);
   
   return {
+    // Data
     allBadges,
     userBadges,
     isLoading,
     error,
     newBadgeNotification,
+    
+    // Enhanced data for UI
+    badgesWithEarnedStatus: getAllBadgesWithEarnedStatus(),
+    availableCategories,
+    
+    // Actions
     loadAllBadges,
     loadUserBadges,
     hasBadge,
+    getBadgesByCategory,
     dismissBadgeNotification,
     checkAndAwardStreakBadges,
     checkAndAwardFirstHabitBadge,
-    // Add new generalized event processor for future use
     processUserEventWithType
   };
 }

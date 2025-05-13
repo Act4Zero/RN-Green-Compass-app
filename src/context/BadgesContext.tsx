@@ -12,10 +12,15 @@ interface BadgesContextType {
   error: string | null;
   newBadgeNotification: BadgeNotification | null;
   
+  // Enhanced data for UI
+  badgesWithEarnedStatus: (Badge & { isEarned: boolean })[];
+  availableCategories: BadgeCategoryType[];
+  
   // Actions
   loadAllBadges: () => Promise<Badge[]>;
   loadUserBadges: () => Promise<void>;
   hasBadge: (badgeCode: string) => boolean;
+  getBadgesByCategory: <T extends Badge>(badges: T[], category: BadgeCategoryType | 'all') => T[];
   dismissBadgeNotification: () => void;
   checkAndAwardStreakBadges: (currentStreak: number) => Promise<boolean>;
   checkAndAwardFirstHabitBadge: () => Promise<boolean>;
