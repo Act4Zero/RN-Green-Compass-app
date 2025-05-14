@@ -5,6 +5,7 @@ import { updateLoginProfile } from './updateLoginProfile';
 import { Profile } from '../types/profiles';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import analyticsService from '../services/analyticsService';
+import { processUserEvent } from '../badges/badgeEngine';
 
 // Define the shape of the auth context
 type AuthContextType = {
@@ -218,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           // Fetch previous profile data
           const { data: profileData, error: profileError } = await supabase
-            .from<Profile, Profile>('profiles')
+            .from<Profile, any>('profiles')
             .select('last_login_date,login_streak')
             .eq('id', data.user.id)
             .single();
@@ -226,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error fetching profile for login streak:', profileError.message);
           } else if (profileData) {
             const nowISO = new Date().toISOString();
-            const { error: updateError } = await updateLoginProfile(
+            const { error: updateError, newStreak } = await updateLoginProfile(
               data.user.id,
               profileData.last_login_date,
               profileData.login_streak,
@@ -234,6 +235,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             );
             if (updateError) {
               console.error('Error updating login streak:', updateError.message);
+            } else {
+              // Award login badges
+              try {
+                await processUserEvent(
+                  data.user.id,
+                  'login',
+                  {
+                    profile: {
+                      id: data.user.id,
+                      login_streak: newStreak,
+                    },
+                    now: new Date(nowISO)
+                  }
+                );
+              } catch (badgeError) {
+                console.error('Error processing login badges:', badgeError);
+              }
             }
           }
         } catch (err) {

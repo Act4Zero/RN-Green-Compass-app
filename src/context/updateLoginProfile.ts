@@ -13,7 +13,7 @@ export async function updateLoginProfile(
   prevLastLoginDate: string | null,
   prevLoginStreak: number | null,
   nowISO: string
-): Promise<{ error: Error | null }> {
+): Promise<{ error: Error | null; newStreak: number }> {
   try {
     let newStreak = 1;
     if (prevLastLoginDate) {
@@ -33,8 +33,9 @@ export async function updateLoginProfile(
       .from('profiles')
       .update({ last_login_date: nowISO, login_streak: newStreak })
       .eq('id', userId);
-    return { error: error ? new Error(error.message) : null };
+    return { error: error ? new Error(error.message) : null, newStreak };
   } catch (err) {
-    return { error: err as Error };
+    // If newStreak is not defined due to error, default to 1
+    return { error: err as Error, newStreak: 1 };
   }
 }
