@@ -44,7 +44,10 @@ const mappedEarnedBadges = userBadges
   .map(ub => ub.badge ? { ...ub.badge, isEarned: true, awarded_at: ub.awarded_at } : null)
   .filter((b): b is Badge & { isEarned: boolean; awarded_at: string } => b !== null);
 
-const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCategory);
+const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCategory).map(badge => ({
+  ...badge,
+  imageUrl: badge.icon_url || undefined,
+}));
   // Map icon_url to imageUrl for BadgeList
   const allBadgesByCategory = getBadgesByCategory(badgesWithEarnedStatus, availableCategory).map(badge => ({
     ...badge,
