@@ -114,7 +114,7 @@ export async function processUserEvent(
   // Default context with current time
   const baseContext: BadgeTriggerContext = {
     userId,
-    profile: { id: userId, streak_login: 0, login_count: 0 },
+    profile: { id: userId, login_streak: 0 },
     activityLogs: [],
     now: new Date(),
     ...context

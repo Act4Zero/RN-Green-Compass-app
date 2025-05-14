@@ -140,8 +140,8 @@ function useBadgesManager() {
         userId: user.id,
         profile: {
           id: user.id,
-          streak_login: currentStreak,
-          login_count: 0, // Would be populated with actual data
+          login_streak: currentStreak,
+
         },
         activityLogs: [], // Would be populated with actual data
         now: new Date()

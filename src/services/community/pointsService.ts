@@ -1,4 +1,7 @@
 import supabase from '../../lib/supabase';
+import { processUserEvent } from '@/badges/badgeEngine';
+import { fetchUserProfile } from '@/services/profile/fetchUserProfile';
+import { Profile as BadgeProfile } from '@/badges/types';
 import {
   AwardPointsParams,
   PointEvent,
@@ -147,6 +150,13 @@ const pointsService = {
         points: totalPoints,
       });
       
+      // Fetch real user profile for badge logic
+      const fetchedProfile = await fetchUserProfile(userId);
+      const profile: BadgeProfile | null = fetchedProfile ? { id: fetchedProfile.id, login_streak: newStreak } : null;
+      if (profile) {
+        await processUserEvent(userId, 'login', { profile });
+      }
+      
       return {
         success: true,
         message: `Daily check-in successful. Day ${newStreak} streak!`,
@@ -211,6 +221,12 @@ const pointsService = {
         referenceId: habitLogData.id,
       });
       
+      // Fetch real user profile for badge logic
+      const profile = await fetchUserProfile(userId);
+      if (profile) {
+        await processUserEvent(userId, 'habit_log', { profile, streak: streakData?.data?.streak });
+      }
+      
       return {
         success: true,
         message: `Habit logged successfully. Earned ${points} points!`,
@@ -251,6 +267,9 @@ const pointsService = {
         points,
         referenceId: contentId,
       });
+      
+      // Award badges for community activity ("community_activity" event)
+      await processUserEvent(userId, 'community_activity', { contentType });
       
       return {
         success: true,
@@ -434,3 +453,4 @@ const pointsService = {
 };
 
 export default pointsService;
+

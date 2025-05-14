@@ -5,11 +5,11 @@ import { BadgeTriggerFn, BadgeRule } from '../types';
  * Each rule maps to a badge in the DB with matching code
  */
 export const dailyFlowBadgeRules: BadgeRule[] = [
-  { code: 'login_first', field: 'login_count', op: '>=', value: 1 },
-  { code: 'streak_bronze', field: 'streak_login', op: '>=', value: 3 },
-  { code: 'streak_silver', field: 'streak_login', op: '>=', value: 7 },
-  { code: 'streak_gold', field: 'streak_login', op: '>=', value: 30 },
-  { code: 'streak_platinum', field: 'streak_login', op: '>=', value: 90 },
+  { code: 'login_first', field: 'login_streak', op: '>=', value: 1 },
+  { code: 'streak_bronze', field: 'login_streak', op: '>=', value: 3 },
+  { code: 'streak_silver', field: 'login_streak', op: '>=', value: 7 },
+  { code: 'streak_gold', field: 'login_streak', op: '>=', value: 30 },
+  { code: 'streak_platinum', field: 'login_streak', op: '>=', value: 90 },
   { code: 'login_night', custom: true }, // Uses custom trigger function
 ];
 

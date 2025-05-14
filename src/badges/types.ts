@@ -3,11 +3,7 @@ import { Badge } from '@/types/community/badges';
 // Core types needed for the badge trigger system
 export interface Profile {
   id: string;
-  streak_login: number;
-  login_count: number;
-  // Add other relevant profile fields
-  
-  // Allow dynamic access to profile properties by string key
+  login_streak: number;
   [key: string]: string | number | boolean | undefined;
 }
 
