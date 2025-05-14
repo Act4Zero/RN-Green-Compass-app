@@ -11,18 +11,24 @@ interface BadgeItemProps {
 }
 
 function BadgeItem({ name, description, imageUrl, isEarned, category }: BadgeItemProps) {
+  const [hasImageError, setHasImageError] = React.useState(false);
+
+  const showImage = imageUrl && !hasImageError;
+
   return (
     <View style={[styles.badgeContainer, !isEarned && styles.badgeUnearnedContainer]}>
       <View style={styles.badgeIconContainer}>
-        {imageUrl ? (
-          <Image 
-            source={{ uri: imageUrl }} 
-            style={[styles.badgeIcon, !isEarned && styles.badgeUnearnedIcon as ImageStyle]} 
+        {showImage ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={[styles.badgeIcon, !isEarned && styles.badgeUnearnedIcon as ImageStyle]}
             resizeMode="contain"
+            onError={() => setHasImageError(true)}
+            accessibilityLabel={`${name} badge`}
           />
         ) : (
           <View style={styles.placeholderIcon}>
-            <Ionicons name="trophy" size={32} color={isEarned ? "#2E7D32" : "#AAAAAA"} />
+            <Ionicons name="trophy" size={32} color={isEarned ? "#2E7D32" : "#AAAAAA"} accessibilityLabel="Badge placeholder" />
           </View>
         )}
         {isEarned && (

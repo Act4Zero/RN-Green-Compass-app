@@ -45,7 +45,11 @@ const mappedEarnedBadges = userBadges
   .filter((b): b is Badge & { isEarned: boolean; awarded_at: string } => b !== null);
 
 const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCategory);
-  const allBadgesByCategory = getBadgesByCategory(badgesWithEarnedStatus, availableCategory);
+  // Map icon_url to imageUrl for BadgeList
+  const allBadgesByCategory = getBadgesByCategory(badgesWithEarnedStatus, availableCategory).map(badge => ({
+    ...badge,
+    imageUrl: badge.icon_url || undefined,
+  }));
   
   // Redirect to signin if user is not authenticated
   useEffect(() => {
