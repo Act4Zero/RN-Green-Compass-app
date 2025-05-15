@@ -38,6 +38,7 @@ export default function RootLayout() {
           {/* Profile screens */}
           <Stack.Screen name="profile/index" options={{ headerShown: false }} />
           <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/badges/index" options={{ headerShown: false }} />
 
           {/* Community screens */}
           <Stack.Screen name="community/index" options={{ headerShown: false }} />
