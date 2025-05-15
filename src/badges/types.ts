@@ -4,7 +4,7 @@ import { Badge } from '@/types/community/badges';
 export interface Profile {
   id: string;
   login_streak: number;
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ActivityLog {
@@ -16,17 +16,18 @@ export interface ActivityLog {
   // Add other relevant activity log fields
   
   // Allow dynamic access to activity log properties by string key
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 // The context passed to badge trigger functions
+// Aligned with Supabase schema: 'target_value' instead of 'target'
 export interface UserGoal {
   id: string;
   user_id: string;
   current_value: number;
-  target: number;
+  target_value: number;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ChallengeParticipant {
@@ -34,7 +35,7 @@ export interface ChallengeParticipant {
   user_id: string;
   status: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ChallengeActivity {
@@ -44,14 +45,14 @@ export interface ChallengeActivity {
   team_co2?: number;
   total_co2?: number;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface Discussion {
   id: string;
   user_id: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface Reaction {
@@ -59,7 +60,7 @@ export interface Reaction {
   comment_id: string;
   reaction_type: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface Comment {
@@ -67,21 +68,21 @@ export interface Comment {
   user_id: string;
   upvotes?: number;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface Post {
   id: string;
   user_id: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface ModerationLog {
   id: string;
   target_id: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface SupportTicket {
@@ -91,7 +92,7 @@ export interface SupportTicket {
   status: string;
   timestamp?: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface LearningPathProgress {
@@ -100,7 +101,7 @@ export interface LearningPathProgress {
   status: string;
   timestamp?: string;
   // Add other relevant fields as needed
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export type BadgeTriggerContext = {

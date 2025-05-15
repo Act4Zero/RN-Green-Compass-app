@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { habitService, goalService } from '../../services/habitService';
 import badgesService from '@/services/community/badgesService';
+import { processUserEvent } from '@/badges/badgeEngine';
 import { habitTrackerBadgeRules, hbtFirstTrigger, hbtSeedTrigger, hbtWasteRookieTrigger, hbtWasteProTrigger, hbtWasteMasterTrigger, hbtCo2CutterTrigger, hbtAllRounderTrigger } from '@/badges/triggers/habitTracker';
 import { useAuth } from '../AuthContext';
 import { Habit, UserHabit, HabitLog, UserGoal } from '../../types/supabase';
@@ -368,6 +369,15 @@ const createGoal = async (
       endDate
     );
     await refreshGoals();
+    // --- Badge Trigger Integration: Goal Creation ---
+    // Evaluate and award goal/challenge badges after creating a goal
+    if (user && newGoal) {
+      try {
+        await processUserEvent(user.id, 'goal_completion', { userGoals: [...userGoals, newGoal] });
+      } catch (badgeError) {
+        console.error('Error processing goal badges:', badgeError);
+      }
+    }
     return newGoal;
   } catch (error) {
     console.error('Error creating goal:', error);
@@ -383,6 +393,15 @@ const updateGoal = async (
   try {
     const updatedGoal = await goalService.updateUserGoal(goalId, updates);
     await refreshGoals();
+    // --- Badge Trigger Integration: Goal Update ---
+    // Evaluate and award goal/challenge badges after updating a goal
+    if (user && updatedGoal) {
+      try {
+        await processUserEvent(user.id, 'goal_completion', { userGoals });
+      } catch (badgeError) {
+        console.error('Error processing goal badges:', badgeError);
+      }
+    }
     return updatedGoal;
   } catch (error) {
     console.error('Error updating goal:', error);

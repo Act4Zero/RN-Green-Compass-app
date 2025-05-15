@@ -75,13 +75,14 @@ const customTriggers: Record<string, BadgeTriggerFn> = {
 
 /**
  * Generates the complete badge trigger registry by combining:
- * 1. All the declarative rules converted to trigger functions
+ * 1. All the declarative rules converted to trigger functions (including goal/challenge rules)
  * 2. All the custom trigger functions
  */
 function buildTriggerRegistry(): Record<string, BadgeTriggerFn> {
   const allRules: BadgeRule[] = [
     ...dailyFlowBadgeRules,
     ...habitTrackerBadgeRules,
+    ...goalChallengesBadgeRules, // <-- Integrated goal/challenge badge rules
     // Add more badge rules from other categories here
   ];
   

@@ -27,7 +27,7 @@ export const goalFirstTrigger: BadgeTriggerFn = ({ userGoals }) => {
  */
 export const goalAchieveBronzeTrigger: BadgeTriggerFn = ({ userGoals }) => {
   if (!Array.isArray(userGoals)) return false;
-  const achieved = userGoals.filter(g => g.current_value >= g.target).length;
+  const achieved = userGoals.filter(g => g.current_value >= g.target_value).length;
   return achieved >= 1;
 };
 
@@ -36,7 +36,7 @@ export const goalAchieveBronzeTrigger: BadgeTriggerFn = ({ userGoals }) => {
  */
 export const goalAchieveSilverTrigger: BadgeTriggerFn = ({ userGoals }) => {
   if (!Array.isArray(userGoals)) return false;
-  const achieved = userGoals.filter(g => g.current_value >= g.target).length;
+  const achieved = userGoals.filter(g => g.current_value >= g.target_value).length;
   return achieved >= 5;
 };
 
@@ -45,7 +45,7 @@ export const goalAchieveSilverTrigger: BadgeTriggerFn = ({ userGoals }) => {
  */
 export const goalAchieveGoldTrigger: BadgeTriggerFn = ({ userGoals }) => {
   if (!Array.isArray(userGoals)) return false;
-  const achieved = userGoals.filter(g => g.current_value >= g.target).length;
+  const achieved = userGoals.filter(g => g.current_value >= g.target_value).length;
   return achieved >= 10;
 };
 
