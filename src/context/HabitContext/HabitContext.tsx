@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { habitService, goalService } from '../../services/habitService';
+import badgesService from '@/services/community/badgesService';
+import { habitTrackerBadgeRules, hbtFirstTrigger, hbtSeedTrigger, hbtWasteRookieTrigger, hbtWasteProTrigger, hbtWasteMasterTrigger, hbtCo2CutterTrigger, hbtAllRounderTrigger } from '@/badges/triggers/habitTracker';
 import { useAuth } from '../AuthContext';
 import { Habit, UserHabit, HabitLog, UserGoal } from '../../types/supabase';
 
@@ -271,167 +273,181 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Function to log a completed habit
-  const logHabit = async (
-    habitId: string,
-    quantity: number = 1,
-    notes?: string,
-    logDate?: string
-  ): Promise<void> => {
-    if (!user) return;
-    
+const logHabit = async (
+  habitId: string,
+  quantity: number = 1,
+  notes?: string,
+  logDate?: string
+): Promise<void> => {
+  if (!user) return;
+  try {
+    // Log the habit
+    await habitService.logHabit(user.id, habitId, quantity, notes, logDate);
+
+    // After logging a habit, award streak points
     try {
-      // Log the habit
-      await habitService.logHabit(user.id, habitId, quantity, notes, logDate);
-      
-      // After logging a habit, award streak points
-      // This ensures points are only awarded when a user actually logs a habit,
-      // not on every stats refresh
-      try {
-        const streakResult = await habitService.registerOverallStreakAndPoint(user.id);
-        
-        // Update streak in state with the returned value
-        setOverallStreak(streakResult.streak);
-        
-        // Note: We need to handle daily check-ins separately
-        // Hooks can only be called within React components, not in regular functions
-        // We'll use an event-based approach instead (dispatch an event that will be handled by app/home.tsx)
-        if (streakResult.isFirstActivityToday) {
-          // Emit a custom event that can be listened to in a React component
-          document.dispatchEvent(new CustomEvent('firstDailyActivity', { 
-            detail: { userId: user.id }
-          }));
-          console.log('Dispatched firstDailyActivity event');
-        }
-      } catch (pointsError) {
-        // Just log the error if awarding points fails, but don't break the habit logging
-        console.error('Error awarding streak points:', pointsError);
+      const streakResult = await habitService.registerOverallStreakAndPoint(user.id);
+      setOverallStreak(streakResult.streak);
+      if (streakResult.isFirstActivityToday) {
+        document.dispatchEvent(new CustomEvent('firstDailyActivity', {
+          detail: { userId: user.id },
+        }));
       }
-      
-      // Refresh relevant data
-      await refreshHabitLogs();
-      await refreshGoals();
-      // Use the regular stats refresh without streak point awards
-      await refreshStats();
-    } catch (error) {
-      console.error('Error logging habit:', error);
-      throw error;
+    } catch (pointsError) {
+      // Log error, don't interrupt habit logging
+      console.error('Error awarding streak points:', pointsError);
     }
-  };
 
-  // Function to create a new goal
-  const createGoal = async (
-    title: string,
-    targetValue: number,
-    category?: string,
-    subcategory?: string,
-    habitId?: string,
-    description?: string,
-    endDate?: string
-  ): Promise<UserGoal | null> => {
-    if (!user) {
-      console.error('Cannot create goal: User not authenticated');
-      return null;
-    }
-    
+    // Refresh relevant data
+    await refreshHabitLogs();
+    await refreshGoals();
+    await refreshStats();
+
+    // --- Badge Trigger Integration ---
+    // Always use up-to-date logs after refresh
+    let logs = habitLogs;
     try {
-      // Create the goal and get the result
-      const newGoal = await goalService.createUserGoal(
-        user.id,
-        title,
-        targetValue,
-        category,
-        subcategory,
-        habitId,
-        description,
-        endDate
-      );
-      
-      // Refresh the goals list
-      await refreshGoals();
-      
-      return newGoal;
-    } catch (error) {
-      console.error('Error creating goal:', error);
-      throw error;
+      const latestLogs = await habitService.getHabitLogs(user.id);
+      if (Array.isArray(latestLogs)) logs = latestLogs;
+    } catch (e) {
+      // fallback to in-memory
     }
-  };
-
-  // Function to update a goal
-  const updateGoal = async (
-    goalId: string,
-    updates: Partial<UserGoal>
-  ): Promise<UserGoal | null> => {
-    try {
-      // Update the goal and get the result
-      const updatedGoal = await goalService.updateUserGoal(goalId, updates);    
-      // Refresh the goals list
-      await refreshGoals();
-      
-      return updatedGoal;
-    } catch (error) {
-      console.error('Error updating goal:', error);
-      throw error;
+    // Patch logs in-memory for badge triggers
+const patchedLogs = logs.map(log => ({
+  ...log,
+  type: log.type || 'habit_log',
+  timestamp: log.timestamp || log.created_at || log.log_date || null,
+}));
+    const badgeTriggers = [
+      { code: 'hbt_first', fn: hbtFirstTrigger },
+      { code: 'hbt_seed', fn: hbtSeedTrigger },
+      { code: 'hbt_waste_rookie', fn: hbtWasteRookieTrigger },
+      { code: 'hbt_waste_pro', fn: hbtWasteProTrigger },
+      { code: 'hbt_waste_master', fn: hbtWasteMasterTrigger },
+      { code: 'hbt_co2_cutter', fn: hbtCo2CutterTrigger },
+      { code: 'hbt_all_rounder', fn: hbtAllRounderTrigger },
+    ];
+    for (const { code, fn } of badgeTriggers) {
+      const triggerResult = fn({ activityLogs: patchedLogs });
+      if (triggerResult) {
+        const hasBadge = await badgesService.hasUserBadge(user.id, code);
+        if (!hasBadge) {
+          const awardResult = await badgesService.awardBadgeIfNotExists(user.id, code);
+        }
+      }
     }
-  };
+  } catch (error) {
+    console.error('Error logging habit:', error);
+    throw error;
+  }
+};
 
-  // Function to delete a goal
-  const deleteGoal = async (goalId: string): Promise<void> => {
-    try {
-      await goalService.deleteUserGoal(goalId);
-      await refreshGoals();
-    } catch (error) {
-      console.error('Error deleting goal:', error);
-      throw error;
-    }
-  };
+// Function to create a new goal
+const createGoal = async (
+  title: string,
+  targetValue: number,
+  category?: string,
+  subcategory?: string,
+  habitId?: string,
+  description?: string,
+  endDate?: string
+): Promise<UserGoal | null> => {
+  if (!user) {
+    console.error('Cannot create goal: User not authenticated');
+    return null;
+  }
+  try {
+    const newGoal = await goalService.createUserGoal(
+      user.id,
+      title,
+      targetValue,
+      category,
+      subcategory,
+      habitId,
+      description,
+      endDate
+    );
+    await refreshGoals();
+    return newGoal;
+  } catch (error) {
+    console.error('Error creating goal:', error);
+    throw error;
+  }
+};
 
-  // The context value exposing habit functions and state
-  const value: HabitContextType = {
-    // Habits
-    habits,
-    userHabits,
-    activeUserHabits,
-    loadingHabits,
-    errorHabits,
-    
-    // Habit Logs
-    habitLogs,
-    loadingLogs,
-    errorLogs,
-    
-    // Goals
-    userGoals,
-    activeUserGoals,
-    loadingGoals,
-    errorGoals,
-    
-    // Stats
-    totalCO2Saved,
-    totalActions,
-    overallStreak,
-    loadingStats,
-    errorStats,
-    
-    // Actions
-    refreshHabits,
-    refreshUserHabits,
-    refreshHabitLogs,
-    refreshGoals,
-    refreshStats,
-    
-    addUserHabit,
-    updateUserHabit,
-    toggleHabitActive,
-    removeUserHabit,
-    
-    logHabit,
-    
-    createGoal,
-    updateGoal,
-    deleteGoal,
-  };
+// Function to update a goal
+const updateGoal = async (
+  goalId: string,
+  updates: Partial<UserGoal>
+): Promise<UserGoal | null> => {
+  try {
+    const updatedGoal = await goalService.updateUserGoal(goalId, updates);
+    await refreshGoals();
+    return updatedGoal;
+  } catch (error) {
+    console.error('Error updating goal:', error);
+    throw error;
+  }
+};
 
-  return <HabitContext.Provider value={value}>{children}</HabitContext.Provider>;
+// Function to delete a goal
+const deleteGoal = async (goalId: string): Promise<void> => {
+  try {
+    await goalService.deleteUserGoal(goalId);
+    await refreshGoals();
+  } catch (error) {
+    console.error('Error deleting goal:', error);
+    throw error;
+  }
+};
+
+// The context value exposing habit functions and state
+const value: HabitContextType = {
+  // Habits
+  habits,
+  userHabits,
+  activeUserHabits,
+  loadingHabits,
+  errorHabits,
+  
+  // Habit Logs
+  habitLogs,
+  loadingLogs,
+  errorLogs,
+  
+  // Goals
+  userGoals,
+  activeUserGoals,
+  loadingGoals,
+  errorGoals,
+  
+  // Stats
+  totalCO2Saved,
+  totalActions,
+  overallStreak,
+  loadingStats,
+  errorStats,
+  
+  // Actions
+  refreshHabits,
+  refreshUserHabits,
+  refreshHabitLogs,
+  refreshGoals,
+  refreshStats,
+  
+  addUserHabit,
+  updateUserHabit,
+  toggleHabitActive,
+  removeUserHabit,
+  logHabit,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+};
+
+  return (
+    <HabitContext.Provider value={value}>{children}</HabitContext.Provider>
+  );
 };
 
 // Custom hook to use the habit context
