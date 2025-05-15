@@ -1,0 +1,53 @@
+import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import useBadgesManager from '@/hooks/useBadgesManager';
+import { Badge, UserBadge, BadgeNotification, BadgeCategoryType } from '@/types/community/badges';
+import { BadgeTriggerContext } from '@/badges/types';
+
+interface BadgesContextType {
+  // Data
+  allBadges: Badge[];
+  userBadges: UserBadge[];
+  isLoading: boolean;
+  error: string | null;
+  newBadgeNotification: BadgeNotification | null;
+  
+  // Enhanced data for UI
+  badgesWithEarnedStatus: (Badge & { isEarned: boolean })[];
+  availableCategories: BadgeCategoryType[];
+  
+  // Actions
+  loadAllBadges: () => Promise<Badge[]>;
+  loadUserBadges: () => Promise<void>;
+  hasBadge: (badgeCode: string) => boolean;
+  getBadgesByCategory: <T extends Badge>(badges: T[], category: BadgeCategoryType | 'all') => T[];
+  dismissBadgeNotification: () => void;
+  checkAndAwardStreakBadges: (currentStreak: number) => Promise<boolean>;
+  checkAndAwardFirstHabitBadge: () => Promise<boolean>;
+  // New generalized event processor
+  processUserEventWithType: (eventType: 'login' | 'habit_log' | 'goal_completion' | 'community_activity', contextData?: Partial<BadgeTriggerContext>) => Promise<boolean>;
+}
+
+const BadgesContext = createContext<BadgesContextType | null>(null);
+
+export function useBadges(): BadgesContextType {
+  const context = useContext(BadgesContext);
+  if (!context) {
+    throw new Error('useBadges must be used within a BadgesProvider');
+  }
+  return context;
+}
+
+interface BadgesProviderProps {
+  children: ReactNode;
+}
+
+export function BadgesProvider({ children }: BadgesProviderProps) {
+  const badgesManager = useBadgesManager();
+  
+  return (
+    <BadgesContext.Provider value={badgesManager}>
+      {children}
+    </BadgesContext.Provider>
+  );
+}

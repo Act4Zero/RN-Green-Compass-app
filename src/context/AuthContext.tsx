@@ -1,8 +1,11 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import supabase, { ensureValidSession } from '../lib/supabase';
+import { updateLoginProfile } from './updateLoginProfile';
+import { Profile } from '../types/profiles';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import analyticsService from '../services/analyticsService';
+import { processUserEvent } from '../badges/badgeEngine';
 
 // Define the shape of the auth context
 type AuthContextType = {
@@ -184,42 +187,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Enhanced sign in function with session validation
   const signIn = async (email: string, password: string, captchaToken?: string) => {
-    try {
-      setLoading(true);
-      const options = captchaToken ? { captchaToken } : {};
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password,
-        options
+  try {
+    setLoading(true);
+    const options = captchaToken ? { captchaToken } : {};
+    const { data, error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password,
+      options
+    });
+    
+    if (error) {
+      console.error('Sign in error:', error.message);
+      return { data, error };
+    }
+    
+    if (data.session) {
+      // Explicitly set the session to ensure it's properly stored
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
       });
       
-      if (error) {
-        console.error('Sign in error:', error.message);
-        return { data, error };
+      // Track login event in Google Analytics
+      analyticsService.trackLogin('email');
+      if (data.user?.id) {
+        analyticsService.setUserId(data.user.id);
       }
-      
-      if (data.session) {
-        // Explicitly set the session to ensure it's properly stored
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        });
-        
-        // Track login event in Google Analytics
-        analyticsService.trackLogin('email');
-        if (data.user?.id) {
-          analyticsService.setUserId(data.user.id);
+
+      // Update last_login_date and login_streak in profiles table
+      if (data.user?.id) {
+        try {
+          // Fetch previous profile data
+          const { data: profileData, error: profileError } = await supabase
+            .from<Profile, any>('profiles')
+            .select('last_login_date,login_streak')
+            .eq('id', data.user.id)
+            .single();
+          if (profileError) {
+            console.error('Error fetching profile for login streak:', profileError.message);
+          } else if (profileData) {
+            const nowISO = new Date().toISOString();
+            const { error: updateError, newStreak } = await updateLoginProfile(
+              data.user.id,
+              profileData.last_login_date,
+              profileData.login_streak,
+              nowISO
+            );
+            if (updateError) {
+              console.error('Error updating login streak:', updateError.message);
+            } else {
+              // Award login badges
+              try {
+                await processUserEvent(
+                  data.user.id,
+                  'login',
+                  {
+                    profile: {
+                      id: data.user.id,
+                      login_streak: newStreak,
+                    },
+                    now: new Date(nowISO)
+                  }
+                );
+              } catch (badgeError) {
+                console.error('Error processing login badges:', badgeError);
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Unexpected error updating login streak:', err);
         }
       }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('Unexpected error during sign in:', error);
-      return { data: null, error: error as Error };
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    return { data, error };
+  } catch (error) {
+    console.error('Unexpected error during sign in:', error);
+    return { data: null, error: error as Error };
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Sign out function
   const signOut = async () => {

@@ -1,6 +1,9 @@
 import supabase from '../../lib/supabase';
 import { Discussion, PaginationParams, PaginatedResult } from './types';
 import pointsService from '../community/pointsService';
+import { discussFirstTrigger } from '@/badges/triggers/community';
+import badgesService from './badgesService';
+import { fetchUserProfile } from '@/services/profile/fetchUserProfile';
 
 /**
  * Service for managing discussions/posts in the community feed
@@ -283,6 +286,38 @@ export const discussionService = {
       console.error(`Error awarding points for post ${data.id}:`, pointsError);
     }
 
+    // Badge trigger: check for 'discuss_first' badge
+    try {
+      const { data: userDiscussions } = await supabase
+        .from('discussions')
+        .select('*')
+        .eq('user_id', userId);
+      if (Array.isArray(userDiscussions)) {
+        const profile = await fetchUserProfile(userId);
+        if (profile) {
+          // Sanitize login_streak (should be number)
+          const safeProfile = {
+            ...profile,
+            login_streak: profile.login_streak ?? 0,
+            interests: Array.isArray(profile.interests) ? profile.interests.join(',') : profile.interests,
+          };
+          const context = {
+            userId,
+            profile: safeProfile,
+            activityLogs: [],
+            now: new Date(),
+            discussions: userDiscussions,
+          };
+          if (discussFirstTrigger(context)) {
+            await badgesService.awardBadgeIfNotExists(userId, 'discuss_first');
+          }
+        }
+      }
+    } catch (badgeError) {
+      // Log the error but don't fail discussion creation
+      console.error('Error checking/awarding discuss_first badge:', badgeError);
+    }
+
     // Ensure we return a properly formatted Discussion object
     return {
       ...data,
@@ -290,6 +325,7 @@ export const discussionService = {
       reaction_count: 0, // New discussions have no reactions
       user_has_reacted: false
     };
+
   },
 
   /**

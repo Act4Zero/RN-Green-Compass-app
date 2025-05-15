@@ -7,6 +7,8 @@ export interface Profile {
   is_anonymous: boolean;
   interests: string[];
   avatar_url: string | null;
+  last_login_date: string | null; // ISO string or null
+  login_streak: number | null;
 }
 
 export type ProfileFormData = {

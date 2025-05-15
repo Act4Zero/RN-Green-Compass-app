@@ -1,4 +1,7 @@
 import supabase from '../../lib/supabase';
+import { helpfulBronzeTrigger, helpfulSilverTrigger, helpfulGoldTrigger } from '@/badges/triggers/community';
+import badgesService from './badgesService';
+import { fetchUserProfile } from '@/services/profile/fetchUserProfile';
 
 /**
  * Service for managing reactions (likes/upvotes) in the community feed
@@ -107,6 +110,51 @@ export const reactionService = {
     if (insertError) {
       console.error(`Error adding reaction for comment ${commentId}:`, insertError);
       throw insertError;
+    }
+
+    // Badge triggers: check for helpful badges after comment reaction
+    try {
+      // Get all comments by the user
+      const { data: userComments } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('user_id', userId);
+      if (Array.isArray(userComments) && userComments.length > 0) {
+        const commentIds = userComments.map((c: any) => c.id);
+        // Get all reactions for these comments
+        const { data: reactions } = await supabase
+          .from('reactions')
+          .select('*')
+          .in('comment_id', commentIds);
+        const profile = await fetchUserProfile(userId);
+        if (profile && Array.isArray(reactions)) {
+          const safeProfile = {
+            ...profile,
+            login_streak: profile.login_streak ?? 0,
+            interests: Array.isArray(profile.interests) ? profile.interests.join(',') : profile.interests,
+          };
+          const context = {
+            userId,
+            profile: safeProfile,
+            activityLogs: [],
+            now: new Date(),
+            comments: userComments,
+            reactions,
+          };
+          if (helpfulBronzeTrigger(context)) {
+            await badgesService.awardBadgeIfNotExists(userId, 'helpful_bronze');
+          }
+          if (helpfulSilverTrigger(context)) {
+            await badgesService.awardBadgeIfNotExists(userId, 'helpful_silver');
+          }
+          if (helpfulGoldTrigger(context)) {
+            await badgesService.awardBadgeIfNotExists(userId, 'helpful_gold');
+          }
+        }
+      }
+    } catch (badgeError) {
+      // Log the error but don't fail reaction creation
+      console.error('Error checking/awarding helpful badges:', badgeError);
     }
 
     return true; // Reaction added

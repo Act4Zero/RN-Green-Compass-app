@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "@/context/AuthContext";
 import HabitContextModule from "@/context/HabitContext/HabitContext";
+import { BadgesProvider } from '@/context/BadgesContext';
 import { useEffect } from 'react';
 import analyticsService from '@/services/analyticsService';
 import { FeatureFlagsProvider } from '@/context/FeatureFlagsContext';
@@ -26,6 +27,7 @@ export default function RootLayout() {
     <FeatureFlagsProvider>
       <AuthProvider>
         <HabitProvider>
+        <BadgesProvider>
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -36,6 +38,7 @@ export default function RootLayout() {
           {/* Profile screens */}
           <Stack.Screen name="profile/index" options={{ headerShown: false }} />
           <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/badges/index" options={{ headerShown: false }} />
 
           {/* Community screens */}
           <Stack.Screen name="community/index" options={{ headerShown: false }} />
@@ -58,6 +61,7 @@ export default function RootLayout() {
             }}
           />
         </Stack>
+        </BadgesProvider>
         </HabitProvider>
       </AuthProvider>
     </FeatureFlagsProvider>

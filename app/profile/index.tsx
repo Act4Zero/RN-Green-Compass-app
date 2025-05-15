@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useBadges } from '@/context/BadgesContext';
 import { Ionicons } from '@expo/vector-icons';
 import profileStyles from '@/styles/Profile.styles';
 import useProfileManager from '@/hooks/useProfileManager';
@@ -20,6 +21,7 @@ import pointsService from '@/services/community/pointsService';
 import useSimplePointHistory from '@/hooks/useSimplePointHistory';
 import useHabitStats from '@/hooks/useHabitStats';
 import PointsSummary from '@/components/community/points/PointsSummary';
+import BadgeSummary from '@/components/badges/BadgeSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 
@@ -46,6 +48,9 @@ export default function ProfileScreen() {
   // Points state managed locally
   const [points, setPoints] = useState<string>('0');
 const [isPointsLoading, setIsPointsLoading] = useState<boolean>(true);
+
+  // Use badges hook to get user badges
+  const { userBadges, isLoading: isBadgesLoading, loadUserBadges } = useBadges();
 
 useEffect(() => {
   let isMounted = true;
@@ -146,8 +151,11 @@ useEffect(() => {
       const initialLoad = async () => {
         if (!authLoading && user && isMounted) {
           try {
-            // Load points and history data in parallel
-            await fetchHistory();
+            // Load points, history and badges data in parallel
+            await Promise.all([
+              fetchHistory(),
+              loadUserBadges()
+            ]);
             
             // Intentionally NOT refreshing streak here to avoid loops
             // The fixed streak value (3) from the hook will be used instead
@@ -166,9 +174,9 @@ useEffect(() => {
       user, 
       authLoading, 
       hasTrackedView, 
-      trackProfileView, 
-      
-      fetchHistory
+      trackProfileView,
+      fetchHistory,
+      loadUserBadges
     ])
   );
 
@@ -299,6 +307,18 @@ useEffect(() => {
             <PointsSummary points={points} streak={loginStreak} />
           )}
         </View>
+        
+        {/* Badges Summary Section */}
+        {isBadgesLoading ? (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Achievements</Text>
+            <View style={styles.loadingPoints}>
+              <ActivityIndicator size="small" color="#2E7D32" />
+            </View>
+          </View>
+        ) : (
+          <BadgeSummary badgeCount={userBadges.length} />
+        )}
         
         {/* Points History Section */}
         <View style={styles.sectionContainer}>

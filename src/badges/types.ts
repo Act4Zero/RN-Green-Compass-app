@@ -1,0 +1,140 @@
+import { Badge } from '@/types/community/badges';
+
+// Core types needed for the badge trigger system
+export interface Profile {
+  id: string;
+  login_streak: number;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  timestamp: string;
+  type: string;
+  habit_id?: string;
+  // Add other relevant activity log fields
+  
+  // Allow dynamic access to activity log properties by string key
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+// The context passed to badge trigger functions
+// Aligned with Supabase schema: 'target_value' instead of 'target'
+export interface UserGoal {
+  id: string;
+  user_id: string;
+  current_value: number;
+  target_value: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface ChallengeParticipant {
+  id: string;
+  user_id: string;
+  status: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface ChallengeActivity {
+  userRank?: number;
+  totalParticipants?: number;
+  user_co2?: number;
+  team_co2?: number;
+  total_co2?: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface Discussion {
+  id: string;
+  user_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface Reaction {
+  id: string;
+  comment_id: string;
+  reaction_type: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface Comment {
+  id: string;
+  user_id: string;
+  upvotes?: number;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface Post {
+  id: string;
+  user_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface ModerationLog {
+  id: string;
+  target_id: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  type: string;
+  status: string;
+  timestamp?: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface LearningPathProgress {
+  id: string;
+  user_id: string;
+  status: string;
+  timestamp?: string;
+  // Add other relevant fields as needed
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export type BadgeTriggerContext = {
+  userId: string;
+  profile: Profile;
+  activityLogs: ActivityLog[];
+  now: Date;
+  userGoals?: UserGoal[];
+  challengeParticipants?: ChallengeParticipant[];
+  challengeActivity?: ChallengeActivity | ChallengeActivity[];
+  discussions?: Discussion[];
+  reactions?: Reaction[];
+  comments?: Comment[];
+  posts?: Post[];
+  moderationLogs?: ModerationLog[];
+  supportTickets?: SupportTicket[];
+  learningPathProgress?: LearningPathProgress[];
+};
+
+// A function that determines if a badge should be awarded
+export type BadgeTriggerFn = (context: BadgeTriggerContext) => boolean | Promise<boolean>;
+
+// Simple rule definition for badges with declarative rules
+export type BadgeRule = {
+  code: string;
+  field?: string;
+  op?: string;
+  value?: number;
+  custom?: boolean;
+};
+
+// Result from badge evaluation
+export type BadgeEvaluationResult = {
+  badgeCode: string;
+  shouldAward: boolean;
+};
