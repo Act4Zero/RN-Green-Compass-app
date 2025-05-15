@@ -9,7 +9,7 @@ import {
   Text,
 } from 'react-native';
 import FeedStyles from '@/styles/FeedStyles';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 
 // Import custom hooks
 import useCommunityFeedState from '@/hooks/community/useCommunityFeedState';
@@ -102,11 +102,23 @@ export default function CommunityFeed() {
           <TouchableOpacity
             style={styles.challengesButton}
             activeOpacity={0.85}
-            onPress={() => router.push('/community/challenges')}
+            onPress={() => router.push({ pathname: '/community/challenges' })}
           >
             <Ionicons name="people" size={26} color="#FFFFFF" style={{ marginRight: 12 }} />
             <Text style={styles.challengesButtonText}>
               Sustainability Challenges
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Leaderboards Button */}
+          <TouchableOpacity
+            style={[styles.challengesButton, { marginTop: 12, backgroundColor: '#2E7D32' }]}
+            activeOpacity={0.85}
+            onPress={() => router.push({ pathname: '/community/leaderboards' })}
+          >
+            <Ionicons name="trophy" size={26} color="#FFFFFF" style={{ marginRight: 12 }} />
+            <Text style={styles.challengesButtonText}>
+              Community Leaderboards
             </Text>
           </TouchableOpacity>
 

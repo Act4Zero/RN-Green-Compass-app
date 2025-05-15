@@ -22,6 +22,7 @@ interface LeaderboardContextType {
   isLoading: boolean;
   error: Error | null;
   filter: LeaderboardFilter;
+  availableScopes: LeaderboardFilterType[];
   
   // Actions
   setLeaderboardType: (type: LeaderboardType) => void;
