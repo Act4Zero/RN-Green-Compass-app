@@ -84,6 +84,7 @@ function buildTriggerRegistry(): Record<string, BadgeTriggerFn> {
     ...habitTrackerBadgeRules,
     ...goalChallengesBadgeRules,
     ...communityBadgeRules,
+    ...metaBadgeRules, // Include meta badge rules
     // Add more badge rules from other categories here
   ];
   
