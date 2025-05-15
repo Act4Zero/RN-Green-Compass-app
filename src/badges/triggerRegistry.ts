@@ -82,7 +82,8 @@ function buildTriggerRegistry(): Record<string, BadgeTriggerFn> {
   const allRules: BadgeRule[] = [
     ...dailyFlowBadgeRules,
     ...habitTrackerBadgeRules,
-    ...goalChallengesBadgeRules, // <-- Integrated goal/challenge badge rules
+    ...goalChallengesBadgeRules,
+    ...communityBadgeRules,
     // Add more badge rules from other categories here
   ];
   

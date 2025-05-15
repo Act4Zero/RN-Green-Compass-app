@@ -1,6 +1,9 @@
 import supabase from '../../lib/supabase';
 import { Comment, PaginationParams, PaginatedResult } from './types';
 import pointsService from '../community/pointsService';
+import { mentorBronzeTrigger, mentorSilverTrigger, mentorGoldTrigger } from '@/badges/triggers/community';
+import badgesService from './badgesService';
+import { fetchUserProfile } from '@/services/profile/fetchUserProfile';
 
 /**
  * Service for managing comments in the community feed
@@ -149,11 +152,48 @@ export const commentService = {
       console.error(`Error awarding points for comment ${data.id}:`, pointsError);
     }
 
+    // Badge triggers: check for mentor badges
+    try {
+      const { data: userComments } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('user_id', userId);
+      const profile = await fetchUserProfile(userId);
+      if (Array.isArray(userComments) && profile) {
+        // Sanitize login_streak (should be number)
+        const safeProfile = {
+          ...profile,
+          login_streak: profile.login_streak ?? 0,
+          interests: Array.isArray(profile.interests) ? profile.interests.join(',') : profile.interests,
+        };
+        const context = {
+          userId,
+          profile: safeProfile,
+          activityLogs: [],
+          now: new Date(),
+          comments: userComments,
+        };
+        if (mentorBronzeTrigger(context)) {
+          await badgesService.awardBadgeIfNotExists(userId, 'mentor_bronze');
+        }
+        if (mentorSilverTrigger(context)) {
+          await badgesService.awardBadgeIfNotExists(userId, 'mentor_silver');
+        }
+        if (mentorGoldTrigger(context)) {
+          await badgesService.awardBadgeIfNotExists(userId, 'mentor_gold');
+        }
+      }
+    } catch (badgeError) {
+      // Log the error but don't fail comment creation
+      console.error('Error checking/awarding mentor badges:', badgeError);
+    }
+
     return {
       ...data,
       reaction_count: 0,
       user_has_reacted: false
     };
+
   },
 
   /**
