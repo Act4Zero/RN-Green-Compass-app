@@ -39,32 +39,57 @@ const fetchPointsLeaderboard = async (
   // Calculate offset for pagination
   const offset = (pagination.page - 1) * pagination.pageSize;
   
-  // Start with base query that will apply to all filter types
+  // Start with base query to get leaderboard data
   let query = supabase
-    .from('leaderboard') // Using the materialized view defined in DB specs
-    .select('user_id, display_name, total_points, avatar_url')
+    .from('leaderboard')
+    .select('user_id, display_name, total_points')
     .order('total_points', { ascending: false })
     .limit(pagination.pageSize)
     .range(offset, offset + pagination.pageSize - 1);
 
   // Apply scope filter based on filter type
   if (filter.scope === 'friends') {
-    // Subquery to get user's friends
-    query = query.in('user_id', function(sb) {
-      return sb
-        .from('user_connections')
-        .select('connected_user_id')
-        .eq('user_id', currentUserId)
-        .eq('status', 'accepted');
-    });
+    // First, get the list of friend user IDs
+    const { data: friends, error: friendsError } = await supabase
+      .from('user_connections')
+      .select('connected_user_id')
+      .eq('user_id', currentUserId)
+      .eq('status', 'accepted');
+
+    if (friendsError) throw friendsError;
+    
+    const friendIds = friends.map(f => f.connected_user_id);
+    
+    // If user has no friends, return empty result
+    if (friendIds.length === 0) {
+      return {
+        entries: [],
+        currentUserEntry: undefined,
+        totalEntries: 0,
+        hasMore: false
+      };
+    }
+    
+    // Filter leaderboard to only show friends
+    query = query.in('user_id', friendIds);
   } else if (filter.scope === 'groups' && filter.groupId) {
-    // Filter by specific group membership
-    query = query.in('user_id', function(sb) {
-      return sb
-        .from('group_members')
-        .select('user_id')
-        .eq('group_id', filter.groupId);
-    });
+    // First, get the list of group member IDs
+    const { data: members } = await supabase
+      .from('group_members')
+      .select('user_id')
+      .eq('group_id', filter.groupId);
+      
+    if (members?.length) {
+      const memberIds = members.map(m => m.user_id);
+      query = query.in('user_id', memberIds);
+    } else {
+      return {
+        entries: [],
+        currentUserEntry: undefined,
+        totalEntries: 0,
+        hasMore: false
+      };
+    }
   }
   // For 'community', no additional filter needed - show all users
 
@@ -76,46 +101,103 @@ const fetchPointsLeaderboard = async (
     throw error;
   }
 
-  // Get total count for pagination
-  const { count: totalCount } = await supabase
+  // Get total count for pagination based on current filter
+  let countQuery = supabase
     .from('leaderboard')
     .select('*', { count: 'exact', head: true });
+    
+  // Apply the same filters to the count query
+  if (filter.scope === 'friends') {
+    const { data: friends } = await supabase
+      .from('user_connections')
+      .select('connected_user_id')
+      .eq('user_id', currentUserId)
+      .eq('status', 'accepted');
+      
+    if (friends?.length) {
+      const friendIds = friends.map((f: { connected_user_id: string }) => f.connected_user_id);
+      countQuery = countQuery.in('user_id', friendIds);
+    } else {
+      return {
+        entries: [],
+        currentUserEntry: undefined,
+        totalEntries: 0,
+        hasMore: false
+      };
+    }
+  } else if (filter.scope === 'groups' && filter.groupId) {
+    // Get group members for the count query
+    const { data: groupMembers } = await supabase
+      .from('group_members')
+      .select('user_id')
+      .eq('group_id', filter.groupId);
+      
+    if (groupMembers?.length) {
+      const memberIds = groupMembers.map((m: { user_id: string }) => m.user_id);
+      countQuery = countQuery.in('user_id', memberIds);
+    } else {
+      return {
+        entries: [],
+        currentUserEntry: undefined,
+        totalEntries: 0,
+        hasMore: false
+      };
+    }
+  }
+  
+  const { count: totalEntries } = await countQuery;
 
-  // Get current user's rank regardless of pagination
+  // Get current user's rank and data from the leaderboard
   const { data: currentUserData } = await supabase
     .from('leaderboard')
-    .select('user_id, display_name, total_points, avatar_url')
+    .select('user_id, display_name, total_points')
     .eq('user_id', currentUserId)
     .single();
+    
+  // Fetch avatar URLs for all users in the leaderboard
+  const userIds = [...(data?.map(item => item.user_id) || [])];
+  if (currentUserData?.user_id && !userIds.includes(currentUserData.user_id)) {
+    userIds.push(currentUserData.user_id);
+  }
+  
+  let avatarUrls: Record<string, string | null> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, avatar_url')
+      .in('id', userIds);
+      
+    profiles?.forEach(profile => {
+      avatarUrls[profile.id] = profile.avatar_url;
+    });
+  }
 
   // Calculate current user's rank if found
   let currentUserEntry: PointsLeaderboardEntry | undefined;
   
   if (currentUserData) {
-    const { data: userRankData } = await supabase
+    // Get user's rank by counting users with higher or equal points
+    const { count: userRank } = await supabase
       .from('leaderboard')
-      .select('user_id')
-      .gte('total_points', currentUserData.total_points)
-      .order('total_points', { ascending: false });
-      
-    const userRank = userRankData?.length || 0;
+      .select('*', { count: 'exact', head: true })
+      .gte('total_points', currentUserData.total_points);
     
     currentUserEntry = {
       userId: currentUserData.user_id,
       displayName: currentUserData.display_name,
       totalPoints: currentUserData.total_points,
-      avatar: currentUserData.avatar_url,
-      rank: userRank,
+      avatar: avatarUrls[currentUserData.user_id] || undefined,
+      rank: userRank || 0,
       isCurrentUser: true
     };
   }
 
   // Map results to the expected format
-  const entries: PointsLeaderboardEntry[] = data?.map((item, index) => ({
+  const entries: PointsLeaderboardEntry[] = data?.map((item: any, index: number) => ({
     userId: item.user_id,
     displayName: item.display_name,
     totalPoints: item.total_points,
-    avatar: item.avatar_url,
+    avatar: avatarUrls[item.user_id] || undefined,
     rank: offset + index + 1,
     isCurrentUser: item.user_id === currentUserId
   })) || [];
@@ -123,8 +205,8 @@ const fetchPointsLeaderboard = async (
   return {
     entries,
     currentUserEntry,
-    totalEntries: totalCount || 0,
-    hasMore: (offset + pagination.pageSize) < (totalCount || 0)
+    totalEntries: totalEntries || 0,
+    hasMore: (offset + pagination.pageSize) < (totalEntries || 0)
   };
 };
 
