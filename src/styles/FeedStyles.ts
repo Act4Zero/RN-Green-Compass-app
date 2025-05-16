@@ -1,15 +1,39 @@
 import { ViewStyle, TextStyle, ImageStyle, StyleSheet } from 'react-native';
 
 export interface FeedStyles {
-  challengesButton: ViewStyle;
-  challengesButtonText: TextStyle;
+  // Layout styles
   keyboardAvoidingContainer: ViewStyle;
   scrollContent: ViewStyle;
   content: ViewStyle;
+  emptyStateWrapper: ViewStyle;
+  
+  // Header styles
   header: ViewStyle;
   backButton: ViewStyle;
   title: TextStyle;
   subtitle: TextStyle;
+  
+  // Feature card styles
+  featureCardsContainer: ViewStyle;
+  featureCard: ViewStyle;
+  featureCardContent: ViewStyle;
+  featureCardIcon: ViewStyle;
+  featureCardTextContainer: ViewStyle;
+  featureCardTitle: TextStyle;
+  featureCardDescription: TextStyle;
+  featureCardButton: ViewStyle;
+  featureCardButtonText: TextStyle;
+  
+  // Section styles
+  sectionHeader: ViewStyle;
+  sectionTitle: TextStyle;
+  sectionSubtitle: TextStyle;
+  
+  // Legacy button styles (kept for backwards compatibility)
+  challengesButton: ViewStyle;
+  challengesButtonText: TextStyle;
+  
+  // Posts container
   postsContainer: ViewStyle;
   postItem: ViewStyle;
   postHeader: ViewStyle;
@@ -53,8 +77,105 @@ export interface FeedStyles {
 }
 
 const FeedStyles = StyleSheet.create<FeedStyles>({
+  // Layout styles
+  keyboardAvoidingContainer: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 900,
+    padding: 16,
+  },
+  emptyStateWrapper: {
+    marginTop: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  
+  // Feature card styles
+  featureCardsContainer: {
+    marginBottom: 24,
+    gap: 16,
+  },
+  featureCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  featureCardContent: {
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureCardIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  featureCardTextContainer: {
+    flex: 1,
+  },
+  featureCardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  featureCardDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 20,
+  },
+  featureCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  featureCardButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+    marginRight: 4,
+  },
+  
+  // Section styles
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    lineHeight: 20,
+  },
+  
+  // Legacy button styles (kept for backwards compatibility)
   challengesButton: {
-    backgroundColor: '#43A047', // More vibrant green
+    backgroundColor: '#43A047',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -70,26 +191,13 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
     shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#A5D6A7', // Accent border
+    borderColor: '#A5D6A7',
   },
   challengesButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: 0.5,
-  },
-  keyboardAvoidingContainer: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 16,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 500,
-    padding: 16
   },
   header: {
     flexDirection: 'row',
