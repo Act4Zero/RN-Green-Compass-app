@@ -217,6 +217,8 @@ const FeedStyles = StyleSheet.create<FeedStyles>({
   subtitle: {
     fontSize: 16,
     color: '#555555',
+    paddingBottom: 16,
+    marginBottom: 8,
   },
   postsContainer: {
     marginTop: 16,
