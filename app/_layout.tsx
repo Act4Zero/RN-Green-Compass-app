@@ -44,6 +44,7 @@ export default function RootLayout() {
           <Stack.Screen name="community/index" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="community/leaderboards/index" options={{ headerShown: false }} />
 
           {/* Challenges screens */}
           <Stack.Screen name="community/challenges/index" options={{ headerShown: false }} />

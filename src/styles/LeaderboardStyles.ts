@@ -17,7 +17,6 @@ export interface LeaderboardStyles {
   leaderboardContainer: ViewStyle;
   leaderboardHeader: ViewStyle;
   leaderboardTitle: TextStyle;
-  refreshButton: ViewStyle;
   divider: ViewStyle;
   entryContainer: ViewStyle;
   entryContainerHighlighted: ViewStyle;
@@ -121,9 +120,6 @@ export default StyleSheet.create<LeaderboardStyles>({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333333',
-  },
-  refreshButton: {
-    padding: 8,
   },
   divider: {
     height: 1,

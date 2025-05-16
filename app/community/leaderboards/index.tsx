@@ -106,13 +106,6 @@ function LeaderboardContent() {
               <Text style={styles.leaderboardTitle}>
                 {filter.type === 'points' ? 'Most Green Points' : 'Longest Habit Streak'}
               </Text>
-              <TouchableOpacity 
-                style={styles.refreshButton}
-                onPress={refreshLeaderboard}
-                disabled={isLoading}
-              >
-                <Ionicons name="refresh" size={20} color="#2E7D32" />
-              </TouchableOpacity>
             </View>
 
             <View style={styles.divider} />
