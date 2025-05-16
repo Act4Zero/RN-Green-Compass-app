@@ -29,13 +29,10 @@ function LeaderboardEntry({ entry, leaderboardType }: LeaderboardEntryProps) {
     }
     
     // Display initials if no avatar
-    const initials = entry.displayName
-      .split(' ')
-      .map(name => name.charAt(0))
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
-    
+    const name = typeof entry.displayName === 'string' ? entry.displayName.trim() : '';
+    const initials = name
+      ? name.split(' ').map(n => n.charAt(0)).join('').substring(0, 2).toUpperCase()
+      : '?';
     return <Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>{initials}</Text>;
   };
 

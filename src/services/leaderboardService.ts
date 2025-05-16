@@ -224,8 +224,8 @@ const fetchStreakLeaderboard = async (
   // Start with base query that will apply to all filter types
   let query = supabase
     .from('profiles')
-    .select('id, display_name, longest_streak, current_streak, avatar_url')
-    .order('longest_streak', { ascending: false })
+    .select('id, display_name, login_streak, avatar_url')
+    .order('login_streak', { ascending: false })
     .limit(pagination.pageSize)
     .range(offset, offset + pagination.pageSize - 1);
 
@@ -266,7 +266,7 @@ const fetchStreakLeaderboard = async (
   // Get current user's rank regardless of pagination
   const { data: currentUserData } = await supabase
     .from('profiles')
-    .select('id, display_name, longest_streak, current_streak, avatar_url')
+    .select('id, display_name, login_streak, avatar_url')
     .eq('id', currentUserId)
     .single();
 
@@ -277,16 +277,16 @@ const fetchStreakLeaderboard = async (
     const { data: userRankData } = await supabase
       .from('profiles')
       .select('id')
-      .gte('longest_streak', currentUserData.longest_streak)
-      .order('longest_streak', { ascending: false });
+      .gte('login_streak', currentUserData.login_streak)
+      .order('login_streak', { ascending: false });
       
     const userRank = userRankData?.length || 0;
     
     currentUserEntry = {
       userId: currentUserData.id,
       displayName: currentUserData.display_name,
-      longestStreak: currentUserData.longest_streak,
-      currentStreak: currentUserData.current_streak,
+      longestStreak: currentUserData.login_streak,
+      currentStreak: currentUserData.login_streak,
       avatar: currentUserData.avatar_url,
       rank: userRank,
       isCurrentUser: true
@@ -297,8 +297,8 @@ const fetchStreakLeaderboard = async (
   const entries: StreakLeaderboardEntry[] = data?.map((item, index) => ({
     userId: item.id,
     displayName: item.display_name,
-    longestStreak: item.longest_streak,
-    currentStreak: item.current_streak,
+    longestStreak: item.login_streak,
+    currentStreak: item.login_streak,
     avatar: item.avatar_url,
     rank: offset + index + 1,
     isCurrentUser: item.id === currentUserId
