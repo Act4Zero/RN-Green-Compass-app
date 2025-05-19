@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNotification } from '../../context/NotificationContext';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import { EnhancedGoal, TimeFrequency } from '../home/types/goal.types';
+import { EnhancedGoal, TimeFrequency } from '../../types/goal.types';
 import { editGoalModalStyles } from '../home/styles/EditGoalModal.styles';
 
 interface EditGoalModalProps {
@@ -38,6 +39,7 @@ export default function EditGoalModal({
   const [editedGoalCurrent, setEditedGoalCurrent] = useState('');
   const [editedTimeFrequency, setEditedTimeFrequency] = useState<TimeFrequency>('one-time');
   const [error, setError] = useState<string | null>(null);
+  const notification = useNotification();
 
   // Reset form when goal changes
   useEffect(() => {
@@ -65,13 +67,25 @@ export default function EditGoalModal({
       const result = await onDelete(goal.id);
       
       if (result.success) {
-        Alert.alert('Success', 'Goal deleted successfully');
+        notification?.addNotification({
+          type: 'toast',
+          message: 'Goal deleted successfully',
+          severity: 'success',
+        });
       } else {
-        Alert.alert('Error', result.error || 'Failed to delete goal');
+        notification?.addNotification({
+          type: 'toast',
+          message: result.error || 'Failed to delete goal',
+          severity: 'error',
+        });
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      Alert.alert('Error', errorMessage);
+      notification?.addNotification({
+        type: 'toast',
+        message: errorMessage,
+        severity: 'error',
+      });
       console.error('Error deleting goal:', err);
     }
   };
@@ -94,7 +108,11 @@ export default function EditGoalModal({
       if (result.success) {
         // Close modal after successful update
         onClose();
-        Alert.alert('Success', 'Goal updated successfully');
+        notification?.addNotification({
+          type: 'toast',
+          message: 'Goal updated successfully',
+          severity: 'success',
+        });
       } else {
         setError(result.error || 'Failed to update goal. Please try again.');
       }

@@ -19,7 +19,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 // Import components
 import PostItem from '@/components/community/PostItem';
-import { Toast } from '@/components/community/Toast';
+import { useNotification } from '@/context/NotificationContext';
 import LoadingState from '@/components/community/LoadingState';
 import ErrorState from '@/components/community/ErrorState';
 import EmptyState from '@/components/community/EmptyState';
@@ -88,8 +88,6 @@ export default function CommunityFeed() {
     refreshDiscussions,
     
     // UI state
-    showToast,
-    toastMessage,
     postOptionsMap,
     
     // Event handlers
@@ -209,8 +207,7 @@ export default function CommunityFeed() {
       {/* New Post Button */}
       <NewPostButton onPress={handleNewPost} />
 
-      {/* Toast Notifications */}
-      <Toast message={toastMessage} visible={showToast} />
+      {/* Notifications are now handled by the NotificationContainer */}
     </KeyboardAvoidingView>
   );
 }

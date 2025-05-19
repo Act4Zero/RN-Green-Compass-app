@@ -9,13 +9,12 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
-  TextInput,
-  Alert
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
-import { Toast } from '@/components/community/Toast';
+import { useNotification } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useActivityLogs from '@/hooks/challenge/useActivityLogs';
@@ -35,7 +34,7 @@ export default function LogActivity() {
   const [activityDescription, setActivityDescription] = useState('');
   const [progress, setProgress] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showToast, setShowToast] = useState(false);
+  const { addNotification } = useNotification();
   
   // Use our selected challenge hook to get challenge details
   const {
@@ -68,8 +67,11 @@ export default function LogActivity() {
     if (!challenge || !user) return;
     
     if (!activityTitle.trim()) {
-      // Still use Alert for error (optional: can convert to toast if desired)
-      Alert.alert('Error', 'Please enter an activity title');
+      addNotification({
+        type: 'toast',
+        message: 'Please enter an activity title',
+        severity: 'error',
+      });
       return;
     }
     
@@ -79,14 +81,22 @@ export default function LogActivity() {
       setIsSubmitting(true);
       // Send title and description as separate fields
       await logActivity(activityTitle, activityDescription, progressValue);
-      setShowToast(true);
+      addNotification({
+        type: 'toast',
+        message: 'Your activity has been logged successfully!',
+        severity: 'success',
+        duration: 2000,
+      });
       setTimeout(() => {
-        setShowToast(false);
         router.replace('/community/challenges');
       }, 2000);
     } catch (error) {
       console.error('Error logging activity:', error);
-      Alert.alert('Error', 'Failed to log your activity. Please try again.');
+      addNotification({
+        type: 'toast',
+        message: 'Failed to log your activity. Please try again.',
+        severity: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +123,7 @@ export default function LogActivity() {
 
   return (
     <>
-      <Toast message="Your activity has been logged successfully!" visible={showToast} />
+      {/* Notifications are handled by the NotificationContainer */}
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

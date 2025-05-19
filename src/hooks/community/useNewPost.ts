@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import useCommunityFeed from '../community/useCommunityFeed';
@@ -38,6 +38,9 @@ function useNewPost() {
   // Get toast handler from feed state
   const { showToastMessage } = useCommunityFeedState();
   
+  // Get notification context
+  const notification = useNotification();
+  
   // UI state
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -58,7 +61,11 @@ function useNewPost() {
           await loadDiscussion(postId);
         } catch (error) {
           console.error('Error loading post for editing:', error);
-          Alert.alert('Error', 'Failed to load post data for editing.');
+          notification?.addNotification({
+            type: 'toast',
+            message: 'Failed to load post data for editing.',
+            severity: 'error',
+          });
           router.back();
         }
       }
@@ -82,11 +89,16 @@ function useNewPost() {
 
   // Handle permission denied
   const handlePermissionDenied = () => {
-    Alert.alert(
-      "Permission Denied",
-      "You don't have permission to edit this post.",
-      [{ text: "OK", onPress: () => router.back() }]
-    );
+    notification?.addNotification({
+      type: 'modal',
+      title: 'Permission Denied',
+      message: "You don't have permission to edit this post.",
+      severity: 'error',
+      action: {
+        label: 'OK',
+        onPress: () => router.back(),
+      },
+    });
   };
 
   // Handle post submission
@@ -113,7 +125,11 @@ function useNewPost() {
             params: { id: postId, updated: 'true' }
           });
         } else if (submitError) {
-          Alert.alert('Error', `Failed to update post: ${submitError}`);
+          notification?.addNotification({
+            type: 'toast',
+            message: `Failed to update post: ${submitError}`,
+            severity: 'error',
+          });
         }
       } else {
         // Create new post
@@ -126,17 +142,29 @@ function useNewPost() {
           setPostTitle('');
 
           // Show toast for successful creation
-          showToastMessage('Post created successfully!');
+          notification?.addNotification({
+            type: 'toast',
+            message: 'Post created successfully!',
+            severity: 'success',
+          });
 
           // Navigate back to the feed (no params)
           router.replace('/community');
         } else if (submitError) {
-          Alert.alert('Error', `Failed to create post: ${submitError}`);
+          notification?.addNotification({
+            type: 'toast',
+            message: `Failed to create post: ${submitError}`,
+            severity: 'error',
+          });
         }
       }
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} post:`, error);
-      Alert.alert('Error', `Failed to ${isEditMode ? 'update' : 'create'} post. Please try again.`);
+      notification?.addNotification({
+        type: 'toast',
+        message: `Failed to ${isEditMode ? 'update' : 'create'} post. Please try again.`,
+        severity: 'error',
+      });
     }
   };
 

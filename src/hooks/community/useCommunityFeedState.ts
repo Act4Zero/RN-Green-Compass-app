@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../../hooks/community/useCommunityFeed';
+import { useNotification } from '../../context/NotificationContext';
 import { discussionService } from '../../services/community';
-import { confirmAndDeletePost } from '../../utils/deletePost';
+import { deletePost } from '../../utils/deletePost';
 
 /**
  * Custom hook to manage community feed state and logic
@@ -32,11 +32,14 @@ function useCommunityFeedState() {
     toggleDiscussionReaction,
   } = useCommunityFeed();
   
+  // Use notification context
+  const { addNotification } = useNotification();
+  const [postOptionsMap, setPostOptionsMap] = useState<Record<string, boolean>>({});
+  const [activePostId, setActivePostId] = useState<string | null>(null);
+
   // UI state management
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [postOptionsMap, setPostOptionsMap] = useState<Record<string, boolean>>({});
-  const [activePostId, setActivePostId] = useState<string | null>(null);
 
   // Use a ref to track if discussions have been loaded
   const discussionsLoadedRef = useRef(false);
@@ -59,20 +62,21 @@ function useCommunityFeedState() {
     }
   }, [user, authLoading, router]);
 
-  // Toast message handler
-  const showToastMessage = (message: string) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 2000);
+  // Notification handler
+  const showToastMessage = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    addNotification({
+      type: 'toast',
+      message,
+      severity,
+      duration: 2000,
+    });
   };
 
   // Post interaction handlers
   const handleLike = async (postId: string) => {
     const success = await toggleDiscussionReaction(postId);
     if (success) {
-      showToastMessage('Post liked!');
+      showToastMessage('Post liked!', 'success');
     }
   };
 
@@ -133,28 +137,40 @@ function useCommunityFeedState() {
     togglePostOptions(postId);
     if (!user) {
       console.error('[FEED] No user found for delete operation');
-      showToastMessage('Error: You must be logged in to delete a post');
+      showToastMessage('Error: You must be logged in to delete a post', 'error');
       return;
     }
     
-    // Use the new utility function for deletion
-    confirmAndDeletePost(
-      postId,
-      user.id,
-      // On success
-      () => {
-        showToastMessage('Post deleted successfully!');
-        
-        // Force refresh to update the UI
-        refreshDiscussions().then(() => {
-        });
-      },
-      // On error
-      (errorMsg) => {
-        console.error(`[FEED] Error deleting post: ${errorMsg}`);
-        showToastMessage(`Error: ${errorMsg}`);
+    // Show confirmation using our notification system
+    addNotification({
+      type: 'modal',
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post? This action cannot be undone.',
+      severity: 'warning',
+      autoClose: false,
+      action: {
+        label: 'Delete',
+        onPress: () => {
+          // Execute delete operation after confirmation
+          deletePost(
+            postId,
+            user.id,
+            // On success
+            () => {
+              showToastMessage('Post deleted successfully!', 'success');
+              
+              // Force refresh to update the UI
+              refreshDiscussions().then(() => {});
+            },
+            // On error
+            (errorMsg) => {
+              console.error(`[FEED] Error deleting post: ${errorMsg}`);
+              showToastMessage(`Error: ${errorMsg}`, 'error');
+            }
+          );
+        }
       }
-    );
+    });
   };
 
   return {
@@ -169,8 +185,7 @@ function useCommunityFeedState() {
     refreshDiscussions,
     
     // UI state
-    showToast,
-    toastMessage,
+    // Toast state is handled by the notification system
     postOptionsMap,
     
     // Event handlers

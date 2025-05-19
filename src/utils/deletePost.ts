@@ -1,4 +1,3 @@
-import { Alert, Platform } from 'react-native';
 import supabase from '../lib/supabase';
 
 /**
@@ -65,61 +64,24 @@ export const deletePost = async (
   }
 };
 
-/**
- * Shows a confirmation dialog and handles post deletion
- * Now with enhanced error handling for web and mobile
- */
+// This function has been deprecated in favor of direct deletePost usage with component-handled confirmation
+// Components should use the notification system for confirmation UI and then call deletePost directly
+// DEPRECATED - Will be removed in a future version
 export const confirmAndDeletePost = (
   postId: string,
   userId: string,
   onSuccess?: () => void,
   onError?: (message: string) => void
 ) => {
-  // Function to execute on delete confirmation
-  const executeDelete = async () => {
-    
-    const success = await deletePost(
-      postId, 
-      userId,
-      () => {
-        if (onSuccess) onSuccess();
-      },
-      (error) => {
-        if (onError) onError(error.message);
-      }
-    );
-    
-    // Ensure the onSuccess callback is called if deletePost returns true
-    if (success && onSuccess) {
-      onSuccess();
-    }
-  };
+  console.warn('confirmAndDeletePost is deprecated. Components should handle their own confirmation UI');
+  console.warn('See documentation for proper usage with notification system');
   
-  // Use platform-specific approach for better reliability
-  if (Platform.OS === 'web') {
-    // For web, use the browser's confirm dialog which is more reliable
-    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
-    
-    if (confirmed) {
-      executeDelete();
-    }
-  } else {
-    // For mobile, use React Native's Alert
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post? This action cannot be undone.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => {}
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: executeDelete
-        }
-      ]
-    );
-  }
+  // Call deletePost directly - no confirmation
+  return deletePost(
+    postId, 
+    userId,
+    onSuccess,
+    // Adapt the error callback to match expected type
+    onError ? (error: Error) => onError(error.message) : undefined
+  );
 };
