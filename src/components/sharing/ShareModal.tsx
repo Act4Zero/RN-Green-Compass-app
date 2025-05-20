@@ -43,6 +43,12 @@ export interface ShareModalProps {
     title: string;
     date: Date;
     icon?: string;
+    shareContent?: {
+      title: string;
+      message: string;
+      url?: string;
+      imageUrl?: string;
+    };
   };
   userName?: string;
   showUserName?: boolean;
@@ -90,8 +96,8 @@ export function ShareModal({
       setIsSharing(true);
       setShareResult({});
 
-      // Generate the sharing content
-      const shareContent = formatAchievementForSharing(
+      // Use custom sharing content if provided, otherwise generate it
+      const shareContent = achievementData.shareContent || formatAchievementForSharing(
         achievementData.title,
         showUserName ? userName : undefined
       );

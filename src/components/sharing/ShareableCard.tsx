@@ -26,6 +26,7 @@ export interface ShareableCardProps {
   theme?: 'light' | 'dark';
   viewShotRef?: React.RefObject<ViewShot>;
   viewShotOptions?: ViewShotProperties;
+  accentColor?: string;
 }
 
 /**
@@ -39,10 +40,10 @@ export function ShareableCard({
   showUserName = false,
   theme: forcedTheme,
   viewShotRef,
-  viewShotOptions = { quality: 1, format: 'png' }
+  viewShotOptions = {}
 }: ShareableCardProps) {
   const deviceTheme = useColorScheme();
-  const theme = forcedTheme || deviceTheme || 'light';
+  const theme: 'light' | 'dark' = forcedTheme || deviceTheme || 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
@@ -51,7 +52,7 @@ export function ShareableCard({
     : 'Date not available';
 
   return (
-    <ViewShot ref={ref} {...viewShotOptions}>
+    <ViewShot ref={ref}>
       <View style={[
         styles.container, 
         theme === 'dark' ? { backgroundColor: '#2F2F2F' } : null
@@ -61,7 +62,7 @@ export function ShareableCard({
             {achievementIcon ? (
               <Image 
                 source={{ uri: achievementIcon }} 
-                style={styles.achievementIcon} 
+                style={iconStyles.achievementIcon as ImageStyle} 
               />
             ) : (
               <View style={[
@@ -100,8 +101,8 @@ export function ShareableCard({
         
         <View style={styles.footer}>
           <Image 
-            source={require('../../../assets/icon.png')} 
-            style={styles.logo} 
+            source={require('../../../assets/images/GCLogo-no-bg.png')} 
+            style={iconStyles.logo} 
             resizeMode="contain"
           />
           <Text style={[
@@ -129,15 +130,42 @@ export const captureShareableCard = async (ref: React.RefObject<ViewShot>): Prom
   }
   
   try {
-    const uri = await ref.current.capture();
-    return uri;
+    // Use viewshot's capture method with type checking
+    if (typeof ref.current.capture === 'function') {
+      const uri = await ref.current.capture();
+      return uri;
+    }
+    console.error('ViewShot capture method not available');
+    return null;
   } catch (error) {
     console.error('Error capturing card:', error);
     return null;
   }
 };
 
-const styles = StyleSheet.create<Styles>({
+// Define separate style types for different style categories
+interface ContainerStyles {
+  container: ViewStyle;
+  cardContent: ViewStyle;
+  header: ViewStyle;
+  achievementInfo: ViewStyle;
+  footer: ViewStyle;
+}
+
+interface IconStyles {
+  achievementIcon: ViewStyle;
+  logo: ImageStyle;
+}
+
+interface TextStyles {
+  title: TextStyle;
+  dateText: TextStyle;
+  userName: TextStyle;
+  appName: TextStyle;
+}
+
+// Create separate style objects for each category
+const containerStyles = StyleSheet.create<ContainerStyles>({
   container: {
     width: 300,
     padding: 16,
@@ -157,6 +185,19 @@ const styles = StyleSheet.create<Styles>({
     alignItems: 'center',
     marginBottom: 16,
   },
+  achievementInfo: {
+    flex: 1,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingTop: 12,
+  },
+});
+
+const iconStyles = StyleSheet.create<IconStyles>({
   achievementIcon: {
     width: 64,
     height: 64,
@@ -166,9 +207,14 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: 'center',
     marginRight: 12,
   },
-  achievementInfo: {
-    flex: 1,
-  },
+  logo: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  }
+});
+
+const textStyles = StyleSheet.create<TextStyles>({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -185,23 +231,18 @@ const styles = StyleSheet.create<Styles>({
     fontWeight: '500',
     color: '#444444',
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingTop: 12,
-  },
-  logo: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
   appName: {
     fontSize: 16,
     fontWeight: '500',
     color: '#2E7D32',
   }
 });
+
+// Combine all styles for convenience
+const styles = {
+  ...containerStyles,
+  ...iconStyles,
+  ...textStyles
+};
 
 export default ShareableCard;
