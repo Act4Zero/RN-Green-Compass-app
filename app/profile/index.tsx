@@ -317,7 +317,15 @@ useEffect(() => {
             </View>
           </View>
         ) : (
-          <BadgeSummary badgeCount={userBadges.length} />
+          <BadgeSummary 
+            badgeCount={userBadges.length} 
+            totalBadgeCount={userBadges.length > 0 ? 20 : 0} /* Using a placeholder value for total badge count */
+            recentBadgeNames={userBadges
+              .slice(0, 3)
+              .map(badge => badge.badge?.name || '')
+              .filter(name => name !== '')}
+            userName={displayIdentifier}
+          />
         )}
         
         {/* Points History Section */}
