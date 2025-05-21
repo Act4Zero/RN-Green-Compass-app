@@ -1,8 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Linking, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Linking, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
 import { Ionicons } from '@expo/vector-icons';
+import CommunityShareModal from './CommunityShareModal';
+import { formatCommunityPostForSharing } from '@/utils/communityShareUtils';
+import { useAuth } from '@/context/AuthContext';
+import postItemStyles from './PostItem.styles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import FeedStyles from '@/styles/FeedStyles';
 
@@ -55,6 +59,59 @@ function PostItem({
   handleLike,
   handleComment
 }: PostItemProps) {
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const { user } = useAuth();
+  // Get user display name with a fallback
+  const userName = user?.email ? user.email.split('@')[0] : undefined;
+  
+  // Format the current date for the achievement date
+  const currentDate = new Date();
+  
+  // Get author name with fallback
+  const authorName = discussion.user?.full_name?.trim() ? 
+    discussion.user.full_name : 'Anonymous';
+  
+  // Prepare post data for sharing
+  const postTitle = discussion.title || null;
+  const postContent = discussion.content || '';
+  
+  // Create custom-formatted sharing content
+  const shareContent = formatCommunityPostForSharing(
+    postTitle,
+    postContent,
+    authorName,
+    userName
+  );
+  
+  // Prepare post data for sharing modal
+  const postData = {
+    title: postTitle,
+    content: postContent,
+    authorName,
+    date: currentDate,
+    shareContent: shareContent
+  };
+  
+  // Handle opening the share modal
+  const handleSharePress = useCallback((e: any) => {
+    e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
+    setIsShareModalVisible(true);
+  }, []);
+  
+  // Handle closing the share modal
+  const handleCloseShareModal = useCallback(() => {
+    setIsShareModalVisible(false);
+  }, []);
+  
+  // Handle share error
+  const handleShareError = useCallback((error: string) => {
+    Alert.alert(
+      'Sharing Error',
+      'There was a problem sharing this post. Please try again.'
+    );
+  }, []);
+  
+  // Initialize router
   const router = useRouter();
 
   return (
@@ -170,10 +227,26 @@ function PostItem({
           <Ionicons name="chatbubble-outline" size={20} color="#757575" />
           <Text style={styles.commentText}>{discussion.comment_count || 0}</Text>
         </TouchableOpacity>
+        
+        {/* Share Button */}
+        <TouchableOpacity 
+          style={postItemStyles.shareButton}
+          onPress={handleSharePress}
+        >
+          <Ionicons name="share-social-outline" size={20} color="#757575" />
+          <Text style={postItemStyles.shareText}>Share</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
     
     {/* Menu options are now rendered in the parent component */}
+    
+    {/* Community Share Modal */}
+    <CommunityShareModal
+      isVisible={isShareModalVisible}
+      onClose={handleCloseShareModal}
+      postData={postData}
+    />
   </View>
   );
 }
