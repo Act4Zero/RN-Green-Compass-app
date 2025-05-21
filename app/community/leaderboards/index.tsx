@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { LeaderboardProvider, useLeaderboard } from '@/context/LeaderboardContext';
+import { PointsLeaderboardEntry, StreakLeaderboardEntry } from '@/types/leaderboards';
 import LeaderboardStyles from '@/styles/LeaderboardStyles';
 import LeaderboardFilters from '@/components/community/leaderboards/LeaderboardFilters';
 import LeaderboardEntry from '@/components/community/leaderboards/LeaderboardEntry';
@@ -98,7 +99,17 @@ function LeaderboardContent() {
           />
 
           {/* Motivational message specific to the user's ranking */}
-          <MotivationalMessage motivationalInfo={motivationalInfo} />
+          <MotivationalMessage 
+            motivationalInfo={motivationalInfo}
+            currentUserRank={currentUserEntry?.rank || 0}
+            displayName={currentUserEntry?.displayName || user?.email?.split('@')[0] || 'User'}
+            totalPoints={filter.type === 'points' ? (currentUserEntry as PointsLeaderboardEntry)?.totalPoints : undefined}
+            leaderboardType={filter.type}
+            leaderboardScope={filter.scope}
+            longestStreak={filter.type === 'streak' ? (currentUserEntry as StreakLeaderboardEntry)?.longestStreak : undefined}
+            currentStreak={filter.type === 'streak' ? (currentUserEntry as StreakLeaderboardEntry)?.currentStreak : undefined}
+            totalEntries={totalEntries}
+          />
 
           {/* Leaderboard data display */}
           <View style={styles.leaderboardContainer}>
