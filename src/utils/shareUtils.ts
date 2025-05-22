@@ -335,12 +335,16 @@ export const isSharingAvailable = (platform?: SocialPlatform): boolean => {
  * @returns Array of available social platforms
  */
 export const getAvailableSocialPlatforms = (): SocialPlatform[] => {
-  const platforms: SocialPlatform[] = ['twitter', 'linkedin'];
-  
-
+  const platforms: SocialPlatform[] = [];
   
   // Always include general sharing
   platforms.push('general');
+  
+  // Include platform-specific sharing based on availability
+  if (Platform.OS === 'web' || Platform.OS === 'ios' || Platform.OS === 'android') {
+    platforms.push('twitter');
+    platforms.push('linkedin');
+  }
   
   return platforms;
 };

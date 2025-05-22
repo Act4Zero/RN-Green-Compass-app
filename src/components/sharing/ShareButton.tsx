@@ -18,7 +18,7 @@ export interface ShareButtonProps {
   onPress: () => void;
   size?: 'small' | 'medium' | 'large';
   variant?: 'primary' | 'outline' | 'ghost';
-  platformIcon?: SocialPlatform | 'facebook';
+  platformIcon?: SocialPlatform;
   label?: string;
   disabled?: boolean;
   isLoading?: boolean;
@@ -46,12 +46,8 @@ export function ShareButton({
   // Determine the icon name based on platform
   function getIconName() {
     switch (platformIcon) {
-      case 'instagram':
-        return 'logo-instagram' as const;
       case 'twitter':
         return 'logo-twitter' as const;
-      case 'facebook':
-        return 'logo-facebook' as const;
       case 'linkedin':
         return 'logo-linkedin' as const;
       case 'general':

@@ -186,28 +186,8 @@ export function ShareModal({
                         />
                       </View>
                     )}
-                    {availablePlatforms.includes('facebook') && (
-                      <View style={styles.buttonContainer}>
-                        <ShareButton
-                          label="Facebook"
-                          platformIcon="facebook"
-                          onPress={() => handleShare('facebook')}
-                          disabled={isSharing}
-                        />
-                      </View>
-                    )}
                   </View>
                   <View style={styles.platformRow}>
-                    {availablePlatforms.includes('instagram') && (
-                      <View style={styles.buttonContainer}>
-                        <ShareButton
-                          label="Instagram"
-                          platformIcon="instagram"
-                          onPress={() => handleShare('instagram')}
-                          disabled={isSharing}
-                        />
-                      </View>
-                    )}
                     {availablePlatforms.includes('linkedin') && (
                       <View style={styles.buttonContainer}>
                         <ShareButton
