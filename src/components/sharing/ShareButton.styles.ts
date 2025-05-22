@@ -35,25 +35,26 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: 'center',
   },
   buttonText: {
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'center',
+    color: '#FFFFFF',
   },
   primary: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#4CAF50',
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#2E7D32',
+    borderColor: '#4CAF50',
   },
   ghost: {
     backgroundColor: 'transparent',
   },
   outlineText: {
-    color: '#2E7D32',
+    color: '#4CAF50',
   },
   ghostText: {
-    color: '#2E7D32',
+    color: '#4CAF50',
   },
   small: {
     paddingVertical: 4,

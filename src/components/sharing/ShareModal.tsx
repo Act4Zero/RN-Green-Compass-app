@@ -3,16 +3,13 @@ import {
   Modal,
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  Platform,
-  ViewStyle,
-  TextStyle,
-  useColorScheme,
   useWindowDimensions,
   ActivityIndicator,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
+import { shareModalStyles } from '../../styles/shareModalStyles';
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
 import ShareableCard, { ShareableCardProps, captureShareableCard } from './ShareableCard';
@@ -24,22 +21,7 @@ import {
   getAvailableSocialPlatforms 
 } from '../../utils/shareUtils';
 
-interface Styles {
-  modalContainer: ViewStyle;
-  modalContent: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  closeButton: ViewStyle;
-  divider: ViewStyle;
-  cardContainer: ViewStyle;
-  sharingOptions: ViewStyle;
-  sharingOptionsTitle: TextStyle;
-  platformButtons: ViewStyle;
-  platformRow: ViewStyle;
-  successMessage: TextStyle;
-  errorMessage: TextStyle;
-  buttonContainer: ViewStyle;
-}
+// Using styles from shareModalStyles.ts
 
 export interface ShareModalProps {
   isVisible: boolean;
@@ -69,8 +51,7 @@ export function ShareModal({
   userName,
   showUserName = false
 }: ShareModalProps) {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
   
@@ -94,7 +75,7 @@ export function ShareModal({
     achievementIcon: achievementData.icon,
     userName,
     showUserName,
-    theme: isDarkMode ? 'dark' : 'light',
+    theme: 'light',
     viewShotRef: cardRef
   };
 
@@ -159,121 +140,110 @@ export function ShareModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[
-        styles.modalContainer,
-        isDarkMode && { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
-      ]}>
-        <View style={[
-          styles.modalContent,
-          { maxWidth: width * 0.9 },
-          isDarkMode && { backgroundColor: '#333' }
-        ]}>
-          <View style={styles.header}>
-            <Text style={[
-              styles.title,
-              isDarkMode && { color: '#FFF' }
-            ]}>
-              Share Your Achievement
-            </Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-              disabled={isSharing}
-            >
-              <Ionicons
-                name="close"
-                size={24}
-                color={isDarkMode ? '#CCC' : '#666'}
-              />
-            </TouchableOpacity>
-          </View>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.contentWrapper}>
+            <View style={styles.header}>
+              <Text style={styles.title}>
+                Share Your Achievement
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onClose}
+                disabled={isSharing}
+              >
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.cardContainer}>
-            <ShareableCard {...cardProps} />
-          </View>
+            <View style={styles.cardContainer}>
+              <ShareableCard {...cardProps} />
+            </View>
 
-          <View style={styles.sharingOptions}>
-            <Text style={[
-              styles.sharingOptionsTitle,
-              isDarkMode && { color: '#CCC' }
-            ]}>
-              Share to:
-            </Text>
 
-            {isSharing ? (
-              <ActivityIndicator size="large" color="#2E7D32" />
-            ) : (
-              <View style={styles.platformButtons}>
-                <View style={styles.platformRow}>
-                  {availablePlatforms.includes('twitter') && (
+            <View style={styles.sharingOptions}>
+              <Text style={styles.sharingOptionsTitle}>
+                Share to:
+              </Text>
+              {isSharing ? (
+                <ActivityIndicator size="large" color="#2E7D32" />
+              ) : (
+                <View style={styles.platformButtons}>
+                  <View style={styles.platformRow}>
+                    {availablePlatforms.includes('twitter') && (
+                      <View style={styles.buttonContainer}>
+                        <ShareButton
+                          label="Twitter"
+                          platformIcon="twitter"
+                          onPress={() => handleShare('twitter')}
+                          disabled={isSharing}
+                        />
+                      </View>
+                    )}
+                    {availablePlatforms.includes('facebook') && (
+                      <View style={styles.buttonContainer}>
+                        <ShareButton
+                          label="Facebook"
+                          platformIcon="facebook"
+                          onPress={() => handleShare('facebook')}
+                          disabled={isSharing}
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.platformRow}>
+                    {availablePlatforms.includes('instagram') && (
+                      <View style={styles.buttonContainer}>
+                        <ShareButton
+                          label="Instagram"
+                          platformIcon="instagram"
+                          onPress={() => handleShare('instagram')}
+                          disabled={isSharing}
+                        />
+                      </View>
+                    )}
+                    {availablePlatforms.includes('linkedin') && (
+                      <View style={styles.buttonContainer}>
+                        <ShareButton
+                          label="LinkedIn"
+                          platformIcon="linkedin"
+                          onPress={() => handleShare('linkedin')}
+                          disabled={isSharing}
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.platformRow}>
                     <View style={styles.buttonContainer}>
                       <ShareButton
-                        label="Twitter"
-                        platformIcon="twitter"
-                        onPress={() => handleShare('twitter')}
+                        label="More Options"
+                        platformIcon="general"
+                        onPress={() => handleShare('general')}
                         disabled={isSharing}
                       />
                     </View>
-                  )}
-                  {availablePlatforms.includes('facebook') && (
-                    <View style={styles.buttonContainer}>
-                      <ShareButton
-                        label="Facebook"
-                        platformIcon="facebook"
-                        onPress={() => handleShare('facebook')}
-                        disabled={isSharing}
-                      />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.platformRow}>
-                  {availablePlatforms.includes('instagram') && (
-                    <View style={styles.buttonContainer}>
-                      <ShareButton
-                        label="Instagram"
-                        platformIcon="instagram"
-                        onPress={() => handleShare('instagram')}
-                        disabled={isSharing}
-                      />
-                    </View>
-                  )}
-                  {availablePlatforms.includes('linkedin') && (
-                    <View style={styles.buttonContainer}>
-                      <ShareButton
-                        label="LinkedIn"
-                        platformIcon="linkedin"
-                        onPress={() => handleShare('linkedin')}
-                        disabled={isSharing}
-                      />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.platformRow}>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
-                      label="More Options"
-                      platformIcon="general"
-                      onPress={() => handleShare('general')}
-                      disabled={isSharing}
-                    />
                   </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            {shareResult.success && (
-              <Text style={styles.successMessage}>
-                {shareResult.message}
-              </Text>
-            )}
+              {shareResult.success && (
+                <Text style={styles.successMessage}>
+                  {shareResult.message}
+                </Text>
+              )}
 
-            {shareResult.success === false && (
-              <Text style={styles.errorMessage}>
-                {shareResult.message}
-              </Text>
-            )}
+              {shareResult.success === false && (
+                <Text style={styles.errorMessage}>
+                  {shareResult.message}
+                </Text>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -281,81 +251,6 @@ export function ShareModal({
   );
 }
 
-const styles = StyleSheet.create<Styles>({
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 20,
-    maxWidth: 350,
-    width: '90%',
-    maxHeight: '90%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
-    marginBottom: 20,
-  },
-  cardContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  sharingOptions: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  sharingOptionsTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#444',
-    marginBottom: 12,
-  },
-  platformButtons: {
-    width: '100%',
-  },
-  platformRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  successMessage: {
-    marginTop: 16,
-    color: '#2E7D32',
-    fontWeight: '500',
-  },
-  errorMessage: {
-    marginTop: 16,
-    color: '#D32F2F',
-    fontWeight: '500',
-  },
-  buttonContainer: {
-    flex: 1,
-    marginHorizontal: 4,
-  }
-});
+const styles = shareModalStyles;
 
 export default ShareModal;
