@@ -4,7 +4,9 @@ import {
   Text, 
   ActivityIndicator, 
   View,
-  useColorScheme
+  useColorScheme,
+  ViewStyle,
+  TextStyle
 } from 'react-native';
 import styles, { Styles } from './ShareButton.styles';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +18,7 @@ export interface ShareButtonProps {
   onPress: () => void;
   size?: 'small' | 'medium' | 'large';
   variant?: 'primary' | 'outline' | 'ghost';
-  platformIcon?: SocialPlatform;
+  platformIcon?: SocialPlatform | 'facebook';
   label?: string;
   disabled?: boolean;
   isLoading?: boolean;
@@ -42,17 +44,20 @@ export function ShareButton({
   const isDarkMode = colorScheme === 'dark';
   
   // Determine the icon name based on platform
-  function getIconName(): string {
+  function getIconName() {
     switch (platformIcon) {
       case 'instagram':
-        return 'logo-instagram';
+        return 'logo-instagram' as const;
       case 'twitter':
-        return 'logo-twitter';
+        return 'logo-twitter' as const;
+      case 'facebook':
+        return 'logo-facebook' as const;
       case 'linkedin':
-        return 'logo-linkedin';
+        return 'logo-linkedin' as const;
       case 'general':
+        return 'share-social-outline' as const;
       default:
-        return 'share-social-outline';
+        return 'share-social-outline' as const;
     }
   }
 

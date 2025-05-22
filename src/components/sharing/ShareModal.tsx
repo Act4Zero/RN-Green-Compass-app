@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -17,7 +17,12 @@ import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
 import ShareableCard, { ShareableCardProps, captureShareableCard } from './ShareableCard';
 import ShareButton from './ShareButton';
-import { shareToSocialPlatform, SocialPlatform, formatAchievementForSharing } from '../../utils/shareUtils';
+import { 
+  shareToSocialPlatform, 
+  SocialPlatform, 
+  formatAchievementForSharing, 
+  getAvailableSocialPlatforms 
+} from '../../utils/shareUtils';
 
 interface Styles {
   modalContainer: ViewStyle;
@@ -74,6 +79,13 @@ export function ShareModal({
     success?: boolean;
     message?: string;
   }>({});
+  
+  const [availablePlatforms, setAvailablePlatforms] = useState<SocialPlatform[]>([]);
+  
+  // Get available platforms on component mount
+  useEffect(() => {
+    setAvailablePlatforms(getAvailableSocialPlatforms());
+  }, []);
 
   // Format achievement data for the ShareableCard component
   const cardProps: ShareableCardProps = {
@@ -195,32 +207,50 @@ export function ShareModal({
             ) : (
               <View style={styles.platformButtons}>
                 <View style={styles.platformRow}>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
-                      label="Instagram"
-                      platformIcon="instagram"
-                      onPress={() => handleShare('instagram')}
-                      disabled={isSharing}
-                    />
-                  </View>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
-                      label="Twitter"
-                      platformIcon="twitter"
-                      onPress={() => handleShare('twitter')}
-                      disabled={isSharing}
-                    />
-                  </View>
+                  {availablePlatforms.includes('twitter') && (
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="Twitter"
+                        platformIcon="twitter"
+                        onPress={() => handleShare('twitter')}
+                        disabled={isSharing}
+                      />
+                    </View>
+                  )}
+                  {availablePlatforms.includes('facebook') && (
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="Facebook"
+                        platformIcon="facebook"
+                        onPress={() => handleShare('facebook')}
+                        disabled={isSharing}
+                      />
+                    </View>
+                  )}
                 </View>
                 <View style={styles.platformRow}>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
-                      label="LinkedIn"
-                      platformIcon="linkedin"
-                      onPress={() => handleShare('linkedin')}
-                      disabled={isSharing}
-                    />
-                  </View>
+                  {availablePlatforms.includes('instagram') && (
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="Instagram"
+                        platformIcon="instagram"
+                        onPress={() => handleShare('instagram')}
+                        disabled={isSharing}
+                      />
+                    </View>
+                  )}
+                  {availablePlatforms.includes('linkedin') && (
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="LinkedIn"
+                        platformIcon="linkedin"
+                        onPress={() => handleShare('linkedin')}
+                        disabled={isSharing}
+                      />
+                    </View>
+                  )}
+                </View>
+                <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
                       label="More Options"
@@ -264,6 +294,7 @@ const styles = StyleSheet.create<Styles>({
     padding: 20,
     maxWidth: 350,
     width: '90%',
+    maxHeight: '90%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
