@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { homeStyles } from '../../styles/Home.styles';
 import { ShareModal } from '@/components/sharing';
 import { formatDashboardForSharing } from '@/utils/sharing/dashboardShareUtils';
-import { useAuth } from '@/context/AuthContext';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 
 interface DashboardStatsProps {
@@ -16,7 +16,7 @@ interface DashboardStatsProps {
 
 export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: DashboardStatsProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
-  const { user } = useAuth();
+  const { displayName } = useUserDisplayName();
   
   // Format the current date for the achievement date
   const currentDate = new Date();
@@ -33,15 +33,12 @@ export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: D
     icon: undefined, // We could add a custom icon here in the future
   };
   
-  // Get user display name with a fallback
-  const userName = user?.email ? user.email.split('@')[0] : undefined;
-  
-  // Create custom-formatted sharing content
+  // Create custom-formatted sharing content using display name from profile
   const shareContent = formatDashboardForSharing(
     safeActions,
     safeCO2,
     safeStreak,
-    userName
+    displayName
   );
   
   // Handle opening the share modal
@@ -105,7 +102,6 @@ export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: D
           // Add pre-formatted sharing content for messaging
           shareContent: shareContent
         }}
-        userName={userName}
         showUserName={true}
       />
     </>

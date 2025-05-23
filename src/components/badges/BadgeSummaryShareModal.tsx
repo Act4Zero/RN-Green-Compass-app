@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 interface BadgeSummaryShareModalProps {
   isVisible: boolean;
@@ -39,9 +40,9 @@ function BadgeSummaryShareModal({
   onError,
   badgeData,
   shareContent,
-  userName,
 }: BadgeSummaryShareModalProps) {
   const viewShotRef = useRef<ViewShot>(null);
+  const { displayName } = useUserDisplayName();
 
   const handleClose = () => {
     onClose();
@@ -178,8 +179,8 @@ function BadgeSummaryShareModal({
                 )}
                 
                 <View style={styles.shareCardFooter}>
-                  {userName ? (
-                    <Text style={styles.footerText}>{userName}'s sustainability journey</Text>
+                  {displayName ? (
+                    <Text style={styles.footerText}>{displayName}'s sustainability journey</Text>
                   ) : (
                     <Text style={styles.footerText}>My sustainability journey</Text>
                   )}

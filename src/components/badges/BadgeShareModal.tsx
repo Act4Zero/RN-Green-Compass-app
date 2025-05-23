@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -17,6 +17,7 @@ import ViewShot from 'react-native-view-shot';
 // import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import BadgeShareableCard from './BadgeShareableCard';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 interface BadgeShareModalProps {
   isVisible: boolean;
@@ -44,9 +45,9 @@ function BadgeShareModal({
   onError,
   badgeData,
   shareContent,
-  userName,
 }: BadgeShareModalProps) {
   const viewShotRef = useRef<ViewShot>(null);
+  const { displayName } = useUserDisplayName();
 
   const handleClose = () => {
     onClose();
@@ -145,7 +146,7 @@ function BadgeShareModal({
                 earnedDate={badgeData.earnedDate}
                 isEarned={badgeData.isEarned}
                 imageUrl={badgeData.imageUrl}
-                userName={userName}
+                userName={displayName}
               />
             </ViewShot>
           </View>

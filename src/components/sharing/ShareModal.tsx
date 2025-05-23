@@ -20,6 +20,7 @@ import {
   formatAchievementForSharing, 
   getAvailableSocialPlatforms 
 } from '../../utils/sharing/shareUtils';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 // Using styles from shareModalStyles.ts
 
@@ -37,7 +38,6 @@ export interface ShareModalProps {
       imageUrl?: string;
     };
   };
-  userName?: string;
   showUserName?: boolean;
 }
 
@@ -48,9 +48,9 @@ export function ShareModal({
   isVisible,
   onClose,
   achievementData,
-  userName,
   showUserName = false
 }: ShareModalProps) {
+  const { displayName } = useUserDisplayName();
 
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
@@ -73,7 +73,7 @@ export function ShareModal({
     achievementTitle: achievementData.title,
     achievementDate: achievementData.date,
     achievementIcon: achievementData.icon,
-    userName,
+    userName: displayName,
     showUserName,
     theme: 'light',
     viewShotRef: cardRef
@@ -92,7 +92,7 @@ export function ShareModal({
       // Use custom sharing content if provided, otherwise generate it
       const shareContent = achievementData.shareContent || formatAchievementForSharing(
         achievementData.title,
-        showUserName ? userName : undefined
+        showUserName ? displayName : undefined
       );
 
       // If we're on a mobile platform and need an image, capture the card

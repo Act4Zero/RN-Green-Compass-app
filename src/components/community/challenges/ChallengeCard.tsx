@@ -6,8 +6,8 @@ import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import cardStyles from './ChallengeCard.styles';
 import { formatChallengeForSharing } from '@/utils/sharing/challengeShareUtils';
 import ChallengeShareModal from './ChallengeShareModal';
-import { useAuth } from '@/context/AuthContext';
 import formatDate from '@/utils/formatDate';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -18,7 +18,7 @@ const styles = ChallengeStyles;
 
 function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
-  const { user } = useAuth();
+  const { displayName } = useUserDisplayName();
   
   // Format the dates for display
   const startDate = new Date(challenge.start_date);
@@ -65,9 +65,6 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   
   const statusInfo = getStatusInfo();
   
-  // Get user display name with a fallback
-  const userName = user?.email ? user.email.split('@')[0] : undefined;
-  
   // Create custom-formatted sharing content for the challenge
   const shareContent = formatChallengeForSharing(
     challenge.title,
@@ -77,7 +74,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
     Boolean(challenge.is_participant),
     challenge.participant_count || 0,
     challenge.progress_metric,
-    userName
+    displayName
   );
   
   // Prepare challenge data for sharing modal
