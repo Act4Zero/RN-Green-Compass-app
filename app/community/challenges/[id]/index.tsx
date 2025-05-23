@@ -8,12 +8,12 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useParticipants from '@/hooks/challenge/useParticipants';
 import ChallengeParticipants from '@/components/community/challenges/ChallengeParticipants';
@@ -31,6 +31,7 @@ export default function ChallengeDetail() {
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
   const { user, loading: authLoading } = useAuth();
+  const { addNotification } = useNotification();
   
   // Use our selected challenge hook
   const { loadChallenge, updateParticipantCount, updateProgressMetrics, clearChallenge, challenge, isLoading, error } = useSelectedChallenge();
@@ -52,7 +53,13 @@ export default function ChallengeDetail() {
   // Event handlers for joining/leaving challenge
   const handleJoinChallenge = async () => {
     if (!user) {
-      Alert.alert('Authentication Required', 'Please sign in to join this challenge.');
+      addNotification({
+        type: 'modal',
+        title: 'Authentication Required',
+        message: 'Please sign in to join this challenge.',
+        severity: 'warning',
+        autoClose: true,
+      });
       return;
     }
     try {
@@ -62,13 +69,25 @@ export default function ChallengeDetail() {
         // Refresh challenge details and participants to update avatars instantly
         loadChallenge(id as string);
         refresh();
-        Alert.alert('Success', 'You have joined the challenge!');
+        addNotification({
+          type: 'toast',
+          message: 'You have joined the challenge!',
+          severity: 'success',
+        });
       } else if (!result.success) {
-        Alert.alert('Error', 'Failed to join the challenge. The challenge may have ended or you have already joined.');
+        addNotification({
+          type: 'toast',
+          message: 'Failed to join the challenge. The challenge may have ended or you have already joined.',
+          severity: 'error',
+        });
       }
     } catch (error) {
       console.error('Error joining challenge:', error);
-      Alert.alert('Error', 'Failed to join the challenge. Please try again.');
+      addNotification({
+        type: 'toast',
+        message: 'Failed to join the challenge. Please try again.',
+        severity: 'error',
+      });
     }
   };
   
@@ -81,13 +100,25 @@ export default function ChallengeDetail() {
         // Refresh challenge details and participants to update avatars instantly
         loadChallenge(id as string);
         refresh();
-        Alert.alert('Success', 'You have left the challenge.');
+        addNotification({
+          type: 'toast',
+          message: 'You have left the challenge.',
+          severity: 'success',
+        });
       } else {
-        Alert.alert('Error', 'Failed to leave the challenge. Please try again.');
+        addNotification({
+          type: 'toast',
+          message: 'Failed to leave the challenge. Please try again.',
+          severity: 'error',
+        });
       }
     } catch (error) {
       console.error('Error leaving challenge:', error);
-      Alert.alert('Error', 'Failed to leave the challenge. Please try again.');
+      addNotification({
+        type: 'toast',
+        message: 'Failed to leave the challenge. Please try again.',
+        severity: 'error',
+      });
     }
   };
 

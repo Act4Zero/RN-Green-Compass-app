@@ -7,9 +7,9 @@ import {
   Platform,
   useWindowDimensions,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import { usePoints } from '@/context/PointsContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -231,13 +231,20 @@ export default function Home() {
     }
   };
 
+  // Get notification context
+  const { addNotification } = useNotification();
+
   // Handle sign out
   const handleSignOut = async () => {
     try {
       await signOut();
       router.replace('/');
     } catch (err) {
-      Alert.alert('Error', 'Failed to sign out. Please try again.');
+      addNotification({
+        type: 'toast',
+        message: 'Failed to sign out. Please try again.',
+        severity: 'error',
+      });
     }
   };
 

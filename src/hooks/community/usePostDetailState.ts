@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import useCommunityFeed from '../community/useCommunityFeed';
-import { confirmAndDeletePost } from '../../utils/deletePost';
+import { deletePost } from '../../utils/deletePost';
+import { useNotification } from '../../context/NotificationContext';
 import { sanitizeMarkdownInput, getCharacterInfo } from '@/utils/sanitizeMarkdownInput';
 
 /**
@@ -47,6 +48,9 @@ function usePostDetailState(discussionId: string) {
     // Methods - Reactions
     toggleDiscussionReaction,
   } = useCommunityFeed();
+  
+  // Use notification context
+  const { addNotification } = useNotification();
   
   // UI state
   const [showToast, setShowToast] = useState(false);
@@ -97,13 +101,14 @@ function usePostDetailState(discussionId: string) {
     }
   }, [user, authLoading, router]);
 
-  // Toast message handler
-  const showToastMessage = (message: string = 'Success!') => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
+  // Notification handler
+  const showToastMessage = (message: string = 'Success!', severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    addNotification({
+      type: 'toast',
+      message,
+      severity,
+      duration: 3000,
+    });
   };
 
   // Post interaction handlers
@@ -112,7 +117,7 @@ function usePostDetailState(discussionId: string) {
     
     const success = await toggleDiscussionReaction(selectedDiscussion.id);
     if (success) {
-      showToastMessage('Post liked!');
+      showToastMessage('Post liked!', 'success');
     }
   };
 
@@ -127,7 +132,7 @@ function usePostDetailState(discussionId: string) {
     const result = await createComment(sanitizeMarkdownInput(limitedComment, 'comment'));
     
     if (result) {
-      showToastMessage('Comment added!');
+      showToastMessage('Comment added!', 'success');
       // Refresh comments to display the new comment and its user details
       loadComments();
       // Optionally clear the comment input for better UX
@@ -162,27 +167,40 @@ function usePostDetailState(discussionId: string) {
     
     if (!user) {
       console.error('[POST DETAIL] No user found for delete operation');
-      showToastMessage('Error: You must be logged in to delete a post');
+      showToastMessage('Error: You must be logged in to delete a post', 'error');
       return;
     }
     
-    // Use the direct deletion utility
-    confirmAndDeletePost(
-      selectedDiscussion.id,
-      user.id,
-      // On success callback
-      () => {
-        showToastMessage('Post deleted successfully!');
-        
-        // Navigate back to community feed
-        router.push('/community');
-      },
-      // On error callback
-      (errorMsg) => {
-        console.error(`[POST DETAIL] Error deleting post: ${errorMsg}`);
-        showToastMessage(`Error: ${errorMsg}`);
+    // Show confirmation dialog with our notification system
+    addNotification({
+      type: 'modal',
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post? This action cannot be undone.',
+      severity: 'warning',
+      autoClose: false,
+      action: {
+        label: 'Delete',
+        onPress: () => {
+          // Execute deletion after confirmation
+          deletePost(
+            selectedDiscussion.id,
+            user.id,
+            // On success callback
+            () => {
+              showToastMessage('Post deleted successfully!', 'success');
+              
+              // Navigate back to community feed
+              router.push('/community');
+            },
+            // On error callback
+            (errorMsg) => {
+              console.error(`[POST DETAIL] Error deleting post: ${errorMsg}`);
+              showToastMessage(`Error: ${errorMsg}`, 'error');
+            }
+          );
+        }
       }
-    );
+    });
   };
   
   const handleSavePostEdit = async () => {
@@ -197,7 +215,7 @@ function usePostDetailState(discussionId: string) {
     
     if (result) {
       setIsEditingPost(false);
-      showToastMessage('Post updated!');
+      showToastMessage('Post updated!', 'success');
       // Reload the discussion to show the updated content
       loadDiscussion(selectedDiscussion.id);
     }
@@ -223,7 +241,7 @@ function usePostDetailState(discussionId: string) {
     if (result) {
       setEditingCommentId(null);
       setEditCommentContent('');
-      showToastMessage('Comment updated!');
+      showToastMessage('Comment updated!', 'success');
     }
   };
   
@@ -245,7 +263,7 @@ function usePostDetailState(discussionId: string) {
     const success = await deleteComment(commentToDelete);
     
     if (success) {
-      showToastMessage('Comment deleted!');
+      showToastMessage('Comment deleted!', 'success');
     }
     
     // Reset state
@@ -274,8 +292,7 @@ function usePostDetailState(discussionId: string) {
     commentsError,
     
     // UI state
-    showToast,
-    toastMessage,
+    // Toast state is no longer needed as we use the notification system
     showPostOptions,
     setShowPostOptions,
     showDeleteModal,

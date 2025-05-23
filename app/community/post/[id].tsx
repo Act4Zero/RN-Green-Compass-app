@@ -22,7 +22,7 @@ import PostOptionsMenu from '@/components/community/postdetails/PostOptionsMenu'
 import NotFoundState from '@/components/community/postdetails/NotFoundState';
 import LoadingState from '@/components/community/LoadingState';
 import ErrorState from '@/components/community/ErrorState';
-import { Toast } from '@/components/community/Toast';
+import { useNotification } from '@/context/NotificationContext';
 
 // Styles for this component
 import PostDetailStyles from '@/styles/community/PostDetailStyles';
@@ -51,8 +51,6 @@ export default function PostDetail() {
     commentsError,
     
     // UI state
-    showToast,
-    toastMessage,
     showPostOptions,
     setShowPostOptions,
     showDeleteModal,
@@ -194,14 +192,13 @@ export default function PostDetail() {
             onContentChange={setNewCommentContent}
             onSubmit={handleSubmitComment}
             isSubmitting={isSubmitting}
-            submitError={submitError}
+            submitError={submitError || undefined}
             characterInfo={characterInfo}
           />
         </View>
       </ScrollView>
 
-      {/* Toast Notification */}
-      <Toast message={toastMessage} visible={showToast} />
+      {/* Notifications handled by NotificationContainer */}
     </KeyboardAvoidingView>
   );
 }

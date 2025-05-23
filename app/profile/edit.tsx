@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Alert, ActivityIndicator, Text, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { View, ActivityIndicator, Text, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useNotification } from '@/context/NotificationContext';
 import ProfileForm from '@/components/profile/ProfileForm';
 import { Ionicons } from '@expo/vector-icons';
 import profileEditStyles from '@/styles/ProfileEdit.styles';
@@ -14,6 +15,7 @@ export default function EditProfileScreen() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const styles = profileEditStyles;
+  const { addNotification } = useNotification();
 
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -77,14 +79,17 @@ export default function EditProfileScreen() {
     
     if (result.success) {
       // Show success message and navigate back to profile screen
-      Alert.alert('Success', 'Your profile has been updated!', [
-        { text: 'OK', onPress: () => {
-          // Small timeout to ensure the alert is dismissed before navigation
-          setTimeout(() => {
-            router.replace('/profile');
-          }, 100);
-        }}
-      ]);
+      addNotification({
+        type: 'toast',
+        message: 'Your profile has been updated!',
+        severity: 'success',
+        duration: 3000,
+      });
+      
+      // Small timeout to ensure the notification is visible before navigation
+      setTimeout(() => {
+        router.replace('/profile');
+      }, 500);
     } else {
       // Error is already set in the hook
       console.error('Error updating profile:', result.error);

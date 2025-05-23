@@ -5,6 +5,8 @@ import { BadgesProvider } from '@/context/BadgesContext';
 import { useEffect } from 'react';
 import analyticsService from '@/services/analyticsService';
 import { FeatureFlagsProvider } from '@/context/FeatureFlagsContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+import { NotificationContainer } from '@/components/notifications/NotificationContainer';
 
 const { HabitProvider } = HabitContextModule;
 
@@ -25,9 +27,10 @@ export default function RootLayout() {
 
   return (
     <FeatureFlagsProvider>
-      <AuthProvider>
-        <HabitProvider>
-        <BadgesProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <HabitProvider>
+            <BadgesProvider>
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -62,9 +65,11 @@ export default function RootLayout() {
             }}
           />
         </Stack>
-        </BadgesProvider>
-        </HabitProvider>
-      </AuthProvider>
+        <NotificationContainer />
+            </BadgesProvider>
+          </HabitProvider>
+        </AuthProvider>
+      </NotificationProvider>
     </FeatureFlagsProvider>
   );
 }

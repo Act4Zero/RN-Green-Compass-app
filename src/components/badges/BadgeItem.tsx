@@ -1,6 +1,8 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, Image, StyleSheet, ViewStyle, TextStyle, ImageStyle, TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import BadgeShareModal from './BadgeShareModal';
+import { formatBadgeForSharing } from '@/utils/sharing/badgeShareUtils';
 
 interface BadgeItemProps {
   name: string;
@@ -8,15 +10,47 @@ interface BadgeItemProps {
   imageUrl?: string;
   isEarned: boolean;
   category: string;
+  earnedDate?: string;
+  userName?: string;
 }
 
-function BadgeItem({ name, description, imageUrl, isEarned, category }: BadgeItemProps) {
-  const [hasImageError, setHasImageError] = React.useState(false);
+function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate, userName }: BadgeItemProps) {
+  const [hasImageError, setHasImageError] = useState(false);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
   const showImage = imageUrl && !hasImageError;
+  
+  // Only allow sharing of earned badges
+  const canShare = isEarned;
+  
+  // Format badge data for sharing
+  const shareContent = formatBadgeForSharing(
+    name,
+    description,
+    category,
+    earnedDate,
+    userName
+  );
+  
+  // Handle share button press
+  const handleSharePress = useCallback((e: GestureResponderEvent) => {
+    e.stopPropagation();
+    setIsShareModalVisible(true);
+  }, []);
+  
+  // Handle closing the share modal
+  const handleCloseShareModal = useCallback(() => {
+    setIsShareModalVisible(false);
+  }, []);
+  
+  // Handle share error
+  const handleShareError = useCallback((error: string) => {
+    console.error('Error sharing badge:', error);
+  }, []);
 
   return (
-    <View style={[styles.badgeContainer, !isEarned && styles.badgeUnearnedContainer]}>
+    <>
+      <View style={[styles.badgeContainer, !isEarned && styles.badgeUnearnedContainer]}>
       <View style={styles.badgeIconContainer}>
         {showImage ? (
           <Image
@@ -38,7 +72,18 @@ function BadgeItem({ name, description, imageUrl, isEarned, category }: BadgeIte
         )}
       </View>
       <View style={styles.badgeInfo}>
-        <Text style={[styles.badgeName, !isEarned && styles.badgeUnearnedText]}>{name}</Text>
+        <View style={styles.badgeHeader}>
+          <Text style={[styles.badgeName, !isEarned && styles.badgeUnearnedText]}>{name}</Text>
+          {canShare && (
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={handleSharePress}
+              accessibilityLabel={`Share ${name} badge`}
+            >
+              <Ionicons name="share-social-outline" size={18} color="#2E7D32" />
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={[styles.badgeDescription, !isEarned && styles.badgeUnearnedText]}>
           {description}
         </Text>
@@ -47,6 +92,26 @@ function BadgeItem({ name, description, imageUrl, isEarned, category }: BadgeIte
         </View>
       </View>
     </View>
+      
+      {/* Share Modal */}
+      {isEarned && (
+        <BadgeShareModal
+          isVisible={isShareModalVisible}
+          onClose={handleCloseShareModal}
+          onError={handleShareError}
+          badgeData={{
+            name,
+            description,
+            category,
+            isEarned,
+            earnedDate,
+            imageUrl
+          }}
+          shareContent={shareContent}
+          userName={userName}
+        />
+      )}
+    </>
   );
 }
 
@@ -59,11 +124,13 @@ interface Styles {
   placeholderIcon: ViewStyle;
   earnedBadge: ViewStyle;
   badgeInfo: ViewStyle;
+  badgeHeader: ViewStyle;
   badgeName: TextStyle;
   badgeUnearnedText: TextStyle;
   badgeDescription: TextStyle;
   categoryChip: ViewStyle;
   categoryText: TextStyle;
+  shareButton: ViewStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -115,13 +182,18 @@ const styles = StyleSheet.create<Styles>({
   },
   badgeInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
+  },
+  badgeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   badgeName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 4,
   },
   badgeUnearnedText: {
     color: '#888888',
@@ -143,6 +215,15 @@ const styles = StyleSheet.create<Styles>({
   categoryText: {
     fontSize: 10,
     color: '#2E7D32',
+  },
+  shareButton: {
+    padding: 4,
+    backgroundColor: '#EAF6EA',
+    borderRadius: 16,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

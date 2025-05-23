@@ -125,6 +125,7 @@ export default function HabitHistory() {
             totalActions={totalActions}
             totalCO2Saved={totalCO2Saved}
             overallStreak={overallStreak}
+            selectedDate={selectedDate}
             styles={styles}
           />
 

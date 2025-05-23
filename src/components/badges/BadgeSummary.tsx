@@ -1,39 +1,99 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { formatBadgeSummaryForSharing } from '@/utils/sharing/badgeShareUtils';
+import BadgeSummaryShareModal from '@/components/badges/BadgeSummaryShareModal';
 
 interface BadgeSummaryProps {
   badgeCount: number;
+  totalBadgeCount: number;
+  recentBadgeNames?: string[];
+  userName?: string;
 }
 
-function BadgeSummary({ badgeCount }: BadgeSummaryProps) {
+function BadgeSummary({ badgeCount, totalBadgeCount, recentBadgeNames = [], userName }: BadgeSummaryProps) {
   const router = useRouter();
-
-  const handleViewAllBadges = () => {
-    router.push('/profile/badges' as any);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  
+  // Prepare the sharing content
+  const shareContent = formatBadgeSummaryForSharing(
+    badgeCount,
+    totalBadgeCount,
+    recentBadgeNames,
+    userName
+  );
+  
+  // Badge data for the share modal
+  const badgeData = {
+    earnedBadgeCount: badgeCount,
+    totalBadgeCount,
+    recentBadgeNames
   };
 
+  const handleViewAllBadges = useCallback(() => {
+    router.push('/profile/badges' as any);
+  }, [router]);
+  
+  const handleSharePress = useCallback(() => {
+    setIsShareModalVisible(true);
+  }, []);
+  
+  const handleCloseShareModal = useCallback(() => {
+    setIsShareModalVisible(false);
+  }, []);
+  
+  const handleShareError = useCallback((error: string) => {
+    Alert.alert(
+      'Sharing Error',
+      'There was a problem sharing your badge achievements. Please try again.'
+    );
+    console.error('Error sharing badges:', error);
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.summaryHeader}>
-        <View style={styles.titleContainer}>
-          <Ionicons name="trophy" size={20} color="#2E7D32" style={{marginRight: 8}} />
-          <Text style={styles.title}>Achievements</Text>
+    <>
+      <View style={styles.container}>
+        <View style={styles.summaryHeader}>
+          <View style={styles.titleContainer}>
+            <Ionicons name="trophy" size={20} color="#2E7D32" style={{marginRight: 8}} />
+            <Text style={styles.title}>Achievements</Text>
+          </View>
+          <View style={styles.badgeActions}>
+            <Text style={styles.count}>
+              {badgeCount} {badgeCount === 1 ? 'badge' : 'badges'} earned
+            </Text>
+            {badgeCount > 0 && (
+              <TouchableOpacity 
+                style={styles.shareButton} 
+                onPress={handleSharePress}
+                accessibilityLabel="Share badge achievements"
+              >
+                <Ionicons name="share-social-outline" size={18} color="#2E7D32" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-        <Text style={styles.count}>
-          {badgeCount} {badgeCount === 1 ? 'badge' : 'badges'} earned
-        </Text>
+        
+        <TouchableOpacity 
+          style={styles.viewAllButton} 
+          onPress={handleViewAllBadges}
+        >
+          <Text style={styles.viewAllButtonText}>View all badges</Text>
+          <Ionicons name="chevron-forward" size={16} color="#2E7D32" />
+        </TouchableOpacity>
       </View>
       
-      <TouchableOpacity 
-        style={styles.viewAllButton} 
-        onPress={handleViewAllBadges}
-      >
-        <Text style={styles.viewAllButtonText}>View all badges</Text>
-        <Ionicons name="chevron-forward" size={16} color="#2E7D32" />
-      </TouchableOpacity>
-    </View>
+      {/* Share Modal */}
+      <BadgeSummaryShareModal
+        isVisible={isShareModalVisible}
+        onClose={handleCloseShareModal}
+        onError={handleShareError}
+        badgeData={badgeData}
+        shareContent={shareContent}
+        userName={userName}
+      />
+    </>
   );
 }
 
@@ -46,6 +106,8 @@ interface Styles {
   count: TextStyle;
   viewAllButton: ViewStyle;
   viewAllButtonText: TextStyle;
+  badgeActions: ViewStyle;
+  shareButton: ViewStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -65,7 +127,7 @@ const styles = StyleSheet.create<Styles>({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -81,23 +143,34 @@ const styles = StyleSheet.create<Styles>({
   },
   count: {
     fontSize: 14,
-    color: '#2E7D32',
-    fontWeight: '600',
+    color: '#666666',
   },
   viewAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9F9F9',
     padding: 10,
-    backgroundColor: '#E8F5E9',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.3)',
   },
   viewAllButtonText: {
+    fontSize: 14,
     color: '#2E7D32',
-    marginRight: 5,
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  badgeActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shareButton: {
+    marginLeft: 10,
+    padding: 4,
+    backgroundColor: '#EAF6EA',
+    borderRadius: 16,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
