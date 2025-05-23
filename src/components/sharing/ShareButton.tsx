@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import styles, { Styles } from './ShareButton.styles';
 import { Ionicons } from '@expo/vector-icons';
-import { SocialPlatform } from '../../utils/shareUtils';
+import { SocialPlatform } from '../../utils/sharing/shareUtils';
 
 
 

@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Challenge } from '@/types/community/challenge';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import cardStyles from './ChallengeCard.styles';
-import { formatChallengeForSharing } from '@/utils/challengeShareUtils';
+import { formatChallengeForSharing } from '@/utils/sharing/challengeShareUtils';
 import ChallengeShareModal from './ChallengeShareModal';
 import { useAuth } from '@/context/AuthContext';
 import formatDate from '@/utils/formatDate';

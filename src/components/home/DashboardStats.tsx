@@ -4,7 +4,7 @@ import styles from './DashboardStats.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { homeStyles } from '../../styles/Home.styles';
 import { ShareModal } from '@/components/sharing';
-import { formatDashboardForSharing } from '@/utils/dashboardShareUtils';
+import { formatDashboardForSharing } from '@/utils/sharing/dashboardShareUtils';
 import { useAuth } from '@/context/AuthContext';
 
 

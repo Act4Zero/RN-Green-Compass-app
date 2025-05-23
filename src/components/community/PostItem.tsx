@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
 import { Ionicons } from '@expo/vector-icons';
 import CommunityShareModal from './CommunityShareModal';
-import { formatCommunityPostForSharing } from '@/utils/communityShareUtils';
+import { formatCommunityPostForSharing } from '@/utils/sharing/communityShareUtils';
 import { useAuth } from '@/context/AuthContext';
 import postItemStyles from './PostItem.styles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';

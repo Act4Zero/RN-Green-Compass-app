@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, ViewStyle, TextStyle, ImageStyle, TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BadgeShareModal from './BadgeShareModal';
-import { formatBadgeForSharing } from '@/utils/badgeShareUtils';
+import { formatBadgeForSharing } from '@/utils/sharing/badgeShareUtils';
 
 interface BadgeItemProps {
   name: string;

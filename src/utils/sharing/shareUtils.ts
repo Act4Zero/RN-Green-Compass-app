@@ -28,7 +28,7 @@ export interface ShareResult {
 /**
  * Social media platforms supported for sharing
  */
-export type SocialPlatform = 'twitter' | 'linkedin' | 'general';
+export type SocialPlatform = 'twitter' | 'linkedin' | 'general' | 'instagram';
 
 /**
  * Share content using device's native share dialog

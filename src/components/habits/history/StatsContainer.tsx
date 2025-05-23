@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HistoryStyles } from '@/styles/historyStyles';
 import { ShareModal } from '@/components/sharing';
-import { formatHabitHistoryForSharing } from '@/utils/habitHistoryShareUtils';
+import { formatHabitHistoryForSharing } from '@/utils/sharing/habitHistoryShareUtils';
 import { useAuth } from '@/context/AuthContext';
 import statsStyles from './StatsContainer.styles';
 

@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
 import LeaderboardShareableCard, { captureLeaderboardShareableCard } from './LeaderboardShareableCard';
 import ShareButton from '../../sharing/ShareButton';
-import { shareToSocialPlatform, SocialPlatform } from '../../../utils/shareUtils';
+import { shareToSocialPlatform, SocialPlatform } from '../../../utils/sharing/shareUtils';
 
 interface Styles {
   modalContainer: ViewStyle;

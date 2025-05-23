@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MotivationalInfo, LeaderboardType, LeaderboardFilterType } from '@/types/leaderboards';
-import { formatLeaderboardForSharing } from '@/utils/leaderboardShareUtils';
+import { formatLeaderboardForSharing } from '@/utils/sharing/leaderboardShareUtils';
 import LeaderboardShareModal from './LeaderboardShareModal';
 import styles from './MotivationalMessage.styles';
 import LeaderboardStyles from '@/styles/LeaderboardStyles';
