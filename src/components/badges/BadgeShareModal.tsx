@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -10,14 +10,15 @@ import {
   Share,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
-// We'll use Share API directly instead of expo-sharing
-// import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import BadgeShareableCard from './BadgeShareableCard';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
+import ShareButton from '../sharing/ShareButton';
+import { shareToSocialPlatform, SocialPlatform } from '../../utils/sharing/shareUtils';
 
 interface BadgeShareModalProps {
   isVisible: boolean;
@@ -35,6 +36,7 @@ interface BadgeShareModalProps {
     title: string;
     message: string;
     url?: string;
+    imageUrl?: string;
   };
   userName?: string;
 }
@@ -48,72 +50,97 @@ function BadgeShareModal({
 }: BadgeShareModalProps) {
   const viewShotRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareResult, setShareResult] = useState<{
+    success?: boolean;
+    message?: string;
+  }>({});
 
   const handleClose = () => {
     onClose();
   };
 
-  const handleShareAsText = async () => {
-    try {
-      const result = await Share.share({
-        title: shareContent.title,
-        message: shareContent.message,
-        url: shareContent.url,
-      });
+  // Capture image and return its URI
+  const captureImage = async (): Promise<string> => {
+    if (!viewShotRef.current || !viewShotRef.current.capture) {
+      throw new Error('ViewShot reference not available');
+    }
+    
+    const uri = await viewShotRef.current.capture() || '';
+    if (!uri) {
+      throw new Error('Failed to capture image');
+    }
+    
+    if (Platform.OS === 'web') {
+      return uri;
+    }
+    
+    // For native platforms, save to file system for sharing
+    const fileUri = `${FileSystem.cacheDirectory}badge-share.png`;
+    await FileSystem.copyAsync({ from: uri, to: fileUri });
+    return fileUri;
+  };
 
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log(`Shared via ${result.activityType}`);
-        } else {
-          console.log('Shared');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
+  // Handle sharing to a specific platform
+  const handleShare = async (platform: SocialPlatform) => {
+    try {
+      setIsSharing(true);
+      setShareResult({});
+
+      // Create share content with the display name
+      const userName = displayName || 'I';
+      
+      // Create a single message format without duplication
+      // Preserve the original title and URL while customizing just the message
+      const content: {
+        title: string;
+        url?: string;
+        message: string;
+        imageUrl?: string;
+      } = {
+        title: shareContent.title,
+        url: 'https://app.greencompass.app', // Correct app URL
+        message: `${userName} earned the ${badgeData.name} badge on Green Compass! Join the movement for sustainable living.`
+      };
+
+      // Capture image for all sharing platforms
+      try {
+        const imageUri = await captureImage();
+        content.imageUrl = imageUri;
+      } catch (imageError) {
+        console.warn('Could not capture image for sharing:', imageError);
+      }
+
+      // Share to the selected platform
+      const result = await shareToSocialPlatform(content, platform);
+
+      if (result.success) {
+        setShareResult({
+          success: true,
+          message: 'Successfully shared!'
+        });
+
+        // Auto close after successful share with a slight delay
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } else {
+        setShareResult({
+          success: false,
+          message: result.error || 'Failed to share. Please try again.'
+        });
       }
     } catch (error) {
+      setShareResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
       if (onError) {
         onError(error instanceof Error ? error.message : String(error));
       }
       console.error('Error sharing:', error);
-    }
-  };
-
-  const handleShareAsImage = async () => {
-    try {
-      if (viewShotRef.current) {
-        // Capture the view as an image
-        const uri = await viewShotRef.current?.capture?.() || '';
-        
-        if (!uri) {
-          throw new Error('Failed to capture image');
-        }
-        
-        if (Platform.OS === 'web') {
-          // On web, we can only share as a text with a URL
-          handleShareAsText();
-          return;
-        }
-        
-        // Use Share API instead of expo-sharing
-        const fileUri = `${FileSystem.cacheDirectory}badge-share.png`;
-        await FileSystem.copyAsync({ from: uri, to: fileUri });
-        await Share.share({
-          title: shareContent.title,
-          url: fileUri,
-        });
-      }
-    } catch (error) {
-      if (onError) {
-        onError(error instanceof Error ? error.message : String(error));
-      }
-      console.error('Error sharing image:', error);
-      
-      // If image sharing fails, fallback to text sharing
-      Alert.alert(
-        'Could not share as image',
-        'Sharing as text instead',
-        [{ text: 'OK', onPress: handleShareAsText }]
-      );
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -152,25 +179,50 @@ function BadgeShareModal({
           </View>
 
           <View style={styles.shareOptionsContainer}>
-            <Text style={styles.shareOptionsTitle}>Share as:</Text>
+            <Text style={styles.shareOptionsTitle}>Share to:</Text>
             
-            <View style={styles.shareButtonsContainer}>
-              <TouchableOpacity
-                style={styles.shareButton}
-                onPress={handleShareAsText}
-              >
-                <Ionicons name="text" size={24} color="#2E7D32" />
-                <Text style={styles.shareButtonText}>Text</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.shareButton}
-                onPress={handleShareAsImage}
-              >
-                <Ionicons name="image" size={24} color="#2E7D32" />
-                <Text style={styles.shareButtonText}>Image</Text>
-              </TouchableOpacity>
-            </View>
+            {isSharing ? (
+              <ActivityIndicator size="large" color="#2E7D32" />
+            ) : (
+              <View style={styles.shareButtonsContainer}>
+                <View style={styles.platformRow}>
+                  <View style={styles.buttonContainer}>
+                    <ShareButton
+                      label="Twitter"
+                      platformIcon="twitter"
+                      onPress={() => handleShare('twitter')}
+                      disabled={isSharing}
+                    />
+                  </View>
+                  <View style={styles.buttonContainer}>
+                    <ShareButton
+                      label="LinkedIn"
+                      platformIcon="linkedin"
+                      onPress={() => handleShare('linkedin')}
+                      disabled={isSharing}
+                    />
+                  </View>
+                </View>
+                <View style={styles.platformRow}>
+                  <View style={styles.buttonContainer}>
+                    <ShareButton
+                      label="General"
+                      platformIcon="general"
+                      onPress={() => handleShare('general')}
+                      disabled={isSharing}
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
+            
+            {shareResult.success && (
+              <Text style={styles.successMessage}>{shareResult.message}</Text>
+            )}
+            
+            {shareResult.success === false && shareResult.message && (
+              <Text style={styles.errorMessage}>{shareResult.message}</Text>
+            )}
           </View>
         </View>
       </View>
@@ -189,8 +241,10 @@ interface Styles {
   shareOptionsContainer: ViewStyle;
   shareOptionsTitle: TextStyle;
   shareButtonsContainer: ViewStyle;
-  shareButton: ViewStyle;
-  shareButtonText: TextStyle;
+  platformRow: ViewStyle;
+  buttonContainer: ViewStyle;
+  successMessage: TextStyle;
+  errorMessage: TextStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -245,20 +299,37 @@ const styles = StyleSheet.create<Styles>({
     marginBottom: 15,
   },
   shareButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  shareButton: {
     flexDirection: 'column',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 8,
-    width: 80,
+    justifyContent: 'center',
+    marginTop: 15,
+    width: '100%',
   },
-  shareButtonText: {
-    marginTop: 8,
-    color: '#444',
+  platformRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  buttonContainer: {
+    flex: 1,
+    marginHorizontal: 2,
+    minWidth: 64,
+  },
+  successMessage: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#2E7D32',
     fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
+  errorMessage: {
+    marginTop: 12,
+    fontSize: 13,
+    color: '#D32F2F',
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
 });
 
