@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 
@@ -42,8 +42,8 @@ export function ShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: ShareableCardProps) {
-  const deviceTheme = useColorScheme();
-  const theme: 'light' | 'dark' = forcedTheme || deviceTheme || 'light';
+  // Always use light theme
+  const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
@@ -53,10 +53,7 @@ export function ShareableCard({
 
   return (
     <ViewShot ref={ref}>
-      <View style={[
-        styles.container, 
-        theme === 'dark' ? { backgroundColor: '#2F2F2F' } : null
-      ]}>
+      <View style={styles.container}>
         <View style={styles.cardContent}>
           <View style={styles.header}>
             {achievementIcon ? (
@@ -74,24 +71,15 @@ export function ShareableCard({
             )}
             
             <View style={styles.achievementInfo}>
-              <Text style={[
-                styles.title, 
-                theme === 'dark' ? { color: '#FFFFFF' } : null
-              ]}>
+              <Text style={styles.title}>
                 {achievementTitle}
               </Text>
-              <Text style={[
-                styles.dateText,
-                theme === 'dark' ? { color: '#CCCCCC' } : null
-              ]}>
+              <Text style={styles.dateText}>
                 Achieved on {formattedDate}
               </Text>
               
               {showUserName && userName && (
-                <Text style={[
-                  styles.userName,
-                  theme === 'dark' ? { color: '#FFFFFF' } : null
-                ]}>
+                <Text style={styles.userName}>
                   by {userName}
                 </Text>
               )}
@@ -105,10 +93,7 @@ export function ShareableCard({
             style={iconStyles.logo} 
             resizeMode="contain"
           />
-          <Text style={[
-            styles.appName,
-            theme === 'dark' ? { color: '#FFFFFF' } : null
-          ]}>
+          <Text style={styles.appName}>
             Green Compass
           </Text>
         </View>

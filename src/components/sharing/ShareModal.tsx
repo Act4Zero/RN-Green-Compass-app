@@ -176,33 +176,27 @@ export function ShareModal({
               ) : (
                 <View style={styles.platformButtons}>
                   <View style={styles.platformRow}>
-                    {availablePlatforms.includes('twitter') && (
-                      <View style={styles.buttonContainer}>
-                        <ShareButton
-                          label="Twitter"
-                          platformIcon="twitter"
-                          onPress={() => handleShare('twitter')}
-                          disabled={isSharing}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  <View style={styles.platformRow}>
-                    {availablePlatforms.includes('linkedin') && (
-                      <View style={styles.buttonContainer}>
-                        <ShareButton
-                          label="LinkedIn"
-                          platformIcon="linkedin"
-                          onPress={() => handleShare('linkedin')}
-                          disabled={isSharing}
-                        />
-                      </View>
-                    )}
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="Twitter"
+                        platformIcon="twitter"
+                        onPress={() => handleShare('twitter')}
+                        disabled={isSharing}
+                      />
+                    </View>
+                    <View style={styles.buttonContainer}>
+                      <ShareButton
+                        label="LinkedIn"
+                        platformIcon="linkedin"
+                        onPress={() => handleShare('linkedin')}
+                        disabled={isSharing}
+                      />
+                    </View>
                   </View>
                   <View style={styles.platformRow}>
                     <View style={styles.buttonContainer}>
                       <ShareButton
-                        label="More Options"
+                        label="General"
                         platformIcon="general"
                         onPress={() => handleShare('general')}
                         disabled={isSharing}

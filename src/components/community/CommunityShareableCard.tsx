@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 
@@ -25,8 +25,8 @@ export function CommunityShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: CommunityShareableCardProps) {
-  const deviceTheme = useColorScheme();
-  const theme: 'light' | 'dark' = forcedTheme || deviceTheme || 'light';
+  // Always use light theme
+  const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
@@ -49,18 +49,12 @@ export function CommunityShareableCard({
         result: 'data-uri',
         ...viewShotOptions
       }}
-      style={[
-        styles.container,
-        theme === 'dark' ? { backgroundColor: '#1E1E1E' } : null
-      ]}
+      style={styles.container}
     >
       <View style={styles.cardContent}>
         {/* Post Header with title */}
         {postTitle && (
-          <Text style={[
-            styles.title,
-            theme === 'dark' ? { color: '#FFFFFF' } : null
-          ]}>
+          <Text style={styles.title}>
             {postTitle}
           </Text>
         )}
@@ -68,26 +62,17 @@ export function CommunityShareableCard({
         {/* Post content as a quote */}
         <View style={styles.quoteContainer}>
           <View style={styles.quoteBar} />
-          <Text style={[
-            styles.quoteText,
-            theme === 'dark' ? { color: '#E0E0E0' } : null
-          ]}>
+          <Text style={styles.quoteText}>
             "{displayContent}"
           </Text>
         </View>
         
         {/* Author and date */}
         <View style={styles.attributionContainer}>
-          <Text style={[
-            styles.authorText,
-            theme === 'dark' ? { color: '#FFFFFF' } : null
-          ]}>
+          <Text style={styles.authorText}>
             — {authorName}
           </Text>
-          <Text style={[
-            styles.dateText,
-            theme === 'dark' ? { color: '#B0B0B0' } : null
-          ]}>
+          <Text style={styles.dateText}>
             {formattedDate}
           </Text>
         </View>
@@ -99,10 +84,7 @@ export function CommunityShareableCard({
           style={styles.logo} 
           resizeMode="contain"
         />
-        <Text style={[
-          styles.appName,
-          theme === 'dark' ? { color: '#FFFFFF' } : null
-        ]}>
+        <Text style={styles.appName}>
           Green Compass
         </Text>
       </View>

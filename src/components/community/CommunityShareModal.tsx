@@ -8,7 +8,6 @@ import {
   Platform,
   ViewStyle,
   TextStyle,
-  useColorScheme,
   useWindowDimensions,
   ActivityIndicator,
   Alert
@@ -18,6 +17,7 @@ import ViewShot from 'react-native-view-shot';
 import CommunityShareableCard, { captureCommunityShareableCard } from './CommunityShareableCard';
 import ShareButton from '../sharing/ShareButton';
 import { shareToSocialPlatform, SocialPlatform } from '../../utils/sharing/shareUtils';
+import useUserDisplayName from '@/hooks/useUserDisplayName';
 
 interface Styles {
   modalContainer: ViewStyle;
@@ -61,10 +61,9 @@ export function CommunityShareModal({
   onClose,
   postData
 }: CommunityShareModalProps) {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
+  const { displayName } = useUserDisplayName();
   
   const [isSharing, setIsSharing] = useState(false);
   const [shareResult, setShareResult] = useState<{
@@ -129,26 +128,17 @@ export function CommunityShareModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[
-        styles.modalContainer,
-        isDarkMode && { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
-      ]}>
-        <View style={[
-          styles.modalContent, 
-          isDarkMode && { backgroundColor: '#1E1E1E' }
-        ]}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={[
-              styles.title, 
-              isDarkMode && { color: '#FFFFFF' }
-            ]}>
+            <Text style={styles.title}>
               Share This Post
             </Text>
             <TouchableOpacity 
               style={styles.closeButton}
               onPress={onClose}
             >
-              <Ionicons name="close" size={24} color={isDarkMode ? '#FFFFFF' : '#000000'} />
+              <Ionicons name="close" size={24} color="#000000" />
             </TouchableOpacity>
           </View>
           
@@ -160,17 +150,14 @@ export function CommunityShareModal({
               postContent={postData.content}
               authorName={postData.authorName}
               postDate={postData.date}
-              theme={isDarkMode ? 'dark' : 'light'}
+              theme="light"
               viewShotRef={cardRef}
             />
           </View>
           
           {/* Social sharing options */}
           <View style={styles.sharingOptions}>
-            <Text style={[
-              styles.sharingOptionsTitle,
-              isDarkMode && { color: '#FFFFFF' }
-            ]}>
+            <Text style={styles.sharingOptionsTitle}>
               Share to
             </Text>
             
@@ -181,22 +168,12 @@ export function CommunityShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="Instagram"
-                      platformIcon="instagram"
-                      onPress={() => handleShare('instagram')}
-                      disabled={isSharing}
-                    />
-                  </View>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
                       label="Twitter"
                       platformIcon="twitter"
                       onPress={() => handleShare('twitter')}
                       disabled={isSharing}
                     />
                   </View>
-                </View>
-                <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
                       label="LinkedIn"
@@ -205,6 +182,8 @@ export function CommunityShareModal({
                       disabled={isSharing}
                     />
                   </View>
+                </View>
+                <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
                       label="General"
