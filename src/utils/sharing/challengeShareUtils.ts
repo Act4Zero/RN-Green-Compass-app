@@ -1,16 +1,7 @@
-/**
- * Utility functions for formatting challenge data for sharing
- */
-
-interface ChallengeShareContent {
-  title: string;
-  message: string;
-  url?: string;
-  imageUrl?: string;
-}
+import { ShareableContent } from './shareUtils';
 
 /**
- * Formats challenge data for sharing
+ * Format challenge data for sharing with customized messaging based on challenge status
  * 
  * @param challengeTitle Title of the challenge
  * @param challengeDescription Description of the challenge
@@ -20,9 +11,9 @@ interface ChallengeShareContent {
  * @param participantCount Number of participants in the challenge
  * @param progressMetric User's progress percentage (if participating)
  * @param userName User's name (for personalization)
- * @returns Formatted sharing content
+ * @returns Formatted share content
  */
-export function formatChallengeForSharing(
+export const formatChallengeForSharing = (
   challengeTitle: string,
   challengeDescription: string,
   startDate: Date,
@@ -31,80 +22,68 @@ export function formatChallengeForSharing(
   participantCount: number,
   progressMetric?: number,
   userName?: string
-): ChallengeShareContent {
+): ShareableContent => {
   // Format dates for display
   const startDateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const endDateStr = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const dateRange = `${startDateStr} - ${endDateStr}`;
   
-  // Current date for checking if challenge is active
+  // Check if challenge is active or completed
   const now = new Date();
   const isActive = now >= startDate && now <= endDate;
   const hasEnded = now > endDate;
   
-  // Create title
-  const title = `${challengeTitle} Challenge`;
+  // Add user context if available
+  const userPrefix = userName ? `${userName}` : 'I';
   
-  // Create personalized message
+  // Generate appropriate message based on the challenge status
   let message = '';
+  let title = '';
   
-  // Add personalized introduction based on participation and challenge status
-  if (userName) {
-    if (isParticipant && isActive) {
-      message += `${userName} is participating in the "${challengeTitle}" challenge on Green Compass! `;
-      if (progressMetric !== undefined) {
-        message += `Currently at ${progressMetric}% progress. `;
-      }
-    } else if (isParticipant && hasEnded) {
-      message += `${userName} completed the "${challengeTitle}" challenge on Green Compass! `;
-    } else if (isActive) {
-      message += `${userName} invites you to join the "${challengeTitle}" challenge on Green Compass! `;
+  if (hasEnded && isParticipant) {
+    // Completed challenge
+    title = `Completed: ${challengeTitle} Challenge`;
+    if (progressMetric && progressMetric === 100) {
+      message = `${userPrefix} successfully completed the "${challengeTitle}" challenge! This sustainability initiative involved ${participantCount} participants from ${startDateStr} to ${endDateStr}. Join Green Compass for more eco-friendly challenges!`;
     } else {
-      message += `${userName} is excited about the upcoming "${challengeTitle}" challenge on Green Compass! `;
+      message = `${userPrefix} participated in the "${challengeTitle}" challenge that just concluded! It ran from ${startDateStr} to ${endDateStr} with ${participantCount} participants making a positive impact together.`;
     }
+  } else if (isActive && isParticipant) {
+    // Active and participating
+    title = `${challengeTitle} Challenge`;
+    message = `${userPrefix}'m currently participating in the "${challengeTitle}" challenge on Green Compass!`;
+    if (progressMetric !== undefined) {
+      message += ` Currently at ${progressMetric}% progress with ${participantCount} other participants. This challenge runs from ${dateRange} - join me to make a collective impact!`;
+    } else {
+      message += ` Join me and ${participantCount} others in this sustainability challenge running from ${dateRange}!`;
+    }
+  } else if (isActive && !isParticipant) {
+    // Active but not participating
+    title = `Join: ${challengeTitle} Challenge`;
+    message = `${userPrefix}'m inviting you to join the "${challengeTitle}" challenge on Green Compass! This sustainability initiative already has ${participantCount} participants and runs until ${endDateStr}. Let's make a difference together!`;
   } else {
-    if (isParticipant && isActive) {
-      message += `I'm participating in the "${challengeTitle}" challenge on Green Compass! `;
-      if (progressMetric !== undefined) {
-        message += `Currently at ${progressMetric}% progress. `;
-      }
-    } else if (isParticipant && hasEnded) {
-      message += `I completed the "${challengeTitle}" challenge on Green Compass! `;
-    } else if (isActive) {
-      message += `I'm inviting you to join the "${challengeTitle}" challenge on Green Compass! `;
-    } else {
-      message += `I'm excited about the upcoming "${challengeTitle}" challenge on Green Compass! `;
-    }
+    // Upcoming challenge
+    title = `Upcoming: ${challengeTitle} Challenge`;
+    message = `${userPrefix}'m excited about the upcoming "${challengeTitle}" challenge on Green Compass! It starts on ${startDateStr} and will run until ${endDateStr}. Join me and ${participantCount} others who've already signed up to make a positive environmental impact!`;
   }
   
-  // Add challenge details
-  const truncatedDescription = challengeDescription.length > 100 
-    ? `${challengeDescription.substring(0, 100).trim()}...` 
-    : challengeDescription;
-  
-  message += `\n\n${truncatedDescription}\n\n`;
-  
-  // Add challenge info
-  message += `📅 ${dateRange}\n`;
-  message += `👥 ${participantCount} participants\n\n`;
-  
-  // Add call to action
-  if (isActive && !isParticipant) {
-    message += `Will you join me in this challenge? Let's make a difference together!\n\n`;
-  } else if (!isActive && !hasEnded) {
-    message += `The challenge starts soon! Mark your calendar and join me!\n\n`;
-  } else {
-    message += `Join Green Compass to participate in more sustainability challenges!\n\n`;
+  // Add a brief description if the message isn't too long
+  if (message.length < 180 && challengeDescription) {
+    const truncatedDescription = challengeDescription.length > 80
+      ? `${challengeDescription.substring(0, 80).trim()}...`
+      : challengeDescription;
+    
+    message += `\n\n"${truncatedDescription}"`;
   }
   
   // Add hashtags
-  message += `#GreenCompass #${challengeTitle.replace(/\s/g, '')} #Sustainability`;
+  message += `\n\n#GreenCompass #${challengeTitle.replace(/\s/g, '')} #Sustainability`;
   
   return {
     title,
     message,
-    url: 'https://greencompass.eco/challenges' // Placeholder URL
+    url: 'https://app.greencompass.app' // Could be a dynamic deep link in the future
   };
-}
+};
 
 export default formatChallengeForSharing;

@@ -73,10 +73,10 @@ const generateMetaTags = (content: ShareableContent): string => {
   const tags = [
     { property: 'og:title', content: content.title },
     { property: 'og:description', content: content.message },
-    { property: 'og:url', content: content.url || 'https://greencompass.app' },
+    { property: 'og:url', content: content.url || 'https://app.greencompass.app' },
     { property: 'og:type', content: content.type || 'website' },
     { property: 'og:site_name', content: content.siteName || 'Green Compass' },
-    { property: 'og:image', content: content.imageUrl || 'https://greencompass.app/images/og-default.jpg' },
+    { property: 'og:image', content: content.imageUrl || 'https://app.greencompass.app/images/og-default.jpg' },
     { property: 'og:image:width', content: String(content.imageWidth || 1200) },
     { property: 'og:image:height', content: String(content.imageHeight || 630) },
 
@@ -84,7 +84,7 @@ const generateMetaTags = (content: ShareableContent): string => {
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: content.title },
     { name: 'twitter:description', content: content.message },
-    { name: 'twitter:image', content: content.imageUrl || 'https://greencompass.app/images/og-default.jpg' },
+    { name: 'twitter:image', content: content.imageUrl || 'https://app.greencompass.app/images/og-default.jpg' },
   ];
 
   return tags
@@ -102,7 +102,7 @@ const generateMetaTags = (content: ShareableContent): string => {
  * Get the base URL for sharing
  */
 const getShareUrl = (content: ShareableContent): string => {
-  return content.url || 'https://greencompass.app';
+  return content.url || 'https://app.greencompass.app';
 };
 
 /**
@@ -113,7 +113,7 @@ export const webShareContent = async (
   platform: SocialPlatform
 ): Promise<ShareResult> => {
   try {
-    const shareUrl = content.url || 'https://greencompass.app';
+    const shareUrl = content.url || 'https://app.greencompass.app';
     const encodedMessage = encodeURIComponent(content.message);
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(content.title);
@@ -239,7 +239,7 @@ export const shareToSocialPlatform = async (
 ): Promise<ShareResult> => {
   // Platform-specific message customization
   let message = content.message;
-  let url = content.url || 'https://greencompass.app';
+  let url = content.url || 'https://app.greencompass.app';
   
   switch (platform) {
     case 'twitter':
@@ -278,7 +278,7 @@ export const formatAchievementForSharing = (
   imageUrl?: string,
   platform?: 'linkedin' | 'twitter' | 'general'
 ): ShareableContent => {
-  const baseUrl = 'https://greencompass.app';
+  const baseUrl = 'https://app.greencompass.app';
   const achievementSlug = achievementTitle.toLowerCase().replace(/\s+/g, '-');
   const url = `${baseUrl}/achievements/${encodeURIComponent(achievementSlug)}`;
   

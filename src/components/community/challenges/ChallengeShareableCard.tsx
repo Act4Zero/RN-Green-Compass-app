@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,8 +32,8 @@ export function ChallengeShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: ChallengeShareableCardProps) {
-  const deviceTheme = useColorScheme();
-  const theme: 'light' | 'dark' = forcedTheme || deviceTheme || 'light';
+  // Always use light theme
+  const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
@@ -99,10 +99,7 @@ export function ChallengeShareableCard({
         result: 'data-uri',
         ...viewShotOptions
       }}
-      style={[
-        styles.container,
-        theme === 'dark' ? { backgroundColor: '#1E1E1E' } : null
-      ]}
+      style={styles.container}
     >
       <View style={styles.cardContent}>
         {/* Challenge Status */}
@@ -121,26 +118,17 @@ export function ChallengeShareableCard({
         </View>
         
         {/* Challenge Title */}
-        <Text style={[
-          styles.title,
-          theme === 'dark' ? { color: '#FFFFFF' } : null
-        ]}>
+        <Text style={styles.title}>
           {challengeTitle}
         </Text>
         
         {/* Date Range */}
-        <Text style={[
-          styles.dateRange,
-          theme === 'dark' ? { color: '#B0B0B0' } : null
-        ]}>
+        <Text style={styles.dateRange}>
           {startDateStr} - {endDateStr}
         </Text>
         
         {/* Challenge Description */}
-        <Text style={[
-          styles.description,
-          theme === 'dark' ? { color: '#E0E0E0' } : null
-        ]}>
+        <Text style={styles.description}>
           {truncatedDescription}
         </Text>
         
@@ -148,10 +136,7 @@ export function ChallengeShareableCard({
         <View style={styles.participationInfo}>
           <View style={styles.participantContainer}>
             <Ionicons name="people" size={16} color="#2E7D32" />
-            <Text style={[
-              styles.participantText,
-              theme === 'dark' ? { color: '#E0E0E0' } : null
-            ]}>
+            <Text style={styles.participantText}>
               {participantCount} participants
             </Text>
           </View>
@@ -167,10 +152,7 @@ export function ChallengeShareableCard({
                   ]}
                 />
               </View>
-              <Text style={[
-                styles.progressText,
-                theme === 'dark' ? { color: '#E0E0E0' } : null
-              ]}>
+              <Text style={styles.progressText}>
                 {progressMetric}% complete
               </Text>
             </View>
@@ -184,10 +166,7 @@ export function ChallengeShareableCard({
           style={styles.logo} 
           resizeMode="contain"
         />
-        <Text style={[
-          styles.appName,
-          theme === 'dark' ? { color: '#FFFFFF' } : null
-        ]}>
+        <Text style={styles.appName}>
           Green Compass
         </Text>
       </View>

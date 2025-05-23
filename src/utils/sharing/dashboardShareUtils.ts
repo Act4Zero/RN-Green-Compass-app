@@ -39,6 +39,6 @@ export const formatDashboardForSharing = (
   return {
     title: 'My Green Compass Impact',
     message,
-    url: 'https://greencompass.app', // Could be a dynamic deep link in the future
+    url: 'https://app.greencompass.app', // Could be a dynamic deep link in the future
   };
 };

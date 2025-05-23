@@ -5,6 +5,9 @@ export interface Styles {
   shareButtonText: TextStyle;
   shareIcon: TextStyle;
   buttonRow: ViewStyle;
+  disabledShareButton: ViewStyle;
+  disabledShareIcon: TextStyle;
+  disabledShareButtonText: TextStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -31,6 +34,16 @@ const styles = StyleSheet.create<Styles>({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 8,
+  },
+  disabledShareButton: {
+    backgroundColor: '#F5F5F5',
+    opacity: 0.7,
+  },
+  disabledShareIcon: {
+    color: '#9E9E9E',
+  },
+  disabledShareButtonText: {
+    color: '#9E9E9E',
   }
 });
 

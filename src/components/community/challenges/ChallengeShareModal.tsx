@@ -8,7 +8,6 @@ import {
   Platform,
   ViewStyle,
   TextStyle,
-  useColorScheme,
   useWindowDimensions,
   ActivityIndicator,
   Alert
@@ -64,8 +63,6 @@ export function ChallengeShareModal({
   onClose,
   challengeData
 }: ChallengeShareModalProps) {
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
   
@@ -74,6 +71,11 @@ export function ChallengeShareModal({
     success?: boolean;
     message?: string;
   }>({});
+
+  // Simple helper to get modal title
+  const getShareModalTitle = () => {
+    return challengeData.isParticipant ? 'Share Your Challenge' : 'Share This Challenge';
+  };
 
   /**
    * Handle sharing to a specific platform
@@ -132,31 +134,21 @@ export function ChallengeShareModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={[
-        styles.modalContainer,
-        isDarkMode && { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
-      ]}>
-        <View style={[
-          styles.modalContent, 
-          isDarkMode && { backgroundColor: '#1E1E1E' }
-        ]}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={[
-              styles.title, 
-              isDarkMode && { color: '#FFFFFF' }
-            ]}>
-              Share This Challenge
+            <Text style={styles.title}>
+              {getShareModalTitle()}
             </Text>
             <TouchableOpacity 
               style={styles.closeButton}
               onPress={onClose}
             >
-              <Ionicons name="close" size={24} color={isDarkMode ? '#FFFFFF' : '#000000'} />
+              <Ionicons name="close" size={24} color="#000000" />
             </TouchableOpacity>
           </View>
           
           <View style={styles.divider} />
-          
           <View style={styles.cardContainer}>
             <ChallengeShareableCard
               challengeTitle={challengeData.title}
@@ -166,17 +158,14 @@ export function ChallengeShareModal({
               isParticipant={challengeData.isParticipant}
               participantCount={challengeData.participantCount}
               progressMetric={challengeData.progressMetric}
-              theme={isDarkMode ? 'dark' : 'light'}
+              theme="light"
               viewShotRef={cardRef}
             />
           </View>
           
           {/* Social sharing options */}
           <View style={styles.sharingOptions}>
-            <Text style={[
-              styles.sharingOptionsTitle,
-              isDarkMode && { color: '#FFFFFF' }
-            ]}>
+            <Text style={styles.sharingOptionsTitle}>
               Share to
             </Text>
             
@@ -187,22 +176,12 @@ export function ChallengeShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="Instagram"
-                      platformIcon="instagram"
-                      onPress={() => handleShare('instagram')}
-                      disabled={isSharing}
-                    />
-                  </View>
-                  <View style={styles.buttonContainer}>
-                    <ShareButton
                       label="Twitter"
                       platformIcon="twitter"
                       onPress={() => handleShare('twitter')}
                       disabled={isSharing}
                     />
                   </View>
-                </View>
-                <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
                       label="LinkedIn"
@@ -211,6 +190,8 @@ export function ChallengeShareModal({
                       disabled={isSharing}
                     />
                   </View>
+                </View>
+                <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
                       label="General"

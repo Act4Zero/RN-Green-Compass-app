@@ -92,11 +92,27 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
     shareContent
   };
   
-  // Handle opening the share modal
+  // Handle opening the share modal - only available for active challenges or completed ones
   const handleSharePress = useCallback((e: GestureResponderEvent) => {
     e.stopPropagation(); // Prevent triggering the parent TouchableOpacity
-    setIsShareModalVisible(true);
-  }, []);
+    
+    // Only allow sharing active challenges or completed ones
+    const now = new Date();
+    const startDate = new Date(challenge.start_date);
+    const endDate = new Date(challenge.end_date);
+    const isActive = now >= startDate && now <= endDate;
+    const hasEnded = now > endDate;
+    
+    if (isActive || hasEnded) {
+      setIsShareModalVisible(true);
+    } else {
+      Alert.alert(
+        'Sharing Unavailable',
+        'You can only share active or completed challenges.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [challenge.start_date, challenge.end_date]);
   
   // Handle closing the share modal
   const handleCloseShareModal = useCallback(() => {
@@ -154,15 +170,26 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
             {challenge.participant_count || 0} participants
           </Text>
           
-          {/* Share Button */}
+          {/* Share Button - visually indicate if sharing is available */}
           <View style={cardStyles.buttonRow}>
             <TouchableOpacity 
-              style={cardStyles.shareButton}
+              style={[cardStyles.shareButton, 
+                !(isActive || hasEnded) && cardStyles.disabledShareButton
+              ]}
               onPress={handleSharePress}
               activeOpacity={0.7}
             >
-              <Ionicons name="share-social" style={cardStyles.shareIcon} />
-              <Text style={cardStyles.shareButtonText}>Share</Text>
+              <Ionicons 
+                name="share-social" 
+                style={[cardStyles.shareIcon, 
+                  !(isActive || hasEnded) && cardStyles.disabledShareIcon
+                ]} 
+              />
+              <Text style={[cardStyles.shareButtonText, 
+                !(isActive || hasEnded) && cardStyles.disabledShareButtonText
+              ]}>
+                Share
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
