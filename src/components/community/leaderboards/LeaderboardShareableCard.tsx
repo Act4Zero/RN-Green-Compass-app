@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,8 +32,8 @@ export function LeaderboardShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: LeaderboardShareableCardProps) {
-  const deviceTheme = useColorScheme();
-  const theme: 'light' | 'dark' = forcedTheme || deviceTheme || 'light';
+  // Always use light theme
+  const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
@@ -66,10 +66,7 @@ export function LeaderboardShareableCard({
         result: 'data-uri',
         ...viewShotOptions
       }}
-      style={[
-        styles.container,
-        theme === 'dark' ? { backgroundColor: '#1E1E1E' } : null
-      ]}
+      style={styles.container}
     >
       <View style={styles.cardContent}>
         {/* Leaderboard Status */}
@@ -86,20 +83,14 @@ export function LeaderboardShareableCard({
             #{rank}
           </Text>
           
-          <Text style={[
-            styles.rankLabel,
-            theme === 'dark' ? { color: '#E0E0E0' } : null
-          ]}>
+          <Text style={styles.rankLabel}>
             {leaderboardType === 'points' ? 'Impact Leaderboard' : 'Streak Leaderboard'}
             {totalEntries ? ` (of ${totalEntries})` : ''}
           </Text>
         </View>
         
         {/* User Name */}
-        <Text style={[
-          styles.userName,
-          theme === 'dark' ? { color: '#FFFFFF' } : null
-        ]}>
+        <Text style={styles.userName}>
           {displayName}
         </Text>
         
@@ -108,10 +99,7 @@ export function LeaderboardShareableCard({
           {leaderboardType === 'points' && (
             <View style={styles.statItem}>
               <Ionicons name="star" size={20} color="#2E7D32" />
-              <Text style={[
-                styles.statValue,
-                theme === 'dark' ? { color: '#FFFFFF' } : null
-              ]}>
+              <Text style={styles.statValue}>
                 {totalPoints || 0} points
               </Text>
             </View>
@@ -121,10 +109,7 @@ export function LeaderboardShareableCard({
             <>
               <View style={styles.statItem}>
                 <Ionicons name="flame" size={20} color="#2E7D32" />
-                <Text style={[
-                  styles.statValue,
-                  theme === 'dark' ? { color: '#FFFFFF' } : null
-                ]}>
+                <Text style={styles.statValue}>
                   {longestStreak || 0} day longest streak
                 </Text>
               </View>
@@ -132,10 +117,7 @@ export function LeaderboardShareableCard({
               {currentStreak !== undefined && currentStreak > 0 && (
                 <View style={styles.statItem}>
                   <Ionicons name="timer-outline" size={20} color="#2E7D32" />
-                  <Text style={[
-                    styles.statValue,
-                    theme === 'dark' ? { color: '#FFFFFF' } : null
-                  ]}>
+                  <Text style={styles.statValue}>
                     {currentStreak} day current streak
                   </Text>
                 </View>
@@ -145,19 +127,13 @@ export function LeaderboardShareableCard({
         </View>
         
         {/* Date */}
-        <Text style={[
-          styles.dateText,
-          theme === 'dark' ? { color: '#B0B0B0' } : null
-        ]}>
+        <Text style={styles.dateText}>
           {formattedDate}
         </Text>
         
         {/* Motivational Message */}
         <View style={styles.motivationalContainer}>
-          <Text style={[
-            styles.motivationalText,
-            theme === 'dark' ? { color: '#E0E0E0' } : null
-          ]}>
+          <Text style={styles.motivationalText}>
             Join me in making sustainable choices every day!
           </Text>
         </View>
@@ -169,10 +145,7 @@ export function LeaderboardShareableCard({
           style={styles.logo} 
           resizeMode="contain"
         />
-        <Text style={[
-          styles.appName,
-          theme === 'dark' ? { color: '#FFFFFF' } : null
-        ]}>
+        <Text style={styles.appName}>
           Green Compass
         </Text>
       </View>
