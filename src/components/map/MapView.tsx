@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Constants from 'expo-constants';
-import * as Location from 'expo-location';
+import { getCurrentPosition } from '../../utils/mapUtils';
 
 import { useMapState } from '../../hooks/useMapState';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
@@ -113,16 +113,18 @@ export default function MapView() {
   const [mapReady, setMapReady] = useState(false);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
 
-  // Request location permission on mount
+  // Check for location permission on mount
   useEffect(() => {
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        setLocationPermission(status === 'granted');
-      } else {
-        setLocationPermission(true);
-      }
-    })();
+    // For web, we check permission differently than native
+    if (Platform.OS === 'web') {
+      // On web, we can't check permissions directly, so we assume it's granted
+      // and will handle rejection when we try to use it
+      setLocationPermission(true);
+    } else {
+      // For native platforms, we would use the appropriate permission checking
+      // For now, we'll just set it to true as a placeholder
+      setLocationPermission(true);
+    }
   }, []);
 
   // Handle messages from the WebView
@@ -168,56 +170,31 @@ export default function MapView() {
     }
   }, [mapReady, filteredLocations]);
 
-  // Locate user position
+  // Locate user position using our mapUtils
   const handleLocateMe = async () => {
     if (!locationPermission) {
-      alert('Location permission is required to use this feature.');
+      Alert.alert('Location Permission', 'Location permission is required to use this feature.');
       return;
     }
 
     try {
-      let location;
-      if (Platform.OS !== 'web') {
-        location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
-        
-        if (webViewRef.current) {
-          webViewRef.current.injectJavaScript(`
-            window.postMessage(JSON.stringify({
-              type: 'SET_CENTER',
-              lat: ${latitude},
-              lng: ${longitude},
-              zoom: 15
-            }));
-            true;
-          `);
-        }
-      } else {
-        // For web, use browser's geolocation
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            const { latitude, longitude } = position.coords;
-            if (webViewRef.current) {
-              webViewRef.current.injectJavaScript(`
-                window.postMessage(JSON.stringify({
-                  type: 'SET_CENTER',
-                  lat: ${latitude},
-                  lng: ${longitude},
-                  zoom: 15
-                }));
-                true;
-              `);
-            }
-          },
-          error => {
-            console.error('Error getting location:', error);
-            alert('Could not get your location. Please check your settings.');
-          }
-        );
+      // Use our utility function to get position
+      const position = await getCurrentPosition();
+      
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          window.postMessage(JSON.stringify({
+            type: 'SET_CENTER',
+            lat: ${position.lat},
+            lng: ${position.lng},
+            zoom: 15
+          }));
+          true;
+        `);
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      alert('Could not get your location. Please check your settings.');
+      Alert.alert('Location Error', 'Could not get your location. Please check your settings.');
     }
   };
 

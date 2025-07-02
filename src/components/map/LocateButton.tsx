@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface LocateButtonProps {
@@ -20,7 +20,7 @@ export default function LocateButton({ onPress }: LocateButtonProps) {
 }
 
 interface Styles {
-  button: React.CSSProperties | any;
+  button: ViewStyle;
 }
 
 const styles = StyleSheet.create<Styles>({

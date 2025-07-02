@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ViewStyle, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
 import { LocationCategory } from '../../types/map';
@@ -144,27 +144,27 @@ export default function MapSidebar() {
 }
 
 interface Styles {
-  container: React.CSSProperties | any;
-  wideContainer: React.CSSProperties | any;
-  narrowContainer: React.CSSProperties | any;
-  title: React.CSSProperties | any;
-  filterSection: React.CSSProperties | any;
-  filterTitle: React.CSSProperties | any;
-  chipContainer: React.CSSProperties | any;
-  categoryChip: React.CSSProperties | any;
-  inactiveChip: React.CSSProperties | any;
-  chipText: React.CSSProperties | any;
-  activeChipText: React.CSSProperties | any;
-  toggleAllButton: React.CSSProperties | any;
-  toggleAllActive: React.CSSProperties | any;
-  toggleAllInactive: React.CSSProperties | any;
-  toggleAllActiveText: React.CSSProperties | any;
-  toggleAllInactiveText: React.CSSProperties | any;
-  legend: React.CSSProperties | any;
-  legendTitle: React.CSSProperties | any;
-  legendItem: React.CSSProperties | any;
-  legendIcon: React.CSSProperties | any;
-  legendText: React.CSSProperties | any;
+  container: ViewStyle;
+  wideContainer: ViewStyle;
+  narrowContainer: ViewStyle;
+  title: TextStyle;
+  filterSection: ViewStyle;
+  filterTitle: TextStyle;
+  chipContainer: ViewStyle;
+  categoryChip: ViewStyle;
+  inactiveChip: ViewStyle;
+  chipText: TextStyle;
+  activeChipText: TextStyle;
+  toggleAllButton: ViewStyle;
+  toggleAllActive: ViewStyle;
+  toggleAllInactive: ViewStyle;
+  toggleAllActiveText: TextStyle;
+  toggleAllInactiveText: TextStyle;
+  legend: ViewStyle;
+  legendTitle: TextStyle;
+  legendItem: ViewStyle;
+  legendIcon: ViewStyle;
+  legendText: TextStyle;
 }
 
 const styles = StyleSheet.create<Styles>({
@@ -179,10 +179,10 @@ const styles = StyleSheet.create<Styles>({
     zIndex: 10,
   },
   wideContainer: {
-    width: 260,
-    minHeight: '100%',
+    width: 250,
+    minHeight: '100%' as any,
     borderRightWidth: 1,
-    borderRightColor: '#EEEEEE',
+    borderRightColor: '#E0E0E0',
   },
   narrowContainer: {
     width: '100%',

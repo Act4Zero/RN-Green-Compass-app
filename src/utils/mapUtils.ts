@@ -2,8 +2,39 @@
  * Map Utility Functions
  * Provides helper functions for map operations
  */
-import { Platform } from 'react-native';
-import { GeographicBounds } from '../types/map';
+import { Platform, Linking } from 'react-native';
+import { GeographicBounds, MapLocation } from '../types/map';
+
+/**
+ * Get the user's current position using the Geolocation API
+ * Returns a Promise with the latitude and longitude
+ */
+/**
+ * Format an address from a MapLocation object
+ * @param location The location object containing address information
+ * @returns A formatted address string
+ */
+export const formatAddress = (location: MapLocation): string => {
+  let addressParts = [];
+  
+  // Address lines
+  if (location.address_line_1) addressParts.push(location.address_line_1);
+  if (location.address_line_2) addressParts.push(location.address_line_2);
+  
+  // Town/city
+  if (location.town) addressParts.push(location.town);
+  
+  // State/province and postcode
+  let regionPostcode = '';
+  if (location.state_or_province) regionPostcode += location.state_or_province;
+  if (location.postcode) regionPostcode += (location.state_or_province ? ' ' : '') + location.postcode;
+  if (regionPostcode) addressParts.push(regionPostcode);
+  
+  // Country
+  if (location.country) addressParts.push(location.country);
+  
+  return addressParts.join(', ');
+};
 
 /**
  * Get the user's current position using the Geolocation API
