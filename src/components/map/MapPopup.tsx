@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { mapPopupStyles } from '../../styles/map/MapPopupStyles';
 import { MapLocation } from '../../types/map';
 import { formatAddress, getPlatformSpecificNavigationUrl } from '../../utils/mapUtils';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
@@ -70,13 +71,13 @@ export default function MapPopup({ location }: MapPopupProps) {
           <View style={[styles.categoryIcon, { backgroundColor: iconColor }]}>
             <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
           </View>
-          <Text style={styles.title}>{location.name}</Text>
+          <Text style={styles.title as any}>{location.name}</Text>
         </View>
         
         <View style={styles.content}>
           <View style={styles.infoRow}>
             <Ionicons name="location" size={16} color="#666666" style={styles.infoIcon} />
-            <Text style={styles.infoText}>{address}</Text>
+            <Text style={styles.infoText as any}>{formatAddress(location)}</Text>
           </View>
           
           <View style={styles.infoRow}>
@@ -86,7 +87,7 @@ export default function MapPopup({ location }: MapPopupProps) {
           
           {location.description && (
             <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionText}>{location.description}</Text>
+              <Text style={styles.descriptionText as any}>{location.description}</Text>
             </View>
           )}
           
@@ -111,7 +112,7 @@ export default function MapPopup({ location }: MapPopupProps) {
           
           {location.source && (
             <View style={styles.sourceContainer}>
-              <Text style={styles.sourceText}>Source: {location.source}</Text>
+              <Text style={styles.sourceText as any}>Source: {location.source || 'Community'}</Text>
             </View>
           )}
         </View>
@@ -125,121 +126,5 @@ export default function MapPopup({ location }: MapPopupProps) {
   );
 }
 
-interface Styles {
-  popupContainer: React.CSSProperties | any;
-  popup: React.CSSProperties | any;
-  closeButton: React.CSSProperties | any;
-  header: React.CSSProperties | any;
-  categoryIcon: React.CSSProperties | any;
-  title: React.CSSProperties | any;
-  content: React.CSSProperties | any;
-  infoRow: React.CSSProperties | any;
-  infoIcon: React.CSSProperties | any;
-  infoText: React.CSSProperties | any;
-  descriptionContainer: React.CSSProperties | any;
-  descriptionText: React.CSSProperties | any;
-  sourceContainer: React.CSSProperties | any;
-  sourceText: React.CSSProperties | any;
-  navigationButton: React.CSSProperties | any;
-  navigationText: React.CSSProperties | any;
-}
-
-const styles = StyleSheet.create<Styles>({
-  popupContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 16,
-    paddingBottom: Platform.OS === 'ios' ? 32 : 16,
-    zIndex: 100,
-  },
-  popup: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    paddingBottom: 16,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  categoryIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  infoIcon: {
-    marginRight: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#333333',
-    flex: 1,
-  },
-  descriptionContainer: {
-    marginTop: 8,
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 4,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#333333',
-    lineHeight: 20,
-  },
-  sourceContainer: {
-    marginTop: 8,
-  },
-  sourceText: {
-    fontSize: 12,
-    color: '#757575',
-    fontStyle: 'italic',
-  },
-  navigationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2E7D32',
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    borderRadius: 4,
-  },
-  navigationText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-});
+// Use the external styles imported from MapPopupStyles
+const styles = mapPopupStyles;

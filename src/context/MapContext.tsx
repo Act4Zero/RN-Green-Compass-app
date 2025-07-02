@@ -158,6 +158,7 @@ interface MapContextType extends MapState {
   selectLocation: (location: MapLocation | null) => void;
   updateViewport: (viewport: MapViewport) => void;
   checkCoverage: () => void;
+  resetViewportToDefault: () => void;
 }
 
 // Create context with default values
@@ -167,7 +168,8 @@ export const MapContext = createContext<MapContextType>({
   toggleCategoryFilter: () => {},
   selectLocation: () => {},
   updateViewport: () => {},
-  checkCoverage: () => {}
+  checkCoverage: () => {},
+  resetViewportToDefault: () => {}
 });
 
 // Provider component
@@ -212,6 +214,17 @@ export function MapProvider({ children }: MapProviderProps) {
     dispatch({ type: 'CHECK_COVERAGE' });
   };
   
+  // Reset viewport to default values
+  const resetViewportToDefault = () => {
+    dispatch({
+      type: 'SET_VIEWPORT',
+      payload: {
+        center: DEFAULT_CENTER,
+        zoom: DEFAULT_ZOOM
+      }
+    });
+  };
+  
   // Context value
   const contextValue: MapContextType = {
     ...state,
@@ -219,7 +232,8 @@ export function MapProvider({ children }: MapProviderProps) {
     toggleCategoryFilter,
     selectLocation,
     updateViewport,
-    checkCoverage
+    checkCoverage,
+    resetViewportToDefault
   };
   
   return (

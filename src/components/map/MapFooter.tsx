@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, Linking } from 'react-native';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { mapFooterStyles } from '../../styles/map/MapFooterStyles';
 
 export default function MapFooter() {
   const { isLoading, error } = useMapIntegration();
@@ -41,41 +42,4 @@ export default function MapFooter() {
   );
 }
 
-interface Styles {
-  container: React.CSSProperties | any;
-  contentRow: React.CSSProperties | any;
-  separator: React.CSSProperties | any;
-  linkText: React.CSSProperties | any;
-  errorText: React.CSSProperties | any;
-}
-
-const styles = StyleSheet.create<Styles>({
-  container: {
-    backgroundColor: '#F5F5F5',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
-  },
-  contentRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  separator: {
-    width: 1,
-    height: 16,
-    backgroundColor: '#CCCCCC',
-    marginHorizontal: 12,
-  },
-  linkText: {
-    fontSize: 12,
-    color: '#555555',
-    textDecorationLine: 'underline',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#D32F2F',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-});
+const styles = mapFooterStyles;

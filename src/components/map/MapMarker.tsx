@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { mapMarkerStyles } from '../../styles/map/MapMarkerStyles';
 import { MapLocation } from '../../types/map';
 
 interface MapMarkerProps {
@@ -69,48 +70,5 @@ export default function MapMarker({ location, selected = false, onPress }: MapMa
   );
 }
 
-interface Styles {
-  markerContainer: React.CSSProperties | any;
-  selectedMarkerContainer: React.CSSProperties | any;
-  marker: React.CSSProperties | any;
-  selectedNameTag: React.CSSProperties | any;
-  nameText: React.CSSProperties | any;
-}
-
-const styles = StyleSheet.create<Styles>({
-  markerContainer: {
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  selectedMarkerContainer: {
-    zIndex: 2,
-  },
-  marker: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#2E7D32',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  selectedNameTag: {
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  nameText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '500',
-    maxWidth: 120,
-  },
-});
+// Use the external styles imported from MapMarkerStyles
+const styles = mapMarkerStyles;

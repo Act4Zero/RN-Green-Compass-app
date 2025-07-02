@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, Alert } from 'react-native';
+import { View, Platform, Alert } from 'react-native';
+import { mapViewStyles } from '../../styles/map/MapViewStyles';
 import { WebView } from 'react-native-webview';
 import Constants from 'expo-constants';
 import { getCurrentPosition } from '../../utils/mapUtils';
 
 import { useMapState } from '../../hooks/useMapState';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+// Import components with relative paths
 import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
 import LocateButton from './LocateButton';
@@ -235,17 +237,5 @@ export default function MapView() {
   );
 }
 
-interface Styles {
-  container: React.CSSProperties | any;
-  webview: React.CSSProperties | any;
-}
-
-const styles = StyleSheet.create<Styles>({
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
-  webview: {
-    flex: 1,
-  },
-});
+// Use the external styles imported from MapViewStyles
+const styles = mapViewStyles;
