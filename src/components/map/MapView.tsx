@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Platform, Alert } from 'react-native';
+import { View, Platform, Alert, Text } from 'react-native';
 import { mapViewStyles } from '../../styles/map/MapViewStyles';
 import { WebView } from 'react-native-webview';
 import Constants from 'expo-constants';
@@ -68,6 +68,8 @@ const leafletHtml = `
       
       // Function to update markers on the map
       function updateMarkers(locations) {
+        // DEBUG: Log locations received for marker creation
+        console.log('[Leaflet] updateMarkers called with locations:', locations);
         // Clear existing markers
         markers.forEach(marker => map.removeLayer(marker));
         markers = [];
@@ -123,8 +125,15 @@ declare global {
 }
 
 export default function MapView() {
+  // DEV DEBUG PANEL STATE
+  const [showDebugPanel, setShowDebugPanel] = useState(__DEV__);
+
   const webViewRef = useRef<WebView>(null);
   const { filteredLocations, viewport, updateViewport, selectedLocation, selectLocation } = useMapIntegration();
+
+  // DEBUG: For UI panel
+  const filteredLocationsCount = filteredLocations?.length ?? 0;
+  const filteredLocationsSample = filteredLocations?.slice(0, 3) ?? [];
   const [mapReady, setMapReady] = useState(false);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
 
@@ -175,6 +184,9 @@ export default function MapView() {
   // Send updated locations to the WebView when they change
   useEffect(() => {
     if (mapReady && webViewRef.current) {
+      // DEBUG: Log filteredLocations just before sending to WebView
+      // eslint-disable-next-line no-console
+      console.log('[MapView] Sending filteredLocations to map:', filteredLocations);
       webViewRef.current.injectJavaScript(`
         window.postMessage(JSON.stringify({
           type: 'UPDATE_MARKERS',
@@ -231,29 +243,71 @@ export default function MapView() {
     }
   }, []);
 
+  const renderDebugPanel = () => {
+    if (!showDebugPanel) return null;
+    return (
+      <View style={{ position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, zIndex: 9999, borderRadius: 6 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>DEBUG: filteredLocations</Text>
+            <Text style={{ color: '#fff' }}>Count: {filteredLocationsCount}</Text>
+            <Text style={{ color: '#fff', fontSize: 10 }}>
+              Sample: {JSON.stringify(filteredLocationsSample, null, 2)}
+            </Text>
+          </View>
+          <Text
+            style={{ color: '#fff', marginLeft: 12, fontWeight: 'bold', fontSize: 16 }}
+            onPress={() => setShowDebugPanel(false)}
+            accessibilityRole="button"
+          >✕</Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderMap = () => {
     if (Platform.OS === 'web') {
       // On web, render the map in a fixed-position div to guarantee visibility
+      // Render MapMarker components for each filtered location on web
+      const safeFilteredLocations = filteredLocations ?? [];
+      if (__DEV__) {
+        // eslint-disable-next-line no-console
+        console.log(`[MapView:web] Rendering ${safeFilteredLocations.length} markers`);
+      }
       return (
-        <div
-          className="leaflet-container"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 1,
-          }}
-        >
+        <>
+          {renderDebugPanel()}
           <div
-            id="map"
+            className="leaflet-container"
             style={{
-              width: '100%',
-              height: '100%',
+              width: '100vw',
+              height: '100vh',
+              zIndex: 1,
+              position: 'fixed',
+              top: 0,
+              left: 0
             }}
-          />
-        </div>
+          >
+            <div
+              id="map"
+              style={{
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+            />
+            {safeFilteredLocations.map((location: any) => (
+              <MapMarker
+                key={location.id}
+                location={location}
+                selected={selectedLocation?.id === location.id}
+                onPress={() => selectLocation(location)}
+              />
+            ))}
+          </div>
+        </>
       );
     } else {
       // On mobile, we use a WebView to render Leaflet
