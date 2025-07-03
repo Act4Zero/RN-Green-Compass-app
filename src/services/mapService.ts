@@ -22,23 +22,20 @@ export const BULGARIA_BOUNDS: GeographicBounds = {
 };
 
 /**
- * Load locations from the static JSON file
- * In a real application, this might be replaced with an API call
+ * Load EV charging locations from the local asset file
+ */
+import { getEVLocations } from '../utils/locationDataUtils';
+
+/**
+ * Load locations from local assets
  */
 export const loadLocations = async (): Promise<MapLocation[]> => {
   try {
-    // In a real application with API calls, we would use fetch here
-    // For MVP, we're loading from a local JSON file
-    const response = await fetch('/map/locations.json');
-    
-    if (!response.ok) {
-      throw new Error(`Failed to load locations: ${response.statusText}`);
-    }
-    
-    const data: MapLocation[] = await response.json();
-    return data;
+    // Load locations from our local assets using the utility function
+    const locations = await getEVLocations();
+    return locations;
   } catch (error) {
-    console.error('Error loading locations:', error);
+    console.error('Error loading EV locations:', error);
     throw error;
   }
 };
