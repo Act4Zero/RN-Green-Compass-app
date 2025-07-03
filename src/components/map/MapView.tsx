@@ -109,6 +109,19 @@ const leafletHtml = `
 </html>
 `;
 
+// Dynamically import leaflet only on the client
+
+// Ensure Leaflet CSS is loaded globally for web
+if (typeof window !== 'undefined' && Platform.OS === 'web') {
+  require('leaflet/dist/leaflet.css');
+}
+
+declare global {
+  interface Window {
+    _leafletMapInitialized?: boolean;
+  }
+}
+
 export default function MapView() {
   const webViewRef = useRef<WebView>(null);
   const { filteredLocations, viewport, updateViewport, selectedLocation, selectLocation } = useMapIntegration();
@@ -200,13 +213,46 @@ export default function MapView() {
     }
   };
 
+  // Initialize Leaflet map on web (client only)
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      (async () => {
+        if (!window._leafletMapInitialized) {
+          const L = (await import('leaflet')).default;
+          const map = L.map('map').setView([42.698334, 23.319941], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+          }).addTo(map);
+          window._leafletMapInitialized = true;
+          console.log('Leaflet map initialized');
+        }
+      })();
+    }
+  }, []);
+
   const renderMap = () => {
     if (Platform.OS === 'web') {
-      // On web, we can use the Leaflet library directly
+      // On web, render the map in a fixed-position div to guarantee visibility
       return (
-        <div className="leaflet-container" style={{width: '100%', height: '100%'}}>
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-          <div id="map" style={{width: '100%', height: '100%'}}></div>
+        <div
+          className="leaflet-container"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 1,
+          }}
+        >
+          <div
+            id="map"
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+          />
         </div>
       );
     } else {
