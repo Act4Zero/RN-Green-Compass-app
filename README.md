@@ -30,6 +30,14 @@ This is a React Native application built with [Expo](https://expo.dev) that help
    - Web browser
    - Physical device using Expo Go
 
+   * 3.1. Alternative way to run the app
+
+      ```bash
+      npx expo start --clear
+      ```
+
+      *This will clear the Metro bundler cache and restart the app.*
+
 ## Deployment with Vercel
 
 This project is configured for deployment on Vercel. Follow these steps to deploy:

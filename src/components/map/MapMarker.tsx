@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { mapMarkerStyles } from '../../styles/map/MapMarkerStyles';
 import { MapLocation } from '../../types/map';
+import { getCategoryIcon } from '../../utils/categoryUtils';
 
 interface MapMarkerProps {
   location: MapLocation;
@@ -11,27 +12,8 @@ interface MapMarkerProps {
 }
 
 export default function MapMarker({ location, selected = false, onPress }: MapMarkerProps) {
-  // Get category icon and color
-  const getCategoryIcon = () => {
-    switch (location.category) {
-      case 'EV Charging Stations':
-        return { name: 'flash', color: '#4CAF50' };
-      case 'Recycling':
-        return { name: 'refresh-circle', color: '#2196F3' };
-      case 'Organic Food':
-        return { name: 'leaf', color: '#8BC34A' };
-      case 'Zero-Waste':
-        return { name: 'trash-bin-outline', color: '#FF9800' };
-      case 'Green Building':
-        return { name: 'home', color: '#9C27B0' };
-      case 'Community':
-        return { name: 'people', color: '#E91E63' };
-      default:
-        return { name: 'location', color: '#757575' };
-    }
-  };
-
-  const { name: iconName, color: iconColor } = getCategoryIcon();
+  // Get category icon and color from the central utility
+  const { name: iconName, color: iconColor } = getCategoryIcon(location.category);
   
   const handlePress = () => {
     if (onPress) {

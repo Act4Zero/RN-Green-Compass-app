@@ -4,40 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { mapSidebarStyles } from '../../styles/map/MapSidebarStyles';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
 import { LocationCategory } from '../../types/map';
+import { getAllCategoryConfigs } from '../../utils/categoryUtils';
 
-// Category definitions with icons and colors
-const categoryConfig: Record<LocationCategory, { icon: string; color: string; label: string }> = {
-  'EV Charging Stations': { 
-    icon: 'flash', 
-    color: '#4CAF50', 
-    label: 'EV Charging' 
-  },
-  'Recycling': { 
-    icon: 'refresh-circle', 
-    color: '#2196F3', 
-    label: 'Recycling' 
-  },
-  'Organic Food': { 
-    icon: 'leaf', 
-    color: '#8BC34A', 
-    label: 'Organic' 
-  },
-  'Zero-Waste': { 
-    icon: 'trash-bin-outline', 
-    color: '#FF9800', 
-    label: 'Zero-Waste' 
-  },
-  'Green Building': { 
-    icon: 'home', 
-    color: '#9C27B0', 
-    label: 'Green Building' 
-  },
-  'Community': { 
-    icon: 'people', 
-    color: '#E91E63', 
-    label: 'Community' 
-  },
-};
+// Get category configurations from central utility
+const categoryConfig = getAllCategoryConfigs();
 
 export default function MapSidebar() {
   const { width } = useWindowDimensions();

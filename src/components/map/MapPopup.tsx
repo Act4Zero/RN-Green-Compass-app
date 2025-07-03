@@ -5,6 +5,7 @@ import { mapPopupStyles } from '../../styles/map/MapPopupStyles';
 import { MapLocation } from '../../types/map';
 import { formatAddress, getPlatformSpecificNavigationUrl } from '../../utils/mapUtils';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { getCategoryIcon } from '../../utils/categoryUtils';
 
 interface MapPopupProps {
   location: MapLocation;
@@ -35,27 +36,8 @@ export default function MapPopup({ location }: MapPopupProps) {
     });
   };
   
-  // Get category icon and color
-  const getCategoryIcon = () => {
-    switch (location.category) {
-      case 'EV Charging Stations':
-        return { name: 'flash', color: '#4CAF50' };
-      case 'Recycling':
-        return { name: 'refresh-circle', color: '#2196F3' };
-      case 'Organic Food':
-        return { name: 'leaf', color: '#8BC34A' };
-      case 'Zero-Waste':
-        return { name: 'trash-bin-outline', color: '#FF9800' };
-      case 'Green Building':
-        return { name: 'home', color: '#9C27B0' };
-      case 'Community':
-        return { name: 'people', color: '#E91E63' };
-      default:
-        return { name: 'location', color: '#757575' };
-    }
-  };
-  
-  const { name: iconName, color: iconColor } = getCategoryIcon();
+  // Get category icon and color from the central utility
+  const { name: iconName, color: iconColor } = getCategoryIcon(location.category);
   
   return (
     <View style={styles.popupContainer}>
