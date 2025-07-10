@@ -14,6 +14,8 @@ import { MapContext } from '../../context/MapContext';
 import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
 import LocateButton from './LocateButton';
+import { categoryConfig } from '../../utils/categoryUtils';
+import { ioniconSvgPaths } from '../../utils/ioniconPaths';
 
 // HTML and JS for the Leaflet map when running in a WebView
 const leafletHtml = `
@@ -284,14 +286,9 @@ export default function MapView() {
   }, [isDataInitialized]); // Only run when data is initialized
 
   // For web: add markers to Leaflet map instance when filteredLocations changes
-  // SVG pin: blue, scalable, modern
-  const svgMarkerString = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='32' height='42' viewBox='0 0 32 42' fill='none'>
-      <ellipse cx='16' cy='14' rx='12' ry='12' fill='#2E7D32'/>
-      <ellipse cx='16' cy='14' rx='6' ry='6' fill='white'/>
-      <path d='M16 42C16 42 28 26.5 28 18C28 8.05887 21.9411 2 16 2C10.0589 2 4 8.05887 4 18C4 26.5 16 42 16 42Z' fill='#2E7D32' stroke='white' stroke-width='2'/>
-    </svg>
-  `;
+  // --- CATEGORY ICON MARKERS ---
+  // (imports are now at the top)
+
   function svgToBase64(svg: string) {
     if (typeof window !== 'undefined' && window.btoa) {
       return window.btoa(unescape(encodeURIComponent(svg)));
@@ -300,8 +297,7 @@ export default function MapView() {
       return Buffer.from(svg).toString('base64');
     }
   }
-  const svgBase64 = svgToBase64(svgMarkerString);
-  const svgIconUrl = `data:image/svg+xml;base64,${svgBase64}`;
+
   useEffect(() => {
     if (Platform.OS !== 'web' || !window._leafletMapInitialized || !window._leafletMapInstance) {
       console.log('[LeafletMarkerEffect] Skipping: platform or map not ready');
@@ -313,16 +309,33 @@ export default function MapView() {
     // Remove old markers
     leafletMarkersRef.current.forEach(marker => marker.remove());
     leafletMarkersRef.current = [];
-    // Custom icon
-    const icon = L.icon({
-      iconUrl: svgIconUrl,
-      iconSize: [32, 42],
-      iconAnchor: [16, 42],
-      popupAnchor: [0, -36],
-      shadowUrl: undefined
-    });
-    // Add new markers
+
     filteredLocations.forEach((location: any) => {
+      // Get icon and color for this category
+      const config = categoryConfig[location.category] || categoryConfig['Community'];
+      const iconName = config.icon;
+      const iconColor = config.color;
+      const iconLabel = config.label;
+      const iconPath = ioniconSvgPaths[iconName] || '';
+
+      // Compose SVG for marker with icon
+      const svgMarkerString = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='32' height='42' viewBox='0 0 32 42' fill='none' color='white'>
+          <path d='M16 42C16 42 28 26.5 28 18C28 8.05887 21.9411 2 16 2C10.0589 2 4 8.05887 4 18C4 26.5 16 42 16 42Z' fill='${iconColor}' stroke='white' stroke-width='2'/>
+          <g transform='translate(7,14) scale(0.8)'>
+            ${iconPath}
+          </g>
+        </svg>
+      `;
+      const svgBase64 = svgToBase64(svgMarkerString);
+      const svgIconUrl = `data:image/svg+xml;base64,${svgBase64}`;
+      const icon = L.icon({
+        iconUrl: svgIconUrl,
+        iconSize: [32, 42],
+        iconAnchor: [16, 42],
+        popupAnchor: [0, -36],
+        shadowUrl: undefined
+      });
       const marker = L.marker([location.lat, location.lng], { icon })
         .addTo(map)
         .bindPopup(location.name || '');
