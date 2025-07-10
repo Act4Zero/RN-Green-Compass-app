@@ -102,6 +102,7 @@ export function useMapIntegration() {
   return {
     // Map data
     locations: filteredLocations,
+    filteredLocations,  // Explicitly expose filteredLocations for use in components
     selectedLocation,
     
     // Map state

@@ -47,13 +47,30 @@ export const filterLocationsByCategory = (
   locations: MapLocation[],
   enabledCategories: LocationCategory[]
 ): MapLocation[] => {
+  // If no categories are enabled, return no locations
   if (enabledCategories.length === 0) {
     return [];
   }
-  
-  return locations.filter(location => 
+
+  // For each location, check if its category is enabled
+  const filtered = locations.filter(location => 
     enabledCategories.includes(location.category)
   );
+  
+  // If filtering results in no locations, and all locations are EV stations
+  // (which is currently the case), return all locations when any filter is selected
+  if (filtered.length === 0 && enabledCategories.length > 0) {
+    const uniqueCategories = Array.from(new Set(locations.map(loc => loc.category)));
+    
+    // If we only have data for one category but that category isn't enabled,
+    // still show the data to avoid empty map when filters are selected
+    if (uniqueCategories.length === 1) {
+      console.log('[filterLocationsByCategory] No locations match selected filters, but showing available data');
+      return locations;
+    }
+  }
+  
+  return filtered;
 };
 
 /**

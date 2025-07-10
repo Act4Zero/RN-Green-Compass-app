@@ -2,7 +2,7 @@
  * Map Context
  * Provides state management for the sustainability map feature
  */
-import { createContext, useReducer, useEffect, ReactNode } from 'react';
+import { createContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import { 
   MapState, 
   MapLocation, 
@@ -153,6 +153,7 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 
 // Create context with initial state
 interface MapContextType extends MapState {
+  isDataInitialized: boolean;
   loadAllLocations: () => Promise<void>;
   toggleCategoryFilter: (category: LocationCategory, enabled: boolean) => void;
   selectLocation: (location: MapLocation | null) => void;
@@ -164,6 +165,7 @@ interface MapContextType extends MapState {
 // Create context with default values
 export const MapContext = createContext<MapContextType>({
   ...initialState,
+  isDataInitialized: false,
   loadAllLocations: async () => {},
   toggleCategoryFilter: () => {},
   selectLocation: () => {},
@@ -179,6 +181,7 @@ interface MapProviderProps {
 
 export function MapProvider({ children }: MapProviderProps) {
   const [state, dispatch] = useReducer(mapReducer, initialState);
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
   
   // Load locations on initial mount
   const loadAllLocations = async () => {
@@ -186,6 +189,7 @@ export function MapProvider({ children }: MapProviderProps) {
     try {
       const locations = await loadLocations();
       dispatch({ type: 'LOAD_LOCATIONS_SUCCESS', payload: locations });
+      setIsDataInitialized(true);
     } catch (error) {
       dispatch({ 
         type: 'LOAD_LOCATIONS_ERROR', 
@@ -193,6 +197,11 @@ export function MapProvider({ children }: MapProviderProps) {
       });
     }
   };
+  
+  // Initialize data on mount
+  useEffect(() => {
+    loadAllLocations();
+  }, []);
   
   // Toggle a category filter
   const toggleCategoryFilter = (category: LocationCategory, enabled: boolean) => {
@@ -228,6 +237,7 @@ export function MapProvider({ children }: MapProviderProps) {
   // Context value
   const contextValue: MapContextType = {
     ...state,
+    isDataInitialized,
     loadAllLocations,
     toggleCategoryFilter,
     selectLocation,

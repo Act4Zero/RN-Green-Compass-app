@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { View, Platform, Alert, Text } from 'react-native';
 import { mapViewStyles } from '../../styles/map/MapViewStyles';
 import { WebView } from 'react-native-webview';
@@ -7,6 +8,8 @@ import { getCurrentPosition } from '../../utils/mapUtils';
 
 import { useMapState } from '../../hooks/useMapState';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { useContext } from 'react';
+import { MapContext } from '../../context/MapContext';
 // Import components with relative paths
 import MapMarker from './MapMarker';
 import MapPopup from './MapPopup';
@@ -68,8 +71,6 @@ const leafletHtml = `
       
       // Function to update markers on the map
       function updateMarkers(locations) {
-        // DEBUG: Log locations received for marker creation
-        console.log('[Leaflet] updateMarkers called with locations:', locations);
         // Clear existing markers
         markers.forEach(marker => map.removeLayer(marker));
         markers = [];
@@ -111,7 +112,8 @@ const leafletHtml = `
 </html>
 `;
 
-// Dynamically import leaflet only on the client
+// Simply ignore TypeScript errors for Leaflet since we're just using it in a controlled way
+// @ts-ignore
 
 // Ensure Leaflet CSS is loaded globally for web
 if (typeof window !== 'undefined' && Platform.OS === 'web') {
@@ -121,6 +123,7 @@ if (typeof window !== 'undefined' && Platform.OS === 'web') {
 declare global {
   interface Window {
     _leafletMapInitialized?: boolean;
+    _leafletMapInstance?: any;
   }
 }
 
@@ -128,6 +131,9 @@ export default function MapView() {
   // DEV DEBUG PANEL STATE
   const [showDebugPanel, setShowDebugPanel] = useState(__DEV__);
 
+  // Get initialization state directly from context
+  const { isDataInitialized } = useContext(MapContext);
+  
   const webViewRef = useRef<WebView>(null);
   const { filteredLocations, viewport, updateViewport, selectedLocation, selectLocation } = useMapIntegration();
 
@@ -184,9 +190,6 @@ export default function MapView() {
   // Send updated locations to the WebView when they change
   useEffect(() => {
     if (mapReady && webViewRef.current) {
-      // DEBUG: Log filteredLocations just before sending to WebView
-      // eslint-disable-next-line no-console
-      console.log('[MapView] Sending filteredLocations to map:', filteredLocations);
       webViewRef.current.injectJavaScript(`
         window.postMessage(JSON.stringify({
           type: 'UPDATE_MARKERS',
@@ -225,23 +228,77 @@ export default function MapView() {
     }
   };
 
+  const leafletMarkersRef = useRef<any[]>([]); // For web: store marker refs
+
   // Initialize Leaflet map on web (client only)
   useEffect(() => {
+    // Delay initialization to ensure DOM is fully rendered
     if (Platform.OS === 'web') {
-      (async () => {
-        if (!window._leafletMapInitialized) {
-          const L = (await import('leaflet')).default;
+      // Use a short timeout to ensure the DOM is ready
+      const initializeLeaflet = () => {
+        if (window._leafletMapInitialized || typeof document === 'undefined') return;
+        
+        try {
+          // Check if map element exists
+          const mapElement = document.getElementById('map');
+          if (!mapElement) {
+            console.log('Map element not found yet, will retry');
+            return;
+          }
+          
+          // Leaflet doesn't have a default export, so we import the whole module
+          const L = require('leaflet');
+          if (!L || !L.map) {
+            console.error('Leaflet loaded but L.map is undefined');
+            return;
+          }
+          
+          // Initialize the map
           const map = L.map('map').setView([42.698334, 23.319941], 12);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19,
           }).addTo(map);
+          
           window._leafletMapInitialized = true;
-          console.log('Leaflet map initialized');
+          window._leafletMapInstance = map; 
+          console.log('Leaflet map initialized successfully');
+        } catch (err) {
+          console.error('Error initializing Leaflet map:', err);
         }
-      })();
+      };
+      
+      // Try immediately and then with a delay if needed
+      initializeLeaflet();
+      
+      // Set a timeout as a fallback to ensure map gets initialized
+      const timeoutId = setTimeout(() => {
+        if (!window._leafletMapInitialized) {
+          console.log('Retrying map initialization after timeout');
+          initializeLeaflet();
+        }
+      }, 500); // 500ms should be enough for the DOM to be ready
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, []);
+  }, [isDataInitialized]); // Only run when data is initialized
+
+  // For web: add markers to Leaflet map instance when filteredLocations changes
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !window._leafletMapInitialized || !window._leafletMapInstance) return;
+    const L = require('leaflet');
+    const map = window._leafletMapInstance;
+    // Remove old markers
+    leafletMarkersRef.current.forEach(marker => marker.remove());
+    leafletMarkersRef.current = [];
+    // Add new markers
+    filteredLocations.forEach((location: any) => {
+      const marker = L.marker([location.lat, location.lng])
+        .addTo(map)
+        .bindPopup(location.name || '');
+      leafletMarkersRef.current.push(marker);
+    });
+  }, [filteredLocations]);
 
   const renderDebugPanel = () => {
     if (!showDebugPanel) return null;
@@ -269,11 +326,6 @@ export default function MapView() {
     if (Platform.OS === 'web') {
       // On web, render the map in a fixed-position div to guarantee visibility
       // Render MapMarker components for each filtered location on web
-      const safeFilteredLocations = filteredLocations ?? [];
-      if (__DEV__) {
-        // eslint-disable-next-line no-console
-        console.log(`[MapView:web] Rendering ${safeFilteredLocations.length} markers`);
-      }
       return (
         <>
           {renderDebugPanel()}
@@ -298,14 +350,6 @@ export default function MapView() {
                 left: 0,
               }}
             />
-            {safeFilteredLocations.map((location: any) => (
-              <MapMarker
-                key={location.id}
-                location={location}
-                selected={selectedLocation?.id === location.id}
-                onPress={() => selectLocation(location)}
-              />
-            ))}
           </div>
         </>
       );
@@ -325,6 +369,16 @@ export default function MapView() {
       );
     }
   };
+
+  // Render loading state if data is not yet initialized
+  if (!isDataInitialized) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}> 
+        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={{ marginTop: 16, color: '#2E7D32', fontWeight: '500' }}>Loading map data...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

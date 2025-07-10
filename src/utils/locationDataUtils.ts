@@ -15,9 +15,7 @@ export const loadEVLocations = async (): Promise<MapLocation[]> => {
     // Use require for both platforms - safer with current TypeScript config
     // This approach avoids dynamic import issues
     const locationsData = require('../../assets/data/locations_ev_bulgaria.json');
-    console.log('[loadEVLocations] Raw locationsData:', Array.isArray(locationsData) ? locationsData.slice(0, 3) : locationsData);
     const transformed = transformLocationsData(locationsData);
-    console.log('[loadEVLocations] Transformed locations:', transformed.slice(0, 3));
     // Check for category consistency
     const uniqueCategories = Array.from(new Set(transformed.map(l => l.category)));
     if (uniqueCategories.length > 1 || uniqueCategories[0] !== 'EV Charging Stations') {
@@ -59,7 +57,6 @@ const transformLocationsData = (rawData: any[]): MapLocation[] => {
     level: item.level,
     is_fast_charge_capable: item.is_fast_charge_capable || false
   }));
-  console.log('[transformLocationsData] Mapped locations count:', mapped.length);
   return mapped;
 };
 
@@ -93,14 +90,10 @@ const generateDescription = (item: any): string => {
  */
 export const getEVLocations = async (): Promise<MapLocation[]> => {
   if (evLocations.length > 0) {
-    console.log('[getEVLocations] Returning cached locations:', evLocations.length);
-    console.log('[getEVLocations] Cached locations:', evLocations);
     return evLocations;
   }
   try {
     evLocations = await loadEVLocations();
-    console.log('[getEVLocations] Loaded locations count:', evLocations.length);
-    console.log('[getEVLocations] Loaded locations:', evLocations);
     return evLocations;
   } catch (error) {
     console.error('Failed to get EV locations:', error);
