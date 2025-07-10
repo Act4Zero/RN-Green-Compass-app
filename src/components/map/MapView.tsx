@@ -284,20 +284,51 @@ export default function MapView() {
   }, [isDataInitialized]); // Only run when data is initialized
 
   // For web: add markers to Leaflet map instance when filteredLocations changes
+  // SVG pin: blue, scalable, modern
+  const svgMarkerString = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='32' height='42' viewBox='0 0 32 42' fill='none'>
+      <ellipse cx='16' cy='14' rx='12' ry='12' fill='#2E7D32'/>
+      <ellipse cx='16' cy='14' rx='6' ry='6' fill='white'/>
+      <path d='M16 42C16 42 28 26.5 28 18C28 8.05887 21.9411 2 16 2C10.0589 2 4 8.05887 4 18C4 26.5 16 42 16 42Z' fill='#2E7D32' stroke='white' stroke-width='2'/>
+    </svg>
+  `;
+  function svgToBase64(svg: string) {
+    if (typeof window !== 'undefined' && window.btoa) {
+      return window.btoa(unescape(encodeURIComponent(svg)));
+    } else {
+      // fallback for Node.js, not expected in browser
+      return Buffer.from(svg).toString('base64');
+    }
+  }
+  const svgBase64 = svgToBase64(svgMarkerString);
+  const svgIconUrl = `data:image/svg+xml;base64,${svgBase64}`;
   useEffect(() => {
-    if (Platform.OS !== 'web' || !window._leafletMapInitialized || !window._leafletMapInstance) return;
+    if (Platform.OS !== 'web' || !window._leafletMapInitialized || !window._leafletMapInstance) {
+      console.log('[LeafletMarkerEffect] Skipping: platform or map not ready');
+      return;
+    }
     const L = require('leaflet');
     const map = window._leafletMapInstance;
+    console.log('[LeafletMarkerEffect] Adding markers:', filteredLocations.length);
     // Remove old markers
     leafletMarkersRef.current.forEach(marker => marker.remove());
     leafletMarkersRef.current = [];
+    // Custom icon
+    const icon = L.icon({
+      iconUrl: svgIconUrl,
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -36],
+      shadowUrl: undefined
+    });
     // Add new markers
     filteredLocations.forEach((location: any) => {
-      const marker = L.marker([location.lat, location.lng])
+      const marker = L.marker([location.lat, location.lng], { icon })
         .addTo(map)
         .bindPopup(location.name || '');
       leafletMarkersRef.current.push(marker);
     });
+    console.log('[LeafletMarkerEffect] Markers added:', leafletMarkersRef.current.length);
   }, [filteredLocations]);
 
   const renderDebugPanel = () => {
