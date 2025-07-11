@@ -144,18 +144,15 @@ export default function MapView() {
   const filteredLocationsSample = filteredLocations?.slice(0, 3) ?? [];
   const [mapReady, setMapReady] = useState(false);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Check for location permission on mount
   useEffect(() => {
     // For web, we check permission differently than native
     if (Platform.OS === 'web') {
-      // On web, we can't check permissions directly, so we assume it's granted
-      // and will handle rejection when we try to use it
       setLocationPermission(true);
     } else {
-      // For native platforms, we would use the appropriate permission checking
-      // For now, we'll just set it to true as a placeholder
-      setLocationPermission(true);
+      setLocationPermission(null); // We'll check on demand
     }
   }, []);
 
@@ -204,16 +201,16 @@ export default function MapView() {
 
   // Locate user position using our mapUtils
   const handleLocateMe = async () => {
-    if (!locationPermission) {
-      Alert.alert('Location Permission', 'Location permission is required to use this feature.');
-      return;
-    }
-
+    setIsLocating(true);
     try {
-      // Use our utility function to get position
+      // Use our utility function to get position (handles permissions)
       const position = await getCurrentPosition();
-      
-      if (webViewRef.current) {
+      setLocationPermission(true);
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window._leafletMapInstance) {
+          window._leafletMapInstance.setView([position.lat, position.lng], 15);
+        }
+      } else if (webViewRef.current) {
         webViewRef.current.injectJavaScript(`
           window.postMessage(JSON.stringify({
             type: 'SET_CENTER',
@@ -226,7 +223,9 @@ export default function MapView() {
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Location Error', 'Could not get your location. Please check your settings.');
+      Alert.alert('Location Error', error instanceof Error ? error.message : 'Could not get your location. Please check your settings.');
+    } finally {
+      setIsLocating(false);
     }
   };
 
@@ -257,6 +256,7 @@ export default function MapView() {
           
           // Initialize the map
           const map = L.map('map').setView([42.698334, 23.319941], 12);
+          window._leafletMapInstance = map;
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19,
@@ -427,7 +427,7 @@ export default function MapView() {
   return (
     <View style={styles.container}>
       {renderMap()}
-      <LocateButton onPress={handleLocateMe} />
+      <LocateButton onPress={handleLocateMe} isLoading={isLocating} />
       {selectedLocation && (
         <MapPopup location={selectedLocation} />
       )}

@@ -5,17 +5,25 @@ import { locateButtonStyles } from '../../styles/map/LocateButtonStyles';
 
 interface LocateButtonProps {
   onPress: () => void;
+  isLoading?: boolean;
 }
 
-export default function LocateButton({ onPress }: LocateButtonProps) {
+import { ActivityIndicator } from 'react-native';
+
+export default function LocateButton({ onPress, isLoading }: LocateButtonProps) {
   return (
-    <TouchableOpacity 
-      style={styles.button} 
+    <TouchableOpacity
+      style={[styles.button, isLoading && { opacity: 0.5 }]}
       onPress={onPress}
       accessibilityLabel="Find my location"
       accessibilityRole="button"
+      disabled={isLoading}
     >
-      <Ionicons name="locate" size={22} color="#333333" />
+      {isLoading ? (
+        <ActivityIndicator size={22} color="#333333" />
+      ) : (
+        <Ionicons name="locate" size={22} color="#333333" />
+      )}
     </TouchableOpacity>
   );
 }

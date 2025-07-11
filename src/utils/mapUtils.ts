@@ -9,11 +9,6 @@ import { GeographicBounds, MapLocation } from '../types/map';
  * Get the user's current position using the Geolocation API
  * Returns a Promise with the latitude and longitude
  */
-/**
- * Format an address from a MapLocation object
- * @param location The location object containing address information
- * @returns A formatted address string
- */
 export const formatAddress = (location: MapLocation): string => {
   let addressParts = [];
   
@@ -40,44 +35,58 @@ export const formatAddress = (location: MapLocation): string => {
  * Get the user's current position using the Geolocation API
  * Returns a Promise with the latitude and longitude
  */
-export const getCurrentPosition = (): Promise<{
-  lat: number;
-  lng: number;
-}> => {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser'));
-      return;
-    }
+import * as Location from 'expo-location';
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        let message;
-        switch (error.code) {
-          case 1:
-            message = 'Permission denied. Please enable location services.';
-            break;
-          case 2:
-            message = 'Position unavailable. Try again later.';
-            break;
-          case 3:
-            message = 'Location request timed out. Try again later.';
-            break;
-          default:
-            message = 'An unknown error occurred.';
-            break;
-        }
-        reject(new Error(message));
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  });
+export const getCurrentPosition = async (): Promise<{ lat: number; lng: number }> => {
+  if (Platform.OS === 'web') {
+    return new Promise((resolve, reject) => {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          let message;
+          switch (error.code) {
+            case 1:
+              message = 'Permission denied. Please enable location services.';
+              break;
+            case 2:
+              message = 'Position unavailable. Try again later.';
+              break;
+            case 3:
+              message = 'Location request timed out. Try again later.';
+              break;
+            default:
+              message = 'An unknown error occurred.';
+              break;
+          }
+          reject(new Error(message));
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    });
+  } else {
+    // Native (Expo/React Native)
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Permission denied. Please enable location services.');
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    } catch (err) {
+      throw new Error(
+        err instanceof Error ? err.message : 'Could not get your location. Please check your settings.'
+      );
+    }
+  }
 };
 
 /**
