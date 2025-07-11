@@ -5,6 +5,7 @@ import { mapViewStyles } from '../../styles/map/MapViewStyles';
 import { WebView } from 'react-native-webview';
 import Constants from 'expo-constants';
 import { getCurrentPosition } from '../../utils/mapUtils';
+import { getIpApproxLocation } from '../../utils/ipLocation';
 
 import { useMapState } from '../../hooks/useMapState';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
@@ -148,15 +149,97 @@ export default function MapView() {
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
-  // Check for location permission on mount
+  // On mount, try to get precise location, then IP-based, then fallback
   useEffect(() => {
-    // For web, we check permission differently than native
-    if (Platform.OS === 'web') {
-      setLocationPermission(true);
-    } else {
-      setLocationPermission(null); // We'll check on demand
+    async function initMapLocation() {
+      // 1. Try precise geolocation
+      try {
+        const position = await getCurrentPosition();
+        setUserLocation(position);
+        setLocationPermission(true);
+        if (Platform.OS === 'web') {
+          if (typeof window !== 'undefined' && window._leafletMapInstance) {
+            window._leafletMapInstance.setView([position.lat, position.lng], 15);
+            const L = (window as any).L;
+            if (L) {
+              if (!window._userLocationMarker) {
+                window._userLocationMarker = L.circleMarker([position.lat, position.lng], {
+                  radius: 8,
+                  color: '#1976D2',
+                  fillColor: '#1976D2',
+                  fillOpacity: 0.9,
+                  weight: 2
+                }).addTo(window._leafletMapInstance);
+              } else {
+                window._userLocationMarker.setLatLng([position.lat, position.lng]);
+              }
+            }
+          }
+        } else if (webViewRef.current) {
+          webViewRef.current.injectJavaScript(`
+            window.postMessage(JSON.stringify({
+              type: 'SET_CENTER',
+              lat: ${position.lat},
+              lng: ${position.lng},
+              zoom: 15
+            }));
+            if(window._userLocationMarker){window._userLocationMarker.setLatLng([${position.lat},${position.lng}]);}else{window._userLocationMarker = L.circleMarker([${position.lat},${position.lng}],{radius:8,color:'#1976D2',fillColor:'#1976D2',fillOpacity:0.9,weight:2}).addTo(window._leafletMapInstance);}
+            true;
+          `);
+        }
+        return;
+      } catch {}
+      
+      // 2. Try IP-based location (web only)
+      if (Platform.OS === 'web') {
+        const approx = await getIpApproxLocation();
+        if (approx) {
+          setUserLocation({ lat: approx.lat, lng: approx.lng });
+          setLocationPermission(false);
+          if (typeof window !== 'undefined' && window._leafletMapInstance) {
+            window._leafletMapInstance.setView([approx.lat, approx.lng], 11);
+            const L = (window as any).L;
+            if (L) {
+              if (!window._userLocationMarker) {
+                window._userLocationMarker = L.circleMarker([approx.lat, approx.lng], {
+                  radius: 8,
+                  color: '#1976D2',
+                  fillColor: '#1976D2',
+                  fillOpacity: 0.6,
+                  weight: 2,
+                  dashArray: '4,3'
+                }).addTo(window._leafletMapInstance);
+              } else {
+                window._userLocationMarker.setLatLng([approx.lat, approx.lng]);
+              }
+            }
+          }
+          Alert.alert('Approximate location', 'Showing your city or region based on your IP address.');
+          return;
+        }
+      }
+      
+      // 3. Fallback to country/world
+      setLocationPermission(false);
+      const fallback = { lat: 20, lng: 0, zoom: 2 }; // World view as fallback
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window._leafletMapInstance) {
+          window._leafletMapInstance.setView([fallback.lat, fallback.lng], fallback.zoom);
+        }
+      } else if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          window.postMessage(JSON.stringify({
+            type: 'SET_CENTER',
+            lat: ${fallback.lat},
+            lng: ${fallback.lng},
+            zoom: ${fallback.zoom}
+          }));
+          true;
+        `);
+      }
     }
-  }, []);
+    if (mapReady) initMapLocation();
+  }, [mapReady]);
 
   // Handle messages from the WebView
   const handleWebViewMessage = (event: any) => {
@@ -274,7 +357,7 @@ export default function MapView() {
           }
           
           // Initialize the map
-          const map = L.map('map').setView([42.698334, 23.319941], 12);
+          const map = L.map('map').setView([20, 0], 2);
           window._leafletMapInstance = map;
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
