@@ -126,10 +126,12 @@ declare global {
   interface Window {
     _leafletMapInitialized?: boolean;
     _leafletMapInstance?: any;
+    _userLocationMarker?: any;
   }
 }
 
 export default function MapView() {
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   // DEV DEBUG PANEL STATE
   const [showDebugPanel, setShowDebugPanel] = useState(__DEV__);
 
@@ -206,9 +208,25 @@ export default function MapView() {
       // Use our utility function to get position (handles permissions)
       const position = await getCurrentPosition();
       setLocationPermission(true);
+      setUserLocation(position);
       if (Platform.OS === 'web') {
         if (typeof window !== 'undefined' && window._leafletMapInstance) {
           window._leafletMapInstance.setView([position.lat, position.lng], 15);
+          // Add or update the user's location marker (blue dot)
+          const L = (window as any).L;
+          if (L) {
+            if (!window._userLocationMarker) {
+              window._userLocationMarker = L.circleMarker([position.lat, position.lng], {
+                radius: 8,
+                color: '#1976D2',
+                fillColor: '#1976D2',
+                fillOpacity: 0.9,
+                weight: 2
+              }).addTo(window._leafletMapInstance);
+            } else {
+              window._userLocationMarker.setLatLng([position.lat, position.lng]);
+            }
+          }
         }
       } else if (webViewRef.current) {
         webViewRef.current.injectJavaScript(`
@@ -218,6 +236,7 @@ export default function MapView() {
             lng: ${position.lng},
             zoom: 15
           }));
+          if(window._userLocationMarker){window._userLocationMarker.setLatLng([${position.lat},${position.lng}]);}else{window._userLocationMarker = L.circleMarker([${position.lat},${position.lng}],{radius:8,color:'#1976D2',fillColor:'#1976D2',fillOpacity:0.9,weight:2}).addTo(window._leafletMapInstance);}
           true;
         `);
       }
