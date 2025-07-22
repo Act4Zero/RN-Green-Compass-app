@@ -73,21 +73,7 @@ export default function MapSidebar() {
     );
   };
 
-  const renderLegend = () => {
-    return (
-      <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Legend</Text>
-        {Object.entries(categoryConfig).map(([category, config]) => (
-          <View key={category} style={styles.legendItem}>
-            <View style={[styles.legendIcon, { backgroundColor: config.color }]}>
-              <Ionicons name={config.icon as any} size={14} color="#FFFFFF" />
-            </View>
-            <Text style={styles.legendText}>{config.label}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
+
 
   return (
     <View style={[
@@ -109,7 +95,7 @@ export default function MapSidebar() {
         {renderToggleAll()}
       </View>
       
-      {isWideScreen && renderLegend()}
+
     </View>
   );
 }

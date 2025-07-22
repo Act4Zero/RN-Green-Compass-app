@@ -17,11 +17,6 @@ export interface MapSidebarStyles {
   toggleAllInactive: ViewStyle;
   toggleAllActiveText: TextStyle;
   toggleAllInactiveText: TextStyle;
-  legend: ViewStyle;
-  legendTitle: TextStyle;
-  legendItem: ViewStyle;
-  legendIcon: ViewStyle;
-  legendText: TextStyle;
 }
 
 export const mapSidebarStyles = StyleSheet.create<MapSidebarStyles>({
@@ -109,28 +104,5 @@ export const mapSidebarStyles = StyleSheet.create<MapSidebarStyles>({
     color: '#666666',
     fontWeight: '500',
   },
-  legend: {
-    marginTop: 20,
-  },
-  legendTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#333333',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  legendIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  legendText: {
-    fontSize: 14,
-    color: '#333333',
-  },
+
 });
