@@ -47,12 +47,18 @@ function createEnhancedPopupContent(location: Location): string {
   let html = `<div class="ev-popup">
     <h3>${location.name || 'Unnamed Location'}</h3>`;
   
-  // Add address section
+  // Create Google Maps URL for navigation using address and coordinates for better accuracy
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    address || location.name || ''
+  )}+${encodeURIComponent(location.lat + ',' + location.lng)}`;
+  
+  // Add address section with Google Maps button
   html += `
     <div class="ev-popup-section">
       <div class="ev-popup-row">
         <i class="icon-location"></i>
         <span>${address}</span>
+        <a href="${googleMapsUrl}" target="_blank" class="ev-popup-maps-btn" title="Open in Google Maps">🗺️</a>
       </div>`;
       
   // Add detailed location if available

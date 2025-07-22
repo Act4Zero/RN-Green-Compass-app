@@ -44,6 +44,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  position: relative;
 }
 
 .ev-popup-row i {
@@ -161,3 +162,28 @@
 .icon-cash::before { content: "💰"; }
 .icon-link::before { content: "🔗"; }
 .icon-speedometer::before { content: "🔄"; }
+
+/* Google Maps Button */
+.ev-popup-maps-btn {
+  margin-left: 8px;
+  padding: 4px 6px;
+  background-color: #4285F4;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.ev-popup-maps-btn:hover {
+  background-color: #3367D6;
+  text-decoration: none;
+}
+
+.ev-popup-maps-btn:active {
+  background-color: #2A56C6;
+  text-decoration: none;
+}
