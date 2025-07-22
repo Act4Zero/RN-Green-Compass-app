@@ -51,6 +51,17 @@ export function useWebMapInit({
           return;
         }
         
+        // Import Leaflet's default CSS
+        require('leaflet/dist/leaflet.css');
+        
+        // Import our custom EV popup CSS
+        try {
+          require('../styles/web/ev-popup.css');
+          console.log('EV popup CSS loaded successfully');
+        } catch (cssErr) {
+          console.warn('Could not load EV popup CSS:', cssErr);
+        }
+        
         // Initialize the map
         const map = L.map('map').setView([initialLat, initialLng], initialZoom);
         window._leafletMapInstance = map;

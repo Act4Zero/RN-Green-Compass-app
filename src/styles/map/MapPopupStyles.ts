@@ -14,9 +14,25 @@ export interface MapPopupStyles {
   // Description related styles
   descriptionContainer: ViewStyle;
   descriptionText: TextStyle;
+  // Address section styles
+  addressSection: ViewStyle;
+  locationDetails: ViewStyle;
+  locationDetailText: TextStyle;
+  // EV charging specific styles
+  evDetailsSection: ViewStyle;
+  sectionTitle: TextStyle;
+  evInfoGrid: ViewStyle;
+  evInfoCard: ViewStyle;
+  evInfoHeader: ViewStyle;
+  evInfoLabel: TextStyle;
+  evInfoValue: TextStyle;
+  fastChargeIndicator: TextStyle;
+  technicalDetails: ViewStyle;
   // Source related styles
   sourceContainer: ViewStyle;
   sourceText: TextStyle;
+  sourceSection: ViewStyle;
+  licenceText: TextStyle;
   // Navigation related styles
   navigationButton: ViewStyle;
   navigationText: TextStyle;
@@ -98,6 +114,76 @@ export const mapPopupStyles = StyleSheet.create<MapPopupStyles>({
     color: '#333333',
     lineHeight: 20,
   },
+  // Address section styles
+  addressSection: {
+    marginBottom: 12,
+  },
+  locationDetails: {
+    marginTop: 4,
+    marginLeft: 24,
+  },
+  locationDetailText: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 2,
+  },
+  // EV charging specific styles
+  evDetailsSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#2E7D32',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginBottom: 12,
+  },
+  evInfoGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  evInfoCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    borderRadius: 6,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  evInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  evInfoLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginLeft: 6,
+    fontWeight: '500',
+  },
+  evInfoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  fastChargeIndicator: {
+    fontSize: 11,
+    color: '#2E7D32',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  technicalDetails: {
+    marginTop: 8,
+  },
   sourceContainer: {
     marginTop: 8,
   },
@@ -105,6 +191,17 @@ export const mapPopupStyles = StyleSheet.create<MapPopupStyles>({
     fontSize: 12,
     color: '#757575',
     fontStyle: 'italic',
+  },
+  sourceSection: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+  },
+  licenceText: {
+    fontSize: 11,
+    color: '#999999',
+    marginTop: 2,
   },
   navigationButton: {
     flexDirection: 'row',

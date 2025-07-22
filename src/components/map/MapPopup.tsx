@@ -57,9 +57,27 @@ export default function MapPopup({ location }: MapPopupProps) {
         </View>
         
         <View style={styles.content}>
-          <View style={styles.infoRow}>
-            <Ionicons name="location" size={16} color="#666666" style={styles.infoIcon} />
-            <Text style={styles.infoText as any}>{formatAddress(location)}</Text>
+          {/* Address Section */}
+          <View style={styles.addressSection}>
+            <View style={styles.infoRow}>
+              <Ionicons name="location" size={16} color="#666666" style={styles.infoIcon} />
+              <Text style={styles.infoText as any}>{formatAddress(location)}</Text>
+            </View>
+            
+            {/* Show detailed address components if available */}
+            {(location.town || location.state_or_province || location.country) && (
+              <View style={styles.locationDetails}>
+                {location.town && location.state_or_province && (
+                  <Text style={styles.locationDetailText}>
+                    {location.town}, {location.state_or_province}
+                    {location.country && location.country !== location.state_or_province && `, ${location.country}`}
+                  </Text>
+                )}
+                {location.postcode && (
+                  <Text style={styles.locationDetailText}>Postcode: {location.postcode}</Text>
+                )}
+              </View>
+            )}
           </View>
           
           <View style={styles.infoRow}>
@@ -73,28 +91,67 @@ export default function MapPopup({ location }: MapPopupProps) {
             </View>
           )}
           
-          {/* Conditional EV specific information */}
+          {/* Enhanced EV Charging Station Information */}
           {location.category === 'EV Charging Stations' && (
-            <>
-              {location.usage_cost && (
-                <View style={styles.infoRow}>
-                  <Ionicons name="cash" size={16} color="#666666" style={styles.infoIcon} />
-                  <Text style={styles.infoText}>Cost: {location.usage_cost}</Text>
-                </View>
-              )}
+            <View style={styles.evDetailsSection}>
+              <Text style={styles.sectionTitle}>Charging Details</Text>
               
-              {location.power_kw && (
-                <View style={styles.infoRow}>
-                  <Ionicons name="flash" size={16} color="#666666" style={styles.infoIcon} />
-                  <Text style={styles.infoText}>Power: {location.power_kw} kW</Text>
+              {/* Power and Charging Speed */}
+              <View style={styles.evInfoGrid}>
+                {location.power_kw && (
+                  <View style={styles.evInfoCard}>
+                    <View style={styles.evInfoHeader}>
+                      <Ionicons name="flash" size={18} color="#2E7D32" />
+                      <Text style={styles.evInfoLabel}>Power</Text>
+                    </View>
+                    <Text style={styles.evInfoValue}>{location.power_kw} kW</Text>
+                    {location.is_fast_charge_capable && (
+                      <Text style={styles.fastChargeIndicator}>⚡ Fast Charge</Text>
+                    )}
+                  </View>
+                )}
+                
+                {location.usage_cost && (
+                  <View style={styles.evInfoCard}>
+                    <View style={styles.evInfoHeader}>
+                      <Ionicons name="cash" size={18} color="#2E7D32" />
+                      <Text style={styles.evInfoLabel}>Cost</Text>
+                    </View>
+                    <Text style={styles.evInfoValue}>{location.usage_cost}</Text>
+                  </View>
+                )}
+              </View>
+              
+              {/* Connection Type and Level */}
+              {(location.connection_type || location.level) && (
+                <View style={styles.technicalDetails}>
+                  {location.connection_type && (
+                    <View style={styles.infoRow}>
+                      <Ionicons name="link" size={16} color="#666666" style={styles.infoIcon} />
+                      <Text style={styles.infoText}>Connector: {location.connection_type}</Text>
+                    </View>
+                  )}
+                  
+                  {location.level && (
+                    <View style={styles.infoRow}>
+                      <Ionicons name="speedometer" size={16} color="#666666" style={styles.infoIcon} />
+                      <Text style={styles.infoText}>Level: {location.level}</Text>
+                    </View>
+                  )}
                 </View>
               )}
-            </>
+            </View>
           )}
           
-          {location.source && (
-            <View style={styles.sourceContainer}>
-              <Text style={styles.sourceText as any}>Source: {location.source || 'Community'}</Text>
+          {/* Data Source and License */}
+          {(location.source || location.licence) && (
+            <View style={styles.sourceSection}>
+              {location.source && (
+                <Text style={styles.sourceText as any}>Source: {location.source}</Text>
+              )}
+              {location.licence && (
+                <Text style={styles.licenceText}>License: {location.licence}</Text>
+              )}
             </View>
           )}
         </View>
