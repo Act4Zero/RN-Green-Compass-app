@@ -54,6 +54,9 @@ export default function RootLayout() {
           <Stack.Screen name="community/challenges/[id]/index" options={{ headerShown: false }} />
           <Stack.Screen name="community/challenges/[id]/log" options={{ headerShown: false }} />
 
+          {/* Map screens */}
+          <Stack.Screen name="map/index" options={{ headerShown: false }} />
+
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

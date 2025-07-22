@@ -1,0 +1,87 @@
+Sustainability Map MVP – Technical Implementation Spec
+
+## 🔧 Overview
+
+This MVP enables users to explore nearby sustainable locations (e.g., EV charging stations, organic stores, zero-waste shops) on a lightweight map UI, with basic filtering and information display.
+
+**Tech Stack**
+- Frontend: React / React Native or Web (Expo Web)
+- Map Library: Leaflet.js (OpenStreetMap tiles)
+- Data Source: Static JSON file (served locally or from CDN)
+- Backend: None (MVP uses static data)
+
+## 📍 Features (MVP Scope)
+
+### ✅ Interactive Map
+- Load map using Leaflet.js and OpenStreetMap tile layer.
+- Auto-center to user’s location (fallback to default).
+- Display pins based on location type (category).
+- Custom pin icons (e.g., EV charger, zero-waste, etc.).
+
+### ✅ Static Location Markers
+- Read data from `/map/locations.json` at load.
+- Markers display a popup with name, address, and link to navigation (Google Maps or Apple Maps).
+
+### ✅ Basic Filtering
+- Filter by category (`EV Charging`, `Organic Food`, `Recycling`, etc.).
+- Filters applied locally on frontend; update visible pins dynamically.
+
+### ✅ Business Profile (Popup Only)
+- Name
+- Address
+- Category
+- Description (short)
+- Navigation button → opens Google Maps
+
+---
+
+## 📄 locations.json Format (Static Data)
+
+```json
+[
+  {
+    "id": "311445",
+    "name": "Via Antiqua, Ceramic Factory",
+    "lat": 42.848070270555496,
+    "lng": 27.100741618369852,
+    "town": "Luliakovo",
+    "state_or_province": "Bourgas",
+    "address_line_1": "Luliakovo Train Station",
+    "address_line_2": null,
+    "postcode": null,
+    "country": null,
+    "category": "EV Charging Stations",
+    "source": "Open Charge Map",
+    "licence": "Open Data Commons ODbL",
+    "usage_cost": "0.70 BGN/kWh",
+    "connection_type": null,
+    "power_kw": 180,
+    "level": null,
+    "is_fast_charge_capable": false
+  },
+  ...
+]
+
+🎨 UI Components
+MapView.tsx
+- Initializes Leaflet map
+- Loads and renders markers
+- Applies category-based filter
+- Handles map interaction and popup
+
+MapSidebar.tsx
+- Category filter toggles
+- Simple legend (icon + label)
+- Optional: Reset filters button
+
+MapPopup.tsx
+- Displays marker info
+
+⚠️ Known Constraints
+No user contributions or reviews in MVP
+No dynamic data refresh
+No personalization (yet)
+JSON file must be manually updated with new locations
+
+✅ Deployment Notes
+Serve the locations.json embedded in your build.
