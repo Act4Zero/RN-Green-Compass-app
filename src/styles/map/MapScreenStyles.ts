@@ -13,10 +13,11 @@ export const mapScreenStyles = StyleSheet.create<MapScreenStyles>({
   },
   content: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'column', // Default to column, overridden in component for responsive design
   },
   mapContainer: {
     flex: 1,
     position: 'relative' as 'relative',
+    minHeight: 400, // Ensure minimum height for mobile
   },
 });

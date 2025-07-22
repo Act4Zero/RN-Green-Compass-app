@@ -26,7 +26,10 @@ export default function MapScreen() {
       ]}>
         <StatusBar style="dark" />
         
-        <View style={styles.content}>
+        <View style={[
+          styles.content,
+          { flexDirection: isWideScreen ? 'row' : 'column' }
+        ]}>
           <MapSidebar />
           <View style={styles.mapContainer}>
             <MapView />

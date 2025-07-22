@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { mapSidebarStyles } from '../../styles/map/MapSidebarStyles';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
 import { LocationCategory } from '../../types/map';
@@ -12,6 +13,7 @@ const categoryConfig = getAllCategoryConfigs();
 export default function MapSidebar() {
   const { width } = useWindowDimensions();
   const { filters, toggleCategory, toggleAllCategories } = useMapIntegration();
+  const router = useRouter();
   const isWideScreen = width > 768;
 
   // Animation for deep-linked categories (simulated pulse)
@@ -80,10 +82,24 @@ export default function MapSidebar() {
       styles.container,
       isWideScreen ? styles.wideContainer : styles.narrowContainer
     ]}>
-      <Text style={styles.title}>Sustainability Map</Text>
+      {/* Header with title and home button */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Sustainability Map</Text>
+        <TouchableOpacity 
+          style={styles.homeButton}
+          onPress={() => router.push('/home')}
+        >
+          <Ionicons name="home" size={20} color="#2E7D32" />
+        </TouchableOpacity>
+      </View>
       
+      {/* Compact filter section */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterTitle}>Categories</Text>
+        <View style={styles.filterHeader}>
+          <Text style={styles.filterTitle}>Filter Categories</Text>
+          {renderToggleAll()}
+        </View>
+        
         <ScrollView 
           horizontal={!isWideScreen}
           showsHorizontalScrollIndicator={false}
@@ -91,11 +107,7 @@ export default function MapSidebar() {
         >
           {renderCategoryChips()}
         </ScrollView>
-        
-        {renderToggleAll()}
       </View>
-      
-
     </View>
   );
 }
