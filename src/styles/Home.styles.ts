@@ -31,6 +31,8 @@ export interface HomeStyles {
   emptyGoalsText: TextStyle;
   signOutButton: ViewStyle;
   signOutButtonText: TextStyle;
+  mapNavButton: ViewStyle;
+  mapNavButtonText: TextStyle;
 }
 
 export const homeStyles = StyleSheet.create<HomeStyles>({
@@ -56,6 +58,27 @@ export const homeStyles = StyleSheet.create<HomeStyles>({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
+  },
+  mapNavButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2E7D32',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 24,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  mapNavButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   welcomeText: {
     fontSize: 16,

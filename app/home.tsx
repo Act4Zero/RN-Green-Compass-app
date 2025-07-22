@@ -263,29 +263,40 @@ export default function Home() {
         contentContainerStyle={homeStyles.scrollContentContainer}
       >
         <View style={[homeStyles.content, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
-          {/* Header with welcome message and logout */}
-          <View style={homeStyles.header}>
-            <View>
-              <Text style={homeStyles.welcomeText}>Welcome back,</Text>
-              <Text style={homeStyles.userName}>{displayIdentifier || ''}</Text>
-            </View>
-            <View style={homeStyles.headerButtons}>
-              <TouchableOpacity
-                style={homeStyles.headerButton}
-                onPress={() => router.replace('/profile')}
-              >
-                <Ionicons name="person-outline" size={24} color="#2E7D32" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={homeStyles.headerButton}
-                onPress={handleSignOut}
-              >
-                <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
-              </TouchableOpacity>
-            </View>
-          </View>
+           {/* Header with welcome message and logout */}
+           <View style={homeStyles.header}>
+             <View>
+               <Text style={homeStyles.welcomeText}>Welcome back,</Text>
+               <Text style={homeStyles.userName}>{displayIdentifier || ''}</Text>
+             </View>
+             <View style={homeStyles.headerButtons}>
+               <TouchableOpacity
+                 style={homeStyles.headerButton}
+                 onPress={() => router.replace('/profile')}
+               >
+                 <Ionicons name="person-outline" size={24} color="#2E7D32" />
+               </TouchableOpacity>
+               <TouchableOpacity
+                 style={homeStyles.headerButton}
+                 onPress={handleSignOut}
+               >
+                 <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
+               </TouchableOpacity>
+             </View>
+           </View>
 
-          {/* Dashboard Stats */}
+           {/* Go to Map Button */}
+           <TouchableOpacity
+             style={homeStyles.mapNavButton}
+             onPress={() => router.push('/map')}
+             accessibilityLabel="Go to map screen"
+             accessibilityRole="button"
+           >
+             <Ionicons name="map-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+             <Text style={homeStyles.mapNavButtonText}>Open Sustainability Map</Text>
+           </TouchableOpacity>
+
+           {/* Dashboard Stats */}
           <DashboardStats
             totalActions={totalActions}
             totalCO2Saved={totalCO2Saved}
