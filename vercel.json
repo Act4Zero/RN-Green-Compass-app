@@ -6,14 +6,8 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/map/$1",
-      "has": [{ "host": "map.greencompass.app" }]
-    },
-    {
       "source": "/:path*",
-      "destination": "/",
-      "missing": [{ "host": "map.greencompass.app" }]
+      "destination": "/"
     }
   ]
 }
