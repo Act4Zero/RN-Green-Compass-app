@@ -73,7 +73,7 @@ function useChallenges({
       // Process the data to format the challenges correctly
       const processedChallenges = challengesWithParticipation.map((challenge: Challenge) => ({
         ...challenge,
-        participant_count: challenge.participant_count?.[0]?.count || 0
+        participant_count: (challenge as any).participant_count?.[0]?.count || 0
       }));
       
       const hasMore = count ? from + processedChallenges.length < count : false;
@@ -141,7 +141,7 @@ function useChallenges({
       // Process the data to format the challenges correctly
       const processedChallenges = (data || []).map(challenge => ({
         ...challenge,
-        participant_count: challenge.participant_count?.[0]?.count || 0
+        participant_count: (challenge as any).participant_count?.[0]?.count || 0
       }));
       
       setState(prev => ({
@@ -260,7 +260,7 @@ function useChallenges({
       // Process the updated challenge
       const updatedChallenge: Challenge = {
         ...data,
-        participant_count: data.participant_count?.[0]?.count || 0
+        participant_count: (data as any).participant_count?.[0]?.count || 0
       };
       
       // Update state

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import supabase from '../../lib/supabase';
-import { ChallengeParticipant, PaginatedResult } from '../../types/challenge';
+import { ChallengeParticipant, PaginatedResult } from '../../types/community/challenge';
 import { ParticipantsState, UseParticipantsProps, JoinResult } from './types';
 import useCurrentUser from './useCurrentUser';
 import { PROFILES_BUCKET } from '@/services/profile/types';

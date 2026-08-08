@@ -6,7 +6,7 @@
  */
 import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import { Challenge } from '../types/challenge';
+import { Challenge } from '../../types/community/challenge';
 import {
   useCurrentUser,
   useChallenges,
@@ -14,7 +14,7 @@ import {
   useParticipants,
   useActivityLogs,
   useFormState
-} from './challenge';
+} from '../challenge';
 
 /**
  * Custom hook for challenge feed functionality
@@ -240,6 +240,7 @@ function useChallengeFeed() {
     
     try {
       const result = await logActivityBase(
+        'Challenge activity',
         newActivityDescription,
         newActivityImpactValue
       );
@@ -284,7 +285,7 @@ function useChallengeFeed() {
         clearChallenge();
         
         // Navigate back to challenges list
-        router.replace('/challenges');
+        router.replace('/community/challenges');
       }
     }
     
@@ -295,14 +296,14 @@ function useChallengeFeed() {
    * Navigate to challenge detail
    */
   const navigateToChallengeDetail = useCallback((challengeId: string) => {
-    router.push(`/challenges/${challengeId}`);
+    router.push({ pathname: '/community/challenges/[id]', params: { id: challengeId } });
   }, [router]);
   
   /**
    * Navigate to create challenge screen
    */
   const navigateToCreateChallenge = useCallback(() => {
-    router.push('/challenges/new');
+    router.push('/community/challenges');
   }, [router]);
   
   /**

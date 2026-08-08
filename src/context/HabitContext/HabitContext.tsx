@@ -316,8 +316,8 @@ const logHabit = async (
     // Patch logs in-memory for badge triggers
 const patchedLogs = logs.map(log => ({
   ...log,
-  type: log.type || 'habit_log',
-  timestamp: log.timestamp || log.created_at || log.log_date || null,
+  type: 'habit_log',
+  timestamp: log.created_at || log.log_date,
 }));
     const badgeTriggers = [
       { code: 'hbt_first', fn: hbtFirstTrigger },
@@ -329,7 +329,12 @@ const patchedLogs = logs.map(log => ({
       { code: 'hbt_all_rounder', fn: hbtAllRounderTrigger },
     ];
     for (const { code, fn } of badgeTriggers) {
-      const triggerResult = fn({ activityLogs: patchedLogs });
+      const triggerResult = fn({
+        userId: user.id,
+        profile: { id: user.id, login_streak: overallStreak },
+        activityLogs: patchedLogs,
+        now: new Date(),
+      });
       if (triggerResult) {
         const hasBadge = await badgesService.hasUserBadge(user.id, code);
         if (!hasBadge) {

@@ -20,6 +20,7 @@ import MotivationalMessage from '@/components/community/leaderboards/Motivationa
 import LoadingState from '@/components/community/leaderboards/LoadingState';
 import ErrorState from '@/components/community/leaderboards/ErrorState';
 import EmptyState from '@/components/community/leaderboards/EmptyState';
+import { useAppTheme } from '@/theme';
 
 // Styles for this component
 const styles = LeaderboardStyles;
@@ -27,6 +28,7 @@ const styles = LeaderboardStyles;
 function LeaderboardContent() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme } = useAppTheme();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   
@@ -68,25 +70,25 @@ function LeaderboardContent() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+        <View style={[styles.content, { maxWidth: 1040 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Leaderboards</Text>
-              <Text style={styles.subtitle}>See how you compare to others</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Impact leaderboard</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Celebrate consistency and learn from the community.</Text>
             </View>
           </View>
 
@@ -112,9 +114,9 @@ function LeaderboardContent() {
           />
 
           {/* Leaderboard data display */}
-          <View style={styles.leaderboardContainer}>
+          <View style={[styles.leaderboardContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
             <View style={styles.leaderboardHeader}>
-              <Text style={styles.leaderboardTitle}>
+              <Text style={[styles.leaderboardTitle, { color: theme.colors.text }]}>
                 {filter.type === 'points' ? 'Most Green Points' : 'Longest Habit Streak'}
               </Text>
             </View>

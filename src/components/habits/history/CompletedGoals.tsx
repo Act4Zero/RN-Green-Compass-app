@@ -1,6 +1,6 @@
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, ListRenderItem } from 'react-native';
 import { historyStyles } from '@/styles/historyStyles';
-import { UserGoal } from '@/app/types/supabase';
+import { UserGoal } from '@/types/supabase';
 
 const styles = historyStyles;
 
@@ -9,7 +9,7 @@ export function CompletedGoals({
   renderCompletedGoalItem
 }: {
   completedGoals: UserGoal[];
-  renderCompletedGoalItem: (item: UserGoal) => React.ReactNode;
+  renderCompletedGoalItem: ListRenderItem<UserGoal>;
 }) {
   return (
     <View style={styles.section}>
@@ -35,4 +35,3 @@ export function CompletedGoals({
 }
 
 export default CompletedGoals;
-  

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { EnhancedGoal } from './types/goal.types';
-import { goalCardStyles } from './styles/GoalCard.styles';
+import { EnhancedGoal } from '@/types/goal.types';
+import { useAppTheme } from '@/theme';
 
 interface GoalCardProps {
   goal: EnhancedGoal;
@@ -12,49 +12,53 @@ interface GoalCardProps {
 
 export default function GoalCard({ goal, onEdit }: GoalCardProps) {
   const router = useRouter();
+  const { theme } = useAppTheme();
+  const progress = Math.max(0, Math.min(100, goal.target > 0 ? (goal.progress / goal.target) * 100 : 0));
 
   return (
-    <View style={goalCardStyles.goalCard}>
-      <View style={goalCardStyles.goalCardHeader}>
-        <Text style={goalCardStyles.goalTitle}>{goal.title}</Text>
+    <View style={{ backgroundColor: theme.colors.backgroundElevated, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.lg, padding: 18, width: 280, minWidth: 240, marginRight: 12 }}>
+      <View style={{ marginBottom: 14 }}>
+        <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{goal.title}</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={goalCardStyles.goalCategory}>
+          <Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 5 }]}>
             {goal.category.charAt(0).toUpperCase() + goal.category.slice(1)}
           </Text>
-          {goal.timeFrequency !== 'none' && (
-            <View style={goalCardStyles.timeChip}>
-              <Text style={goalCardStyles.timeChipText}>{goal.timeFrequency}</Text>
+          {goal.timeFrequency && (
+            <View style={{ paddingHorizontal: 9, paddingVertical: 5, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radii.pill }}>
+              <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 11 }]}>{goal.timeFrequency}</Text>
             </View>
           )}
         </View>
       </View>
       
-      <View style={goalCardStyles.goalProgress}>
-        <View style={goalCardStyles.goalProgressBar}>
+      <View style={{ marginBottom: 16 }}>
+        <View style={{ height: 8, backgroundColor: theme.colors.surfaceStrong, borderRadius: 4, marginBottom: 8, overflow: 'hidden' }}>
           <View 
-            style={[goalCardStyles.goalProgressFill, { width: `${(goal.progress / goal.target) * 100}%` }]}
+            style={{ height: '100%', backgroundColor: theme.colors.accent, borderRadius: 4, width: `${progress}%` }}
           />
         </View>
-        <Text style={goalCardStyles.goalProgressText}>
+        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'right', fontSize: 12 }]}>
           {goal.progress} of {goal.target} actions completed
         </Text>
       </View>
       
-      <View style={goalCardStyles.goalActions}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
         <TouchableOpacity 
-          style={goalCardStyles.goalActionButton}
+          accessibilityRole="button"
+          style={{ minHeight: 40, justifyContent: 'center', backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.sm, paddingHorizontal: 14 }}
           onPress={() => onEdit(goal)}
         >
-          <Text style={goalCardStyles.goalActionText}>Edit</Text>
+          <Text style={[theme.typography.label, { color: theme.colors.primary }]}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[goalCardStyles.goalActionButton, { marginLeft: 8 }]}
+          accessibilityRole="button"
+          style={{ minHeight: 40, justifyContent: 'center', backgroundColor: theme.colors.primary, borderRadius: theme.radii.sm, paddingHorizontal: 14 }}
           onPress={() => router.push({
             pathname: '/habits/log',
             params: { category: goal.category }
           } as any)}
         >
-          <Text style={goalCardStyles.goalActionText}>Log Action</Text>
+          <Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>Log action</Text>
         </TouchableOpacity>
       </View>
     </View>

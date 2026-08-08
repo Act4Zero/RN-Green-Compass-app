@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/theme';
 
 interface Styles {
   container: ViewStyle;
@@ -26,6 +27,7 @@ export default function SignupSuccess() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { theme } = useAppTheme();
 
   const handleContinue = () => {
     console.log('User not authenticated, redirecting to signin');
@@ -33,14 +35,14 @@ export default function SignupSuccess() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }, isTabletOrLarger && { width: '100%', maxWidth: 520 }]}>
         <View style={styles.successIcon}>
-          <Ionicons name="checkmark-circle" size={100} color="#2E7D32" />
+          <Ionicons name="checkmark-circle" size={88} color={theme.colors.success} />
         </View>
 
-        <Text style={styles.title}>Account Created!</Text>
-        <Text style={styles.message}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Check your inbox</Text>
+        <Text style={[styles.message, { color: theme.colors.textMuted }]}>
           Your Green Compass account has been successfully created. Please head over to your inbox to confirm your email address. Once confirmed, you're ready to start your sustainability journey!
         </Text>
 

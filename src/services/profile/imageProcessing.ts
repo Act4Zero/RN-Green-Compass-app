@@ -135,18 +135,10 @@ export async function compressImageWeb(
     // Create an image bitmap from the file
     const imageBitmap = await createImageBitmap(file);
     
-    // Use OffscreenCanvas if available, otherwise regular canvas
-    let canvas, ctx;
-    
-    if (typeof OffscreenCanvas === 'function') {
-      canvas = new OffscreenCanvas(width, Math.round(width * (imageBitmap.height / imageBitmap.width)));
-      ctx = canvas.getContext('2d');
-    } else {
-      canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = Math.round(width * (imageBitmap.height / imageBitmap.width));
-      ctx = canvas.getContext('2d');
-    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = Math.round(width * (imageBitmap.height / imageBitmap.width));
+    const ctx = canvas.getContext('2d');
     
     if (!ctx) {
       throw new Error('Failed to get canvas context');
@@ -156,20 +148,12 @@ export async function compressImageWeb(
     ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
     
     // Convert to blob with compression
-    let compressedBlob;
-    if (canvas instanceof OffscreenCanvas) {
-      compressedBlob = await canvas.convertToBlob({
-        type: 'image/jpeg',
-        quality
-      });
-    } else {
-      return new Promise((resolve) => {
+    let compressedBlob: Blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
-          else throw new Error('Failed to create blob from canvas');
+          else reject(new Error('Failed to create blob from canvas'));
         }, 'image/jpeg', quality);
       });
-    }
     
     // If the image is still too large, try more aggressive compression
     if (compressedBlob.size > TARGET_FILE_SIZE) {
@@ -178,19 +162,12 @@ export async function compressImageWeb(
       quality = Math.max(0.1, Math.min(0.5, quality * sizeRatio * 1.2));
       
       // Second compression pass
-      if (canvas instanceof OffscreenCanvas) {
-        compressedBlob = await canvas.convertToBlob({
-          type: 'image/jpeg',
-          quality
-        });
-      } else {
-        compressedBlob = await new Promise((resolve) => {
+      compressedBlob = await new Promise<Blob>((resolve, reject) => {
           canvas.toBlob((blob) => {
             if (blob) resolve(blob);
-            else throw new Error('Failed to create blob from canvas');
+            else reject(new Error('Failed to create blob from canvas'));
           }, 'image/jpeg', quality);
         });
-      }
     }
     
     return compressedBlob;

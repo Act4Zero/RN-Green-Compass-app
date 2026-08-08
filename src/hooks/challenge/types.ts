@@ -1,4 +1,4 @@
-import { Challenge, ChallengeParticipant, ActivityLog, PaginationParams, PaginatedResult } from '../../types/challenge';
+import { Challenge, ChallengeParticipant, ActivityLog, PaginationParams, PaginatedResult } from '../../types/community/challenge';
 
 /**
  * State for challenges

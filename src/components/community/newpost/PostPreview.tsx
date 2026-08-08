@@ -6,7 +6,7 @@ import { markdownStyles } from '@/styles/community/NewPostStyles';
 
 interface PostPreviewProps {
   content: string | undefined;
-  sanitizeMarkdown: (text: string, type: string) => string;
+  sanitizeMarkdown: (text: string, type?: 'post' | 'comment') => string;
 }
 
 function PostPreview({ content, sanitizeMarkdown }: PostPreviewProps) {

@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { EnhancedGoal } from './types/goal.types';
+import { EnhancedGoal } from '@/types/goal.types';
 import GoalCard from './GoalCard';
 import { homeStyles } from '../../styles/Home.styles';
+import { useAppTheme } from '@/theme';
 
 interface GoalsListProps {
   goals: EnhancedGoal[];
@@ -13,13 +14,14 @@ interface GoalsListProps {
 
 export function GoalsList({ goals, onEditGoal }: GoalsListProps) {
   const router = useRouter();
+  const { theme } = useAppTheme();
 
   // Empty state for no goals
   if (!goals || goals.length === 0) {
     return (
-      <View style={homeStyles.emptyGoalsContainer}>
-        <Text style={homeStyles.emptyGoalsText}>
-          You don't have any active goals yet. Tap 'Add Goal' to get started!
+      <View style={[homeStyles.emptyGoalsContainer, { backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.md }]}>
+        <Text style={[homeStyles.emptyGoalsText, theme.typography.body, { color: theme.colors.textMuted }]}>
+          No active goals yet. Add one small target to make your next step visible.
         </Text>
       </View>
     );
@@ -77,15 +79,17 @@ export function GoalsList({ goals, onEditGoal }: GoalsListProps) {
 }
 
 export function GoalsHeader({ onAddGoal }: { onAddGoal: () => void }) {
+  const { theme } = useAppTheme();
   return (
     <View style={homeStyles.sectionHeader}>
-      <Text style={homeStyles.cardTitle}>Your Goals</Text>
+      <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Your goals</Text>
       <TouchableOpacity 
-        style={homeStyles.addGoalButton}
+        accessibilityRole="button"
+        style={[homeStyles.addGoalButton, { minHeight: 44, paddingHorizontal: 12, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radii.md }]}
         onPress={onAddGoal}
       >
-        <Ionicons name="add-circle-outline" size={20} color="#2E7D32" />
-        <Text style={homeStyles.addGoalText}>Add Goal</Text>
+        <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+        <Text style={[homeStyles.addGoalText, theme.typography.label, { color: theme.colors.primary }]}>Add goal</Text>
       </TouchableOpacity>
     </View>
   );

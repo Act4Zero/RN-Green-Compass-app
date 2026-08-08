@@ -1,14 +1,9 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import FeedStyles from '@/styles/FeedStyles';
-
-const styles = FeedStyles;
+import { StatePanel } from '@/components/ui';
 
 function EmptyState() {
   return (
-    <View style={styles.noPostsContainer}>
-      <Text style={styles.noPostsText}>No posts yet. Be the first to share!</Text>
-    </View>
+    <StatePanel icon="chatbubbles-outline" title="A fresh conversation" message="No posts here yet. Share a useful idea or a small win with the community." />
   );
 }
 

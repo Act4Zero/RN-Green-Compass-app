@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, SectionList } from 'react-native';
-import { PointEvent, PointSource } from '../../types/points';
+import { PointEvent, PointSource } from '@/types/community/points';
 import PointsHistoryItem from './PointsHistoryItem';
 import PointsHistoryFilter from './PointsHistoryFilter';
-import pointsStyles from '../../styles/Points.styles';
+import pointsStyles from '@/styles/community/Points.styles';
 
 interface PointsHistoryProps {
   historyByDate: Record<string, PointEvent[]>;

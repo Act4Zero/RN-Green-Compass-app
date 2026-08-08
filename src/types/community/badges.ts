@@ -16,6 +16,7 @@ export interface Badge {
   description: string | null;
   icon_url: string | null;
   category: BadgeCategoryType;
+  awarded_at?: string;
 }
 
 export interface UserBadge {

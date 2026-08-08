@@ -4,6 +4,7 @@ import Button from '../../../components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { Habit } from '../../../types/supabase';
 import Input from '@/components/Input';
+import { useAppTheme } from '@/theme';
 
 const styles = LogStyles;
 
@@ -30,52 +31,53 @@ export function SelectedHabitSection({
     isSubmitting: boolean;
     loading: boolean;
 }) {
+    const { theme } = useAppTheme();
     return (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {selectedHabit ? 'Selected Habit' : 'No Habit Selected'}
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            {selectedHabit ? '4. Add the details' : '4. Add the details'}
           </Text>
           
           {selectedHabit ? (
-            <View style={styles.selectedHabitContainer}>
+            <View style={[styles.selectedHabitContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <View style={styles.selectedHabitHeader}>
                 <View style={styles.selectedHabitInfo}>
-                  <Text style={styles.selectedHabitTitle}>{selectedHabit.name}</Text>
-                  <Text style={styles.selectedHabitCO2}>{selectedHabit.estimated_co2_saving} kg CO₂</Text>
+                  <Text style={[styles.selectedHabitTitle, { color: theme.colors.text }]}>{selectedHabit.name}</Text>
+                  <Text style={[styles.selectedHabitCO2, { color: theme.colors.primary }]}>{selectedHabit.estimated_co2_saving} kg CO₂</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.deselectButton}
                   onPress={() => selectHabit(null)}
                 >
-                  <Ionicons name="close-circle-outline" size={24} color="#555555" />
+                  <Ionicons name="close-circle-outline" size={24} color={theme.colors.textMuted} />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.selectedHabitDescription}>{selectedHabit.description}</Text>
+              <Text style={[styles.selectedHabitDescription, { color: theme.colors.textMuted }]}>{selectedHabit.description}</Text>
               
               <View style={styles.quantityContainer}>
-                <Text style={styles.quantityLabel}>How many times did you do this?</Text>
+                <Text style={[styles.quantityLabel, { color: theme.colors.text }]}>How many times did you do this?</Text>
                 
                 <View style={styles.quantityControls}>
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[styles.quantityButton, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border }]}
                     onPress={decrementQuantity}
                   >
-                    <Text style={styles.quantityButtonText}>-</Text>
+                    <Text style={[styles.quantityButtonText, { color: theme.colors.primary }]}>-</Text>
                   </TouchableOpacity>
                   
-                  <Text style={styles.quantityValue}>{quantity}</Text>
+                  <Text style={[styles.quantityValue, { color: theme.colors.text }]}>{quantity}</Text>
                   
                   <TouchableOpacity
-                    style={styles.quantityButton}
+                    style={[styles.quantityButton, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border }]}
                     onPress={incrementQuantity}
                   >
-                    <Text style={styles.quantityButtonText}>+</Text>
+                    <Text style={[styles.quantityButtonText, { color: theme.colors.primary }]}>+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
               
               <View style={styles.notesContainer}>
-                <Text style={styles.notesLabel}>Notes (Optional)</Text>
+                <Text style={[styles.notesLabel, { color: theme.colors.text }]}>Notes (optional)</Text>
                 <Input
                   value={notes}
                   onChangeText={(text) => {
@@ -101,8 +103,8 @@ export function SelectedHabitSection({
               />
             </View>
           ) : (
-            <View style={styles.noHabitSelectedContainer}>
-              <Text style={styles.noHabitText}>Please select a habit from the list above</Text>
+            <View style={[styles.noHabitSelectedContainer, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border }]}>
+              <Text style={[styles.noHabitText, { color: theme.colors.textMuted }]}>Select an action above to see impact and logging controls.</Text>
             </View>
           )}
         </View>

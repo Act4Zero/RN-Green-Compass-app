@@ -7,10 +7,27 @@ import analyticsService from '@/services/analyticsService';
 import { FeatureFlagsProvider } from '@/context/FeatureFlagsContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 import { NotificationContainer } from '@/components/notifications/NotificationContainer';
+import PointsProvider from '@/context/PointsContext';
+import { ThemeProvider } from '@/theme';
+import { AppShell } from '@/components/navigation/AppShell';
+import { useFonts } from 'expo-font';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from '@expo-google-fonts/manrope';
 
 const { HabitProvider } = HabitContextModule;
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
   // Initialize analytics when the app starts
   useEffect(() => {
     // Initialize analytics and log the result
@@ -25,12 +42,17 @@ export default function RootLayout() {
     }
   }, []);
 
+  if (!fontsLoaded) return null;
+
   return (
+    <ThemeProvider>
     <FeatureFlagsProvider>
       <NotificationProvider>
         <AuthProvider>
           <HabitProvider>
+            <PointsProvider>
             <BadgesProvider>
+        <AppShell>
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -68,11 +90,14 @@ export default function RootLayout() {
             }}
           />
         </Stack>
+        </AppShell>
         <NotificationContainer />
             </BadgesProvider>
+            </PointsProvider>
           </HabitProvider>
         </AuthProvider>
       </NotificationProvider>
     </FeatureFlagsProvider>
+    </ThemeProvider>
   );
 }

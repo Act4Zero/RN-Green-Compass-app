@@ -24,10 +24,12 @@ import PointsSummary from '@/components/community/points/PointsSummary';
 import BadgeSummary from '@/components/badges/BadgeSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
+import { useAppTheme } from '@/theme';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme, preference, setPreference } = useAppTheme();
   const [imageLoadError, setImageLoadError] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -198,17 +200,17 @@ useEffect(() => {
   // This prevents potential infinite loading states
   if (isLoading && user) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>Loading your profile...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={[styles.errorContainer, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>
       </View>
     );
   }
@@ -224,31 +226,31 @@ useEffect(() => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      <StatusBar barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.colors.background} />
       <ScrollView
-        style={styles.scrollContent}
-        contentContainerStyle={styles.scrollContentContainer}
+        style={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={[styles.scrollContentContainer, { backgroundColor: theme.colors.background }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.contentContainer, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
+        <View style={[styles.contentContainer, { maxWidth: 1040 }, isTabletOrLarger && { width: '100%' }]}>
         {/* Header */}
         <View style={styles.pageHeader}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => router.replace('/home')}
           >
-            <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>Profile</Text>
-            <Text style={styles.subtitle}>Manage your personal information</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Your profile</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Identity, achievements, preferences, and account.</Text>
           </View>
         </View>
 
         {/* Profile Card */}
-        <View style={styles.profileCard}>
+        <View style={[styles.profileCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
           {/* Avatar and Name */}
           <View style={styles.avatarContainer}>
             {profile.avatar_url && !imageLoadError ? (
@@ -261,47 +263,47 @@ useEffect(() => {
                 }}
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarPlaceholderText}>{displayIdentifier.charAt(0).toUpperCase()}</Text>
+              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primarySoft }]}>
+                <Text style={[styles.avatarPlaceholderText, { color: theme.colors.primary }]}>{displayIdentifier.charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </View>
 
           <View style={styles.nameContainer}>
-            <Text style={styles.displayName}>{displayIdentifier}</Text>
+            <Text style={[styles.displayName, { color: theme.colors.text }]}>{displayIdentifier}</Text>
             {profile.is_anonymous && (
-              <Text style={styles.anonymousIndicator}>Anonymous Mode</Text>
+              <Text style={[styles.anonymousIndicator, { color: theme.colors.textMuted }]}>Anonymous mode</Text>
             )}
           </View>
 
-          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+          <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.colors.primary }]} onPress={handleEditProfile}>
             <Ionicons name="pencil-outline" size={16} color="white" style={{ marginRight: 8 }} />
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
         {/* Interests Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Your Sustainability Interests</Text>
+        <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sustainability interests</Text>
           <View style={styles.interestsContainer}>
             {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
               profile.interests.map((interest) => (
-                <View key={interest} style={styles.interestItem}>
-                  <Text style={styles.interestText}>{interest}</Text>
+                <View key={interest} style={[styles.interestItem, { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.borderStrong }]}>
+                  <Text style={[styles.interestText, { color: theme.colors.primary }]}>{interest}</Text>
                 </View>
               ))
             ) : (
-              <Text style={styles.emptyInterestsText}>No interests selected yet.</Text>
+              <Text style={[styles.emptyInterestsText, { color: theme.colors.textMuted }]}>No interests selected yet.</Text>
             )}
           </View>
         </View>
 
         {/* Points Summary Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Green Points</Text>
+        <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Green points</Text>
           {isPointsLoading ? (
             <View style={styles.loadingPoints}>
-              <ActivityIndicator size="small" color="#2E7D32" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
           ) : (
             <PointsSummary points={points} streak={loginStreak} />
@@ -310,10 +312,10 @@ useEffect(() => {
         
         {/* Badges Summary Section */}
         {isBadgesLoading ? (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Achievements</Text>
+          <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Achievements</Text>
             <View style={styles.loadingPoints}>
-              <ActivityIndicator size="small" color="#2E7D32" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
           </View>
         ) : (
@@ -329,8 +331,8 @@ useEffect(() => {
         )}
         
         {/* Points History Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Points History</Text>
+        <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Points history</Text>
           
           {/* Filters */}
           <View style={styles.filterContainer}>
@@ -383,7 +385,7 @@ useEffect(() => {
           {/* History List */}
           <View style={styles.historyListContainer}>
             {isHistoryLoading ? (
-              <ActivityIndicator size="small" color="#2E7D32" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             ) : Object.keys(historyByDate).length > 0 ? (
               Object.entries(historyByDate)
                 .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
@@ -400,7 +402,7 @@ useEffect(() => {
                               'chatbubbles-outline'
                             } 
                             size={20} 
-                            color="#2E7D32" 
+                            color={theme.colors.primary}
                           />
                         </View>
 
@@ -435,10 +437,30 @@ useEffect(() => {
           </View>
         </View>
 
+        <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Appearance</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {(['system', 'light', 'dark'] as const).map((option) => {
+              const active = preference === option;
+              return (
+                <TouchableOpacity
+                  key={option}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  onPress={() => setPreference(option)}
+                  style={{ minHeight: 44, minWidth: 92, paddingHorizontal: 16, borderRadius: 999, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface }}
+                >
+                  <Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.text }]}>{option.charAt(0).toUpperCase() + option.slice(1)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={18} color="#2E7D32" style={{ marginRight: 8 }} />
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
+        <TouchableOpacity style={[styles.signOutButton, { borderColor: theme.colors.danger, borderWidth: 1, minHeight: 48 }]} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={18} color={theme.colors.danger} style={{ marginRight: 8 }} />
+          <Text style={[styles.signOutButtonText, { color: theme.colors.danger }]}>Sign out</Text>
         </TouchableOpacity>
         </View>
       </ScrollView>

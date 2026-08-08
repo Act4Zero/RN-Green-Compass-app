@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import FeedStyles from '@/styles/FeedStyles';
+import { useAppTheme } from '@/theme';
 
 const styles = FeedStyles;
 
 function FeedHeader() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   
   return (
     <>
@@ -22,11 +24,11 @@ function FeedHeader() {
             }
           }}
         >
-          <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+          <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Community</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Community</Text>
       </View>
-      <Text style={styles.subtitle}>Share and learn with fellow eco-enthusiasts</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Share what works. Find people who keep you moving.</Text>
     </>
   );
 }

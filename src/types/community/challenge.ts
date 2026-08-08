@@ -1,4 +1,4 @@
-import { Database } from './supabase';
+import { Database } from '../supabase';
 
 // Type for a challenge
 export interface Challenge {

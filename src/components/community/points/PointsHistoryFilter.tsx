@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { PointSource } from '../../types/points';
-import { formatPointSource } from '../../utils/pointsFormatters';
-import pointsStyles from '../../styles/Points.styles';
+import { PointSource } from '@/types/community/points';
+import { formatPointSource } from '@/utils/pointsFormatters';
+import pointsStyles from '@/styles/community/Points.styles';
 
 interface PointsHistoryFilterProps {
   activeFilters: PointSource[];

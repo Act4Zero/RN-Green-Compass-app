@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import FeedStyles from '../styles/FeedStyles';
+import FeedStyles from '@/styles/FeedStyles';
 
 interface PostHeaderProps {
   discussion: any;

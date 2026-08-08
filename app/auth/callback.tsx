@@ -1,15 +1,17 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import supabase from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
+import { useAppTheme } from '@/theme';
 
 // This component handles OAuth redirects
 export default function AuthCallback() {
   const { refreshSession } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { theme } = useAppTheme();
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -57,8 +59,9 @@ export default function AuthCallback() {
   }, [router, refreshSession]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Completing sign in...</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={[styles.text, { color: theme.colors.text }]}>Completing sign in…</Text>
     </View>
   );
 }

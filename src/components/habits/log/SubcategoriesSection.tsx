@@ -1,5 +1,6 @@
 import LogStyles from '@/styles/LogStyles';
 import { TouchableOpacity, Text, View, ScrollView } from 'react-native';
+import { useAppTheme } from '@/theme';
 
 const styles = LogStyles;
 
@@ -12,9 +13,10 @@ export function SubcategoriesSection({
     selectedSubcategory: string;
     handleSelectSubcategory: (id: string) => void;
 }) {
+    const { theme } = useAppTheme();
     return (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select a Subcategory</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>2. Refine your focus</Text>
             
             <ScrollView 
               horizontal 
@@ -27,14 +29,16 @@ export function SubcategoriesSection({
                   key={subcategory.id}
                   style={[
                     styles.subcategoryItem,
+                    { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                     selectedSubcategory === subcategory.id && styles.subcategoryItemSelected,
+                    selectedSubcategory === subcategory.id && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
                   ]}
                   onPress={() => handleSelectSubcategory(subcategory.id)}
                 >
                   <Text
                     style={[
                       styles.subcategoryText,
-                      { color: selectedSubcategory === subcategory.id ? '#FFFFFF' : '#333333' },
+                      { color: selectedSubcategory === subcategory.id ? theme.colors.textInverse : theme.colors.text },
                     ]}
                     numberOfLines={2}
                   >

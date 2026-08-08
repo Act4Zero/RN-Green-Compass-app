@@ -17,6 +17,7 @@ import ChallengeCard from '@/components/community/challenges/ChallengeCard';
 import { useAuth } from '@/context/AuthContext';
 import EmptyState from '@/components/community/challenges/EmptyState';
 import FilterTabs from '@/components/community/challenges/FilterTabs';
+import { useAppTheme } from '@/theme';
 
 // Styles for this component
 const styles = ChallengeStyles;
@@ -24,6 +25,7 @@ const styles = ChallengeStyles;
 export default function ChallengesList() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme } = useAppTheme();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   
@@ -94,15 +96,15 @@ export default function ChallengesList() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+        <View style={[styles.content, { maxWidth: 1040 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity 
@@ -115,11 +117,11 @@ export default function ChallengesList() {
                 }
               }}
             >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Sustainability Challenges</Text>
-              <Text style={styles.subtitle}>Join group challenges and track progress together</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Community challenges</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Build momentum with people working toward the same goal.</Text>
             </View>
           </View>
 
@@ -175,7 +177,7 @@ export default function ChallengesList() {
               {/* Load More Button */}
               {shouldShowLoadMore && (
                 <TouchableOpacity 
-                  style={[styles.joinButton, { backgroundColor: '#81C784' }]} 
+                  style={[styles.joinButton, { backgroundColor: theme.colors.primary }]}
                   onPress={loadMoreChallenges}
                   disabled={isLoading}
                 >
