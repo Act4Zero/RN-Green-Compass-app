@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import pointsStyles from '../../styles/Points.styles';
+import pointsStyles from '@/styles/community/Points.styles';
 
 interface PointsCardProps {
   points: string;

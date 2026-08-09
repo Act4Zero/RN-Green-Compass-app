@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import useGoals from './useGoals';
-import { EnhancedGoal, TimeFrequency, DatabaseGoal } from '../components/home/types/goal.types';
+import { EnhancedGoal, TimeFrequency, DatabaseGoal } from '../types/goal.types';
 
 export default function useGoalsManager() {
   const { userGoals, loading: goalsLoading, updateExistingGoal, deleteExistingGoal, refreshGoals } = useGoals();

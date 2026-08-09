@@ -11,6 +11,3 @@ export * from './communityShareUtils';
 export * from './dashboardShareUtils';
 export * from './habitHistoryShareUtils';
 export * from './leaderboardShareUtils';
-
-// Export specific types for better type checking
-export type { ShareableContent, ShareResult, SocialPlatform } from './shareUtils';

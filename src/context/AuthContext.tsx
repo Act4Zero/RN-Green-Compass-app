@@ -219,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           // Fetch previous profile data
           const { data: profileData, error: profileError } = await supabase
-            .from<Profile, any>('profiles')
+            .from('profiles')
             .select('last_login_date,login_streak')
             .eq('id', data.user.id)
             .single();
@@ -229,8 +229,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const nowISO = new Date().toISOString();
             const { error: updateError, newStreak } = await updateLoginProfile(
               data.user.id,
-              profileData.last_login_date,
-              profileData.login_streak,
+              (profileData as Pick<Profile, 'last_login_date'>).last_login_date,
+              (profileData as Pick<Profile, 'login_streak'>).login_streak,
               nowISO
             );
             if (updateError) {

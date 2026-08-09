@@ -17,6 +17,7 @@ import HabitsSection from '@/components/habits/log/HabitsSection';
 import SelectedHabitSection from '@/components/habits/log/SelectedHabitSection';
 import useLogManager from '@/hooks/habits/useLogManager';
 import { useAuth } from '@/context/AuthContext';
+import { useAppTheme } from '@/theme';
 
 // Styles for this component
 const styles = LogStyles;
@@ -24,6 +25,7 @@ const styles = LogStyles;
 export default function LogHabit() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();  
   // Use our custom hook to manage all the log screen logic
   const {
@@ -67,25 +69,25 @@ export default function LogHabit() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
     <ScrollView 
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+      <View style={[styles.content, { maxWidth: 1040 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+            <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>Log a Habit</Text>
-            <Text style={styles.subtitle}>Track your sustainable actions</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Log an action</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Choose a category, then capture the impact.</Text>
           </View>
         </View>
 

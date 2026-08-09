@@ -220,6 +220,24 @@ const fetchStreakLeaderboard = async (
 ): Promise<LeaderboardResponse<StreakLeaderboardEntry>> => {
   // Calculate offset for pagination
   const offset = (pagination.page - 1) * pagination.pageSize;
+  let scopedUserIds: string[] | null = null;
+
+  if (filter.scope === 'friends') {
+    const { data: connections, error: connectionsError } = await supabase
+      .from('user_connections')
+      .select('connected_user_id')
+      .eq('user_id', currentUserId)
+      .eq('status', 'accepted');
+    if (connectionsError) throw connectionsError;
+    scopedUserIds = connections?.map((connection) => connection.connected_user_id) || [];
+  } else if (filter.scope === 'groups' && filter.groupId) {
+    const { data: members, error: membersError } = await supabase
+      .from('group_members')
+      .select('user_id')
+      .eq('group_id', filter.groupId);
+    if (membersError) throw membersError;
+    scopedUserIds = members?.map((member) => member.user_id) || [];
+  }
   
   // Start with base query that will apply to all filter types
   let query = supabase
@@ -229,25 +247,7 @@ const fetchStreakLeaderboard = async (
     .limit(pagination.pageSize)
     .range(offset, offset + pagination.pageSize - 1);
 
-  // Apply scope filter based on filter type
-  if (filter.scope === 'friends') {
-    // Subquery to get user's friends
-    query = query.in('id', function(sb) {
-      return sb
-        .from('user_connections')
-        .select('connected_user_id')
-        .eq('user_id', currentUserId)
-        .eq('status', 'accepted');
-    });
-  } else if (filter.scope === 'groups' && filter.groupId) {
-    // Filter by specific group membership
-    query = query.in('id', function(sb) {
-      return sb
-        .from('group_members')
-        .select('user_id')
-        .eq('group_id', filter.groupId);
-    });
-  }
+  if (scopedUserIds) query = query.in('id', scopedUserIds.length > 0 ? scopedUserIds : ['00000000-0000-0000-0000-000000000000']);
   // For 'community', no additional filter needed - show all users
 
   // Execute the query

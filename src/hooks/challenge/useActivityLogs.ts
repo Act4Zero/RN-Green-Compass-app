@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import supabase from '../../lib/supabase';
-import { ActivityLog, PaginatedResult } from '../../types/challenge';
+import { ActivityLog, PaginatedResult } from '../../types/community/challenge';
 import { ActivityLogsState, UseActivityLogsProps } from './types';
 import useCurrentUser from './useCurrentUser';
 

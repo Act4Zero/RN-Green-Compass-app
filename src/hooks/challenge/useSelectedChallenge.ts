@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import supabase from '../../lib/supabase';
-import { Challenge } from '../../types/challenge';
+import { Challenge } from '../../types/community/challenge';
 import { SelectedChallengeState } from './types';
 import useCurrentUser from './useCurrentUser';
 
@@ -41,7 +41,7 @@ function useSelectedChallenge() {
       // Process challenge data
       let challengeWithDetails: Challenge = {
         ...data,
-        participant_count: data.participant_count?.[0]?.count || 0
+        participant_count: (data as any).participant_count?.[0]?.count || 0
       };
       
       // If user is logged in, check if they're participating

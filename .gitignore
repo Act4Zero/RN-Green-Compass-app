@@ -7,6 +7,9 @@ expo-env.d.ts
 # @end expo-cli
 .expo
 .expo/types/router.d.ts
+dist/
+dist-ios/
+dist-android/
 
 # windsurf rules
 .windsurfrules

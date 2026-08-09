@@ -1,4 +1,4 @@
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, ListRenderItem } from 'react-native';
 import { historyStyles } from '@/styles/historyStyles';
 import { HabitLog } from '../../../types/supabase';
 
@@ -12,7 +12,7 @@ export function HabitsHistory({
 }: {
   selectedDate: Date | null;
   filteredLogs: HabitLog[];
-  renderLogItem: (item: HabitLog) => React.ReactNode;
+  renderLogItem: ListRenderItem<HabitLog>;
   formatSelectedDate: (date: Date) => string;
 }) {
   return (

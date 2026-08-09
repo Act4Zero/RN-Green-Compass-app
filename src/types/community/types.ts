@@ -1,4 +1,4 @@
-import { Discussion, Comment, PaginationParams, PaginatedResult } from '../../types/community';
+import { Discussion, Comment, PaginationParams, PaginatedResult } from './community';
 
 /**
  * State for discussions

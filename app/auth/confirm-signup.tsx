@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import supabase from '@/lib/supabase';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/theme';
 
 interface Styles {
   container: ViewStyle;
@@ -20,6 +21,7 @@ export default function ConfirmSignup() {
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Confirming your email...');
+  const { theme } = useAppTheme();
 
   useEffect(() => {
     const confirmEmail = async () => {
@@ -70,12 +72,12 @@ export default function ConfirmSignup() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
         {status === 'loading' ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2E7D32" />
-            <Text style={styles.message}>{message}</Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.message, { color: theme.colors.textMuted }]}>{message}</Text>
           </View>
         ) : (
           <>
@@ -83,14 +85,14 @@ export default function ConfirmSignup() {
               <Ionicons 
                 name={status === 'success' ? 'checkmark-circle' : 'alert-circle'} 
                 size={100} 
-                color={status === 'success' ? '#2E7D32' : '#D32F2F'} 
+                color={status === 'success' ? theme.colors.success : theme.colors.danger}
               />
             </View>
 
-            <Text style={[styles.title, { color: status === 'success' ? '#2E7D32' : '#D32F2F' }]}>
+            <Text style={[styles.title, { color: status === 'success' ? theme.colors.success : theme.colors.danger }]}>
               {status === 'success' ? 'Email Confirmed!' : 'Confirmation Failed'}
             </Text>
-            <Text style={styles.message}>{message}</Text>
+            <Text style={[styles.message, { color: theme.colors.textMuted }]}>{message}</Text>
 
             <View style={styles.buttonContainer}>
               <Button

@@ -22,6 +22,7 @@ import Input from '@/components/Input';
 import Turnstile from '@/components/Turnstile';
 import { ensureValidSession } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
+import { useAppTheme } from '@/theme';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -48,6 +49,7 @@ interface Styles {
 }
 
 export default function SignIn() {
+  const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
@@ -195,14 +197,14 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, theme.shadows.raised, isTabletOrLarger && { width: '60%', maxWidth: 520 }]}>
         <View style={styles.logoContainer}>
           <Image
             source={require('../../assets/images/GCLogo-no-bg.png')}
@@ -212,8 +214,8 @@ export default function SignIn() {
         </View>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue to Green Compass</Text>
+            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>Welcome back</Text>
+            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>Continue building a greener everyday.</Text>
           </View>
 
           <View style={styles.form}>
@@ -242,7 +244,7 @@ export default function SignIn() {
 
             {/* Changed from asChild pattern to avoid ref forwarding warning */}
             <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
-              <Text style={styles.forgotPassword}>Forgot password?</Text>
+              <Text style={[styles.forgotPassword, { color: theme.colors.primary }]}>Forgot password?</Text>
             </TouchableOpacity>
 
             {/* Invisible Captcha verification */}
@@ -254,8 +256,8 @@ export default function SignIn() {
             />
 
             {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
+                <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>
               </View>
             )}
 
@@ -268,9 +270,9 @@ export default function SignIn() {
             />
 
             <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             </View>
 
             {googleLoading ? (
@@ -279,7 +281,7 @@ export default function SignIn() {
               </View>
             ) : (
               <TouchableOpacity
-                style={styles.googleButtonNative}
+                style={[styles.googleButtonNative, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderStrong, borderRadius: theme.radii.md }]}
                 onPress={handleGoogleSignIn}
                 activeOpacity={0.85}
                 disabled={googleLoading}
@@ -293,15 +295,15 @@ export default function SignIn() {
                   accessible
                   accessibilityLabel="Google logo"
                 />
-                <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>Sign in with Google</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
               New here?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/auth/signup')}>Sign Up</Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signup')}>Create an account</Text>
             </Text>
           </View>
         </View>

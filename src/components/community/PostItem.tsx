@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import postItemStyles from './PostItem.styles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import FeedStyles from '@/styles/FeedStyles';
+import { useAppTheme } from '@/theme';
 
 // Custom renderer for Markdown images to make them clickable
 const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
@@ -60,6 +61,7 @@ function PostItem({
   handleComment
 }: PostItemProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const { theme } = useAppTheme();
   const { user } = useAuth();
   // Get user display name with a fallback
   const userName = user?.email ? user.email.split('@')[0] : undefined;
@@ -117,7 +119,7 @@ function PostItem({
   return (
     <View key={discussion.id}>
       <TouchableOpacity 
-        style={styles.postItem}
+        style={[styles.postItem, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}
         onPress={() => router.push(`/community/post/${discussion.id}`)}
         activeOpacity={0.7}
       >
@@ -131,21 +133,21 @@ function PostItem({
   />
 ) : (
   <View style={styles.defaultAvatar}>
-    <Text style={styles.defaultAvatarText}>
+    <Text style={[styles.defaultAvatarText, { color: theme.colors.primary }]}>
       {discussion.user?.full_name
         ? discussion.user.full_name.charAt(0).toUpperCase()
         : '❓'}
     </Text>
   </View>
 )}
-          <Text style={styles.postAuthor}>
+          <Text style={[styles.postAuthor, { color: theme.colors.text }]}>
   {discussion.user?.full_name?.trim()
     ? discussion.user.full_name
     : 'Anonymous'}
 </Text>
         </View>
         <View style={styles.postHeaderRight}>
-          <Text style={styles.postTimestamp}>
+          <Text style={[styles.postTimestamp, { color: theme.colors.textMuted }]}>
             {new Date(discussion.created_at).toLocaleDateString()}
           </Text>
           {/* Show options button if the post belongs to the current user */}
@@ -157,7 +159,7 @@ function PostItem({
                 togglePostOptions(discussion.id);
               }}
             >
-              <Ionicons name="ellipsis-vertical" size={20} color="#757575" />
+              <Ionicons name="ellipsis-vertical" size={20} color={theme.colors.textMuted} />
             </TouchableOpacity>
           )}
           {/* Options menu will appear as an overlay */}
@@ -166,21 +168,21 @@ function PostItem({
       
       {/* Post Title */}
       {discussion.title && (
-        <Text style={styles.postTitle}>{discussion.title}</Text>
+        <Text style={[styles.postTitle, { color: theme.colors.text }]}>{discussion.title}</Text>
       )}
       
       {/* Post Content */}
       <Markdown 
         style={{
-          body: styles.postContent,
-          bullet: { color: '#2E7D32' },
+          body: { ...styles.postContent, color: theme.colors.textMuted },
+          bullet: { color: theme.colors.primary },
           strong: { fontWeight: 'bold' },
           heading1: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
           heading2: { fontSize: 20, fontWeight: 'bold', marginVertical: 8 },
           heading3: { fontSize: 18, fontWeight: 'bold', marginVertical: 6 },
-          code_block: { backgroundColor: '#f0f0f0', padding: 10, borderRadius: 4 },
-          code_inline: { backgroundColor: '#f0f0f0', padding: 2, borderRadius: 2 },
-          link: { color: '#1976D2', textDecorationLine: 'underline' },
+          code_block: { backgroundColor: theme.colors.surfaceMuted, color: theme.colors.text, padding: 10, borderRadius: 4 },
+          code_inline: { backgroundColor: theme.colors.surfaceMuted, color: theme.colors.text, padding: 2, borderRadius: 2 },
+          link: { color: theme.colors.info, textDecorationLine: 'underline' },
           image: { 
             width: 300, 
             height: 300, 
@@ -211,7 +213,7 @@ function PostItem({
           <Ionicons 
             name={discussion.user_has_reacted ? "heart" : "heart-outline"} 
             size={20} 
-            color={discussion.user_has_reacted ? "#2E7D32" : "#757575"} 
+            color={discussion.user_has_reacted ? theme.colors.primary : theme.colors.textMuted}
           />
           <Text style={[styles.reactionText, discussion.user_has_reacted && styles.reactionTextActive]}>
             {discussion.reaction_count || 0}
@@ -224,7 +226,7 @@ function PostItem({
             handleComment(discussion.id);
           }}
         >
-          <Ionicons name="chatbubble-outline" size={20} color="#757575" />
+          <Ionicons name="chatbubble-outline" size={20} color={theme.colors.textMuted} />
           <Text style={styles.commentText}>{discussion.comment_count || 0}</Text>
         </TouchableOpacity>
         
@@ -233,7 +235,7 @@ function PostItem({
           style={postItemStyles.shareButton}
           onPress={handleSharePress}
         >
-          <Ionicons name="share-social-outline" size={20} color="#757575" />
+          <Ionicons name="share-social-outline" size={20} color={theme.colors.textMuted} />
           <Text style={postItemStyles.shareText}>Share</Text>
         </TouchableOpacity>
       </View>

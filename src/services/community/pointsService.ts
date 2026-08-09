@@ -1,7 +1,6 @@
 import supabase from '../../lib/supabase';
 import { processUserEvent } from '@/badges/badgeEngine';
 import { fetchUserProfile } from '@/services/profile/fetchUserProfile';
-import { Profile as BadgeProfile } from '@/badges/types';
 import {
   AwardPointsParams,
   PointEvent,
@@ -152,7 +151,7 @@ const pointsService = {
       
       // Fetch real user profile for badge logic
       const fetchedProfile = await fetchUserProfile(userId);
-      const profile: BadgeProfile | null = fetchedProfile ? { id: fetchedProfile.id, login_streak: newStreak } : null;
+      const profile = fetchedProfile ? { id: fetchedProfile.id, login_streak: newStreak } : null;
       if (profile) {
         await processUserEvent(userId, 'login', { profile });
       }
@@ -224,7 +223,9 @@ const pointsService = {
       // Fetch real user profile for badge logic
       const profile = await fetchUserProfile(userId);
       if (profile) {
-        await processUserEvent(userId, 'habit_log', { profile, streak: streakData?.data?.streak });
+        await processUserEvent(userId, 'habit_log', {
+          profile: { id: profile.id, login_streak: profile.login_streak ?? 0 }
+        });
       }
       
       return {
@@ -269,7 +270,10 @@ const pointsService = {
       });
       
       // Award badges for community activity ("community_activity" event)
-      await processUserEvent(userId, 'community_activity', { contentType });
+      await processUserEvent(userId, 'community_activity', {
+        posts: contentType === 'post' ? [{ id: contentId, user_id: userId }] : undefined,
+        comments: contentType === 'comment' ? [{ id: contentId, user_id: userId }] : undefined,
+      });
       
       return {
         success: true,
@@ -453,4 +457,3 @@ const pointsService = {
 };
 
 export default pointsService;
-

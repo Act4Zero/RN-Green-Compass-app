@@ -27,6 +27,7 @@ export function useMapIntegration() {
   const { filters, toggleCategoryFilter, toggleAllCategories } = useMapFilters();
   const { selectedLocation, selectLocation, clearSelectedLocation } = useSelectedLocation();
   const { viewport, updateViewport, isOutOfCoverage } = useMapViewport();
+  const { resetViewportToDefault } = mapState;
 
   // Loading state management to prevent infinite loops
   const [locationLoadingState, setLocationLoadingState] = useState<LoadingState>(createInitialLoadingState());
@@ -128,6 +129,7 @@ export function useMapIntegration() {
     toggleAllCategories,
     getUserLocation,
     updateViewport,
+    resetViewportToDefault,
     clearError
   };
 }

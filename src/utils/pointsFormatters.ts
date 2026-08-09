@@ -13,7 +13,8 @@ export function formatPointSource(source: PointSource): string {
   const sourceMap: Record<PointSource, string> = {
     'daily_login': 'Daily Check-in',
     'habit_log': 'Sustainable Habit',
-    'discussion_participation': 'Community Participation'
+    'discussion_participation': 'Community Participation',
+    'habit_streak': 'Habit Streak'
   };
   
   return sourceMap[source] || source;

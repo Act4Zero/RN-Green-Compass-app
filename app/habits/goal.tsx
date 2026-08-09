@@ -18,10 +18,12 @@ import FrequencySelector from '@/components/habits/goal/FrequencySelectorProps';
 import GoalInput from '@/components/habits/goal/GoalInput';
 import { useAuth } from '@/context/AuthContext';
 import useGoalManager from '@/hooks/habits/useGoalManager';
+import { useAppTheme } from '@/theme';
 
 export default function Goal() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme } = useAppTheme();
   const { source } = useLocalSearchParams<{ source: string }>();
   const { user, loading: authLoading } = useAuth();
 
@@ -53,21 +55,21 @@ export default function Goal() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
     >
-      <ScrollView contentContainerStyle={goalStyles.container}>
-        <View style={[goalStyles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}> 
+      <ScrollView contentContainerStyle={[goalStyles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[goalStyles.content, { maxWidth: 920 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
           <View style={goalStyles.header}>
             <TouchableOpacity 
               style={goalStyles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
-            <Text style={goalStyles.title}>Set Your Goal</Text>
+            <Text style={[goalStyles.title, { color: theme.colors.text }]}>Shape a new goal</Text>
           </View>
 
-          <Text style={goalStyles.subtitle}>Choose a focus area</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>1. Choose a focus area</Text>
 
           <FocusAreasComponent
             focusAreas={focusAreas}
@@ -75,13 +77,13 @@ export default function Goal() {
             toggleFocusArea={toggleFocusArea}
           />
 
-          <Text style={goalStyles.subtitle}>Choose frequency</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>2. Choose frequency</Text>
           <FrequencySelector
             frequency={frequency}
             onFrequencyChange={setFrequency}
           />
 
-          <Text style={goalStyles.subtitle}>Set your target</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>3. Set your target</Text>
           <GoalInput
             targetInputValue={targetInputValue}
             decrementTarget={decrementTarget}
@@ -91,8 +93,8 @@ export default function Goal() {
           />
 
           {selectedFocusAreas.length > 0 && (
-            <View style={goalStyles.summaryContainer}>
-              <Text style={goalStyles.summaryText}>
+            <View style={[goalStyles.summaryContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+              <Text style={[goalStyles.summaryText, { color: theme.colors.textMuted }]}>
                 Your initial target: <Text style={goalStyles.summaryHighlight}>{targetValue} actions {frequency !== 'one-time' ? frequency : ''}</Text>
                 {selectedFocusAreas.length === 1 
                   ? ` to ${focusAreas.find(a => a.id === selectedFocusAreas[0])?.name.toLowerCase()}`

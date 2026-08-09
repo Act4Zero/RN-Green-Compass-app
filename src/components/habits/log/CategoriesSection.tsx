@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import LogStyles from '@/styles/LogStyles';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/theme';
 
 const styles = LogStyles;
 
@@ -13,9 +14,10 @@ export function CategoriesSection({
     selectedCategory: string;
     handleSelectCategory: (id: string) => void;
 }) {
+    const { theme } = useAppTheme();
     return (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select a Category</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>1. Choose a category</Text>
           
           <ScrollView 
             horizontal 
@@ -27,7 +29,9 @@ export function CategoriesSection({
                 key={category.id}
                 style={[
                   styles.categoryItem,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                   selectedCategory === category.id && styles.categoryItemSelected,
+                  selectedCategory === category.id && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
                 ]}
                 onPress={() => handleSelectCategory(category.id)}
               >
@@ -35,13 +39,13 @@ export function CategoriesSection({
                   <Ionicons
                     name={category.icon as any}
                     size={24}
-                    color={selectedCategory === category.id ? '#2E7D32' : '#757575'}
+                    color={selectedCategory === category.id ? theme.colors.primary : theme.colors.textMuted}
                   />
                 </View>
                 <Text
                   style={[
                     styles.categoryText,
-                    { color: selectedCategory === category.id ? '#FFFFFF' : '#333333' },
+                    { color: selectedCategory === category.id ? theme.colors.textInverse : theme.colors.text },
                   ]}
                 >
                   {category.name}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { PointEvent } from '../../types/points';
-import { formatPointSource, getPointEventDescription } from '../../utils/pointsFormatters';
-import pointsStyles from '../../styles/Points.styles';
+import { PointEvent } from '@/types/community/points';
+import { formatPointSource, getPointEventDescription } from '@/utils/pointsFormatters';
+import pointsStyles from '@/styles/community/Points.styles';
 
 interface PointsHistoryItemProps {
   pointEvent: PointEvent;

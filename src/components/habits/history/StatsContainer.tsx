@@ -106,7 +106,6 @@ export function StatsContainer({
           // Add pre-formatted sharing content for messaging
           shareContent: shareContent
         }}
-        userName={userName}
         showUserName={true}
       />
     </>
@@ -114,4 +113,3 @@ export function StatsContainer({
 }
 
 export default StatsContainer;
-

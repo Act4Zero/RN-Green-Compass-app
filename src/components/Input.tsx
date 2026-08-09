@@ -13,6 +13,7 @@ import {
   TextInputFocusEventData,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '@/theme';
 
 interface InputProps {
   label?: string;
@@ -69,6 +70,7 @@ const Input: React.FC<InputProps> = ({
   numberOfLines = 1,
   maxLength,
 }) => {
+  const { theme } = useAppTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -128,10 +130,10 @@ const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, theme.typography.label, { color: theme.colors.text }]}>{label}</Text>}
       
       {isPassword ? (
-        <View style={styles.passwordContainer}>
+        <View style={[styles.passwordContainer, { backgroundColor: theme.colors.surface, borderColor: error ? theme.colors.danger : isFocused ? theme.colors.primary : theme.colors.borderStrong }]}>
           <TextInput
             value={value}
             onChangeText={onChangeText}
@@ -139,7 +141,8 @@ const Input: React.FC<InputProps> = ({
             secureTextEntry={!showPassword}
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
-            style={[styles.input, styles.inputText, inputStyle, { flex: 1 }]}
+            placeholderTextColor={theme.colors.textMuted}
+            style={[styles.input, styles.inputText, theme.typography.body, { flex: 1, color: theme.colors.text, backgroundColor: 'transparent', borderWidth: 0 }, inputStyle]}
             onFocus={handleFocus}
             onBlur={handleBlur}
             autoComplete={autoComplete}
@@ -151,7 +154,7 @@ const Input: React.FC<InputProps> = ({
             <Ionicons 
               name={showPassword ? 'eye-off' : 'eye'} 
               size={24} 
-              color="#757575" 
+              color={theme.colors.textMuted}
             />
           </TouchableOpacity>
         </View>
@@ -163,7 +166,8 @@ const Input: React.FC<InputProps> = ({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          style={[styles.input, styles.inputText, inputStyle]}
+          placeholderTextColor={theme.colors.textMuted}
+          style={[styles.input, styles.inputText, theme.typography.body, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: error ? theme.colors.danger : isFocused ? theme.colors.primary : theme.colors.borderStrong }, inputStyle]}
           onFocus={handleFocus}
           onBlur={handleBlur}
           autoComplete={autoComplete}
@@ -178,13 +182,13 @@ const Input: React.FC<InputProps> = ({
           <View style={styles.passwordStrengthBar}>
             <View style={getPasswordStrengthBarStyle()} />
           </View>
-          <Text style={styles.passwordStrengthText}>
+          <Text style={[styles.passwordStrengthText, { color: theme.colors.textMuted }]}>
             {passwordStrength.label && `Password strength: ${passwordStrength.label}`}
           </Text>
         </View>
       )}
       
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text> : null}
     </View>
   );
 };

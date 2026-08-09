@@ -3,10 +3,7 @@ import {
   View,
   Text,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   useWindowDimensions,
-  TouchableOpacity,
 } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
@@ -18,19 +15,17 @@ import analyticsService from '@/services/analyticsService';
 import useGoalsManager from '@/hooks/useGoalsManager';
 
 // Import components
-import { DashboardStats } from '@/components/home/DashboardStats';
-import QuickActions from '@/components/home/QuickActions';
 import { GoalsList, GoalsHeader } from '@/components/home/GoalsList';
 import EditGoalModal from '@/components/modals/EditGoalModal';
-
-// Import styles
-import { homeStyles } from '@/styles/Home.styles';
+import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
+import { useAppTheme } from '@/theme';
 
 // Import types
 import { EnhancedGoal, TimeFrequency } from '@/types/goal.types';
 import useProfileManager from '@/hooks/useProfileManager';
 
 export default function Home() {
+  const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, signOut, loading: authLoading } = useAuth();
@@ -253,80 +248,79 @@ export default function Home() {
     router.push('habits/goal' as any);
   };
 
+  const metrics = [
+    { label: 'Actions taken', value: `${totalActions || 0}`, icon: 'checkmark-circle-outline' as const },
+    { label: 'CO₂ saved', value: `${totalCO2Saved?.toFixed(1) || '0.0'} kg`, icon: 'cloud-outline' as const },
+    { label: 'Current streak', value: `${overallStreak || 0} days`, icon: 'flame-outline' as const },
+  ];
+
+  const actions = [
+    { label: 'Log an action', detail: 'Record a sustainable choice', icon: 'add-circle-outline' as const, route: '/habits/log' as const },
+    { label: 'Explore the map', detail: 'Find greener places nearby', icon: 'map-outline' as const, route: '/map' as const },
+    { label: 'Join the community', detail: 'Take part in a challenge', icon: 'people-outline' as const, route: '/community' as const },
+  ];
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={homeStyles.keyboardAvoidingContainer}
-    >
-      <ScrollView
-        style={homeStyles.scrollView}
-        contentContainerStyle={homeStyles.scrollContentContainer}
-      >
-        <View style={[homeStyles.content, isTabletOrLarger && { width: '60%', maxWidth: 700 }]}>
-           {/* Header with welcome message and logout */}
-           <View style={homeStyles.header}>
-             <View>
-               <Text style={homeStyles.welcomeText}>Welcome back,</Text>
-               <Text style={homeStyles.userName}>{displayIdentifier || ''}</Text>
-             </View>
-             <View style={homeStyles.headerButtons}>
-               <TouchableOpacity
-                 style={homeStyles.headerButton}
-                 onPress={() => router.replace('/profile')}
-               >
-                 <Ionicons name="person-outline" size={24} color="#2E7D32" />
-               </TouchableOpacity>
-               <TouchableOpacity
-                 style={homeStyles.headerButton}
-                 onPress={handleSignOut}
-               >
-                 <Ionicons name="log-out-outline" size={24} color="#2E7D32" />
-               </TouchableOpacity>
-             </View>
-           </View>
-
-           {/* Go to Map Button */}
-           <TouchableOpacity
-             style={homeStyles.mapNavButton}
-             onPress={() => router.push('/map')}
-             accessibilityLabel="Go to map screen"
-             accessibilityRole="button"
-           >
-             <Ionicons name="map-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-             <Text style={homeStyles.mapNavButtonText}>Open Sustainability Map</Text>
-           </TouchableOpacity>
-
-           {/* Dashboard Stats */}
-          <DashboardStats
-            totalActions={totalActions}
-            totalCO2Saved={totalCO2Saved}
-            overallStreak={overallStreak}
+    <Screen>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Content wide>
+          <PageHeader
+            eyebrow="Your compass"
+            title={`Welcome back${displayIdentifier ? `, ${displayIdentifier}` : ''}`}
+            description="Keep your momentum visible and choose the next action that feels achievable today."
+            action={isTabletOrLarger ? <AppButton label="Log action" icon="add" onPress={() => router.push('/habits/log')} /> : undefined}
           />
 
-          {/* Quick Actions */}
-          <QuickActions />
+          <Card elevated style={{ backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, padding: isTabletOrLarger ? 32 : 24, marginBottom: 18, overflow: 'hidden' }}>
+            <View style={{ position: 'absolute', width: 260, height: 260, borderRadius: 130, right: -70, top: -110, backgroundColor: theme.colors.accent, opacity: 0.18 }} />
+            <View style={{ flexDirection: isTabletOrLarger ? 'row' : 'column', justifyContent: 'space-between', alignItems: isTabletOrLarger ? 'center' : 'flex-start', gap: 20 }}>
+              <View style={{ flex: 1, maxWidth: 600 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase', letterSpacing: 1.1 }]}>Your impact story</Text>
+                <Text style={[theme.typography.h1, { color: '#FFFFFF', marginTop: 8 }]}>Consistency is climate action.</Text>
+                <Text style={[theme.typography.body, { color: '#D8EAE0', marginTop: 10 }]}>Every logged habit makes your progress easier to understand—and easier to repeat.</Text>
+              </View>
+              <AppButton label="View history" icon="arrow-forward" variant="secondary" onPress={() => router.push('/habits/history')} style={{ minWidth: 160 }} />
+            </View>
+          </Card>
 
-          {/* Goals Section */}
-          <View style={homeStyles.section}>
-            <GoalsHeader onAddGoal={handleAddGoal} />
-            <GoalsList 
-              goals={goals} 
-              onEditGoal={handleEditGoal} 
-            />
+          <View style={{ flexDirection: isTabletOrLarger ? 'row' : 'column', gap: 12, marginBottom: 28 }}>
+            {metrics.map((metric) => (
+              <Card key={metric.label} style={{ flex: 1, padding: 20 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View>
+                    <Text style={[theme.typography.metric, { color: theme.colors.text }]}>{metric.value}</Text>
+                    <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{metric.label}</Text>
+                  </View>
+                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name={metric.icon} size={21} color={theme.colors.primary} />
+                  </View>
+                </View>
+              </Card>
+            ))}
           </View>
 
-          {/* Sign Out Button */}
-          <TouchableOpacity
-            style={homeStyles.signOutButton}
-            onPress={handleSignOut}
-            disabled={loading}
-          >
-            <Text style={homeStyles.signOutButtonText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>Choose your next move</Text>
+          <View style={{ flexDirection: isTabletOrLarger ? 'row' : 'column', gap: 12, marginBottom: 32 }}>
+            {actions.map((action) => (
+              <Card key={action.label} style={{ flex: 1, padding: 20 }}>
+                <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <Ionicons name={action.icon} size={22} color={theme.colors.primary} />
+                </View>
+                <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{action.label}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4, marginBottom: 16 }]}>{action.detail}</Text>
+                <AppButton label="Open" variant="ghost" icon="arrow-forward" onPress={() => router.push(action.route)} />
+              </Card>
+            ))}
+          </View>
+
+          {refreshError ? <Text style={[theme.typography.bodySmall, { color: theme.colors.danger, marginBottom: 12 }]}>{refreshError}</Text> : null}
+          <Card style={{ padding: 20, marginBottom: 26 }}>
+            <GoalsHeader onAddGoal={handleAddGoal} />
+            <GoalsList goals={goals} onEditGoal={handleEditGoal} />
+          </Card>
+        </Content>
       </ScrollView>
 
-      {/* Edit Goal Modal */}
       <EditGoalModal
         visible={isEditModalVisible}
         goal={selectedGoal}
@@ -335,6 +329,6 @@ export default function Home() {
         onDelete={handleDeleteGoal}
         loading={loading}
       />
-    </KeyboardAvoidingView>
+    </Screen>
   );
 }

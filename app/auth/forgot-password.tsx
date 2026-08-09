@@ -18,6 +18,7 @@ import supabase from '@/lib/supabase';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Turnstile from '@/components/Turnstile';
+import { useAppTheme } from '@/theme';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -42,6 +43,7 @@ export default function ForgotPassword() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { theme } = useAppTheme();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -116,13 +118,13 @@ export default function ForgotPassword() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, isTabletOrLarger && { width: '100%', maxWidth: 520 }]}>
         <View style={styles.logoContainer}>
           <Image
             source={require('../../assets/images/GCLogo-no-bg.png')}
@@ -131,9 +133,9 @@ export default function ForgotPassword() {
           />
         </View>
           <View style={styles.header}>
-            <Text style={styles.title}>Reset Password</Text>
-            <Text style={styles.subtitle}>
-              Enter your email address and we'll send you a link to reset your password
+            <Text style={[styles.title, { color: theme.colors.text }]}>Reset your password</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+              We’ll email you a secure link to get back into Green Compass.
             </Text>
           </View>
 
@@ -161,8 +163,8 @@ export default function ForgotPassword() {
                 />
 
                 {error && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
+                  <View style={[styles.errorContainer, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.danger, borderWidth: 1 }]}>
+                    <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>
                   </View>
                 )}
 
@@ -175,8 +177,8 @@ export default function ForgotPassword() {
                 />
               </>
             ) : (
-              <View style={styles.successContainer}>
-                <Text style={styles.successText}>
+              <View style={[styles.successContainer, { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.success, borderWidth: 1 }]}>
+                <Text style={[styles.successText, { color: theme.colors.text }]}>
                   Password reset link sent! Please check your email inbox.
                 </Text>
                 <Button
@@ -190,9 +192,9 @@ export default function ForgotPassword() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
               Remember your password?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/auth/signin')}>Login</Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signin')}>Sign in</Text>
             </Text>
           </View>
         </View>

@@ -24,6 +24,7 @@ import Turnstile from '@/components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
 import supabase, { ensureValidSession } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
+import { useAppTheme } from '@/theme';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -54,6 +55,7 @@ interface Styles {
 }
 
 export default function SignUp() {
+  const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
@@ -301,13 +303,13 @@ export default function SignUp() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.content, isTabletOrLarger && { width: '60%', maxWidth: 500 }]}>
+        <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, theme.shadows.raised, isTabletOrLarger && { width: '60%', maxWidth: 540 }]}>
         <View style={styles.logoContainer}>
           <Image
             source={require('../../assets/images/GCLogo-no-bg.png')}
@@ -317,8 +319,8 @@ export default function SignUp() {
         </View>
           
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join Green Compass and start your sustainability journey</Text>
+            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>Create your account</Text>
+            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>Start with one action and build momentum that lasts.</Text>
           </View>
 
           <View style={styles.form}>
@@ -361,26 +363,26 @@ export default function SignUp() {
               onPress={toggleTerms}
               activeOpacity={0.7}
             >
-              <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, termsAccepted && styles.checkboxChecked, termsAccepted && { backgroundColor: theme.colors.primary }]}>
                 {termsAccepted && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
               </View>
-              <Text style={styles.checkboxText}>
+              <Text style={[styles.checkboxText, { color: theme.colors.textMuted }]}>
                 I agree to the{' '}
                 <Text 
-                  style={styles.checkboxLink} 
+                  style={[styles.checkboxLink, { color: theme.colors.primary }]}
                   onPress={() => Linking.openURL('https://www.greencompass.app/tos')}
                 >
                   Terms of Service
                 </Text> and{' '}
                 <Text 
-                  style={styles.checkboxLink} 
+                  style={[styles.checkboxLink, { color: theme.colors.primary }]}
                   onPress={() => Linking.openURL('https://www.greencompass.app/privacy')}
                 >
                   Privacy Policy
                 </Text>
               </Text>
             </TouchableOpacity>
-            {termsError && <Text style={styles.errorText}>{termsError}</Text>}
+            {termsError && <Text style={[styles.errorText, { color: theme.colors.danger }]}>{termsError}</Text>}
 
             {/* Invisible Captcha verification */}
             <Turnstile
@@ -391,8 +393,8 @@ export default function SignUp() {
             />
 
             {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
+                <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>
               </View>
             )}
 
@@ -405,9 +407,9 @@ export default function SignUp() {
             />
 
             <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             </View>
 
             {/* Sign up with Google button */}
@@ -417,7 +419,7 @@ export default function SignUp() {
               </View>
             ) : (
               <TouchableOpacity
-                style={styles.googleButtonNative}
+                style={[styles.googleButtonNative, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderStrong, borderRadius: theme.radii.md }]}
                 onPress={handleGoogleSignUp}
                 activeOpacity={0.85}
                 disabled={googleLoading}
@@ -431,16 +433,16 @@ export default function SignUp() {
                   accessible
                   accessibilityLabel="Google logo"
                 />
-                <Text style={styles.googleButtonText}>Sign up with Google</Text>
+                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>Sign up with Google</Text>
               </TouchableOpacity>
             )}
 
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
               Already have an account?{' '}
-              <Text style={styles.footerLink} onPress={() => router.push('/auth/signin')}>Login</Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signin')}>Sign in</Text>
             </Text>
           </View>
         </View>

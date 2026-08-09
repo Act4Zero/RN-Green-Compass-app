@@ -1,4 +1,4 @@
-import { Database } from './supabase';
+import { Database } from '../supabase';
 
 // Type for a discussion/post in the community feed
 export interface Discussion {

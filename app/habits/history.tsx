@@ -19,12 +19,14 @@ import CompletedGoals from '@/components/habits/history/CompletedGoals';
 import useHistoryManager from '@/hooks/habits/useHistoryManager';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
+import { useAppTheme } from '@/theme';
 
 const styles = historyStyles;
 
 export default function HabitHistory() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
+  const { theme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
   
   // Use our custom hook to manage all the history logic
@@ -99,25 +101,25 @@ export default function HabitHistory() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
+      style={[styles.keyboardAvoidingContainer, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     > 
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
+        <View style={[styles.content, { maxWidth: 1040 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
           <View style={styles.header}>
             <TouchableOpacity 
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Habit History</Text>
-              <Text style={styles.subtitle}>Track your progress over time</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>Impact history</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>See the patterns behind your progress.</Text>
             </View>
           </View>
 

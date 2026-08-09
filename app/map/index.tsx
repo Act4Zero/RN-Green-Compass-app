@@ -11,20 +11,22 @@ import CoverageAlert from '../../src/components/map/CoverageAlert';
 import MapFooter from '../../src/components/map/MapFooter';
 // Import external styles
 import { mapScreenStyles } from '../../src/styles/map/MapScreenStyles';
+import { useAppTheme } from '@/theme';
 
 export default function MapScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === 'web';
   const isWideScreen = width > 768;
+  const { theme } = useAppTheme();
 
   return (
     <MapProvider>
       <View style={[
         styles.container,
-        { paddingTop: isWeb ? insets.top : 0 }
+        { paddingTop: isWeb ? insets.top : 0, backgroundColor: theme.colors.background }
       ]}>
-        <StatusBar style="dark" />
+        <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
         
         <View style={[
           styles.content,

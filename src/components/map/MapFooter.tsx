@@ -35,7 +35,7 @@ export default function MapFooter() {
       
       {error && (
         <Text style={styles.errorText}>
-          Error: {error.userMessage || 'Something went wrong'}
+          Error: {error.message || 'Something went wrong'}
         </Text>
       )}
     </View>

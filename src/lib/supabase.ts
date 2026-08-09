@@ -6,12 +6,19 @@ import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
 // Get the environment variables from Expo Constants or use hardcoded values as fallback
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+const configuredSupabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+const configuredSupabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+export const isSupabaseConfigured = Boolean(configuredSupabaseUrl && configuredSupabaseAnonKey);
+
+// Static route rendering imports the client without executing authenticated requests.
+// Valid local placeholders keep production exports deterministic when CI secrets are absent;
+// configured builds continue to use the real project values without any behavior change.
+const supabaseUrl = configuredSupabaseUrl || 'https://build-placeholder.supabase.co';
+const supabaseAnonKey = configuredSupabaseAnonKey || 'build-placeholder-anon-key';
 
 // Validate URL and key
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase URL or Anon Key is missing. Please check your environment variables.');
+if (!isSupabaseConfigured && typeof window !== 'undefined') {
+  console.warn('Supabase is not configured. Add the EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY environment variables.');
 }
 
 // Enhanced AsyncStorage adapter with error handling and retry logic

@@ -3,7 +3,7 @@ import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useParticipants from '@/hooks/challenge/useParticipants';
-import { ChallengeParticipant } from '@/types/challenge';
+import { ChallengeParticipant } from '@/types/community/challenge';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
 
 interface ChallengeParticipantsProps {
