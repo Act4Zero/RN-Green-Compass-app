@@ -1,39 +1,20 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { coverageAlertStyles } from '../../styles/map/CoverageAlertStyles';
+import React from 'react';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { useAppTheme } from '../../theme';
 
 export default function CoverageAlert() {
-  const { isOutOfCoverage, resetViewportToDefault } = useMapIntegration();
-  
-  if (!isOutOfCoverage) {
-    return null;
-  }
-  
+  const map = useMapIntegration();
+  const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  if (!map.isOutOfCoverage) return null;
+  const desktop = width >= theme.breakpoints.desktop;
   return (
-    <View style={styles.container}>
-      <View style={styles.alertBox}>
-        <Ionicons name="warning" size={24} color="#FF9800" style={{marginRight: 10}} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>Outside Coverage Area</Text>
-          <Text style={styles.message}>
-            The Sustainability Map is currently only available for Bulgaria. 
-            We're working on expanding our coverage!
-          </Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={resetViewportToDefault}
-          accessibilityLabel="Return to Bulgaria"
-          accessibilityRole="button"
-        >
-          <Text style={styles.buttonText}>Return to Bulgaria</Text>
-        </TouchableOpacity>
-      </View>
+    <View accessibilityLiveRegion="polite" style={[theme.shadows.raised, { position: 'absolute', zIndex: 55, top: desktop ? 150 : 146, alignSelf: 'center', maxWidth: 520, marginHorizontal: 16, borderRadius: theme.radii.md, borderWidth: 1, borderColor: theme.colors.warning, backgroundColor: theme.colors.backgroundElevated, padding: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
+      <Ionicons name="location-outline" size={21} color={theme.colors.warning} />
+      <Text style={[theme.typography.bodySmall, { color: theme.colors.text, flex: 1 }]}>Verified coverage is currently limited to Bulgaria.</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Return to Bulgaria" onPress={map.resetViewportToDefault} style={{ minHeight: 40, justifyContent: 'center', paddingHorizontal: theme.spacing.sm, borderRadius: theme.radii.sm, backgroundColor: theme.colors.primarySoft }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>Return</Text></Pressable>
     </View>
   );
 }
-
-// Use the external styles imported from CoverageAlertStyles
-const styles = coverageAlertStyles;

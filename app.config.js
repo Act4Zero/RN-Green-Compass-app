@@ -7,6 +7,7 @@ const EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIE
 const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const EXPO_PUBLIC_GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI;
 const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
+const EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 module.exports = {
   name: "GreenCompass",
@@ -40,6 +41,13 @@ module.exports = {
   },
   plugins: [
     "expo-router",
+    "@rnmapbox/maps",
+    [
+      "expo-location",
+      {
+        "locationWhenInUsePermission": "Show your position on the Sustainability Globe."
+      }
+    ],
     [
       "expo-splash-screen",
       {
@@ -65,5 +73,6 @@ module.exports = {
     googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
     // Cloudflare Turnstile site key for captcha
     turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
+    mapboxAccessToken: EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
   }
 };

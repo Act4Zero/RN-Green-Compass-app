@@ -4,7 +4,7 @@
  */
 import { useContext, useCallback } from 'react';
 import { MapContext } from '../context/MapContext';
-import { MapLocation, LocationCategory, MapViewport } from '../types/map';
+import { LocationCategory } from '../types/map';
 
 /**
  * Hook to access and manipulate map state
@@ -44,7 +44,7 @@ export function useMapLocations() {
  * Hook for managing map filters
  */
 export function useMapFilters() {
-  const { filters, toggleCategoryFilter } = useMapState();
+  const { filters, toggleCategoryFilter, toggleAllCategories } = useMapState();
 
   const enabledCategories = useCallback(() => {
     return Object.entries(filters.categories)
@@ -65,13 +65,6 @@ export function useMapFilters() {
   const areAllCategoriesDisabled = useCallback(() => {
     return Object.values(filters.categories).every(enabled => !enabled);
   }, [filters.categories]);
-
-  const toggleAllCategories = useCallback((enabled: boolean) => {
-    const categories = Object.keys(filters.categories) as LocationCategory[];
-    categories.forEach(category => {
-      toggleCategoryFilter(category, enabled);
-    });
-  }, [filters.categories, toggleCategoryFilter]);
 
   return {
     filters,
@@ -108,12 +101,12 @@ export function useSelectedLocation() {
  * Hook for viewport and coverage management
  */
 export function useMapViewport() {
-  const { viewport, isOutOfCoverage, updateViewport, checkCoverage } = useMapState();
+  const { camera, isOutOfCoverage, updateCamera, checkCoverage } = useMapState();
 
   return {
-    viewport,
+    viewport: camera,
     isOutOfCoverage,
-    updateViewport,
+    updateViewport: updateCamera,
     checkCoverage
   };
 }

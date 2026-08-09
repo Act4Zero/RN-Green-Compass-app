@@ -3,6 +3,7 @@
  * Handles loading and filtering map location data
  */
 import { MapLocation, LocationCategory, GeographicBounds } from '../types/map';
+import { getEVLocations } from '../utils/locationDataUtils';
 
 // Default center coordinates for Sofia, Bulgaria
 export const DEFAULT_CENTER = {
@@ -24,8 +25,6 @@ export const BULGARIA_BOUNDS: GeographicBounds = {
 /**
  * Load EV charging locations from the local asset file
  */
-import { getEVLocations } from '../utils/locationDataUtils';
-
 /**
  * Load locations from local assets
  */

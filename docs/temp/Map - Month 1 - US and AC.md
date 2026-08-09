@@ -1,3 +1,5 @@
+> **Superseded:** This historical Month 1 brief describes the retired Leaflet implementation and aspirational seed data. The current acceptance criteria are in [`../features/sustainability-globe.md`](../features/sustainability-globe.md).
+
 Map - Month 1 - US and AC
 
 1 · Purpose

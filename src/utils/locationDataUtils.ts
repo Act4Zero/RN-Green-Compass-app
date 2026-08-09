@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { MapLocation, LocationCategory } from '../types/map';
 
 // Import the locations data when in a bundled environment

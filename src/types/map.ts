@@ -1,12 +1,5 @@
-/**
- * Type definitions for the Sustainability Map feature
- */
-
-/**
- * Categories for sustainable locations
- * Six required categories: EV, Recycling, Organic, Zero-Waste, Green Building, Community
- */
-export type LocationCategory = 
+/** Shared contracts for the Sustainability Globe feature. */
+export type LocationCategory =
   | 'EV Charging Stations'
   | 'Recycling'
   | 'Organic Food'
@@ -14,10 +7,6 @@ export type LocationCategory =
   | 'Green Building'
   | 'Community';
 
-/**
- * Map location data structure as defined in the technical specification
- * Based on the static JSON format from locations.json
- */
 export interface MapLocation {
   id: string;
   name: string;
@@ -32,60 +21,104 @@ export interface MapLocation {
   category: LocationCategory;
   source: string | null;
   licence: string | null;
-  
-  // Optional fields that may be specific to certain categories
-  // EV Charging specific fields
   usage_cost?: string | null;
   connection_type?: string | null;
   power_kw?: number | null;
   level?: string | null;
   is_fast_charge_capable?: boolean;
-  
-  // Additional fields that might be useful
   description?: string;
   website?: string;
 }
 
-/**
- * Filter state for the map
- */
-export interface MapFilters {
-  categories: {
-    [key in LocationCategory]: boolean;
-  };
+export type MapStyleId = 'living-earth' | 'night-canopy' | 'satellite';
+
+export interface MapStylePreset {
+  id: MapStyleId;
+  label: string;
+  description: string;
+  styleUrl: string;
+  lightPreset: 'day' | 'night';
+  icon: 'earth-outline' | 'moon-outline' | 'planet-outline';
+  swatches: readonly [string, string, string];
 }
 
-/**
- * Map viewport state
- */
-export interface MapViewport {
-  center: {
-    lat: number;
-    lng: number;
-  };
-  zoom: number;
+export interface MapPoint {
+  lat: number;
+  lng: number;
 }
 
-/**
- * Geographic bounds
- */
-export interface GeographicBounds {
+export interface MapViewportBounds {
   north: number;
   south: number;
   east: number;
   west: number;
 }
 
-/**
- * Map state interface
- */
+export interface MapCameraState {
+  center: MapPoint;
+  zoom: number;
+  pitch: number;
+  heading: number;
+  bounds?: MapViewportBounds;
+}
+
+export interface MapCameraCommand extends Partial<MapCameraState> {
+  id: number;
+  durationMs?: number;
+}
+
+export interface MapLocationFeatureProperties {
+  id: string;
+  name: string;
+  category: LocationCategory;
+  powerKw: number | null;
+  fastCharge: boolean;
+}
+
+export type MapLocationFeature = GeoJSON.Feature<GeoJSON.Point, MapLocationFeatureProperties>;
+export type MapLocationFeatureCollection = GeoJSON.FeatureCollection<
+  GeoJSON.Point,
+  MapLocationFeatureProperties
+>;
+
+export interface MapRendererProps {
+  accessToken: string;
+  locations: MapLocation[];
+  selectedLocationId: string | null;
+  styleId: MapStyleId;
+  cameraCommand: MapCameraCommand | null;
+  userLocation: MapPoint | null;
+  reducedMotion: boolean;
+  onReady: () => void;
+  onCameraChanged: (camera: MapCameraState) => void;
+  onLocationPress: (locationId: string) => void;
+  onClusterPress: (center: MapPoint, expansionZoom: number) => void;
+  onError: (message: string) => void;
+}
+
+export interface MapFilters {
+  categories: Partial<Record<LocationCategory, boolean>>;
+}
+
+export type GeographicBounds = MapViewportBounds;
+
 export interface MapState {
   locations: MapLocation[];
   filteredLocations: MapLocation[];
+  visibleLocations: MapLocation[];
+  availableCategories: LocationCategory[];
   isLoading: boolean;
   error: Error | null;
   filters: MapFilters;
+  query: string;
   selectedLocation: MapLocation | null;
-  viewport: MapViewport;
+  styleId: MapStyleId;
+  camera: MapCameraState;
+  cameraCommand: MapCameraCommand | null;
+  userLocation: MapPoint | null;
+  isLocating: boolean;
+  locationError: string | null;
   isOutOfCoverage: boolean;
+  isResultsOpen: boolean;
+  isResultsRailCollapsed: boolean;
 }
