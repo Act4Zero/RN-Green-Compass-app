@@ -15,12 +15,14 @@ const mockMapFacade: any = {
   resetViewportToDefault: jest.fn(),
 };
 let mockAccessToken = '';
+let mockExpoGoRuntime = false;
 
 jest.mock('@/theme', () => ({ useAppTheme: () => ({ theme: require('@/theme/tokens').createTheme('light') }) }));
 jest.mock('@/hooks/useMapIntegration', () => ({ useMapIntegration: () => mockMapFacade }));
 jest.mock('@/config/mapGlobe', () => ({
   ...jest.requireActual('@/config/mapGlobe'),
   getMapboxAccessToken: () => mockAccessToken,
+  isExpoGoRuntime: () => mockExpoGoRuntime,
 }));
 jest.mock('../GlobeRenderer', () => {
   const ReactModule = require('react');
@@ -43,6 +45,7 @@ jest.mock('@expo/vector-icons', () => {
 describe('Sustainability Globe shell', () => {
   afterEach(() => {
     mockAccessToken = '';
+    mockExpoGoRuntime = false;
     mockMapFacade.error = null;
     mockMapFacade.isLoading = false;
     mockMapFacade.locationError = null;
@@ -62,6 +65,14 @@ describe('Sustainability Globe shell', () => {
     act(() => { tree = renderer.create(<MapView />); });
     expect(tree.root.findByProps({ children: 'The globe is taking a breather' })).toBeTruthy();
     expect(tree.root.findByProps({ children: 'Add EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to enable the live 3D map.' })).toBeTruthy();
+  });
+
+  it('opens safely with custom-build guidance in Expo Go', () => {
+    mockAccessToken = 'pk.test';
+    mockExpoGoRuntime = true;
+    let tree!: renderer.ReactTestRenderer;
+    act(() => { tree = renderer.create(<MapView />); });
+    expect(tree.root.findByProps({ children: 'The 3D globe requires a custom development build and cannot run in Expo Go.' })).toBeTruthy();
   });
 
   it('renders a dataset failure without attempting to mount a renderer', () => {

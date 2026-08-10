@@ -1,3 +1,5 @@
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { Platform } from 'react-native';
 import { MapCameraState, MapStyleId, MapStylePreset, MapViewportBounds } from '../types/map';
 
 export const EUROPE_GLOBE_CAMERA: MapCameraState = {
@@ -55,6 +57,11 @@ export const MAP_STYLE_IDS = Object.keys(MAP_STYLE_PRESETS) as MapStyleId[];
 export const MAP_STYLE_STORAGE_KEY = 'green-compass:map-style';
 
 export const getMapboxAccessToken = (): string => process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ?? '';
+
+export const isExpoGoRuntime = (): boolean => (
+  Platform.OS !== 'web'
+  && Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+);
 
 export function isMapStyleId(value: unknown): value is MapStyleId {
   return typeof value === 'string' && MAP_STYLE_IDS.includes(value as MapStyleId);

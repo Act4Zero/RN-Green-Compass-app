@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Text, View } from 'react-native';
-import { getMapboxAccessToken } from '../../config/mapGlobe';
+import { getMapboxAccessToken, isExpoGoRuntime } from '../../config/mapGlobe';
 import analyticsService from '../../services/analyticsService';
 import { useAppTheme } from '../../theme';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
@@ -37,6 +37,7 @@ export default function MapView() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const hasTrackedView = useRef(false);
   const accessToken = getMapboxAccessToken();
+  const isUnsupportedExpoGo = isExpoGoRuntime();
 
   useEffect(() => {
     if (!map.isDataInitialized || hasTrackedView.current) return;
@@ -66,6 +67,7 @@ export default function MapView() {
     );
   }
   if (map.error) return <UnavailableState message={map.error.message} />;
+  if (isUnsupportedExpoGo) return <UnavailableState message="The 3D globe requires a custom development build and cannot run in Expo Go." />;
   if (!accessToken) return <UnavailableState message="Add EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to enable the live 3D map." />;
   if (rendererError) return <UnavailableState message={rendererError} />;
 
