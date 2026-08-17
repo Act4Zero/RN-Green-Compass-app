@@ -123,6 +123,10 @@ export default function GlobeRenderer(props: MapRendererProps) {
   useEffect(() => {
     let cancelled = false;
     let map: any;
+    let resizeObserver: ResizeObserver | null = null;
+    let firstResizeFrame: number | null = null;
+    let secondResizeFrame: number | null = null;
+    const resizeMap = () => map?.resize();
     loadMapboxGL().then((mapboxgl) => {
       if (cancelled || !containerRef.current) return;
       mapboxRef.current = mapboxgl;
@@ -146,9 +150,19 @@ export default function GlobeRenderer(props: MapRendererProps) {
           antialias: true,
         });
         mapRef.current = map;
+        // React Native Web can finish measuring the app shell after Mapbox has
+        // created its canvas. Keep the canvas synchronized with the actual map
+        // container instead of leaving it at the transient first measurement.
+        resizeObserver = new ResizeObserver(resizeMap);
+        resizeObserver.observe(containerRef.current);
+        window.addEventListener('resize', resizeMap);
+        firstResizeFrame = window.requestAnimationFrame(() => {
+          resizeMap();
+          secondResizeFrame = window.requestAnimationFrame(resizeMap);
+        });
         map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
         map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right');
-        map.on('style.load', () => { ensureDataLayers(map); latest.current.onReady(); });
+        map.on('style.load', () => { resizeMap(); ensureDataLayers(map); latest.current.onReady(); });
         map.on('error', (event: any) => {
           const message = event?.error?.message;
           if (message && !message.includes('AbortError')) latest.current.onError(message);
@@ -161,13 +175,19 @@ export default function GlobeRenderer(props: MapRendererProps) {
             bounds: { north: bounds.getNorth(), south: bounds.getSouth(), east: bounds.getEast(), west: bounds.getWest() },
           });
         });
-        map.on('click', 'location-clusters', async (event: any) => {
+        map.on('click', 'location-clusters', (event: any) => {
           const feature = event.features?.[0];
           if (!feature) return;
           const source = map.getSource(LOCATIONS_SOURCE);
-          const zoom = await source.getClusterExpansionZoom(feature.properties.cluster_id);
           const [lng, lat] = feature.geometry.coordinates;
-          latest.current.onClusterPress({ lat, lng }, zoom);
+          source.getClusterExpansionZoom(feature.properties.cluster_id, (error: Error | null, zoom: number) => {
+            if (error) {
+              latest.current.onError('Unable to open this location cluster. Please try again.');
+              return;
+            }
+            const nextZoom = Number.isFinite(zoom) ? zoom : Math.min(map.getZoom() + 2, 14);
+            latest.current.onClusterPress({ lat, lng }, nextZoom);
+          });
         });
         map.on('click', 'location-pins', (event: any) => {
           const id = event.features?.[0]?.properties?.id;
@@ -181,7 +201,15 @@ export default function GlobeRenderer(props: MapRendererProps) {
         latest.current.onError(error instanceof Error ? error.message : 'Unable to start the 3D globe.');
       }
     }).catch((error) => latest.current.onError(error instanceof Error ? error.message : 'Unable to load the map renderer.'));
-    return () => { cancelled = true; map?.remove(); mapRef.current = null; };
+    return () => {
+      cancelled = true;
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', resizeMap);
+      if (firstResizeFrame !== null) window.cancelAnimationFrame(firstResizeFrame);
+      if (secondResizeFrame !== null) window.cancelAnimationFrame(secondResizeFrame);
+      map?.remove();
+      mapRef.current = null;
+    };
   // The renderer owns one stable map instance; current props are read through latest.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -221,14 +249,14 @@ export default function GlobeRenderer(props: MapRendererProps) {
     const map = mapRef.current;
     const command = props.cameraCommand;
     if (!map || !command) return;
-    const next = {
-      center: command.center ? [command.center.lng, command.center.lat] : undefined,
-      zoom: command.zoom,
-      pitch: command.pitch,
-      bearing: command.heading,
+    const next: Record<string, unknown> = {
       duration: props.reducedMotion ? 0 : command.durationMs ?? 850,
       essential: false,
     };
+    if (command.center) next.center = [command.center.lng, command.center.lat];
+    if (Number.isFinite(command.zoom)) next.zoom = command.zoom;
+    if (Number.isFinite(command.pitch)) next.pitch = command.pitch;
+    if (Number.isFinite(command.heading)) next.bearing = command.heading;
     if (props.reducedMotion) map.jumpTo(next);
     else map.flyTo(next);
   }, [props.cameraCommand, props.reducedMotion]);

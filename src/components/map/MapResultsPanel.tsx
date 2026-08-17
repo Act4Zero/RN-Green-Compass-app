@@ -60,7 +60,7 @@ export default function MapResultsPanel() {
       </View>
       <FlatList
         data={map.visibleLocations}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => `${item.id}:${item.connection_type ?? 'connector'}:${index}`}
         contentContainerStyle={{ padding: theme.spacing.sm, gap: theme.spacing.xs }}
         renderItem={({ item }) => <ResultRow location={item} />}
         ListEmptyComponent={<View style={{ padding: theme.spacing.xl, alignItems: 'center', gap: theme.spacing.sm }}><Ionicons name="search-outline" size={26} color={theme.colors.textMuted} /><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>No verified places match this view. Clear the search or return to Bulgaria.</Text></View>}
