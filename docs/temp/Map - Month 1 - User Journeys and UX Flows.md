@@ -1,3 +1,5 @@
+> **Superseded:** This historical Month 1 brief describes the retired map. The current requirements are in [`../features/sustainability-globe.md`](../features/sustainability-globe.md), including the verified 89-location EV dataset, Europe-first 3D globe, dynamic categories, and responsive discovery UI.
+
 Map - Month 1 - User Journeys and UX Flows
 
 Sustainability Map – Functional Requirements
@@ -63,4 +65,3 @@ External analytics tooling will capture engagement metrics; instrumentation even
 #	Question	Needed By
 Q1	Which analytics platform will record the success metrics?	Sprint planning
 Q2	Should the masked-area overlay be interactive (e.g., clickable opacity to return to Sofia)?	UX review
-

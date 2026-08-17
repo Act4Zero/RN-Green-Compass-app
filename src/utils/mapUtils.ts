@@ -2,7 +2,8 @@
  * Map Utility Functions
  * Provides helper functions for map operations
  */
-import { Platform, Linking } from 'react-native';
+import { Platform } from 'react-native';
+import * as Location from 'expo-location';
 import { GeographicBounds, MapLocation } from '../types/map';
 
 /**
@@ -35,8 +36,6 @@ export const formatAddress = (location: MapLocation): string => {
  * Get the user's current position using the Geolocation API
  * Returns a Promise with the latitude and longitude
  */
-import * as Location from 'expo-location';
-
 export const getCurrentPosition = async (): Promise<{ lat: number; lng: number }> => {
   if (Platform.OS === 'web') {
     return new Promise((resolve, reject) => {

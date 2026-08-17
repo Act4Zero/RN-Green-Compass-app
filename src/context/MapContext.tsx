@@ -1,254 +1,215 @@
-/**
- * Map Context
- * Provides state management for the sustainability map feature
- */
-import { createContext, useReducer, useEffect, ReactNode, useState } from 'react';
-import { 
-  MapState, 
-  MapLocation, 
-  LocationCategory, 
-  MapFilters, 
-  MapViewport 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import analyticsService from '../services/analyticsService';
+import { loadLocations } from '../services/mapService';
+import {
+  LocationCategory,
+  MapCameraCommand,
+  MapCameraState,
+  MapFilters,
+  MapLocation,
+  MapPoint,
+  MapStyleId,
 } from '../types/map';
-import { 
-  loadLocations, 
-  DEFAULT_CENTER, 
-  DEFAULT_ZOOM, 
-  filterLocationsByCategory,
-  isOutOfCoverage
-} from '../services/mapService';
+import {
+  BULGARIA_CAMERA,
+  EUROPE_GLOBE_CAMERA,
+  isMapStyleId,
+  MAP_STYLE_STORAGE_KEY,
+} from '../config/mapGlobe';
+import {
+  filterMapLocations,
+  getAvailableCategories,
+  getVisibleResults,
+  isDetailedCameraOutOfCoverage,
+} from '../utils/mapGlobe';
+import { getCurrentPosition } from '../utils/mapUtils';
+import { INITIAL_MAP_CONTROLLER_STATE, mapControllerReducer } from './mapControllerReducer';
 
-// Define initial map filters with all categories enabled by default
-const initialFilters: MapFilters = {
-  categories: {
-    'EV Charging Stations': true,
-    'Recycling': true,
-    'Organic Food': true,
-    'Zero-Waste': true,
-    'Green Building': true,
-    'Community': true
-  }
-};
-
-// Initial map state
-const initialState: MapState = {
-  locations: [],
-  filteredLocations: [],
-  isLoading: false,
-  error: null,
-  filters: initialFilters,
-  selectedLocation: null,
-  viewport: {
-    center: DEFAULT_CENTER,
-    zoom: DEFAULT_ZOOM
-  },
-  isOutOfCoverage: false
-};
-
-// Action types for the reducer
-type MapAction =
-  | { type: 'LOAD_LOCATIONS_START' }
-  | { type: 'LOAD_LOCATIONS_SUCCESS'; payload: MapLocation[] }
-  | { type: 'LOAD_LOCATIONS_ERROR'; payload: Error }
-  | { type: 'SET_FILTER'; payload: { category: LocationCategory; enabled: boolean } }
-  | { type: 'SELECT_LOCATION'; payload: MapLocation | null }
-  | { type: 'SET_VIEWPORT'; payload: MapViewport }
-  | { type: 'CHECK_COVERAGE' };
-
-// Reducer for managing map state
-function mapReducer(state: MapState, action: MapAction): MapState {
-  switch (action.type) {
-    case 'LOAD_LOCATIONS_START':
-      return {
-        ...state,
-        isLoading: true,
-        error: null
-      };
-    
-    case 'LOAD_LOCATIONS_SUCCESS': {
-      const locations = action.payload;
-      // Apply current filters to the loaded locations
-      const enabledCategories = Object.entries(state.filters.categories)
-        .filter(([_, enabled]) => enabled)
-        .map(([category]) => category as LocationCategory);
-      
-      const filteredLocations = filterLocationsByCategory(locations, enabledCategories);
-      
-      return {
-        ...state,
-        locations,
-        filteredLocations,
-        isLoading: false
-      };
-    }
-    
-    case 'LOAD_LOCATIONS_ERROR':
-      return {
-        ...state,
-        isLoading: false,
-        error: action.payload
-      };
-    
-    case 'SET_FILTER': {
-      const { category, enabled } = action.payload;
-      const newFilters = {
-        ...state.filters,
-        categories: {
-          ...state.filters.categories,
-          [category]: enabled
-        }
-      };
-      
-      // Apply updated filters
-      const enabledCategories = Object.entries(newFilters.categories)
-        .filter(([_, enabled]) => enabled)
-        .map(([category]) => category as LocationCategory);
-      
-      const filteredLocations = filterLocationsByCategory(state.locations, enabledCategories);
-      
-      return {
-        ...state,
-        filters: newFilters,
-        filteredLocations
-      };
-    }
-    
-    case 'SELECT_LOCATION':
-      return {
-        ...state,
-        selectedLocation: action.payload
-      };
-    
-    case 'SET_VIEWPORT': {
-      const newViewport = action.payload;
-      // Check if we're out of coverage whenever the viewport changes
-      const isCurrentlyOutOfCoverage = isOutOfCoverage(
-        newViewport.center.lat,
-        newViewport.center.lng
-      );
-      
-      return {
-        ...state,
-        viewport: newViewport,
-        isOutOfCoverage: isCurrentlyOutOfCoverage
-      };
-    }
-    
-    case 'CHECK_COVERAGE': {
-      const isCurrentlyOutOfCoverage = isOutOfCoverage(
-        state.viewport.center.lat,
-        state.viewport.center.lng
-      );
-      
-      return {
-        ...state,
-        isOutOfCoverage: isCurrentlyOutOfCoverage
-      };
-    }
-    
-    default:
-      return state;
-  }
-}
-
-// Create context with initial state
-interface MapContextType extends MapState {
+export interface MapContextType {
+  locations: MapLocation[];
+  filteredLocations: MapLocation[];
+  visibleLocations: MapLocation[];
+  availableCategories: LocationCategory[];
+  filters: MapFilters;
+  query: string;
+  selectedLocation: MapLocation | null;
+  styleId: MapStyleId;
+  camera: MapCameraState;
+  cameraCommand: MapCameraCommand | null;
+  userLocation: MapPoint | null;
+  isLoading: boolean;
+  error: Error | null;
+  isLocating: boolean;
+  locationError: string | null;
+  isOutOfCoverage: boolean;
+  isResultsOpen: boolean;
+  isResultsRailCollapsed: boolean;
   isDataInitialized: boolean;
   loadAllLocations: () => Promise<void>;
   toggleCategoryFilter: (category: LocationCategory, enabled: boolean) => void;
-  selectLocation: (location: MapLocation | null) => void;
-  updateViewport: (viewport: MapViewport) => void;
-  checkCoverage: () => void;
+  toggleAllCategories: (enabled: boolean) => void;
+  setQuery: (query: string) => void;
+  selectLocation: (location: MapLocation | null, moveCamera?: boolean) => void;
+  setStyleId: (styleId: MapStyleId) => void;
+  updateCamera: (camera: MapCameraState) => void;
+  moveCamera: (camera: Partial<MapCameraState>, durationMs?: number) => void;
+  locateUser: () => Promise<MapPoint | null>;
+  clearLocationError: () => void;
+  setResultsOpen: (open: boolean) => void;
+  setResultsRailCollapsed: (collapsed: boolean) => void;
   resetViewportToDefault: () => void;
+  checkCoverage: () => void;
 }
 
-// Create context with default values
+const unavailable = () => undefined;
+
 export const MapContext = createContext<MapContextType>({
-  ...initialState,
-  isDataInitialized: false,
-  loadAllLocations: async () => {},
-  toggleCategoryFilter: () => {},
-  selectLocation: () => {},
-  updateViewport: () => {},
-  checkCoverage: () => {},
-  resetViewportToDefault: () => {}
+  locations: [], filteredLocations: [], visibleLocations: [], availableCategories: [],
+  filters: { categories: {} }, query: '', selectedLocation: null, styleId: 'living-earth',
+  camera: EUROPE_GLOBE_CAMERA, cameraCommand: null, userLocation: null, isLoading: false,
+  error: null, isLocating: false, locationError: null, isOutOfCoverage: false,
+  isResultsOpen: false, isResultsRailCollapsed: false, isDataInitialized: false,
+  loadAllLocations: async () => undefined,
+  toggleCategoryFilter: unavailable, toggleAllCategories: unavailable, setQuery: unavailable,
+  selectLocation: unavailable, setStyleId: unavailable, updateCamera: unavailable,
+  moveCamera: unavailable, locateUser: async () => null, clearLocationError: unavailable,
+  setResultsOpen: unavailable, setResultsRailCollapsed: unavailable,
+  resetViewportToDefault: unavailable, checkCoverage: unavailable,
 });
 
-// Provider component
-interface MapProviderProps {
-  children: ReactNode;
-}
+export function MapProvider({ children }: { children: ReactNode }) {
+  const [locations, setLocations] = useState<MapLocation[]>([]);
+  const [controller, dispatch] = useReducer(mapControllerReducer, INITIAL_MAP_CONTROLLER_STATE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const commandId = useRef(0);
+  const hasTrackedSearch = useRef(false);
+  const loaded = useRef(false);
 
-export function MapProvider({ children }: MapProviderProps) {
-  const [state, dispatch] = useReducer(mapReducer, initialState);
-  const [isDataInitialized, setIsDataInitialized] = useState(false);
-  
-  // Load locations on initial mount
-  const loadAllLocations = async () => {
-    dispatch({ type: 'LOAD_LOCATIONS_START' });
+  const loadAllLocations = useCallback(async () => {
+    if (loaded.current) return;
+    loaded.current = true;
+    setIsLoading(true);
+    setError(null);
     try {
-      const locations = await loadLocations();
-      dispatch({ type: 'LOAD_LOCATIONS_SUCCESS', payload: locations });
-      setIsDataInitialized(true);
-    } catch (error) {
-      dispatch({ 
-        type: 'LOAD_LOCATIONS_ERROR', 
-        payload: error instanceof Error ? error : new Error('Unknown error loading locations') 
-      });
+      const nextLocations = await loadLocations();
+      const categories = getAvailableCategories(nextLocations);
+      setLocations(nextLocations);
+      dispatch({ type: 'categories-ready', categories });
+    } catch (loadError) {
+      const nextError = loadError instanceof Error ? loadError : new Error('Unable to load map locations.');
+      setError(nextError);
+      loaded.current = false;
+    } finally {
+      setIsLoading(false);
     }
-  };
-  
-  // Initialize data on mount
-  useEffect(() => {
-    loadAllLocations();
   }, []);
-  
-  // Toggle a category filter
-  const toggleCategoryFilter = (category: LocationCategory, enabled: boolean) => {
-    dispatch({ type: 'SET_FILTER', payload: { category, enabled } });
-  };
-  
-  // Select a location
-  const selectLocation = (location: MapLocation | null) => {
-    dispatch({ type: 'SELECT_LOCATION', payload: location });
-  };
-  
-  // Update the map viewport
-  const updateViewport = (viewport: MapViewport) => {
-    dispatch({ type: 'SET_VIEWPORT', payload: viewport });
-  };
-  
-  // Check if we're out of coverage area
-  const checkCoverage = () => {
-    dispatch({ type: 'CHECK_COVERAGE' });
-  };
-  
-  // Reset viewport to default values
-  const resetViewportToDefault = () => {
-    dispatch({
-      type: 'SET_VIEWPORT',
-      payload: {
-        center: DEFAULT_CENTER,
-        zoom: DEFAULT_ZOOM
-      }
-    });
-  };
-  
-  // Context value
-  const contextValue: MapContextType = {
-    ...state,
-    isDataInitialized,
-    loadAllLocations,
-    toggleCategoryFilter,
-    selectLocation,
-    updateViewport,
-    checkCoverage,
-    resetViewportToDefault
-  };
-  
-  return (
-    <MapContext.Provider value={contextValue}>
-      {children}
-    </MapContext.Provider>
+
+  useEffect(() => { void loadAllLocations(); }, [loadAllLocations]);
+  useEffect(() => {
+    void AsyncStorage.getItem(MAP_STYLE_STORAGE_KEY).then((stored) => {
+      if (isMapStyleId(stored)) dispatch({ type: 'style-changed', styleId: stored });
+    }).catch(() => undefined);
+  }, []);
+
+  const availableCategories = useMemo(() => getAvailableCategories(locations), [locations]);
+  const {
+    camera, cameraCommand, filters, isResultsOpen, isResultsRailCollapsed,
+    query, selectedLocation, styleId, userLocation,
+  } = controller;
+  const filteredLocations = useMemo(
+    () => filterMapLocations(locations, filters.categories, query),
+    [filters.categories, locations, query],
   );
+  const visibleLocations = useMemo(
+    () => getVisibleResults(filteredLocations, camera.bounds, camera.center, Boolean(query.trim())),
+    [camera.bounds, camera.center, filteredLocations, query],
+  );
+  const isOutOfCoverage = isDetailedCameraOutOfCoverage(camera.center, camera.zoom);
+
+  const moveCamera = useCallback((next: Partial<MapCameraState>, durationMs = 900) => {
+    commandId.current += 1;
+    dispatch({ type: 'camera-commanded', command: { ...next, id: commandId.current, durationMs } });
+  }, []);
+
+  const toggleCategoryFilter = useCallback((category: LocationCategory, enabled: boolean) => {
+    dispatch({ type: 'category-toggled', category, enabled });
+    analyticsService.trackEvent('map_filter_toggled', { category, enabled });
+  }, []);
+
+  const toggleAllCategories = useCallback((enabled: boolean) => {
+    dispatch({ type: 'all-categories-toggled', enabled });
+    analyticsService.trackEvent('map_filter_toggled', { category: 'all', enabled });
+  }, []);
+
+  const setQuery = useCallback((nextQuery: string) => {
+    dispatch({ type: 'query-changed', query: nextQuery });
+    if (nextQuery.trim() && !hasTrackedSearch.current) {
+      hasTrackedSearch.current = true;
+      analyticsService.trackEvent('map_search_used');
+    }
+    if (!nextQuery.trim()) hasTrackedSearch.current = false;
+  }, []);
+
+  const selectLocation = useCallback((location: MapLocation | null, shouldMove = true) => {
+    dispatch({ type: 'location-selected', location });
+    if (location) {
+      analyticsService.trackEvent('map_pin_selected', { location_id: location.id, category: location.category });
+      if (shouldMove) moveCamera({ center: { lat: location.lat, lng: location.lng }, zoom: 13.2, pitch: 48 }, 850);
+    }
+  }, [moveCamera]);
+
+  const setStyleId = useCallback((nextStyleId: MapStyleId) => {
+    dispatch({ type: 'style-changed', styleId: nextStyleId });
+    void AsyncStorage.setItem(MAP_STYLE_STORAGE_KEY, nextStyleId).catch(() => undefined);
+    analyticsService.trackEvent('map_style_changed', { style: nextStyleId });
+  }, []);
+
+  const locateUser = useCallback(async () => {
+    setIsLocating(true);
+    setLocationError(null);
+    try {
+      const point = await getCurrentPosition();
+      dispatch({ type: 'user-located', location: point });
+      moveCamera({ center: point, zoom: 13.5, pitch: 42 }, 900);
+      analyticsService.trackEvent('map_locate_outcome', { outcome: 'success' });
+      return point;
+    } catch (locateError) {
+      const message = locateError instanceof Error ? locateError.message : 'Could not get your location.';
+      setLocationError(message);
+      analyticsService.trackEvent('map_locate_outcome', { outcome: 'error' });
+      return null;
+    } finally {
+      setIsLocating(false);
+    }
+  }, [moveCamera]);
+
+  const resetViewportToDefault = useCallback(() => {
+    moveCamera(BULGARIA_CAMERA, 950);
+    analyticsService.trackEvent('map_coverage_return');
+  }, [moveCamera]);
+
+  const value = useMemo<MapContextType>(() => ({
+    locations, filteredLocations, visibleLocations, availableCategories, filters, query,
+    selectedLocation, styleId, camera, cameraCommand, userLocation, isLoading, error,
+    isLocating, locationError, isOutOfCoverage, isResultsOpen, isResultsRailCollapsed,
+    isDataInitialized: !isLoading && !error,
+    loadAllLocations, toggleCategoryFilter, toggleAllCategories, setQuery, selectLocation,
+    setStyleId, updateCamera: (nextCamera) => dispatch({ type: 'camera-changed', camera: nextCamera }), moveCamera, locateUser,
+    clearLocationError: () => setLocationError(null),
+    setResultsOpen: (open) => dispatch({ type: 'results-visibility-changed', open }),
+    setResultsRailCollapsed: (collapsed) => dispatch({ type: 'results-rail-collapsed-changed', collapsed }),
+    resetViewportToDefault, checkCoverage: () => undefined,
+  }), [
+    locations, filteredLocations, visibleLocations, availableCategories, filters, query,
+    selectedLocation, styleId, camera, cameraCommand, userLocation, isLoading, error,
+    isLocating, locationError, isOutOfCoverage, isResultsOpen, isResultsRailCollapsed, loadAllLocations,
+    toggleCategoryFilter, toggleAllCategories, setQuery, selectLocation, setStyleId,
+    moveCamera, locateUser, resetViewportToDefault,
+  ]);
+
+  return <MapContext.Provider value={value}>{children}</MapContext.Provider>;
 }

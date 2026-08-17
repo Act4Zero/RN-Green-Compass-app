@@ -16,7 +16,14 @@ This is a React Native application built with [Expo](https://expo.dev) that help
    ```
    EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=your_public_mapbox_token
    ```
+
+   The Mapbox value is a public, URL-restricted runtime token. Native Mapbox
+   dependencies also need `MAPBOX_DOWNLOADS_TOKEN` while installing/building;
+   keep that private token only in your local shell or CI/EAS secret store. Pass
+   it to native installs as `RNMAPBOX_MAPS_DOWNLOAD_TOKEN`. It
+   must never be added to `.env`, Expo config, logs, or the application bundle.
 
 3. Start the app
 
@@ -28,7 +35,22 @@ This is a React Native application built with [Expo](https://expo.dev) that help
    - iOS simulator
    - Android emulator
    - Web browser
-   - Physical device using Expo Go
+   - Physical device using a custom development build
+
+   The 3D sustainability globe uses native Mapbox modules and is not supported
+   by Expo Go. After installing dependencies, preserve the checked-in native
+   projects with a non-clean prebuild and create a development build:
+
+   ```bash
+   npx expo prebuild --no-install
+   RNMAPBOX_MAPS_DOWNLOAD_TOKEN="$MAPBOX_DOWNLOADS_TOKEN" npx expo run:ios
+   # or
+   RNMAPBOX_MAPS_DOWNLOAD_TOKEN="$MAPBOX_DOWNLOADS_TOKEN" npx expo run:android
+   ```
+
+   Web development continues to work with `npx expo start --web`. See
+   [`docs/features/sustainability-globe.md`](docs/features/sustainability-globe.md)
+   for architecture, styling, credentials, testing, and data/licensing details.
 
    * 3.1. Alternative way to run the app
 

@@ -1,169 +1,75 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { mapPopupStyles } from '../../styles/map/MapPopupStyles';
-import { MapLocation } from '../../types/map';
-import { formatAddress, getPlatformSpecificNavigationUrl } from '../../utils/mapUtils';
+import React from 'react';
+import { Linking, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import analyticsService from '../../services/analyticsService';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
-import { getCategoryIcon } from '../../utils/categoryUtils';
+import { useAppTheme } from '../../theme';
+import { MapLocation } from '../../types/map';
+import { distanceFromPoint } from '../../utils/mapGlobe';
+import { formatAddress, getPlatformSpecificNavigationUrl } from '../../utils/mapUtils';
 
-interface MapPopupProps {
-  location: MapLocation;
-}
-
-export default function MapPopup({ location }: MapPopupProps) {
-  const { clearSelectedLocation } = useMapIntegration();
-  
-  // Format the address
-  const address = formatAddress(location);
-  
-  // Handle navigation button press
-  const handleNavigate = () => {
-    const url = getPlatformSpecificNavigationUrl(
-      location.lat,
-      location.lng,
-      location.name,
-      address
-    );
-    
-    Linking.canOpenURL(url).then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.error("Don't know how to open URI: " + url);
-        alert("Couldn't open map application");
-      }
-    });
-  };
-  
-  // Get category icon and color from the central utility
-  const { name: iconName, color: iconColor } = getCategoryIcon(location.category);
-  
+function Detail({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+  const { theme } = useAppTheme();
   return (
-    <View style={styles.popupContainer}>
-      <View style={styles.popup}>
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={clearSelectedLocation}
-        >
-          <Ionicons name="close" size={24} color="#666666" />
-        </TouchableOpacity>
-        
-        <View style={styles.header}>
-          <View style={[styles.categoryIcon, { backgroundColor: iconColor }]}>
-            <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
-          </View>
-          <Text style={styles.title as any}>{location.name}</Text>
-        </View>
-        
-        <View style={styles.content}>
-          {/* Address Section */}
-          <View style={styles.addressSection}>
-            <View style={styles.infoRow}>
-              <Ionicons name="location" size={16} color="#666666" style={styles.infoIcon} />
-              <Text style={styles.infoText as any}>{formatAddress(location)}</Text>
-            </View>
-            
-            {/* Show detailed address components if available */}
-            {(location.town || location.state_or_province || location.country) && (
-              <View style={styles.locationDetails}>
-                {location.town && location.state_or_province && (
-                  <Text style={styles.locationDetailText}>
-                    {location.town}, {location.state_or_province}
-                    {location.country && location.country !== location.state_or_province && `, ${location.country}`}
-                  </Text>
-                )}
-                {location.postcode && (
-                  <Text style={styles.locationDetailText}>Postcode: {location.postcode}</Text>
-                )}
-              </View>
-            )}
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Ionicons name="pricetag" size={16} color="#666666" style={styles.infoIcon} />
-            <Text style={styles.infoText}>{location.category}</Text>
-          </View>
-          
-          {location.description && (
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionText as any}>{location.description}</Text>
-            </View>
-          )}
-          
-          {/* Enhanced EV Charging Station Information */}
-          {location.category === 'EV Charging Stations' && (
-            <View style={styles.evDetailsSection}>
-              <Text style={styles.sectionTitle}>Charging Details</Text>
-              
-              {/* Power and Charging Speed */}
-              <View style={styles.evInfoGrid}>
-                {location.power_kw && (
-                  <View style={styles.evInfoCard}>
-                    <View style={styles.evInfoHeader}>
-                      <Ionicons name="flash" size={18} color="#2E7D32" />
-                      <Text style={styles.evInfoLabel}>Power</Text>
-                    </View>
-                    <Text style={styles.evInfoValue}>{location.power_kw} kW</Text>
-                    {location.is_fast_charge_capable && (
-                      <Text style={styles.fastChargeIndicator}>⚡ Fast Charge</Text>
-                    )}
-                  </View>
-                )}
-                
-                {location.usage_cost && (
-                  <View style={styles.evInfoCard}>
-                    <View style={styles.evInfoHeader}>
-                      <Ionicons name="cash" size={18} color="#2E7D32" />
-                      <Text style={styles.evInfoLabel}>Cost</Text>
-                    </View>
-                    <Text style={styles.evInfoValue}>{location.usage_cost}</Text>
-                  </View>
-                )}
-              </View>
-              
-              {/* Connection Type and Level */}
-              {(location.connection_type || location.level) && (
-                <View style={styles.technicalDetails}>
-                  {location.connection_type && (
-                    <View style={styles.infoRow}>
-                      <Ionicons name="link" size={16} color="#666666" style={styles.infoIcon} />
-                      <Text style={styles.infoText}>Connector: {location.connection_type}</Text>
-                    </View>
-                  )}
-                  
-                  {location.level && (
-                    <View style={styles.infoRow}>
-                      <Ionicons name="speedometer" size={16} color="#666666" style={styles.infoIcon} />
-                      <Text style={styles.infoText}>Level: {location.level}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
-          )}
-          
-          {/* Data Source and License */}
-          {(location.source || location.licence) && (
-            <View style={styles.sourceSection}>
-              {location.source && (
-                <Text style={styles.sourceText as any}>Source: {location.source}</Text>
-              )}
-              {location.licence && (
-                <Text style={styles.licenceText}>License: {location.licence}</Text>
-              )}
-            </View>
-          )}
-        </View>
-        
-        <TouchableOpacity style={styles.navigationButton} onPress={handleNavigate}>
-          <Ionicons name="navigate" size={18} color="#FFFFFF" />
-          <Text style={styles.navigationText}>Open in Maps</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={{ flex: 1, minWidth: 120, padding: theme.spacing.sm, borderRadius: theme.radii.md, backgroundColor: theme.colors.surfaceMuted, gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Ionicons name={icon} size={16} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.textMuted, fontSize: 11 }]}>{label}</Text></View>
+      <Text style={[theme.typography.label, { color: theme.colors.text }]}>{value}</Text>
     </View>
   );
 }
 
-// Use the external styles imported from MapPopupStyles
-const styles = mapPopupStyles;
+export default function MapPopup({ location }: { location: MapLocation }) {
+  const map = useMapIntegration();
+  const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const desktop = width >= theme.breakpoints.desktop;
+  const distance = distanceFromPoint(location, map.userLocation);
+  const address = formatAddress(location);
+
+  const navigate = async () => {
+    const url = getPlatformSpecificNavigationUrl(location.lat, location.lng, location.name, address);
+    analyticsService.trackEvent('map_navigation_opened', { location_id: location.id, platform: Platform.OS });
+    if (await Linking.canOpenURL(url)) await Linking.openURL(url);
+  };
+
+  return (
+    <View style={[theme.shadows.raised, {
+      position: 'absolute', zIndex: 70, backgroundColor: theme.colors.backgroundElevated,
+      borderWidth: 1, borderColor: theme.colors.border, overflow: 'hidden',
+      ...(desktop
+        ? { right: 20, top: 146, bottom: 54, width: 380, borderRadius: theme.radii.xl }
+        : { left: 12, right: 12, bottom: 14, maxHeight: '58%', borderRadius: theme.radii.xl }),
+    }]}>
+      <ScrollView contentContainerStyle={{ padding: theme.spacing.lg, gap: theme.spacing.md }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm }}>
+          <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}><Ionicons name="flash" size={23} color={theme.colors.accent} /></View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text accessibilityRole="header" style={[theme.typography.h3, { color: theme.colors.text }]}>{location.name}</Text>
+            <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{address || location.town}</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close location details" onPress={map.clearSelectedLocation} hitSlop={10}><Ionicons name="close" size={25} color={theme.colors.textMuted} /></Pressable>
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
+          <Detail icon="speedometer-outline" label="Charging power" value={location.power_kw ? `${location.power_kw} kW` : 'Not listed'} />
+          <Detail icon="cash-outline" label="Usage cost" value={location.usage_cost || 'Not listed'} />
+          <Detail icon="git-branch-outline" label="Connector" value={location.connection_type || 'Not listed'} />
+          <Detail icon="navigate-outline" label="Distance" value={distance === null ? 'Use locate me' : `${distance.toFixed(distance < 10 ? 1 : 0)} km`} />
+        </View>
+        {location.is_fast_charge_capable ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, paddingVertical: 8, alignSelf: 'flex-start', backgroundColor: theme.colors.accentSoft }}><Ionicons name="flash" size={16} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.primary }]}>Fast-charge capable</Text></View> : null}
+        {location.description ? <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{location.description}</Text> : null}
+        <Pressable
+          accessibilityRole="button" accessibilityLabel={`Open ${location.name} in maps`}
+          onPress={() => void navigate()}
+          style={({ pressed }) => ({ minHeight: 50, borderRadius: theme.radii.md, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: theme.spacing.xs, backgroundColor: theme.colors.primary, opacity: pressed ? 0.84 : 1 })}
+        >
+          <Ionicons name="navigate" size={19} color={theme.colors.accent} />
+          <Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>Open in Maps</Text>
+        </Pressable>
+        <View style={{ borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: theme.spacing.sm, gap: 3 }}>
+          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>Source: {location.source || 'Open Charge Map'}</Text>
+          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>Licence: {location.licence || 'Open Data Commons ODbL'}</Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

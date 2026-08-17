@@ -1,0 +1,70 @@
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { FlatList, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { useAppTheme } from '../../theme';
+import { MapLocation } from '../../types/map';
+import { formatAddress } from '../../utils/mapUtils';
+
+function ResultRow({ location }: { location: MapLocation }) {
+  const map = useMapIntegration();
+  const { theme } = useAppTheme();
+  const selected = map.selectedLocation?.id === location.id;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${location.name}`}
+      onPress={() => map.selectLocation(location)}
+      style={({ pressed }) => ({
+        padding: theme.spacing.sm, borderRadius: theme.radii.md, gap: 4,
+        backgroundColor: selected ? theme.colors.primarySoft : pressed ? theme.colors.surfaceMuted : theme.colors.surface,
+        borderWidth: 1, borderColor: selected ? theme.colors.primary : theme.colors.border,
+      })}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.xs }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}>
+          <Ionicons name="flash" size={17} color={theme.colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text }]}>{location.name}</Text>
+          <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{formatAddress(location) || location.town}</Text>
+        </View>
+        {location.power_kw ? <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{location.power_kw} kW</Text> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+export default function MapResultsPanel() {
+  const map = useMapIntegration();
+  const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const desktop = width >= theme.breakpoints.desktop;
+  if (desktop && map.isResultsRailCollapsed) return null;
+  if (!desktop && !map.isResultsOpen) return null;
+  return (
+    <View style={[theme.shadows.raised, {
+      position: 'absolute', zIndex: 35,
+      left: desktop ? 20 : 12, top: desktop ? 146 : 144,
+      bottom: desktop ? 54 : 14, width: desktop ? 340 : undefined, right: desktop ? undefined : 12,
+      maxHeight: desktop ? undefined : 300,
+      borderRadius: theme.radii.xl, borderWidth: 1, borderColor: theme.colors.border,
+      backgroundColor: theme.colors.backgroundElevated, overflow: 'hidden',
+    }]}>
+      <View style={{ padding: theme.spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View>
+          <Text accessibilityLiveRegion="polite" style={[theme.typography.h3, { color: theme.colors.text }]}>{map.visibleLocations.length} places</Text>
+          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{map.query ? 'Matching your search' : 'In the visible area'}</Text>
+        </View>
+        {!desktop ? <Pressable accessibilityLabel="Close results" onPress={() => map.setResultsOpen(false)} hitSlop={8}><Ionicons name="close" size={24} color={theme.colors.textMuted} /></Pressable> : null}
+      </View>
+      <FlatList
+        data={map.visibleLocations}
+        keyExtractor={(item, index) => `${item.id}:${item.connection_type ?? 'connector'}:${index}`}
+        contentContainerStyle={{ padding: theme.spacing.sm, gap: theme.spacing.xs }}
+        renderItem={({ item }) => <ResultRow location={item} />}
+        ListEmptyComponent={<View style={{ padding: theme.spacing.xl, alignItems: 'center', gap: theme.spacing.sm }}><Ionicons name="search-outline" size={26} color={theme.colors.textMuted} /><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>No verified places match this view. Clear the search or return to Bulgaria.</Text></View>}
+      />
+    </View>
+  );
+}

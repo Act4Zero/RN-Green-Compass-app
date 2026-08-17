@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme';
@@ -43,8 +43,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { theme, toggleTheme } = useAppTheme();
+  const [hasHydrated, setHasHydrated] = useState(false);
   const isPublic = pathname === '/' || pathname.startsWith('/auth');
-  const desktop = width >= theme.breakpoints.desktop;
+  const desktop = hasHydrated && width >= theme.breakpoints.desktop;
+
+  // Expo static rendering has no viewport. Match its mobile-first shell for the
+  // initial client render, then promote to the desktop rail after hydration.
+  useEffect(() => setHasHydrated(true), []);
 
   if (isPublic) return <>{children}</>;
 

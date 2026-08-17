@@ -1,31 +1,18 @@
-import React from 'react';
-import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { locateButtonStyles } from '../../styles/map/LocateButtonStyles';
+import React from 'react';
+import { ActivityIndicator, Pressable, useWindowDimensions } from 'react-native';
+import { useAppTheme } from '../../theme';
 
-interface LocateButtonProps {
-  onPress: () => void;
-  isLoading?: boolean;
-}
-
-import { ActivityIndicator } from 'react-native';
-
-export default function LocateButton({ onPress, isLoading }: LocateButtonProps) {
+export default function LocateButton({ onPress, isLoading }: { onPress: () => void; isLoading: boolean }) {
+  const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const desktop = width >= theme.breakpoints.desktop;
   return (
-    <TouchableOpacity
-      style={[styles.button, isLoading && { opacity: 0.5 }]}
-      onPress={onPress}
-      accessibilityLabel="Find my location"
-      accessibilityRole="button"
-      disabled={isLoading}
+    <Pressable
+      accessibilityRole="button" accessibilityLabel="Find my location" disabled={isLoading} onPress={onPress}
+      style={({ pressed }) => [theme.shadows.raised, { position: 'absolute', zIndex: 45, right: desktop ? 22 : 14, bottom: desktop ? 64 : 64, width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.backgroundElevated, borderWidth: 1, borderColor: theme.colors.border, opacity: pressed ? 0.82 : 1 }]}
     >
-      {isLoading ? (
-        <ActivityIndicator size={22} color="#333333" />
-      ) : (
-        <Ionicons name="locate" size={22} color="#333333" />
-      )}
-    </TouchableOpacity>
+      {isLoading ? <ActivityIndicator color={theme.colors.primary} /> : <Ionicons name="locate" size={23} color={theme.colors.primary} />}
+    </Pressable>
   );
 }
-
-const styles = locateButtonStyles;
