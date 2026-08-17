@@ -42,7 +42,10 @@ Both renderers implement `MapRendererProps` from `src/types/map.ts`:
 - `GlobeRenderer.web.tsx` uses the exact `mapbox-gl@3.27.0` browser runtime.
   Expo 52 Metro cannot transform Mapbox 3.27's runtime worker import, so the
   adapter loads Mapbox's official versioned JS/CSS distribution and converts
-  download failures into the shared unavailable state.
+  download failures into the shared unavailable state. The browser runtime is
+  intentionally not installed as an npm package because RNMapbox 10.2.10 has
+  an optional peer constraint on Mapbox GL JS 2.x; keeping the exact 3.27 CDN
+  runtime avoids that unused-package conflict during clean npm/Vercel installs.
 - `GlobeRenderer.native.tsx` uses `@rnmapbox/maps@10.2.10`.
 - Both receive one GeoJSON `FeatureCollection`, use provider-side clustering,
   and emit the same ready, error, camera, pin, and cluster events.
