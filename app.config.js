@@ -1,4 +1,7 @@
-import 'dotenv/config';
+// Keep this config file CommonJS. Mixing an ESM import with `module.exports`
+// causes Node/Expo to load an empty config, dropping all `extra` values in
+// the web bundle even when Vercel provides them at build time.
+require('dotenv').config();
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
