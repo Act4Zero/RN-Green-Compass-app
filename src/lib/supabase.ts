@@ -5,9 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
-// Get the environment variables from Expo Constants or use hardcoded values as fallback
-const configuredSupabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const configuredSupabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+// Expo inlines EXPO_PUBLIC_* values into the client bundle. Prefer those direct
+// values on web so authentication does not depend on the static manifest's
+// `extra` payload; retain the manifest values for existing native builds.
+const configuredSupabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || Constants.expoConfig?.extra?.supabaseUrl;
+const configuredSupabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || Constants.expoConfig?.extra?.supabaseAnonKey;
 export const isSupabaseConfigured = Boolean(configuredSupabaseUrl && configuredSupabaseAnonKey);
 
 // Static route rendering imports the client without executing authenticated requests.
