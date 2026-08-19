@@ -79,6 +79,17 @@ export default function RootLayout() {
           {/* Map screens */}
           <Stack.Screen name="map/index" options={{ headerShown: false }} />
 
+          {/* Knowledge Hub screens */}
+          <Stack.Screen name="knowledge/index" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/search" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/topic/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/content/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/quiz/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/downloads" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/path/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/certificate/[code]" options={{ headerShown: false }} />
+          <Stack.Screen name="admin/knowledge/index" options={{ headerShown: false }} />
+
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen

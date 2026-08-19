@@ -7,6 +7,7 @@ export type BadgeCategoryType =
   | 'habit_tracker'
   | 'goals_challenges'
   | 'community'
+  | 'knowledge_hub'
   | 'meta';
 
 export interface Badge {

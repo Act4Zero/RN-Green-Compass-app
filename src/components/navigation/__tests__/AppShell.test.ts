@@ -6,16 +6,18 @@ describe('adaptive app navigation', () => {
       'Home',
       'Habits',
       'Map',
+      'Hub',
       'Community',
-      'Profile',
     ]);
   });
 
   it('keeps nested screens associated with their primary destination', () => {
     const habits = APP_NAV_ITEMS.find((item) => item.label === 'Habits')!;
     const community = APP_NAV_ITEMS.find((item) => item.label === 'Community')!;
+    const hub = APP_NAV_ITEMS.find((item) => item.label === 'Hub')!;
     expect(isNavItemActive('/habits/history', habits)).toBe(true);
     expect(isNavItemActive('/community/challenges/42', community)).toBe(true);
+    expect(isNavItemActive('/knowledge/content/clean-energy-explained', hub)).toBe(true);
     expect(isNavItemActive('/profile', community)).toBe(false);
   });
 

@@ -14,7 +14,8 @@ export function formatPointSource(source: PointSource): string {
     'daily_login': 'Daily Check-in',
     'habit_log': 'Sustainable Habit',
     'discussion_participation': 'Community Participation',
-    'habit_streak': 'Habit Streak'
+    'habit_streak': 'Habit Streak',
+    'learning_milestone': 'Learning Milestone'
   };
   
   return sourceMap[source] || source;
@@ -35,6 +36,8 @@ export function getPointEventDescription(pointEvent: PointEvent): string {
       return `${source} - You logged a sustainable habit (+${pointEvent.points} points)`;
     case 'discussion_participation':
       return `${source} - Thanks for contributing (+${pointEvent.points} points)`;
+    case 'learning_milestone':
+      return `${source} - You completed a Knowledge Hub milestone (+${pointEvent.points} points)`;
     default:
       return `${source} - You earned ${pointEvent.points} points`;
   }
@@ -100,6 +103,8 @@ export function createPointsAnimationMessage(amount: number, source: PointSource
       return `+${amount} Green Points! Sustainable habit logged!`;
     case 'discussion_participation':
       return `+${amount} Green Points! Thanks for contributing!`;
+    case 'learning_milestone':
+      return `+${amount} Green Points! Learning milestone reached!`;
     default:
       return `+${amount} Green Points!`;
   }

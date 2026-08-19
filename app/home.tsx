@@ -23,6 +23,7 @@ import { useAppTheme } from '@/theme';
 // Import types
 import { EnhancedGoal, TimeFrequency } from '@/types/goal.types';
 import useProfileManager from '@/hooks/useProfileManager';
+import { knowledgeService, type KnowledgeItemDetail } from '@/features/knowledge';
 
 export default function Home() {
   const { theme } = useAppTheme();
@@ -34,6 +35,7 @@ export default function Home() {
   // State for UI
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
+  const [dailyDose, setDailyDose] = useState<KnowledgeItemDetail | null>(null);
   
   // Use the profile manager hook
   const {
@@ -87,6 +89,10 @@ export default function Home() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    void knowledgeService.getKnowledgeHome({ userId: user?.id }).then((result) => setDailyDose(result.dailyDose)).catch(() => undefined);
+  }, [user?.id]);
   
   // Get points context to handle daily check-ins
   const { awardDailyCheckIn } = usePoints();
@@ -298,6 +304,17 @@ export default function Home() {
               </Card>
             ))}
           </View>
+
+          {dailyDose ? (
+            <Card style={{ padding: 20, marginBottom: 28, flexDirection: isTabletOrLarger ? 'row' : 'column', alignItems: isTabletOrLarger ? 'center' : 'flex-start', gap: 18, backgroundColor: theme.colors.accentSoft }}>
+              <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="bulb-outline" size={23} color={theme.colors.accent} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1 }]}>Daily knowledge dose</Text>
+                <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{dailyDose.title}</Text>
+              </View>
+              <AppButton label="Learn why" variant="secondary" icon="arrow-forward" onPress={() => router.push(`/knowledge/content/${dailyDose.slug}` as any)} />
+            </Card>
+          ) : null}
 
           <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>Choose your next move</Text>
           <View style={{ flexDirection: isTabletOrLarger ? 'row' : 'column', gap: 12, marginBottom: 32 }}>

@@ -5,6 +5,9 @@ import { Image, Pressable, Text, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme';
 import { APP_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
+import { PROFILE_NAV_ITEM } from './config';
+import { useAuth } from '@/context/AuthContext';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 export { APP_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
 
@@ -19,7 +22,7 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
       accessibilityRole="link"
       accessibilityLabel={item.label}
       accessibilityState={{ selected: active }}
-      onPress={() => router.replace(item.href)}
+      onPress={() => router.replace(item.href as any)}
       style={({ pressed }) => ({
         minHeight: compact ? 54 : 48,
         minWidth: compact ? 56 : undefined,
@@ -40,12 +43,17 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { theme, toggleTheme } = useAppTheme();
+  const { user, loading: authLoading } = useAuth();
+  const knowledgeEnabled = useFeatureFlag('knowledge_hub', true);
   const [hasHydrated, setHasHydrated] = useState(false);
-  const isPublic = pathname === '/' || pathname.startsWith('/auth');
+  const isPublicKnowledge = pathname.startsWith('/knowledge') && !user && !authLoading;
+  const isPublic = pathname === '/' || pathname.startsWith('/auth') || isPublicKnowledge;
   const desktop = hasHydrated && width >= theme.breakpoints.desktop;
+  const navItems = knowledgeEnabled ? APP_NAV_ITEMS : APP_NAV_ITEMS.filter((item) => item.href !== '/knowledge');
 
   // Expo static rendering has no viewport. Match its mobile-first shell for the
   // initial client render, then promote to the desktop rail after hydration.
@@ -75,9 +83,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </View>
           </View>
           <View style={{ gap: theme.spacing.xs }}>
-            {APP_NAV_ITEMS.map((item) => <NavItem key={item.href} item={item} />)}
+            {navItems.map((item) => <NavItem key={item.href} item={item} />)}
           </View>
           <View style={{ flex: 1 }} />
+          <View style={{ marginBottom: theme.spacing.sm }}><NavItem item={PROFILE_NAV_ITEM} /></View>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Switch to ${theme.mode === 'dark' ? 'light' : 'dark'} theme`}
@@ -90,6 +99,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={{ flex: 1, paddingBottom: desktop ? 0 : 72 + insets.bottom }}>{children}</View>
+      {!desktop && !pathname.startsWith('/profile') ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Open profile"
+          onPress={() => router.replace('/profile')}
+          style={({ pressed }) => ({
+            position: 'absolute',
+            right: theme.spacing.md,
+            top: Math.max(insets.top, theme.spacing.sm),
+            zIndex: 20,
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            borderWidth: 1,
+            borderColor: theme.colors.borderStrong,
+            backgroundColor: theme.colors.backgroundElevated,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.78 : 1,
+            ...theme.shadows.subtle,
+          })}
+        >
+          <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+        </Pressable>
+      ) : null}
       {!desktop ? (
         <View
           style={{
@@ -108,7 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             backgroundColor: theme.colors.backgroundElevated,
           }}
         >
-          {APP_NAV_ITEMS.map((item) => <NavItem key={item.href} item={item} compact />)}
+          {navItems.map((item) => <NavItem key={item.href} item={item} compact />)}
         </View>
       ) : null}
     </View>
