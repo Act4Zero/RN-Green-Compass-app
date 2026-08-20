@@ -13,7 +13,7 @@ describe('Knowledge Hub launch catalog', () => {
 
   it('provides a complete month of cited daily doses', () => {
     expect(DAILY_DOSES).toHaveLength(30);
-    expect(DAILY_DOSES.every((item) => item.type === 'daily' && item.sources.length > 0)).toBe(true);
+    expect(DAILY_DOSES.every((item) => item.type === 'daily_fact' && item.sources.length > 0)).toBe(true);
   });
 
   it('passes editorial publication validation', () => {

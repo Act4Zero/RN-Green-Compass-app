@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { AppButton, Card, Content, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
 import { KnowledgeBlockRenderer } from '@/features/knowledge/components/KnowledgeBlockRenderer';
 import { KnowledgeCard } from '@/features/knowledge/components/KnowledgeCard';
-import { knowledgeService, type KnowledgeItemDetail, type KnowledgeItemSummary } from '@/features/knowledge';
+import { SpeakControls } from '@/features/knowledge/components/SpeakControls';
+import { KNOWLEDGE_TOPICS, knowledgeService, resolveKnowledgeVisual, useKnowledgeLocale, type KnowledgeBlock, type KnowledgeItemDetail, type KnowledgeItemSummary } from '@/features/knowledge';
 import analyticsService from '@/services/analyticsService';
 import { shareContent } from '@/utils/sharing/shareUtils';
 import { useAppTheme } from '@/theme';
@@ -19,21 +20,23 @@ export default function KnowledgeContentScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { addNotification } = useNotification();
+  const { locale, t } = useKnowledgeLocale();
   const [item, setItem] = useState<KnowledgeItemDetail | null>(null);
   const [related, setRelated] = useState<KnowledgeItemSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookmarked, setBookmarked] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [easyRead, setEasyRead] = useState(false);
   const desktop = width >= theme.breakpoints.desktop;
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await knowledgeService.getPublishedKnowledgeItem(slug, 'en', user?.id);
+    const result = await knowledgeService.getPublishedKnowledgeItem(slug, locale, user?.id);
     setItem(result);
     if (result) {
       const [search, bookmarks, downloads, progressEntries] = await Promise.all([
-        knowledgeService.searchKnowledge('', { topic: result.topicSlugs[0] }, 'en', 0, 5),
+        knowledgeService.searchKnowledge('', { topic: result.topicSlugs[0] }, locale, 0, 5),
         knowledgeService.getBookmarks(user?.id),
         knowledgeService.getDownloads(user?.id),
         knowledgeService.getProgress(user?.id),
@@ -47,7 +50,7 @@ export default function KnowledgeContentScreen() {
       if (user) await knowledgeService.setKnowledgeProgress(user.id, result.id, result.versionId, Math.max(10, progressEntries.find((entry) => entry.itemId === result.id)?.percent || 0));
     }
     setLoading(false);
-  }, [slug, user]);
+  }, [slug, user, locale]);
 
   useEffect(() => { void load(); }, [load]);
   const meta = useMemo(() => item ? `${labelForType(item.type)} • ${item.estimatedMinutes} min • ${item.difficulty}` : '', [item]);
@@ -63,6 +66,9 @@ export default function KnowledgeContentScreen() {
   if (loading) return <Screen><Content><StatePanel icon="book-outline" title="Opening this lesson" message="Loading the latest reviewed version…" /></Content></Screen>;
   if (!item) return <Screen><Content><StatePanel icon="alert-circle-outline" title="Content unavailable" message="This item may have been archived or the link may be incorrect." action={<AppButton label="Browse the Hub" onPress={() => router.replace('/knowledge' as any)} />} /></Content></Screen>;
 
+  const resolved = resolveKnowledgeVisual(item, KNOWLEDGE_TOPICS);
+  const speechText = [item.title, item.summary, ...item.body.map(blockText)].filter(Boolean).join('. ');
+
   const toggleBookmark = () => requireUser(() => void knowledgeService.toggleKnowledgeBookmark(user!.id, item.id).then((saved) => { setBookmarked(saved); addNotification({ type: 'toast', severity: 'success', message: saved ? 'Saved to your Hub bookmarks.' : 'Removed from bookmarks.' }); analyticsService.trackEvent('knowledge_bookmark_toggled', { content_id: item.id, saved }); }));
   const toggleDownload = () => requireUser(() => void (downloaded ? knowledgeService.removeDownload(user!.id, item.id).then(() => setDownloaded(false)) : knowledgeService.downloadItem(user!.id, item).then(() => setDownloaded(true))).then(() => addNotification({ type: 'toast', severity: 'success', message: downloaded ? 'Offline copy removed.' : 'Available offline.' })).catch((error) => addNotification({ type: 'toast', severity: 'error', message: error.message })));
   const markComplete = () => requireUser(() => void knowledgeService.setKnowledgeProgress(user!.id, item.id, item.versionId, 100).then(() => { setProgress(100); addNotification({ type: 'modal', severity: 'success', title: 'Lesson complete', message: 'Your learning progress has been saved.' }); analyticsService.trackEvent('knowledge_content_completed', { content_id: item.id, topic: item.topicSlugs[0] }); }));
@@ -72,12 +78,14 @@ export default function KnowledgeContentScreen() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} onScroll={({ nativeEvent }) => { const range = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height; if (range > 0) setProgress((current) => Math.max(current, Math.round((nativeEvent.contentOffset.y / range) * 90))); }} scrollEventThrottle={240}>
         <Content wide style={{ paddingBottom: 80 }}>
-          <AppButton label="Back" icon="arrow-back" variant="ghost" onPress={() => router.canGoBack() ? router.back() : router.replace('/knowledge' as any)} style={{ alignSelf: 'flex-start', marginBottom: 18 }} />
+          <AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => router.canGoBack() ? router.back() : router.replace('/knowledge' as any)} style={{ alignSelf: 'flex-start', marginBottom: 18 }} />
+          <View style={{ borderRadius: theme.radii.xl, overflow: 'hidden', marginBottom: 28, backgroundColor: theme.mode === 'dark' ? resolved.visual.palette.darkSurface : resolved.visual.palette.surface }}><Image source={resolved.source} accessibilityLabel={resolved.visual.alt[locale]} resizeMode="cover" style={{ width: '100%', height: desktop ? 440 : 250 }} /></View>
           <View style={{ flexDirection: desktop ? 'row' : 'column', alignItems: 'flex-start', gap: 32 }}>
             <View style={{ flex: 1, width: '100%', maxWidth: 760, alignSelf: desktop ? undefined : 'center' }}>
               <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1.1 }]}>{meta}</Text>
               <Text accessibilityRole="header" style={[theme.typography.display, { color: theme.colors.text, marginTop: 10 }]}>{item.title}</Text>
               <Text style={[theme.typography.body, { color: theme.colors.textMuted, fontSize: 18, lineHeight: 28, marginTop: 14 }]}>{item.summary}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 9, marginTop: 18 }}><SpeakControls text={speechText} /><AppButton label={easyRead ? t('Standard view', 'Стандартен изглед') : t('Easy read', 'Лесно четене')} icon="text-outline" variant={easyRead ? 'primary' : 'secondary'} onPress={() => setEasyRead((value) => !value)} /></View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 20 }}>
                 {item.topicSlugs.map((topic) => <Pressable key={topic} onPress={() => router.push(`/knowledge/topic/${topic}` as any)} style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: theme.radii.pill, backgroundColor: theme.colors.primarySoft }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'capitalize' }]}>{topic.replace(/-/g, ' ')}</Text></Pressable>)}
               </View>
@@ -90,7 +98,7 @@ export default function KnowledgeContentScreen() {
                 <AppButton label="Share" icon="share-outline" variant="ghost" onPress={share} />
               </View>
               <View accessibilityLabel={`Reading progress ${progress}%`} style={{ height: 5, borderRadius: 3, backgroundColor: theme.colors.surfaceStrong, marginBottom: 28, overflow: 'hidden' }}><View style={{ height: '100%', width: `${progress}%`, backgroundColor: theme.colors.primary }} /></View>
-              <KnowledgeBlockRenderer blocks={item.body} sources={item.sources} sourceContentId={item.id} />
+              <KnowledgeBlockRenderer blocks={item.body} sources={item.sources} sourceContentId={item.id} easyRead={easyRead} />
 
               <View style={{ marginTop: 38 }}>
                 <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text }]}>Sources and further reading</Text>
@@ -111,3 +119,14 @@ export default function KnowledgeContentScreen() {
 function FeedbackButton({ label, icon, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }) { const { theme } = useAppTheme(); return <Pressable onPress={onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, padding: 8 }}><Ionicons name={icon} size={16} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{label}</Text></Pressable>; }
 function labelForType(type: string) { return type.charAt(0).toUpperCase() + type.slice(1); }
 function formatDate(date: string) { return new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(date)); }
+function blockText(block: KnowledgeBlock) {
+  if (block.type === 'heading' || block.type === 'paragraph') return block.text;
+  if (block.type === 'list' || block.type === 'checklist') return block.items.join('. ');
+  if (block.type === 'callout') return `${block.title}. ${block.text}`;
+  if (block.type === 'stat') return `${block.value}. ${block.label}`;
+  if (block.type === 'quote') return `${block.text}. ${block.attribution}`;
+  if (block.type === 'video') return `${block.title}. ${block.transcript}`;
+  if (block.type === 'download') return `${block.title}. ${block.description}`;
+  if (block.type === 'action') return `${block.title}. ${block.text}`;
+  return '';
+}

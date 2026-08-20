@@ -41,6 +41,7 @@ module.exports = {
   },
   plugins: [
     "expo-router",
+    "expo-notifications",
     "@rnmapbox/maps",
     [
       "expo-location",

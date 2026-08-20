@@ -24,7 +24,7 @@ export function rankKnowledgeItems(items: KnowledgeItemSummary[], context: Ranki
   const now = context.now ?? new Date();
 
   const ranked = items
-    .filter((item) => item.type !== 'daily')
+    .filter((item) => !item.type.startsWith('daily_'))
     .map((item) => {
       const interestMatch = item.topicSlugs.find((topic) => interestTopics.has(topic));
       const habitMatch = item.topicSlugs.find((topic) => habitTopics.has(topic));

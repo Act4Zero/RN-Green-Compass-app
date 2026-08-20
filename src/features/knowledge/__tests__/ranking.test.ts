@@ -1,7 +1,7 @@
 import { KNOWLEDGE_ITEMS } from '../data/catalog';
 import { rankKnowledgeItems } from '../ranking';
 
-const summaries = KNOWLEDGE_ITEMS.filter((item) => item.type !== 'daily').map(({ body: _body, sources: _sources, searchText: _search, author: _author, reviewer: _reviewer, version: _version, checksum: _checksum, ...item }) => item);
+const summaries = KNOWLEDGE_ITEMS.filter((item) => !item.type.startsWith('daily_')).map(({ body: _body, sources: _sources, searchText: _search, author: _author, reviewer: _reviewer, version: _version, checksum: _checksum, ...item }) => item);
 
 describe('Knowledge Hub recommendation ranking', () => {
   it('prioritizes explainable interest and habit matches', () => {
