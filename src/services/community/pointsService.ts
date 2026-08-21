@@ -179,31 +179,17 @@ const pointsService = {
    * Updates habit streak if tracking is enabled
    * @param userId The user's ID
    * @param habitId The habit's ID
+   * @param habitLogId ID of the already-created habit log
    * @param trackStreak Whether to track and update habit streak
    * @returns Response with success status and point event data
    */
   processHabitLog: async (
     userId: string,
     habitId: string,
+    habitLogId: string,
     trackStreak = true
   ): Promise<PointsResponse> => {
     try {
-      // Log the habit first
-      const { data: habitLogData, error: habitLogError } = await supabase
-        .from('habit_logs')
-        .insert({
-          user_id: userId,
-          habit_id: habitId,
-          completed: true,
-          log_date: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      
-      if (habitLogError) {
-        throw habitLogError;
-      }
-      
       // Update habit streak if tracking is enabled
       let streakData = null;
       if (trackStreak) {
@@ -217,7 +203,7 @@ const pointsService = {
         userId,
         source: 'habit_log',
         points,
-        referenceId: habitLogData.id,
+        referenceId: habitLogId,
       });
       
       // Fetch real user profile for badge logic

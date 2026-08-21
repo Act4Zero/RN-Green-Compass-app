@@ -19,6 +19,7 @@ describe('adaptive app navigation', () => {
     expect(isNavItemActive('/community/challenges/42', community)).toBe(true);
     expect(isNavItemActive('/knowledge/content/clean-energy-explained', hub)).toBe(true);
     expect(isNavItemActive('/profile', community)).toBe(false);
+    expect(habits.href).toBe('/habits');
   });
 
   it('uses unique accessible labels and URLs', () => {

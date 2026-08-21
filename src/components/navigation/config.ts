@@ -5,7 +5,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 export interface AppNavItem {
   label: string;
-  href: '/home' | '/habits/log' | '/map' | '/knowledge' | '/community' | '/profile';
+  href: '/home' | '/habits' | '/map' | '/knowledge' | '/community' | '/profile';
   match: string;
   icon: IconName;
   activeIcon: IconName;
@@ -13,7 +13,7 @@ export interface AppNavItem {
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { label: 'Home', href: '/home', match: '/home', icon: 'home-outline', activeIcon: 'home' },
-  { label: 'Habits', href: '/habits/log', match: '/habits', icon: 'leaf-outline', activeIcon: 'leaf' },
+  { label: 'Habits', href: '/habits', match: '/habits', icon: 'leaf-outline', activeIcon: 'leaf' },
   { label: 'Map', href: '/map', match: '/map', icon: 'map-outline', activeIcon: 'map' },
   { label: 'Hub', href: '/knowledge', match: '/knowledge', icon: 'library-outline', activeIcon: 'library' },
   { label: 'Community', href: '/community', match: '/community', icon: 'people-outline', activeIcon: 'people' },

@@ -316,6 +316,15 @@ export default function Home() {
             </Card>
           ) : null}
 
+          <Card style={{ padding: 20, marginBottom: 28, flexDirection: isTabletOrLarger ? 'row' : 'column', alignItems: isTabletOrLarger ? 'center' : 'flex-start', gap: 18, backgroundColor: theme.colors.primarySoft }}>
+            <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="sparkles-outline" size={23} color={theme.colors.accent} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1 }]}>Today’s eco practice</Text>
+              <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>A small challenge, check-in, reflection, and poll are ready.</Text>
+            </View>
+            <AppButton label="Check in" icon="arrow-forward" onPress={() => router.push('/habits/today' as any)} />
+          </Card>
+
           <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>Choose your next move</Text>
           <View style={{ flexDirection: isTabletOrLarger ? 'row' : 'column', gap: 12, marginBottom: 32 }}>
             {actions.map((action) => (

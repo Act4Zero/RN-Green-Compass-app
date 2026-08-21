@@ -58,9 +58,14 @@ export default function RootLayout() {
         {/* Provide global defaults via screenOptions here */}
         <Stack screenOptions={{ headerTitle: "" }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/index" options={{ headerShown: false }} />
           <Stack.Screen name="habits/goal" options={{ headerShown: false }} />
           <Stack.Screen name="habits/log" options={{ headerShown: false }} />
           <Stack.Screen name="habits/history" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/identity" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/today" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/impact" options={{ headerShown: false }} />
+          <Stack.Screen name="habits/travel" options={{ headerShown: false }} />
 
           {/* Profile screens */}
           <Stack.Screen name="profile/index" options={{ headerShown: false }} />

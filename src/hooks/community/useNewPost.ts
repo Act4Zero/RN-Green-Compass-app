@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +11,7 @@ import useCommunityFeedState from './useCommunityFeedState';
  */
 function useNewPost() {
   // Get post ID from URL parameters if in edit mode
-  const { postId } = useLocalSearchParams<{ postId: string }>();
+  const { postId, prefillTitle, prefillContent } = useLocalSearchParams<{ postId?: string; prefillTitle?: string; prefillContent?: string }>();
   const isEditMode = Boolean(postId);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -45,6 +45,16 @@ function useNewPost() {
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [postTitle, setPostTitle] = useState('');
+  const didApplyPrefill = useRef(false);
+
+  // Sharing routes only prefill a draft. The user still reviews and submits it,
+  // and private reflection fields are never passed by the offsetting feature.
+  useEffect(() => {
+    if (isEditMode || didApplyPrefill.current) return;
+    if (prefillTitle) setPostTitle(prefillTitle.slice(0, 120));
+    if (prefillContent) setNewPostContent(prefillContent.slice(0, 5000));
+    didApplyPrefill.current = Boolean(prefillTitle || prefillContent);
+  }, [isEditMode, prefillTitle, prefillContent, setNewPostContent]);
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {

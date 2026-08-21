@@ -18,7 +18,7 @@ interface PointsContextType {
   refreshBalance: () => Promise<void>;
   refreshHistory: () => Promise<void>;
   awardDailyCheckIn: () => Promise<boolean>;
-  logHabit: (habitId: string) => Promise<boolean>;
+  logHabit: (habitId: string, habitLogId: string) => Promise<boolean>;
   trackCommunityActivity: (type: 'post' | 'comment', contentId: string) => Promise<boolean>;
 }
 
@@ -159,7 +159,7 @@ setPointBalance({
   };
   
   // Log a habit and award points
-  const logHabit = async (habitId: string): Promise<boolean> => {
+  const logHabit = async (habitId: string, habitLogId: string): Promise<boolean> => {
     if (!user?.id) return false;
     
     // Use both loading states since this affects both balance and history
@@ -168,7 +168,7 @@ setPointBalance({
     setHasError(false);
     
     try {
-      const result = await pointsService.processHabitLog(user.id, habitId);
+      const result = await pointsService.processHabitLog(user.id, habitId, habitLogId);
       
       if (result.success && result.data) {
         // Update balance
