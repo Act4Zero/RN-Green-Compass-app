@@ -26,17 +26,41 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
       style={({ pressed }) => ({
         minHeight: compact ? 54 : 48,
         minWidth: compact ? 56 : undefined,
+        width: compact ? undefined : '100%',
+        flex: compact ? 1 : undefined,
         paddingHorizontal: compact ? theme.spacing.xs : theme.spacing.md,
         borderRadius: theme.radii.md,
         flexDirection: compact ? 'column' : 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: compact ? 3 : theme.spacing.sm,
+        justifyContent: compact ? 'center' : 'flex-start',
+        gap: compact ? 3 : 0,
         backgroundColor: active ? theme.colors.primarySoft : pressed ? theme.colors.surfaceMuted : 'transparent',
       })}
     >
-      <Ionicons name={active ? item.activeIcon : item.icon} size={compact ? 21 : 20} color={active ? theme.colors.primary : theme.colors.textMuted} />
-      <Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted, fontSize: compact ? 10 : 13 }]}>{item.label}</Text>
+      <View
+        style={{
+          width: compact ? 24 : 28,
+          height: compact ? 22 : 24,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: compact ? 0 : theme.spacing.sm,
+        }}
+      >
+        <Ionicons name={active ? item.activeIcon : item.icon} size={compact ? 21 : 20} color={active ? theme.colors.primary : theme.colors.textMuted} />
+      </View>
+      <Text
+        numberOfLines={1}
+        style={[
+          theme.typography.label,
+          {
+            color: active ? theme.colors.primary : theme.colors.textMuted,
+            fontSize: compact ? 10 : 13,
+            textAlign: compact ? 'center' : 'left',
+          },
+        ]}
+      >
+        {item.label}
+      </Text>
     </Pressable>
   );
 }
