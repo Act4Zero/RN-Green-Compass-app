@@ -25,6 +25,7 @@ import BadgeSummary from '@/components/badges/BadgeSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 import { useAppTheme } from '@/theme';
+import { knowledgeService, type KnowledgeProgress } from '@/features/knowledge';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
   const [hasTrackedView, setHasTrackedView] = useState(false);
+  const [learningProgress, setLearningProgress] = useState<KnowledgeProgress[]>([]);
   const styles = profileStyles;
   
   // Use the profile manager hook
@@ -71,6 +73,10 @@ useEffect(() => {
   }
   fetchPoints();
   return () => { isMounted = false; };
+}, [user?.id]);
+
+useEffect(() => {
+  if (user?.id) void knowledgeService.getProgress(user.id).then(setLearningProgress);
 }, [user?.id]);
   const { 
     historyByDate, 
@@ -297,6 +303,17 @@ useEffect(() => {
             )}
           </View>
         </View>
+
+        {/* Points Summary Section */}
+        <TouchableOpacity accessibilityRole="link" onPress={() => router.push('/knowledge' as any)} style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }] }>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Knowledge Hub progress</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5 }]}>{learningProgress.filter((entry) => entry.completed).length} completed • {learningProgress.filter((entry) => !entry.completed && entry.percent > 0).length} in progress</Text>
+            </View>
+            <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="library-outline" size={20} color={theme.colors.primary} /></View>
+          </View>
+        </TouchableOpacity>
 
         {/* Points Summary Section */}
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>

@@ -10,6 +10,7 @@ import { NotificationContainer } from '@/components/notifications/NotificationCo
 import PointsProvider from '@/context/PointsContext';
 import { ThemeProvider } from '@/theme';
 import { AppShell } from '@/components/navigation/AppShell';
+import { KnowledgeLocaleProvider } from '@/features/knowledge';
 import { useFonts } from 'expo-font';
 import {
   Manrope_400Regular,
@@ -48,6 +49,7 @@ export default function RootLayout() {
     <ThemeProvider>
     <FeatureFlagsProvider>
       <NotificationProvider>
+        <KnowledgeLocaleProvider>
         <AuthProvider>
           <HabitProvider>
             <PointsProvider>
@@ -79,6 +81,21 @@ export default function RootLayout() {
           {/* Map screens */}
           <Stack.Screen name="map/index" options={{ headerShown: false }} />
 
+          {/* Knowledge Hub screens */}
+          <Stack.Screen name="knowledge/index" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/search" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/topic/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/content/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/quiz/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/downloads" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/daily" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/path/[slug]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/tour/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/simulation/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/webinar/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/certificate/[code]" options={{ headerShown: false }} />
+          <Stack.Screen name="admin/knowledge/index" options={{ headerShown: false }} />
+
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen
@@ -96,6 +113,7 @@ export default function RootLayout() {
             </PointsProvider>
           </HabitProvider>
         </AuthProvider>
+        </KnowledgeLocaleProvider>
       </NotificationProvider>
     </FeatureFlagsProvider>
     </ThemeProvider>
