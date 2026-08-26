@@ -135,18 +135,26 @@ Apply `supabase/migrations/202608260002_sustainability_map_platform.sql`, grant
 the appropriate account `reviewer`/`publisher` metadata, then use `/admin/map`
 to import the bundled EV catalogue and confirm the budget period.
 
-`MAPBOX_DOWNLOADS_TOKEN` is build-only and belongs in the local shell and
-CI/EAS secret store. Never commit it, place it in Expo `extra`, print it in logs
-or expose it to JavaScript.
+The current RNMapbox/Mapbox native artifacts install in CI without a downloads
+token. If a future private artifact registry requires `MAPBOX_DOWNLOADS_TOKEN`
+or `RNMAPBOX_MAPS_DOWNLOAD_TOKEN`, keep it only in the local shell and CI/EAS
+secret store. Never commit it, place it in Expo `extra`, print it in logs or
+expose it to JavaScript.
 
 Native Mapbox requires a custom development build and does not run in Expo Go:
 
 ```bash
-npm install --legacy-peer-deps
+npm ci
 npx expo prebuild --no-install
-RNMAPBOX_MAPS_DOWNLOAD_TOKEN="$MAPBOX_DOWNLOADS_TOKEN" npx expo run:ios
-RNMAPBOX_MAPS_DOWNLOAD_TOKEN="$MAPBOX_DOWNLOADS_TOKEN" npx expo run:android
+npx expo run:ios
+npx expo run:android
 ```
+
+`.github/workflows/sustainability-map-ci.yml` runs the complete client export
+matrix, a real Android `assembleDebug`, an unsigned iOS simulator build and an
+isolated PostGIS migration/RLS/concurrency contract. The database job creates
+an ephemeral database and never contacts production Supabase. The native jobs
+do not receive runtime Mapbox tokens and therefore cannot consume map loads.
 
 ## Acceptance criteria
 
@@ -166,8 +174,9 @@ RNMAPBOX_MAPS_DOWNLOAD_TOKEN="$MAPBOX_DOWNLOADS_TOKEN" npx expo run:android
   shell at 390px, 768px and 1440px with 48px controls, keyboard access and
   screen-reader labels.
 - Required gates are TypeScript, ESLint, Jest, web/iOS/Android Expo exports,
-  Android debug build and unsigned iOS simulator build. Native builds require
-  their installed platform toolchains and the private downloads token.
+  Android debug build, isolated PostGIS/RLS/concurrency tests and an unsigned
+  iOS simulator build. Native builds require their platform toolchains; any
+  future private downloads token remains build-only.
 - Release measurements remain first paint under two seconds on the documented
   mobile profile, Lighthouse Performance ≥85 and Accessibility ≥90.
 

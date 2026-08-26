@@ -449,7 +449,7 @@ returns table(location_id uuid,score numeric,reasons text[]) language sql stable
       least(1,extensions.st_distance(l.geo,extensions.st_setsrid(extensions.st_makepoint(p_lng,p_lat),4326)::extensions.geography)/200000.0) distance_ratio
     from public.sustainability_locations l where auth.uid() is not null and l.status='published'
   ), ranked as (
-    select id,round((case when preferred then 40 else 0 end)+(30*(1-distance_ratio))+(20*(visits::numeric/greatest(1,max(visits) over())))+(case when published_at>now()-interval '90 days' then 10 else 0 end),2) score,preferred,distance_ratio,visits,published_at from stats
+    select id,round(((case when preferred then 40 else 0 end)+(30*(1-distance_ratio))+(20*(visits::numeric/greatest(1,max(visits) over())))+(case when published_at>now()-interval '90 days' then 10 else 0 end))::numeric,2) score,preferred,distance_ratio,visits,published_at from stats
   )
   select id,score,array_remove(array[case when preferred then 'Matches your preferences' end,case when distance_ratio<0.25 then 'Nearby' end,case when visits>0 then 'Popular with the community' end,case when published_at>now()-interval '90 days' then 'Newly verified' end],null) from ranked order by score desc,id limit least(greatest(p_limit,1),50)
 $$;
