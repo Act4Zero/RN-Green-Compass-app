@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, Text, TextInput, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
-import { KNOWLEDGE_ITEMS, KNOWLEDGE_TOPICS, validateKnowledgeItem, validateKnowledgeTopicVisual, type KnowledgeContentType } from '@/features/knowledge';
+import { INFOGRAPHIC_ITEMS, KNOWLEDGE_CHALLENGES, KNOWLEDGE_ITEMS, KNOWLEDGE_QUESTS, KNOWLEDGE_TOPICS, knowledgeService, validateChallengeConfig, validateKnowledgeItem, validateKnowledgeTopicVisual, validateQuestGraph, type KnowledgeContentType, type KnowledgeWebinarQuestion } from '@/features/knowledge';
 import { useAppTheme } from '@/theme';
 
 type ReviewFilter = 'all' | 'ready' | 'blocked';
@@ -15,12 +15,19 @@ export default function KnowledgeEditorialConsole() {
   const router = useRouter();
   const [filter, setFilter] = useState<ReviewFilter>('all');
   const [type, setType] = useState<KnowledgeContentType | 'all'>('all');
+  const [questions, setQuestions] = useState<KnowledgeWebinarQuestion[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [timestamps, setTimestamps] = useState<Record<string, string>>({});
   const roles = (user?.app_metadata?.knowledge_roles || []) as string[];
   const authorized = roles.some((role) => ['editor', 'reviewer', 'publisher'].includes(role));
-  const report = useMemo(() => KNOWLEDGE_ITEMS.map((item) => ({ item, issues: validateKnowledgeItem(item) })), []);
+  const allItems = useMemo(() => [...KNOWLEDGE_ITEMS, ...INFOGRAPHIC_ITEMS], []);
+  const report = useMemo(() => allItems.map((item) => ({ item, issues: validateKnowledgeItem(item) })), [allItems]);
   const visualIssues = useMemo(() => KNOWLEDGE_TOPICS.flatMap((topic) => validateKnowledgeTopicVisual(topic)), []);
   const filtered = report.filter((entry) => (filter === 'all' || (filter === 'ready' ? entry.issues.length === 0 : entry.issues.length > 0)) && (type === 'all' || entry.item.type === type));
-  const types = [...new Set(KNOWLEDGE_ITEMS.map((item) => item.type))];
+  const types = [...new Set(allItems.map((item) => item.type))];
+  const missionIssues = useMemo(() => [...KNOWLEDGE_CHALLENGES.flatMap(validateChallengeConfig), ...KNOWLEDGE_QUESTS.flatMap(validateQuestGraph)], []);
+  const loadQuestions = useCallback(() => void knowledgeService.getWebinarModerationQueue().then(setQuestions), []);
+  useEffect(loadQuestions, [loadQuestions]);
 
   if (!authorized) return <Screen><Content><StatePanel icon="lock-closed-outline" title="Editorial access required" message="Knowledge Hub publishing roles are managed through protected account metadata." action={<AppButton label="Back to Hub" onPress={() => router.replace('/knowledge' as any)} />} /></Content></Screen>;
 
@@ -33,9 +40,14 @@ export default function KnowledgeEditorialConsole() {
       <Metric icon="warning-outline" label="Blocked" value={report.filter((entry) => entry.issues.length > 0).length + visualIssues.length} tone="warning" />
       <Metric icon="language-outline" label="Languages" value={2} />
       <Metric icon="images-outline" label="Topic visuals" value={KNOWLEDGE_TOPICS.length} tone={visualIssues.length ? 'warning' : 'success'} />
+      <Metric icon="stats-chart-outline" label="Infographics" value={INFOGRAPHIC_ITEMS.length / 2} tone="success" />
+      <Metric icon="compass-outline" label="Missions" value={KNOWLEDGE_CHALLENGES.length + KNOWLEDGE_QUESTS.length} tone={missionIssues.length ? 'warning' : 'success'} />
     </View>
 
-    <Card style={{ marginBottom: 18 }}><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}><Ionicons name="shield-checkmark-outline" size={22} color={theme.colors.primary} /><View style={{ flex: 1, minWidth: 240 }}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>Active publication gate</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>Requires EN + BG approval, citations, reviewer, review dates, topic mapping, bilingual alt text, media rights, captions and transcript. Status changes are written to the audit trail.</Text></View><Text style={[theme.typography.label, { color: theme.colors.success }]}>ENFORCED IN DATABASE</Text></View></Card>
+    <Card style={{ marginBottom: 18 }}><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}><Ionicons name="shield-checkmark-outline" size={22} color={theme.colors.primary} /><View style={{ flex: 1, minWidth: 240 }}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>Active publication gate</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>Requires EN + BG approval, citations, reviewer, review dates, topic mapping, bilingual alt text, media rights, captions and transcript. V2 also validates infographic text alternatives, mission graphs, configured rewards and webinar moderation ownership.</Text></View><Text style={[theme.typography.label, { color: theme.colors.success }]}>ENFORCED IN DATABASE</Text></View></Card>
+
+    <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 10 }]}>Webinar Q&A moderation</Text>
+    <View style={{ gap: 10, marginBottom: 24 }}>{questions.length === 0 ? <Card><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>No pending or approved questions.</Text></Card> : questions.map((question) => <Card key={question.id}><View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><Badge label={question.status} /><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{new Date(question.createdAt).toLocaleString()}</Text></View><Text style={[theme.typography.body, { color: theme.colors.text, marginTop: 9 }]}>{question.body}</Text>{question.status === 'approved' ? <><TextInput accessibilityLabel="Speaker answer" value={answers[question.id] || ''} onChangeText={(value) => setAnswers((current) => ({ ...current, [question.id]: value }))} placeholder="Verified speaker/editor answer" placeholderTextColor={theme.colors.textMuted} multiline style={[theme.typography.body, { color: theme.colors.text, minHeight: 82, textAlignVertical: 'top', borderWidth: 1, borderColor: theme.colors.borderStrong, borderRadius: theme.radii.md, padding: 12, marginTop: 12 }]} /><TextInput accessibilityLabel="Replay timestamp in seconds" value={timestamps[question.id] || ''} onChangeText={(value) => setTimestamps((current) => ({ ...current, [question.id]: value.replace(/\D/g, '') }))} placeholder="Optional replay timestamp (seconds)" placeholderTextColor={theme.colors.textMuted} keyboardType="number-pad" style={[theme.typography.body, { color: theme.colors.text, borderWidth: 1, borderColor: theme.colors.borderStrong, borderRadius: theme.radii.md, padding: 12, marginTop: 8 }]} /></> : null}<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>{question.status === 'pending' ? <AppButton label="Approve" onPress={() => void knowledgeService.moderateWebinarQuestion(question.id, 'approved').then(loadQuestions)} /> : <AppButton label="Publish answer" disabled={(answers[question.id] || '').trim().length < 2} onPress={() => void knowledgeService.moderateWebinarQuestion(question.id, 'answered', answers[question.id], timestamps[question.id] ? Number(timestamps[question.id]) : undefined).then(loadQuestions)} />}<AppButton label="Reject" variant="ghost" onPress={() => void knowledgeService.moderateWebinarQuestion(question.id, 'rejected').then(loadQuestions)} /></View></Card>)}</View>
 
     <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 10 }]}>Review queue</Text>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>{(['all', 'ready', 'blocked'] as const).map((value) => <AppButton key={value} label={value === 'all' ? 'All states' : value === 'ready' ? 'Ready' : 'Blocked'} variant={filter === value ? 'primary' : 'secondary'} onPress={() => setFilter(value)} />)}</View>

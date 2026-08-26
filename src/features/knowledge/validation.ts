@@ -38,6 +38,15 @@ function validateBlock(block: KnowledgeBlock, sourceIds: Set<string>): Knowledge
   if ((block.type === 'stat' || block.type === 'quote') && !sourceIds.has(block.sourceId)) {
     issues.push({ field: block.id, message: 'The cited source is missing.' });
   }
+  if (block.type === 'infographic') {
+    if (!block.textAlternative.trim()) issues.push({ field: block.id, message: 'Infographics require a text alternative.' });
+    if (block.dataPoints.length < 2) issues.push({ field: block.id, message: 'Infographics require at least two data points.' });
+    if (block.takeaways.length === 0) issues.push({ field: block.id, message: 'Infographics require at least one takeaway.' });
+    for (const point of block.dataPoints) {
+      if (!Number.isFinite(point.value)) issues.push({ field: `${block.id}.${point.id}`, message: 'Infographic values must be finite numbers.' });
+      if (!sourceIds.has(point.sourceId)) issues.push({ field: `${block.id}.${point.id}`, message: 'Every infographic data point requires a published source.' });
+    }
+  }
   return issues;
 }
 

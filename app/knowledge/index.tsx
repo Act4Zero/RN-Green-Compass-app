@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { AppButton, Card, Content, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { KnowledgeError, KnowledgeLoading } from '@/features/knowledge/components/KnowledgeState';
 import {
   KNOWLEDGE_TOPICS,
+  KNOWLEDGE_CHALLENGES,
+  KNOWLEDGE_QUESTS,
   knowledgeService,
   localizedTopic,
   resolveKnowledgeVisual,
@@ -14,13 +16,15 @@ import {
   type KnowledgeHomeData,
   type KnowledgeItemSummary,
   type KnowledgeLearningPath,
+  type KnowledgeLearningProfile,
+  type KnowledgePreferences,
   type KnowledgeTopic,
 } from '@/features/knowledge';
 import analyticsService from '@/services/analyticsService';
 import { fetchUserProfile } from '@/services/profile';
 import { useAppTheme } from '@/theme';
 
-type HubView = 'overview' | 'library' | 'topics' | 'practice' | 'paths' | 'live';
+type HubView = 'overview' | 'library' | 'topics' | 'practice' | 'paths' | 'missions' | 'live';
 
 const HUB_VIEWS: { id: HubView; icon: keyof typeof Ionicons.glyphMap; en: string; bg: string }[] = [
   { id: 'overview', icon: 'home-outline', en: 'Overview', bg: 'Начало' },
@@ -28,6 +32,7 @@ const HUB_VIEWS: { id: HubView; icon: keyof typeof Ionicons.glyphMap; en: string
   { id: 'topics', icon: 'grid-outline', en: 'Topics', bg: 'Теми' },
   { id: 'practice', icon: 'flask-outline', en: 'Practice', bg: 'Практика' },
   { id: 'paths', icon: 'trail-sign-outline', en: 'Paths', bg: 'Пътеки' },
+  { id: 'missions', icon: 'compass-outline', en: 'Missions', bg: 'Мисии' },
   { id: 'live', icon: 'videocam-outline', en: 'Live', bg: 'На живо' },
 ];
 
@@ -41,17 +46,21 @@ const TYPE_ICONS: Partial<Record<KnowledgeItemSummary['type'], keyof typeof Ioni
   tour: 'navigate-circle-outline',
   simulation: 'options-outline',
   webinar: 'videocam-outline',
+  infographic: 'stats-chart-outline',
 };
 
 export default function KnowledgeHubScreen() {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const router = useRouter();
+  const params = useLocalSearchParams<{ view?: HubView }>();
   const { user } = useAuth();
   const { locale, setLocale } = useKnowledgeLocale();
   const [data, setData] = useState<KnowledgeHomeData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<HubView>('overview');
+  const [activeView, setActiveView] = useState<HubView>(HUB_VIEWS.some((entry) => entry.id === params.view) ? params.view! : 'overview');
+  const [learningProfile, setLearningProfile] = useState<KnowledgeLearningProfile | null>(null);
+  const [preferences, setPreferences] = useState<KnowledgePreferences | null>(null);
   const compact = width < theme.breakpoints.tablet;
   const columns = compact ? 1 : width < theme.breakpoints.desktop ? 2 : 3;
 
@@ -59,7 +68,10 @@ export default function KnowledgeHubScreen() {
     setError(null);
     try {
       const profile = user ? await fetchUserProfile(user.id) : null;
-      const result = await knowledgeService.getKnowledgeHome({ locale, userId: user?.id, interests: profile?.interests || [] });
+      const preference = await knowledgeService.getPreferences(user?.id, locale, profile?.interests || []);
+      const [result, learning] = await Promise.all([knowledgeService.getKnowledgeHome({ locale, userId: user?.id, interests: preference.topicSlugs.length ? preference.topicSlugs : profile?.interests || [] }), knowledgeService.getLearningProfile(user?.id)]);
+      setPreferences(preference);
+      setLearningProfile(learning);
       setData(result);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'The Hub could not load.');
@@ -73,24 +85,26 @@ export default function KnowledgeHubScreen() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content wide style={{ maxWidth: 1180 }}>
-          <HubHeader compact={compact} locale={locale} onLocale={() => void setLocale(locale === 'en' ? 'bg' : 'en')} onSearch={() => router.push('/knowledge/search' as any)} />
+          <HubHeader compact={compact} locale={locale} profile={learningProfile} onLocale={() => void setLocale(locale === 'en' ? 'bg' : 'en')} onSearch={() => router.push('/knowledge/search' as any)} onLearning={() => router.push('/knowledge/learning' as any)} />
           <HubNavigation compact={compact} value={activeView} onChange={setActiveView} />
 
           {!data && !error ? <KnowledgeLoading /> : null}
           {error ? <KnowledgeError retry={() => void load()} /> : null}
-          {data && activeView === 'overview' ? <Overview data={data} compact={compact} columns={columns} onViewChange={setActiveView} /> : null}
+          {data && activeView === 'overview' ? <Overview data={data} profile={learningProfile} compact={compact} columns={columns} onViewChange={setActiveView} /> : null}
           {data && activeView === 'library' ? <Library data={data} columns={columns} /> : null}
           {data && activeView === 'topics' ? <Topics topics={data.topics} columns={columns} /> : null}
           {data && activeView === 'practice' ? <Practice items={data.interactive} columns={columns} /> : null}
           {data && activeView === 'paths' ? <Paths paths={data.paths} columns={columns} /> : null}
+          {data && activeView === 'missions' ? <Missions columns={columns} /> : null}
           {data && activeView === 'live' ? <Live items={data.live} /> : null}
         </Content>
       </ScrollView>
+      {preferences && !preferences.onboardingComplete ? <InterestOnboarding preference={preferences} onComplete={async (topicSlugs) => { const saved = await knowledgeService.setPreferences(user?.id, { ...preferences, locale, topicSlugs, onboardingComplete: true, updatedAt: new Date().toISOString() }); setPreferences(saved); void load(); }} /> : null}
     </Screen>
   );
 }
 
-function HubHeader({ compact, locale, onLocale, onSearch }: { compact: boolean; locale: 'en' | 'bg'; onLocale: () => void; onSearch: () => void }) {
+function HubHeader({ compact, locale, profile, onLocale, onSearch, onLearning }: { compact: boolean; locale: 'en' | 'bg'; profile: KnowledgeLearningProfile | null; onLocale: () => void; onSearch: () => void; onLearning: () => void }) {
   const { theme } = useAppTheme();
   const { t } = useKnowledgeLocale();
   return (
@@ -103,6 +117,7 @@ function HubHeader({ compact, locale, onLocale, onSearch }: { compact: boolean; 
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <AppButton label={locale.toUpperCase()} icon="language-outline" variant="secondary" onPress={onLocale} style={{ flex: compact ? 1 : undefined }} />
         <AppButton label={t('Search', 'Търсене')} accessibilityLabel={t('Search Knowledge Hub', 'Търсене в Knowledge Hub')} icon="search" onPress={onSearch} style={{ flex: compact ? 1 : undefined }} />
+        <AppButton label={profile ? `${profile.learningXp} XP` : t('Progress', 'Прогрес')} accessibilityLabel={t('Open My Learning', 'Отвори Моето обучение')} icon="school-outline" variant="secondary" onPress={onLearning} style={{ flex: compact ? 1 : undefined }} />
       </View>
     </View>
   );
@@ -113,25 +128,26 @@ function HubNavigation({ compact, value, onChange }: { compact: boolean; value: 
   const { locale } = useKnowledgeLocale();
   const tabs = HUB_VIEWS.map((view) => {
         const active = value === view.id;
-        return <Pressable key={view.id} accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={() => onChange(view.id)} style={{ minHeight: 44, width: compact ? '31.7%' : undefined, minWidth: compact ? undefined : 108, paddingHorizontal: compact ? 8 : 15, borderRadius: theme.radii.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: compact ? 5 : 7, backgroundColor: active ? theme.colors.surface : 'transparent', borderWidth: active ? 1 : 0, borderColor: theme.colors.border }}><Ionicons name={view.icon} size={17} color={active ? theme.colors.primary : theme.colors.textMuted} /><Text numberOfLines={1} style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted, fontSize: compact ? 12 : undefined }]}>{locale === 'bg' ? view.bg : view.en}</Text></Pressable>;
+        return <Pressable key={view.id} accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={() => onChange(view.id)} style={{ minHeight: 44, minWidth: compact ? 104 : 108, paddingHorizontal: compact ? 10 : 15, borderRadius: theme.radii.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: compact ? 5 : 7, backgroundColor: active ? theme.colors.surface : 'transparent', borderWidth: active ? 1 : 0, borderColor: theme.colors.border }}><Ionicons name={view.icon} size={17} color={active ? theme.colors.primary : theme.colors.textMuted} /><Text numberOfLines={1} style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted, fontSize: compact ? 12 : undefined }]}>{locale === 'bg' ? view.bg : view.en}</Text></Pressable>;
       });
-  if (compact) return <View accessibilityRole="tablist" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, padding: 5, backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.lg, marginBottom: 26 }}>{tabs}</View>;
-  return <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, padding: 5, paddingRight: 10 }} style={{ backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.lg, marginBottom: 26 }}>{tabs}</ScrollView>;
+  return <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" contentContainerStyle={{ gap: 6, padding: 5, paddingRight: 10 }} style={{ backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.lg, marginBottom: 26 }}>{tabs}</ScrollView>;
 }
 
-function Overview({ data, compact, columns, onViewChange }: { data: KnowledgeHomeData; compact: boolean; columns: number; onViewChange: (view: HubView) => void }) {
+function Overview({ data, profile, compact, columns, onViewChange }: { data: KnowledgeHomeData; profile: KnowledgeLearningProfile | null; compact: boolean; columns: number; onViewChange: (view: HubView) => void }) {
   const router = useRouter();
   const { t } = useKnowledgeLocale();
   const recommendations = data.continueLearning.length ? data.continueLearning : data.recommendations.length ? data.recommendations : data.editorPicks;
   return (
     <>
       <DailyHero item={data.dailyDose} compact={compact} onPress={() => router.push('/knowledge/daily' as any)} />
+      {profile ? <LearningSnapshot profile={profile} compact={compact} /> : null}
       <SectionHeader title={t('Find your way', 'Изберете посока')} description={t('Start with the kind of learning you need today.', 'Започнете с подходящия за днес начин на учене.')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 34 }}>
         <BrowseTile columns={columns} icon="library-outline" title={t('Browse library', 'Библиотека')} text={t('Articles, videos and guides', 'Статии, видеа и ръководства')} onPress={() => onViewChange('library')} />
         <BrowseTile columns={columns} icon="grid-outline" title={t('Explore topics', 'Разгледайте темите')} text={t('Ten sustainability areas', 'Десет области на устойчивост')} onPress={() => onViewChange('topics')} />
         <BrowseTile columns={columns} icon="flask-outline" title={t('Learn by doing', 'Учете с практика')} text={t('Quizzes, tours and labs', 'Тестове, турове и лаборатории')} onPress={() => onViewChange('practice')} />
         <BrowseTile columns={columns} icon="trail-sign-outline" title={t('Follow a path', 'Следвайте пътека')} text={t('Structured modules and certificates', 'Модули и сертификати')} onPress={() => onViewChange('paths')} />
+        <BrowseTile columns={columns} icon="compass-outline" title={t('Take a mission', 'Започнете мисия')} text={t('Timed challenges and branching quests', 'Предизвикателства и разклонени мисии')} onPress={() => onViewChange('missions')} />
         <BrowseTile columns={columns} icon="videocam-outline" title={t('Join live', 'Включете се на живо')} text={t('Sessions, reminders and replays', 'Сесии, напомняния и записи')} onPress={() => onViewChange('live')} />
         <BrowseTile columns={columns} icon="download-outline" title={t('Use offline', 'Използвайте офлайн')} text={t('Downloads and printable toolkits', 'Изтегляния и пакети за печат')} onPress={() => router.push('/knowledge/downloads' as any)} />
       </View>
@@ -159,6 +175,7 @@ function Library({ data, columns }: { data: KnowledgeHomeData; columns: number }
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 26 }}>
         <FormatShortcut columns={columns} icon="document-text-outline" label={t('Articles', 'Статии')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'article' } })} />
         <FormatShortcut columns={columns} icon="play-circle-outline" label={t('Videos', 'Видеа')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'video' } })} />
+        <FormatShortcut columns={columns} icon="stats-chart-outline" label={t('Infographics', 'Инфографики')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'infographic' } })} />
         <FormatShortcut columns={columns} icon="hammer-outline" label={t('DIY projects', 'Направи си сам')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'diy' } })} />
         <FormatShortcut columns={columns} icon="bookmark-outline" label={t('Resources', 'Ресурси')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'resource' } })} />
       </View>
@@ -217,6 +234,38 @@ function Live({ items }: { items: KnowledgeItemSummary[] }) {
       <Card style={{ padding: 0, overflow: 'hidden' }}>{items.map((item, index) => <ContentRow key={item.id} item={item} last={index === items.length - 1} />)}</Card>
     </>
   );
+}
+
+function Missions({ columns }: { columns: number }) {
+  const router = useRouter();
+  const { theme } = useAppTheme();
+  const { locale, t } = useKnowledgeLocale();
+  return <>
+    <SectionHeader title={t('Learning missions', 'Учебни мисии')} description={t('Choose a timed personal challenge or explore a branching Knowledge Quest. Core library content remains open.', 'Изберете лично предизвикателство със срок или разклонена Knowledge Quest. Основната библиотека остава отворена.')} />
+    <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 12 }]}>{t('Learning Challenges', 'Учебни предизвикателства')}</Text>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 30 }}>{KNOWLEDGE_CHALLENGES.map((challenge) => <Pressable key={challenge.id} accessibilityRole="link" onPress={() => router.push(`/knowledge/challenge/${challenge.id}` as any)} style={{ width: columnWidth(columns) }}><Card style={{ minHeight: 220, height: '100%', borderTopWidth: 4, borderTopColor: theme.colors.accent }}><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{challenge.durationDays} {t('DAYS', 'ДНИ')}</Text><Ionicons name="timer-outline" size={22} color={theme.colors.primary} /></View><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 18 }]}>{challenge.title[locale]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 7, flex: 1 }]}>{challenge.summary[locale]}</Text><Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 16 }]}>{challenge.steps.length} {t('steps', 'стъпки')} • {challenge.rewardPoints} points</Text></Card></Pressable>)}</View>
+    <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 12 }]}>{t('Knowledge Quests', 'Knowledge Quests')}</Text>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{KNOWLEDGE_QUESTS.map((quest) => <Pressable key={quest.id} accessibilityRole="link" onPress={() => router.push(`/knowledge/quest/${quest.id}` as any)} style={{ width: columnWidth(columns) }}><Card elevated style={{ minHeight: 230, height: '100%', backgroundColor: theme.colors.primarySoft }}><Ionicons name="compass-outline" size={28} color={theme.colors.primary} /><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 16 }]}>{quest.title[locale]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 7, flex: 1 }]}>{quest.summary[locale]}</Text><Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 16 }]}>{quest.nodes.filter((node) => !node.bonus).length} core • {quest.nodes.filter((node) => node.bonus).length} bonus • {quest.rewardPoints} points</Text></Card></Pressable>)}</View>
+  </>;
+}
+
+function LearningSnapshot({ profile, compact }: { profile: KnowledgeLearningProfile; compact: boolean }) {
+  const router = useRouter();
+  const { theme } = useAppTheme();
+  const { locale, t } = useKnowledgeLocale();
+  const nextTarget = profile.nextLevel?.minimumXp || profile.learningXp;
+  const percent = profile.nextLevel ? Math.round(((profile.learningXp - profile.level.minimumXp) / (nextTarget - profile.level.minimumXp)) * 100) : 100;
+  return <Pressable accessibilityRole="link" accessibilityLabel={t('Open My Learning progress', 'Отвори прогреса в Моето обучение')} onPress={() => router.push('/knowledge/learning' as any)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1, marginBottom: 32 })}><Card style={{ flexDirection: compact ? 'column' : 'row', alignItems: compact ? 'stretch' : 'center', gap: 18 }}><View style={{ width: 50, height: 50, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primarySoft }}><Ionicons name="school-outline" size={25} color={theme.colors.primary} /></View><View style={{ flex: 1 }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('MY LEARNING', 'МОЕТО ОБУЧЕНИЕ')}</Text><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 3 }]}>{profile.level.name[locale]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{profile.learningXp} XP • {profile.completedItems} {t('completed', 'завършени')}</Text><View style={{ height: 6, borderRadius: 3, overflow: 'hidden', backgroundColor: theme.colors.surfaceStrong, marginTop: 10 }}><View style={{ height: '100%', width: `${percent}%`, backgroundColor: theme.colors.primary }} /></View></View><Ionicons name="chevron-forward" size={21} color={theme.colors.primary} /></Card></Pressable>;
+}
+
+function InterestOnboarding({ preference, onComplete }: { preference: KnowledgePreferences; onComplete: (topics: string[]) => Promise<void> }) {
+  const { theme } = useAppTheme();
+  const { locale, t } = useKnowledgeLocale();
+  const [selected, setSelected] = useState(preference.topicSlugs.slice(0, 3));
+  const [saving, setSaving] = useState(false);
+  const toggle = (slug: string) => setSelected((current) => current.includes(slug) ? current.filter((entry) => entry !== slug) : current.length < 3 ? [...current, slug] : current);
+  const finish = async (topics: string[]) => { setSaving(true); await onComplete(topics); setSaving(false); };
+  return <Modal visible transparent animationType="fade" onRequestClose={() => void finish([])}><View style={{ flex: 1, backgroundColor: '#00000066', alignItems: 'center', justifyContent: 'center', padding: 20 }}><View accessibilityViewIsModal style={{ width: '100%', maxWidth: 720, maxHeight: '90%' }}><Card elevated style={{ padding: 24 }}><ScrollView showsVerticalScrollIndicator={false}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('PERSONALISE YOUR HUB', 'ПЕРСОНАЛИЗИРАЙТЕ HUB')}</Text><Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 6 }]}>{t('What do you want to learn first?', 'Какво искате да научите първо?')}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Choose up to three topics. This only orders recommendations—the complete library stays open.', 'Изберете до три теми. Това само подрежда препоръките — цялата библиотека остава отворена.')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}>{KNOWLEDGE_TOPICS.map((topic) => { const active = selected.includes(topic.slug); const copy = localizedTopic(topic, locale); return <Pressable key={topic.slug} accessibilityRole="checkbox" accessibilityState={{ checked: active }} onPress={() => toggle(topic.slug)} style={{ width: '48%', minWidth: 150, borderWidth: 1, borderColor: active ? topic.visual.palette.primary : theme.colors.border, backgroundColor: active ? topic.visual.palette.surface : theme.colors.surface, borderRadius: theme.radii.md, padding: 13 }}><Text style={[theme.typography.label, { color: active ? topic.visual.palette.primary : theme.colors.text }]}>{copy.name}</Text></Pressable>; })}</View><Text accessibilityLiveRegion="polite" style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 12 }]}>{selected.length}/3 {t('selected', 'избрани')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}><AppButton label={t('Save interests', 'Запази интересите')} disabled={selected.length === 0} loading={saving} onPress={() => void finish(selected)} style={{ flex: 1 }} /><AppButton label={t('Skip for now', 'Пропусни засега')} variant="ghost" onPress={() => void finish([])} /></View></ScrollView></Card></View></View></Modal>;
 }
 
 function DailyHero({ item, compact, onPress }: { item: KnowledgeHomeData['dailyDose']; compact: boolean; onPress: () => void }) {
@@ -286,7 +335,7 @@ function ModeIcon({ icon, color, background }: { icon: keyof typeof Ionicons.gly
 
 function formatType(type: KnowledgeItemSummary['type'], locale: 'en' | 'bg') {
   const labels: Record<KnowledgeItemSummary['type'], [string, string]> = {
-    article: ['Article', 'Статия'], guide: ['Guide', 'Ръководство'], video: ['Video', 'Видео'], quiz: ['Quiz', 'Тест'], resource: ['Resource', 'Ресурс'], diy: ['DIY', 'Направи си сам'], tour: ['Tour', 'Обиколка'], simulation: ['Lab', 'Лаборатория'], webinar: ['Live', 'На живо'], daily_fact: ['Fact', 'Факт'], daily_quote: ['Quote', 'Цитат'], daily_tip: ['Tip', 'Съвет'],
+    article: ['Article', 'Статия'], guide: ['Guide', 'Ръководство'], video: ['Video', 'Видео'], quiz: ['Quiz', 'Тест'], resource: ['Resource', 'Ресурс'], diy: ['DIY', 'Направи си сам'], tour: ['Tour', 'Обиколка'], simulation: ['Lab', 'Лаборатория'], webinar: ['Live', 'На живо'], infographic: ['Infographic', 'Инфографика'], daily_fact: ['Fact', 'Факт'], daily_quote: ['Quote', 'Цитат'], daily_tip: ['Tip', 'Съвет'],
   };
   return labels[type][locale === 'bg' ? 1 : 0];
 }

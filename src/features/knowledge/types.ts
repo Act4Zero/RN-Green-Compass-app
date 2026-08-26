@@ -9,6 +9,7 @@ export type KnowledgeContentType =
   | 'tour'
   | 'simulation'
   | 'webinar'
+  | 'infographic'
   | 'daily_fact'
   | 'daily_quote'
   | 'daily_tip';
@@ -70,7 +71,19 @@ export type KnowledgeBlock =
   | { id: string; type: 'quote'; text: string; attribution: string; sourceId: string }
   | { id: string; type: 'video'; provider: 'youtube' | 'vimeo'; url: string; title: string; transcript: string; captionsUrl?: string; consentRequired?: boolean }
   | { id: string; type: 'download'; title: string; description: string; sizeLabel: string; uri?: string }
+  | { id: string; type: 'infographic'; template: KnowledgeInfographicTemplate; title: string; description: string; dataPoints: KnowledgeInfographicDataPoint[]; takeaways: string[]; textAlternative: string }
   | { id: string; type: 'action'; title: string; text: string; action: KnowledgeAction };
+
+export type KnowledgeInfographicTemplate = 'comparison' | 'process' | 'proportion' | 'timeline';
+
+export interface KnowledgeInfographicDataPoint {
+  id: string;
+  label: string;
+  value: number;
+  displayValue: string;
+  unit?: string;
+  sourceId: string;
+}
 
 export interface KnowledgeItemSummary {
   id: string;
@@ -175,6 +188,119 @@ export interface KnowledgeWebinarRegistration {
   webinarId: string;
   registeredAt: string;
   reminderEnabled: boolean;
+}
+
+export type KnowledgeLevelId = 'novice' | 'explorer' | 'builder' | 'guru';
+
+export interface KnowledgeLevel {
+  id: KnowledgeLevelId;
+  name: Record<KnowledgeLocale, string>;
+  minimumXp: number;
+  nextMinimumXp: number | null;
+}
+
+export interface KnowledgePreferences {
+  locale: KnowledgeLocale;
+  topicSlugs: string[];
+  onboardingComplete: boolean;
+  updatedAt: string;
+}
+
+export type KnowledgeMissionStepKind = 'content' | 'quiz' | 'tour' | 'simulation' | 'diy' | 'action';
+
+export interface KnowledgeMissionStep {
+  id: string;
+  kind: KnowledgeMissionStepKind;
+  title: Record<KnowledgeLocale, string>;
+  itemId?: string;
+  action?: KnowledgeAction;
+  required: boolean;
+  prerequisiteIds: string[];
+  bonus?: boolean;
+}
+
+export interface KnowledgeChallenge {
+  id: string;
+  slug: string;
+  title: Record<KnowledgeLocale, string>;
+  summary: Record<KnowledgeLocale, string>;
+  topicSlug: string;
+  durationDays: 3 | 7 | 14;
+  rewardPoints: 20 | 35 | 60;
+  steps: KnowledgeMissionStep[];
+}
+
+export interface KnowledgeChallengeAttempt {
+  challengeId: string;
+  attemptId: string;
+  startedAt: string;
+  deadlineAt: string;
+  completedStepIds: string[];
+  status: 'active' | 'completed' | 'expired';
+  completedAt?: string;
+}
+
+export interface KnowledgeQuestNode extends KnowledgeMissionStep {
+  branch?: string;
+  rewardPoints?: number;
+}
+
+export interface KnowledgeQuest {
+  id: string;
+  slug: string;
+  title: Record<KnowledgeLocale, string>;
+  summary: Record<KnowledgeLocale, string>;
+  topicSlug: string;
+  rewardPoints: 50;
+  nodes: KnowledgeQuestNode[];
+}
+
+export interface KnowledgeQuestProgress {
+  questId: string;
+  completedNodeIds: string[];
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface KnowledgeBadgeSummary {
+  code: string;
+  name: Record<KnowledgeLocale, string>;
+  description: Record<KnowledgeLocale, string>;
+  earned: boolean;
+}
+
+export interface KnowledgeLearningProfile {
+  learningXp: number;
+  totalGreenPoints: number;
+  level: KnowledgeLevel;
+  nextLevel: KnowledgeLevel | null;
+  completedItems: number;
+  completedQuizzes: number;
+  completedInteractives: number;
+  topicProgress: Record<string, number>;
+  activeChallenge: KnowledgeChallengeAttempt | null;
+  activeQuest: KnowledgeQuestProgress | null;
+  badges: KnowledgeBadgeSummary[];
+}
+
+export interface KnowledgeRewardResult {
+  awardedPoints: number;
+  learningXp: number;
+  level: KnowledgeLevel;
+  newBadgeCodes: string[];
+}
+
+export interface KnowledgeWebinarQuestion {
+  id: string;
+  webinarId: string;
+  userId?: string;
+  body: string;
+  status: 'pending' | 'approved' | 'answered' | 'rejected';
+  upvotes: number;
+  viewerHasUpvoted: boolean;
+  answer?: string;
+  replayTimestampSeconds?: number;
+  createdAt: string;
 }
 
 export interface KnowledgeLearningPath {
