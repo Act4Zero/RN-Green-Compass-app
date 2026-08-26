@@ -15,7 +15,8 @@ export function formatPointSource(source: PointSource): string {
     'habit_log': 'Sustainable Habit',
     'discussion_participation': 'Community Participation',
     'habit_streak': 'Habit Streak',
-    'learning_milestone': 'Learning Milestone'
+    'learning_milestone': 'Learning Milestone',
+    'daily_challenge': 'Daily Eco-Challenge'
   };
   
   return sourceMap[source] || source;
@@ -38,6 +39,8 @@ export function getPointEventDescription(pointEvent: PointEvent): string {
       return `${source} - Thanks for contributing (+${pointEvent.points} points)`;
     case 'learning_milestone':
       return `${source} - You completed a Knowledge Hub milestone (+${pointEvent.points} points)`;
+    case 'daily_challenge':
+      return `${source} - You completed today’s challenge (+${pointEvent.points} points)`;
     default:
       return `${source} - You earned ${pointEvent.points} points`;
   }
@@ -105,6 +108,8 @@ export function createPointsAnimationMessage(amount: number, source: PointSource
       return `+${amount} Green Points! Thanks for contributing!`;
     case 'learning_milestone':
       return `+${amount} Green Points! Learning milestone reached!`;
+    case 'daily_challenge':
+      return `+${amount} Green Points! Daily challenge completed!`;
     default:
       return `+${amount} Green Points!`;
   }

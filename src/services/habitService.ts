@@ -206,7 +206,7 @@ export const habitService = {
     
     // Award points for the habit log (1 point per habit logged)
     try {
-      await pointsService.processHabitLog(userId, habitId);
+      await pointsService.processHabitLog(userId, habitId, data.id);
     } catch (pointsError) {
       // Log the error but don't fail the habit logging
       console.error(`Error awarding habit log points for habit ${habitId}:`, pointsError);
