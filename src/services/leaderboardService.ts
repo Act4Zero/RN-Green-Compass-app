@@ -41,7 +41,7 @@ const fetchPointsLeaderboard = async (
   
   // Start with base query to get leaderboard data
   let query = supabase
-    .from('leaderboard')
+    .from('opt_in_leaderboard')
     .select('user_id, display_name, total_points')
     .order('total_points', { ascending: false })
     .limit(pagination.pageSize)
@@ -94,7 +94,7 @@ const fetchPointsLeaderboard = async (
   // For 'community', no additional filter needed - show all users
 
   // Execute the query
-  const { data, error, count } = await query;
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching points leaderboard:', error);
@@ -103,7 +103,7 @@ const fetchPointsLeaderboard = async (
 
   // Get total count for pagination based on current filter
   let countQuery = supabase
-    .from('leaderboard')
+    .from('opt_in_leaderboard')
     .select('*', { count: 'exact', head: true });
     
   // Apply the same filters to the count query
@@ -149,7 +149,7 @@ const fetchPointsLeaderboard = async (
 
   // Get current user's rank and data from the leaderboard
   const { data: currentUserData } = await supabase
-    .from('leaderboard')
+    .from('opt_in_leaderboard')
     .select('user_id, display_name, total_points')
     .eq('user_id', currentUserId)
     .single();
@@ -178,7 +178,7 @@ const fetchPointsLeaderboard = async (
   if (currentUserData) {
     // Get user's rank by counting users with higher or equal points
     const { count: userRank } = await supabase
-      .from('leaderboard')
+      .from('opt_in_leaderboard')
       .select('*', { count: 'exact', head: true })
       .gte('total_points', currentUserData.total_points);
     
@@ -251,7 +251,7 @@ const fetchStreakLeaderboard = async (
   // For 'community', no additional filter needed - show all users
 
   // Execute the query
-  const { data, error, count } = await query;
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching streak leaderboard:', error);

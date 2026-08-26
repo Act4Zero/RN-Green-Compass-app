@@ -84,6 +84,15 @@ describe('offsetting service fallback contracts', () => {
     expect(mockRpc).not.toHaveBeenCalled();
   });
 
+  it('deduplicates an offline check-in activity by source event id', async () => {
+    const input = { factorCode: 'plant-meal', comparisonFactorCode: 'beef-meal', quantity: 1, occurredOn: '2026-08-21', sourceEventId: 'daily-check-in:2026-08-21:plant-meal' };
+    await offsettingService.saveCarbonActivity('user-activity', input);
+    await offsettingService.saveCarbonActivity('user-activity', input);
+    const entries = await offsettingService.getCarbonActivities('user-activity');
+    expect(entries).toHaveLength(1);
+    expect(entries[0].avoidedKgCo2e).toBe(4.2);
+  });
+
   it('never recommends learning content above the user progression stage', async () => {
     mockGetKnowledgeHome.mockResolvedValueOnce({
       recommendations: [

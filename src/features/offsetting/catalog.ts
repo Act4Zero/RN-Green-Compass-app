@@ -1,8 +1,10 @@
-import type { DailyEcoChallenge, EmissionFactor, ImpactCategory, LearningStage, SustainabilityPoll } from './types';
+import type { CarbonActivityFactor, DailyEcoChallenge, EmissionFactor, FootprintBenchmark, ImpactCategory, ImpactEquivalency, LearningStage, OffsetProject, PersonalizedCarbonTip, SustainabilityPoll } from './types';
 
 export const FACTOR_VERSION = 'DESNZ-2026-JULY-v1';
 export const FACTOR_SOURCE_URL = 'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2026';
 export const UK_ELECTRICITY_KG_CO2E_PER_KWH = 0.18436;
+export const EDGAR_BENCHMARK_SOURCE_URL = 'https://edgar.jrc.ec.europa.eu/report_2025?vis=ghgpop';
+export const EPA_EQUIVALENCY_SOURCE_URL = 'https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator-calculations-and-references';
 
 // Reviewed July 2026 flat-file factors. Each value combines the direct factor
 // and its matching well-to-tank factor. Flight includes radiative forcing; car
@@ -14,6 +16,47 @@ export const TRAVEL_FACTORS: Record<string, EmissionFactor> = {
   boat: { code: 'boat', version: FACTOR_VERSION, label: 'Average ferry passenger + WTT', kgCo2ePerPassengerKm: 0.13825, sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
   car: { code: 'car', version: FACTOR_VERSION, label: 'Average car, unknown fuel + WTT', kgCo2ePerPassengerKm: 0.2099, sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
 };
+
+export const ACTIVITY_FACTORS: CarbonActivityFactor[] = [
+  { code: 'car-km', activity: 'transport', label: 'Average car journey', unit: 'km', regionCode: 'GB', kgCo2ePerUnit: 0.2099, version: FACTOR_VERSION, methodology: 'Average unknown-fuel car, direct plus well-to-tank, per vehicle kilometre.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'bus-passenger-km', activity: 'transport', label: 'Local bus journey', unit: 'passenger km', regionCode: 'GB', kgCo2ePerUnit: 0.128, version: FACTOR_VERSION, methodology: 'Average local bus, direct plus well-to-tank, per passenger kilometre.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'train-passenger-km', activity: 'transport', label: 'National rail journey', unit: 'passenger km', regionCode: 'GB', kgCo2ePerUnit: 0.03989, version: FACTOR_VERSION, methodology: 'National rail, direct plus well-to-tank, per passenger kilometre.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'electricity-uk-kwh', activity: 'electricity', label: 'UK grid electricity', unit: 'kWh', regionCode: 'GB', kgCo2ePerUnit: UK_ELECTRICITY_KG_CO2E_PER_KWH, version: FACTOR_VERSION, methodology: 'Generation, transmission and distribution, and well-to-tank components.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'natural-gas-kwh', activity: 'heating', label: 'Natural gas heating', unit: 'kWh', regionCode: 'GB', kgCo2ePerUnit: 0.20269, version: FACTOR_VERSION, methodology: 'Natural gas gross calorific value, direct plus well-to-tank estimate.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'heating-oil-kwh', activity: 'heating', label: 'Heating oil', unit: 'kWh', regionCode: 'GB', kgCo2ePerUnit: 0.29877, version: FACTOR_VERSION, methodology: 'Burning oil energy estimate including upstream emissions.', sourceLabel: 'UK Government GHG Conversion Factors 2026', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'beef-meal', activity: 'food', label: 'Beef-based meal estimate', unit: 'meal', regionCode: 'GLOBAL', kgCo2ePerUnit: 5, version: 'GC-FOOD-2026-v1', methodology: 'Directional meal template for personal learning; not an inventory-grade food lifecycle assessment.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'plant-meal', activity: 'food', label: 'Plant-forward meal estimate', unit: 'meal', regionCode: 'GLOBAL', kgCo2ePerUnit: 0.8, version: 'GC-FOOD-2026-v1', methodology: 'Directional meal template for personal learning; not an inventory-grade food lifecycle assessment.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'new-clothing-item', activity: 'purchases', label: 'New clothing item estimate', unit: 'item', regionCode: 'GLOBAL', kgCo2ePerUnit: 12, version: 'GC-CONSUMPTION-2026-v1', methodology: 'Directional consumption template; product-specific footprints vary substantially.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'reused-clothing-item', activity: 'purchases', label: 'Reused clothing item estimate', unit: 'item', regionCode: 'GLOBAL', kgCo2ePerUnit: 1, version: 'GC-CONSUMPTION-2026-v1', methodology: 'Directional estimate for acquisition and handling of a reused item.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'landfill-waste-kg', activity: 'waste', label: 'Mixed waste sent to landfill', unit: 'kg', regionCode: 'GB', kgCo2ePerUnit: 0.467, version: 'GC-WASTE-2026-v1', methodology: 'Directional mixed-waste template; composition and treatment route materially affect the result.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+  { code: 'recycled-waste-kg', activity: 'waste', label: 'Material sent for recycling', unit: 'kg', regionCode: 'GB', kgCo2ePerUnit: 0.021, version: 'GC-WASTE-2026-v1', methodology: 'Directional mixed recycling template; material-specific factors should be preferred when available.', sourceLabel: 'Green Compass reviewed learning estimate', sourceUrl: FACTOR_SOURCE_URL },
+];
+
+export const FOOTPRINT_BENCHMARKS: FootprintBenchmark[] = [
+  { regionCode: 'GLOBAL', regionName: 'Global', year: 2024, tonnesCo2ePerCapita: 6.56, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR 2025 report', sourceUrl: EDGAR_BENCHMARK_SOURCE_URL },
+  { regionCode: 'BG', regionName: 'Bulgaria', year: 2024, tonnesCo2ePerCapita: 6.92, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR 2025 report', sourceUrl: EDGAR_BENCHMARK_SOURCE_URL },
+  { regionCode: 'GB', regionName: 'United Kingdom', year: 2024, tonnesCo2ePerCapita: 5.63, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR 2025 report', sourceUrl: EDGAR_BENCHMARK_SOURCE_URL },
+  { regionCode: 'US', regionName: 'United States', year: 2024, tonnesCo2ePerCapita: 17.34, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR 2025 report', sourceUrl: EDGAR_BENCHMARK_SOURCE_URL },
+  { regionCode: 'DE', regionName: 'Germany', year: 2024, tonnesCo2ePerCapita: 8.17, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR 2025 report', sourceUrl: EDGAR_BENCHMARK_SOURCE_URL },
+];
+
+export const IMPACT_EQUIVALENCIES: ImpactEquivalency[] = [
+  { code: 'urban-tree-seedling-10-years', version: 'EPA-2024-v1', label: 'urban tree seedlings grown for 10 years (annual sequestration equivalent)', kgCo2ePerUnit: 60, methodology: 'Approximate probability-weighted annual sequestration after the EPA growth and survival assumptions. This is not a tree-planting claim.', sourceLabel: 'US EPA Greenhouse Gas Equivalencies Calculator', sourceUrl: EPA_EQUIVALENCY_SOURCE_URL },
+];
+
+export const OFFSET_PROJECTS: OffsetProject[] = [
+  { id: 'cloverly-forest-restoration', provider: 'cloverly', providerProjectId: 'forest-restoration', name: 'Verified forest restoration portfolio', summary: 'A reviewed placeholder catalog entry for Cloverly sandbox checkout. Production metadata is refreshed from the provider before activation.', country: 'Multiple regions', technology: 'Afforestation and forest restoration', standard: 'Provider-verified registry credits', registryUrl: 'https://cloverly.com/', permanence: 'Project-specific; inspect the registry record before checkout.', pricePerTonneMinor: 2200, currency: 'USD', active: true },
+  { id: 'cloverly-renewable-energy', provider: 'cloverly', providerProjectId: 'renewable-energy', name: 'Verified renewable energy portfolio', summary: 'A reviewed placeholder catalog entry for Cloverly sandbox checkout. Production inventory and certification remain provider-authoritative.', country: 'Multiple regions', technology: 'Renewable energy', standard: 'Provider-verified registry credits', registryUrl: 'https://cloverly.com/', permanence: 'Avoidance credit; project-specific documentation applies.', pricePerTonneMinor: 1800, currency: 'USD', active: true },
+];
+
+export const PERSONALIZED_CARBON_TIPS: PersonalizedCarbonTip[] = [
+  { id: 'tip-plant-meal', category: 'food', title: 'Try one plant-forward meal', description: 'Swap one beef-based meal for the plant-forward template and log the comparison.', expectedImpact: 'About 4.2 kg CO₂e avoided per compared meal', assumption: 'Uses Green Compass directional meal templates; recipes and supply chains vary.', knowledgeSlug: 'sustainable-food-starter-guide' },
+  { id: 'tip-train-km', category: 'transport', title: 'Compare rail for a suitable trip', description: 'Use the travel comparison before a journey and choose rail when practical.', expectedImpact: 'About 0.17 kg CO₂e less per km than a solo average car', assumption: 'Uses UK 2026 average car and national rail factors.', knowledgeSlug: 'green-transportation-starter-guide' },
+  { id: 'tip-reuse-item', category: 'purchases', title: 'Choose one reused item first', description: 'Search second-hand before buying one new clothing item.', expectedImpact: 'Directional difference of about 11 kg CO₂e per template item', assumption: 'Product footprints vary widely; this is a learning estimate.', knowledgeSlug: 'ethical-fashion-starter-guide' },
+  { id: 'tip-recycle-waste', category: 'waste', title: 'Separate one kilogram of recyclable material', description: 'Log the material with an explicit landfill comparison.', expectedImpact: 'Directional difference of about 0.45 kg CO₂e per kg', assumption: 'Material mix and local treatment route change the result.', knowledgeSlug: 'zero-waste-starter-guide' },
+  { id: 'tip-electricity-kwh', category: 'electricity', title: 'Measure one avoidable electricity load', description: 'Use a bill or smart plug to find kWh that can be removed safely.', expectedImpact: '0.184 kg CO₂e per UK-grid kWh not consumed', assumption: 'Uses the disclosed UK grid factor; regional electricity differs.', knowledgeSlug: 'clean-energy-starter-guide' },
+  { id: 'tip-heating-kwh', category: 'heating', title: 'Reduce a measured heating load', description: 'Track kWh before and after one safe efficiency change.', expectedImpact: 'About 0.20 kg CO₂e per natural-gas kWh avoided', assumption: 'Uses the UK natural-gas template and excludes building-specific effects.', knowledgeSlug: 'clean-energy-starter-guide' },
+];
 
 const categoryKnowledge: Record<ImpactCategory, string> = {
   plastic: 'zero-waste-starter-guide',
