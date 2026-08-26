@@ -17,6 +17,7 @@ This is a React Native application built with [Expo](https://expo.dev) that help
    EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=your_public_mapbox_token
+   EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
    ```
 
    The Mapbox value is a public, URL-restricted runtime token. Native Mapbox
@@ -51,6 +52,9 @@ This is a React Native application built with [Expo](https://expo.dev) that help
    Web development continues to work with `npx expo start --web`. See
    [`docs/features/sustainability-globe.md`](docs/features/sustainability-globe.md)
    for architecture, styling, credentials, testing, and data/licensing details.
+   Marketplace setup, Stripe Connect secrets, partner acceptance and rollout are
+   documented in
+   [`docs/features/sustainability-marketplace.md`](docs/features/sustainability-marketplace.md).
 
    * 3.1. Alternative way to run the app
 

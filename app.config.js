@@ -11,6 +11,7 @@ const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDR
 const EXPO_PUBLIC_GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI;
 const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
 const EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+const EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (process.env.VERCEL_ENV === 'production' && (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY)) {
   throw new Error(
@@ -53,6 +54,13 @@ module.exports = {
     "expo-notifications",
     "@rnmapbox/maps",
     [
+      "@stripe/stripe-react-native",
+      {
+        "merchantIdentifier": "merchant.com.act4zero.GreenCompass",
+        "enableGooglePay": true
+      }
+    ],
+    [
       "expo-location",
       {
         "locationWhenInUsePermission": "Show your position on the Sustainability Globe."
@@ -84,5 +92,6 @@ module.exports = {
     // Cloudflare Turnstile site key for captcha
     turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
     mapboxAccessToken: EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+    stripePublishableKey: EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   }
 };

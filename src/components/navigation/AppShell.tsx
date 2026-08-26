@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { Image, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme';
-import { APP_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
+import { APP_NAV_ITEMS, MOBILE_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
 import { PROFILE_NAV_ITEM } from './config';
 import { useAuth } from '@/context/AuthContext';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
-export { APP_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
+export { APP_NAV_ITEMS, MOBILE_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
 
 function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolean }) {
   const pathname = usePathname();
@@ -73,11 +73,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme } = useAppTheme();
   const { user, loading: authLoading } = useAuth();
   const knowledgeEnabled = useFeatureFlag('knowledge_hub', true);
+  const marketplaceEnabled = useFeatureFlag('sustainability_marketplace_mvp', false);
   const [hasHydrated, setHasHydrated] = useState(false);
   const isPublicKnowledge = pathname.startsWith('/knowledge') && !user && !authLoading;
-  const isPublic = pathname === '/' || pathname.startsWith('/auth') || isPublicKnowledge;
+  const isPublicMarketplace = pathname.startsWith('/marketplace') && !user && !authLoading;
+  const isPublic = pathname === '/' || pathname.startsWith('/auth') || isPublicKnowledge || isPublicMarketplace;
   const desktop = hasHydrated && width >= theme.breakpoints.desktop;
-  const navItems = knowledgeEnabled ? APP_NAV_ITEMS : APP_NAV_ITEMS.filter((item) => item.href !== '/knowledge');
+  const filterEnabled = (items: AppNavItem[]) => items.filter((item) => (knowledgeEnabled || item.href !== '/knowledge') && (marketplaceEnabled || item.href !== '/marketplace'));
+  const desktopNavItems = filterEnabled(APP_NAV_ITEMS);
+  const mobileNavItems = filterEnabled(MOBILE_NAV_ITEMS);
 
   // Expo static rendering has no viewport. Match its mobile-first shell for the
   // initial client render, then promote to the desktop rail after hydration.
@@ -107,7 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </View>
           </View>
           <View style={{ gap: theme.spacing.xs }}>
-            {navItems.map((item) => <NavItem key={item.href} item={item} />)}
+            {desktopNavItems.map((item) => <NavItem key={item.href} item={item} />)}
           </View>
           <View style={{ flex: 1 }} />
           <View style={{ marginBottom: theme.spacing.sm }}><NavItem item={PROFILE_NAV_ITEM} /></View>
@@ -166,7 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             backgroundColor: theme.colors.backgroundElevated,
           }}
         >
-          {navItems.map((item) => <NavItem key={item.href} item={item} compact />)}
+          {mobileNavItems.map((item) => <NavItem key={item.href} item={item} compact />)}
         </View>
       ) : null}
     </View>
