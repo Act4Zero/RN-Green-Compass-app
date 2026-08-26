@@ -3,7 +3,7 @@
  * Handles loading and filtering map location data
  */
 import { MapLocation, LocationCategory, GeographicBounds } from '../types/map';
-import { getEVLocations } from '../utils/locationDataUtils';
+import { loadCatalogLocations, sustainabilityMapService } from '../features/sustainability-map';
 
 // Default center coordinates for Sofia, Bulgaria
 export const DEFAULT_CENTER = {
@@ -31,8 +31,20 @@ export const BULGARIA_BOUNDS: GeographicBounds = {
 export const loadLocations = async (): Promise<MapLocation[]> => {
   try {
     // Load locations from our local assets using the utility function
-    const locations = await getEVLocations();
-    return locations;
+    const { locations } = await loadCatalogLocations();
+    try {
+      const events = await sustainabilityMapService.listEvents();
+      return [...locations, ...events.map((event): MapLocation => ({
+        id: `event:${event.id}`, name: event.title, description: event.summary,
+        lat: event.latitude, lng: event.longitude, town: '', state_or_province: null,
+        address_line_1: null, address_line_2: null, postcode: null, country: 'Bulgaria',
+        category: 'community_events', categories: ['community_events'], source: 'Green Compass Community',
+        licence: 'Community event listing', verified: true, connectors: [], credentials: [],
+        sustainability_features: [{ label: 'Upcoming event', value: new Date(event.startsAt).toLocaleDateString(), verified: true }],
+      }))];
+    } catch {
+      return locations;
+    }
   } catch (error) {
     console.error('Error loading EV locations:', error);
     throw error;

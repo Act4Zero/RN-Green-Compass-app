@@ -56,7 +56,14 @@ export const MAP_STYLE_PRESETS: Record<MapStyleId, MapStylePreset> = {
 export const MAP_STYLE_IDS = Object.keys(MAP_STYLE_PRESETS) as MapStyleId[];
 export const MAP_STYLE_STORAGE_KEY = 'green-compass:map-style';
 
-export const getMapboxAccessToken = (): string => process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ?? '';
+export const getMapboxAccessToken = (): string => {
+  const platformToken = Platform.OS === 'web'
+    ? process.env.EXPO_PUBLIC_MAPBOX_WEB_ACCESS_TOKEN
+    : Platform.OS === 'ios'
+      ? process.env.EXPO_PUBLIC_MAPBOX_IOS_ACCESS_TOKEN
+      : process.env.EXPO_PUBLIC_MAPBOX_ANDROID_ACCESS_TOKEN;
+  return (platformToken || process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '').trim();
+};
 
 export const isExpoGoRuntime = (): boolean => (
   Platform.OS !== 'web'

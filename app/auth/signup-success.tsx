@@ -9,7 +9,7 @@ import {
   TextStyle,
   ImageStyle,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
@@ -27,11 +27,12 @@ export default function SignupSuccess() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { next } = useLocalSearchParams<{ next?: string }>();
   const { theme } = useAppTheme();
 
   const handleContinue = () => {
     console.log('User not authenticated, redirecting to signin');
-    router.push('/auth/signin');
+    router.push({ pathname: '/auth/signin', params: { next: next === '/map' ? '/map' : '/home' } });
   };
 
   return (

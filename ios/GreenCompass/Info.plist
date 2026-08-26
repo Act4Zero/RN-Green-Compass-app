@@ -27,8 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>myapp</string>
-          <string>com.anonymous.GreenCompass</string>
+          <string>com.act4zero.greencompass</string>
         </array>
       </dict>
     </array>

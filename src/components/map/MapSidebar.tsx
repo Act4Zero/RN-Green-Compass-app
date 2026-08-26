@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { MAP_STYLE_IDS, MAP_STYLE_PRESETS } from '../../config/mapGlobe';
@@ -11,6 +11,7 @@ import { getCategoryConfig } from '../../utils/categoryUtils';
 export default function MapSidebar() {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const { utm_source } = useLocalSearchParams<{ utm_source?: string }>();
   const pulse = useRef(new Animated.Value(1)).current;
@@ -40,7 +41,7 @@ export default function MapSidebar() {
           {desktop ? (
             <View style={{ minWidth: 180 }}>
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>Sustainability Globe</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>89 verified EV locations · Bulgaria</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{map.locations.length} verified places · Bulgaria</Text>
             </View>
           ) : null}
           <View style={{ flex: 1, minHeight: 46, borderRadius: theme.radii.md, borderWidth: 1, borderColor: theme.colors.borderStrong, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.sm }}>
@@ -48,7 +49,7 @@ export default function MapSidebar() {
             <TextInput
               value={map.query}
               onChangeText={map.setQuery}
-              placeholder="Search chargers, towns or postcodes"
+              placeholder="Search places, towns or postcodes"
               placeholderTextColor={theme.colors.textMuted}
               accessibilityLabel="Search sustainability locations"
               returnKeyType="search"
@@ -94,6 +95,10 @@ export default function MapSidebar() {
               );
             })}
           </Animated.View>
+          <View style={{ width: 1, height: 28, backgroundColor: theme.colors.border, marginHorizontal: 2 }} />
+          <Pressable accessibilityRole="button" accessibilityLabel="Open eco-routes" onPress={() => router.push('/map/routes' as any)} style={{ minHeight: 40, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Ionicons name="trail-sign-outline" size={17} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>Eco-routes</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open map impact" onPress={() => router.push('/map/impact' as any)} style={{ minHeight: 40, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Ionicons name="analytics-outline" size={17} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>My impact</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="Suggest a sustainable place" onPress={() => router.push('/map/contribute' as any)} style={{ minHeight: 40, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Ionicons name="add-circle-outline" size={17} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>Suggest</Text></Pressable>
           <View style={{ width: 1, height: 28, backgroundColor: theme.colors.border, marginHorizontal: 2 }} />
           {MAP_STYLE_IDS.map((styleId) => {
             const preset = MAP_STYLE_PRESETS[styleId];

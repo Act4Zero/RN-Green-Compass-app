@@ -24,6 +24,7 @@ import {
   isDetailedCameraOutOfCoverage,
 } from '../utils/mapGlobe';
 import { getCurrentPosition } from '../utils/mapUtils';
+import { sustainabilityMapService } from '../features/sustainability-map';
 import { INITIAL_MAP_CONTROLLER_STATE, mapControllerReducer } from './mapControllerReducer';
 
 export interface MapContextType {
@@ -46,6 +47,7 @@ export interface MapContextType {
   isResultsOpen: boolean;
   isResultsRailCollapsed: boolean;
   isDataInitialized: boolean;
+  recommendationIds: string[];
   loadAllLocations: () => Promise<void>;
   toggleCategoryFilter: (category: LocationCategory, enabled: boolean) => void;
   toggleAllCategories: (enabled: boolean) => void;
@@ -60,6 +62,7 @@ export interface MapContextType {
   setResultsRailCollapsed: (collapsed: boolean) => void;
   resetViewportToDefault: () => void;
   checkCoverage: () => void;
+  refreshRecommendations: (point?: MapPoint) => Promise<void>;
 }
 
 const unavailable = () => undefined;
@@ -70,12 +73,14 @@ export const MapContext = createContext<MapContextType>({
   camera: EUROPE_GLOBE_CAMERA, cameraCommand: null, userLocation: null, isLoading: false,
   error: null, isLocating: false, locationError: null, isOutOfCoverage: false,
   isResultsOpen: false, isResultsRailCollapsed: false, isDataInitialized: false,
+  recommendationIds: [],
   loadAllLocations: async () => undefined,
   toggleCategoryFilter: unavailable, toggleAllCategories: unavailable, setQuery: unavailable,
   selectLocation: unavailable, setStyleId: unavailable, updateCamera: unavailable,
   moveCamera: unavailable, locateUser: async () => null, clearLocationError: unavailable,
   setResultsOpen: unavailable, setResultsRailCollapsed: unavailable,
   resetViewportToDefault: unavailable, checkCoverage: unavailable,
+  refreshRecommendations: async () => undefined,
 });
 
 export function MapProvider({ children }: { children: ReactNode }) {
@@ -85,9 +90,11 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [recommendationIds, setRecommendationIds] = useState<string[]>([]);
   const commandId = useRef(0);
   const hasTrackedSearch = useRef(false);
   const loaded = useRef(false);
+  const recommendationsLoaded = useRef(false);
 
   const loadAllLocations = useCallback(async () => {
     if (loaded.current) return;
@@ -135,6 +142,19 @@ export function MapProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'camera-commanded', command: { ...next, id: commandId.current, durationMs } });
   }, []);
 
+  const refreshRecommendations = useCallback(async (point?: MapPoint) => {
+    try {
+      const recommendations = await sustainabilityMapService.listRecommendations(point || controller.userLocation || controller.camera.center);
+      setRecommendationIds(recommendations.map((item) => item.locationId));
+    } catch { setRecommendationIds([]); }
+  }, [controller.camera.center, controller.userLocation]);
+
+  useEffect(() => {
+    if (!locations.length || recommendationsLoaded.current) return;
+    recommendationsLoaded.current = true;
+    void refreshRecommendations();
+  }, [locations.length, refreshRecommendations]);
+
   const toggleCategoryFilter = useCallback((category: LocationCategory, enabled: boolean) => {
     dispatch({ type: 'category-toggled', category, enabled });
     analyticsService.trackEvent('map_filter_toggled', { category, enabled });
@@ -175,6 +195,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
       const point = await getCurrentPosition();
       dispatch({ type: 'user-located', location: point });
       moveCamera({ center: point, zoom: 13.5, pitch: 42 }, 900);
+      void refreshRecommendations(point);
       analyticsService.trackEvent('map_locate_outcome', { outcome: 'success' });
       return point;
     } catch (locateError) {
@@ -185,7 +206,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLocating(false);
     }
-  }, [moveCamera]);
+  }, [moveCamera, refreshRecommendations]);
 
   const resetViewportToDefault = useCallback(() => {
     moveCamera(BULGARIA_CAMERA, 950);
@@ -197,18 +218,19 @@ export function MapProvider({ children }: { children: ReactNode }) {
     selectedLocation, styleId, camera, cameraCommand, userLocation, isLoading, error,
     isLocating, locationError, isOutOfCoverage, isResultsOpen, isResultsRailCollapsed,
     isDataInitialized: !isLoading && !error,
+    recommendationIds,
     loadAllLocations, toggleCategoryFilter, toggleAllCategories, setQuery, selectLocation,
     setStyleId, updateCamera: (nextCamera) => dispatch({ type: 'camera-changed', camera: nextCamera }), moveCamera, locateUser,
     clearLocationError: () => setLocationError(null),
     setResultsOpen: (open) => dispatch({ type: 'results-visibility-changed', open }),
     setResultsRailCollapsed: (collapsed) => dispatch({ type: 'results-rail-collapsed-changed', collapsed }),
-    resetViewportToDefault, checkCoverage: () => undefined,
+    resetViewportToDefault, checkCoverage: () => undefined, refreshRecommendations,
   }), [
     locations, filteredLocations, visibleLocations, availableCategories, filters, query,
     selectedLocation, styleId, camera, cameraCommand, userLocation, isLoading, error,
     isLocating, locationError, isOutOfCoverage, isResultsOpen, isResultsRailCollapsed, loadAllLocations,
     toggleCategoryFilter, toggleAllCategories, setQuery, selectLocation, setStyleId,
-    moveCamera, locateUser, resetViewportToDefault,
+    moveCamera, locateUser, resetViewportToDefault, recommendationIds, refreshRecommendations,
   ]);
 
   return <MapContext.Provider value={value}>{children}</MapContext.Provider>;

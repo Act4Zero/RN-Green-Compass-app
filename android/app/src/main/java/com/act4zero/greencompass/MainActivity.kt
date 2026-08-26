@@ -1,4 +1,4 @@
-package com.anonymous.GreenCompass
+package com.act4zero.greencompass
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -18,6 +18,8 @@ let mockAccessToken = '';
 let mockExpoGoRuntime = false;
 
 jest.mock('@/theme', () => ({ useAppTheme: () => ({ theme: require('@/theme/tokens').createTheme('light') }) }));
+jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }), useLocalSearchParams: () => ({}) }));
 jest.mock('@/hooks/useMapIntegration', () => ({ useMapIntegration: () => mockMapFacade }));
 jest.mock('@/config/mapGlobe', () => ({
   ...jest.requireActual('@/config/mapGlobe'),
@@ -56,7 +58,7 @@ describe('Sustainability Globe shell', () => {
     mockMapFacade.isLoading = true;
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapView />); });
-    expect(tree.root.findByProps({ children: 'Preparing 89 verified places…' })).toBeTruthy();
+    expect(tree.root.findByProps({ children: 'Preparing the verified sustainability catalogue…' })).toBeTruthy();
   });
 
   it('renders a clear non-secret configuration fallback when the public token is absent', () => {
@@ -64,7 +66,7 @@ describe('Sustainability Globe shell', () => {
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapView />); });
     expect(tree.root.findByProps({ children: 'The globe is taking a breather' })).toBeTruthy();
-    expect(tree.root.findByProps({ children: 'Add EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to enable the live 3D map.' })).toBeTruthy();
+    expect(tree.root.findByProps({ children: 'Add the platform-specific EXPO_PUBLIC_MAPBOX_*_ACCESS_TOKEN to enable the live 3D map.' })).toBeTruthy();
   });
 
   it('opens safely with custom-build guidance in Expo Go', () => {

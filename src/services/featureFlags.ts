@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import supabase from '../lib/supabase';
+import supabase, { isSupabaseConfigured } from '../lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
@@ -78,6 +78,15 @@ export function useFeatureFlags(): {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Public/static previews are intentionally usable without Supabase secrets.
+    // Avoid querying the build placeholder (and emitting a console error) until
+    // a real backend is configured.
+    if (!isSupabaseConfigured) {
+      setFlags({});
+      setLoading(false);
+      return;
+    }
+
     // Subscribe to feature flags
     const channel = FeatureFlagsService.subscribeToFeatureFlags((newFlags) => {
       setFlags(newFlags);
