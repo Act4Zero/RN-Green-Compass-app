@@ -94,9 +94,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.GreenCompass'
+    namespace 'com.act4zero.greencompass'
     defaultConfig {
-        applicationId 'com.anonymous.GreenCompass'
+        applicationId 'com.act4zero.greencompass'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

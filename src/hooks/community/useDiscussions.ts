@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { discussionService } from '../../services/community';
-import { Discussion, PaginationParams, DiscussionsState, UseDiscussionsProps } from '../../types/community/types';
+import { PaginationParams, DiscussionsState, UseDiscussionsProps } from '../../types/community/types';
 import useCurrentUser from './useCurrentUser';
+import type { DiscussionCategory } from '@/types/community/community';
 
 /**
  * Hook for managing discussions in the community feed
@@ -59,7 +60,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
       console.error('Error loading discussions:', error);
       return null;
     }
-  }, [pageSize]); // Removed state.isLoading from dependencies
+  }, [pageSize, currentUser?.id]);
 
   /**
    * Load more discussions (pagination)
@@ -83,7 +84,8 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
    */
   const createDiscussion = useCallback(async (
     content: string,
-    title?: string
+    title?: string,
+    category: DiscussionCategory = 'sustainable_living'
   ) => {
     if (!currentUser) {
       setState(prev => ({ ...prev, error: 'You must be logged in to create a post' }));
@@ -101,7 +103,8 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
       const newDiscussion = await discussionService.createDiscussion(
         currentUser.id,
         content,
-        title
+        title,
+        category
       );
 
       // Update the discussions list with the new post
@@ -128,7 +131,7 @@ const useDiscussions = ({ initialPage = 1, pageSize = 10 }: UseDiscussionsProps 
    */
   const updateDiscussion = useCallback(async (
     discussionId: string,
-    updates: { content?: string; title?: string }
+    updates: { content?: string; title?: string; category?: DiscussionCategory }
   ) => {
     if (!currentUser) {
       setState(prev => ({ ...prev, error: 'You must be logged in to update a post' }));

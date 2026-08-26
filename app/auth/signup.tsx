@@ -16,7 +16,7 @@ import {
   BackHandler,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
@@ -59,6 +59,8 @@ export default function SignUp() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  const destination = next === '/map' ? '/map' : '/home';
   const { signUp, refreshSession, signInWithGoogle } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -66,7 +68,7 @@ export default function SignUp() {
   const handleGoogleSignUp = async () => {
     try {
       setGoogleLoading(true);
-      await signInWithGoogle();
+      await signInWithGoogle(destination);
     } catch (error) {
       // Optionally show error feedback
       console.error('Google sign up error:', error);
@@ -285,8 +287,11 @@ export default function SignUp() {
         // Future implementation: Update user profile with fullName
       }
       
-      // Show success message and navigate to success screen
-      router.push('/auth/signup-success');
+      // Confirmed projects return a session immediately; email-confirmation projects
+      // continue through the success screen while preserving the requested map route.
+      router.replace(finalSessionCheck.session
+        ? destination
+        : { pathname: '/auth/signup-success', params: { next: destination } });
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign up error:', err);
@@ -442,7 +447,7 @@ export default function SignUp() {
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
               Already have an account?{' '}
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signin')}>Sign in</Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signin', params: { next: destination } })}>Sign in</Text>
             </Text>
           </View>
         </View>

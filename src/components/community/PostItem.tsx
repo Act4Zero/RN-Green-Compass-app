@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Linking, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import postItemStyles from './PostItem.styles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import FeedStyles from '@/styles/FeedStyles';
 import { useAppTheme } from '@/theme';
+import { useNotification } from '@/context/NotificationContext';
+import { communityEngagementService } from '@/features/community';
 
 // Custom renderer for Markdown images to make them clickable
 const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
@@ -63,6 +65,7 @@ function PostItem({
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const { theme } = useAppTheme();
   const { user } = useAuth();
+  const { addNotification } = useNotification();
   // Get user display name with a fallback
   const userName = user?.email ? user.email.split('@')[0] : undefined;
   
@@ -104,14 +107,28 @@ function PostItem({
   const handleCloseShareModal = useCallback(() => {
     setIsShareModalVisible(false);
   }, []);
-  
-  // Handle share error
-  const handleShareError = useCallback((error: string) => {
-    Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing this post. Please try again.'
-    );
-  }, []);
+
+  const handleReportPress = useCallback((e: any) => {
+    e.stopPropagation();
+    addNotification({
+      type: 'modal',
+      title: 'Report discussion',
+      message: 'Send this discussion to the moderation team for review?',
+      severity: 'warning',
+      autoClose: false,
+      action: {
+        label: 'Send report',
+        onPress: async () => {
+          try {
+            await communityEngagementService.reportDiscussion(discussion.id);
+            addNotification({ type: 'toast', message: 'Report sent to the moderation team.', severity: 'success' });
+          } catch (error) {
+            addNotification({ type: 'toast', message: error instanceof Error ? error.message : 'Unable to send report.', severity: 'error' });
+          }
+        },
+      },
+    });
+  }, [addNotification, discussion.id]);
   
   // Initialize router
   const router = useRouter();
@@ -167,6 +184,7 @@ function PostItem({
       </View>
       
       {/* Post Title */}
+      <View style={{ alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: theme.colors.primarySoft, marginBottom: 7 }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'capitalize' }]}>{String(discussion.category || 'sustainable_living').replace(/_/g, ' ')}</Text></View>
       {discussion.title && (
         <Text style={[styles.postTitle, { color: theme.colors.text }]}>{discussion.title}</Text>
       )}
@@ -238,6 +256,7 @@ function PostItem({
           <Ionicons name="share-social-outline" size={20} color={theme.colors.textMuted} />
           <Text style={postItemStyles.shareText}>Share</Text>
         </TouchableOpacity>
+        {discussion.user_id !== user?.id ? <TouchableOpacity style={postItemStyles.shareButton} onPress={handleReportPress} accessibilityLabel="Report discussion"><Ionicons name="flag-outline" size={19} color={theme.colors.textMuted} /><Text style={postItemStyles.shareText}>Report</Text></TouchableOpacity> : null}
       </View>
     </TouchableOpacity>
     

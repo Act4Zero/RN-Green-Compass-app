@@ -1,4 +1,4 @@
-package com.anonymous.GreenCompass
+package com.act4zero.greencompass
 
 import android.app.Application
 import android.content.res.Configuration

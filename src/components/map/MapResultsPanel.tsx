@@ -5,11 +5,14 @@ import { useMapIntegration } from '../../hooks/useMapIntegration';
 import { useAppTheme } from '../../theme';
 import { MapLocation } from '../../types/map';
 import { formatAddress } from '../../utils/mapUtils';
+import { getCategoryConfig } from '../../utils/categoryUtils';
 
 function ResultRow({ location }: { location: MapLocation }) {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
   const selected = map.selectedLocation?.id === location.id;
+  const category = getCategoryConfig(location.category);
+  const recommended = map.recommendationIds.includes(location.id);
   return (
     <Pressable
       accessibilityRole="button"
@@ -23,13 +26,13 @@ function ResultRow({ location }: { location: MapLocation }) {
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.xs }}>
         <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}>
-          <Ionicons name="flash" size={17} color={theme.colors.accent} />
+          <Ionicons name={category.icon as any} size={17} color={theme.colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text }]}>{location.name}</Text>
+          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text, flexShrink: 1 }]}>{location.name}</Text>{recommended ? <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 10 }]}>FOR YOU</Text> : null}</View>
           <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{formatAddress(location) || location.town}</Text>
         </View>
-        {location.power_kw ? <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{location.power_kw} kW</Text> : null}
+        {location.power_kw ? <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{location.power_kw} kW</Text> : location.verified ? <Ionicons name="shield-checkmark" size={18} color={theme.colors.primary} /> : null}
       </View>
     </Pressable>
   );
