@@ -4,7 +4,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import useCommunityFeed from '../community/useCommunityFeed';
-import useCommunityFeedState from './useCommunityFeedState';
+import type { DiscussionCategory } from '@/types/community/community';
 
 /**
  * Custom hook for managing new post creation and editing logic
@@ -21,8 +21,6 @@ function useNewPost() {
     // Form state
     newPostContent,
     setNewPostContent,
-    newPostTitle,
-    setNewPostTitle,
     resetPostForm,
     isSubmitting,
     submitError,
@@ -35,9 +33,6 @@ function useNewPost() {
     loadDiscussion
   } = useCommunityFeed();
 
-  // Get toast handler from feed state
-  const { showToastMessage } = useCommunityFeedState();
-  
   // Get notification context
   const notification = useNotification();
   
@@ -45,6 +40,7 @@ function useNewPost() {
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [postTitle, setPostTitle] = useState('');
+  const [category, setCategory] = useState<DiscussionCategory>('sustainable_living');
   const didApplyPrefill = useRef(false);
 
   // Sharing routes only prefill a draft. The user still reviews and submits it,
@@ -82,13 +78,14 @@ function useNewPost() {
     };
     
     loadPostData();
-  }, [isEditMode, postId, user, loadDiscussion, router]);
+  }, [isEditMode, postId, user, loadDiscussion, notification, router]);
   
   // Update form when post data is loaded
   useEffect(() => {
     if (isEditMode && selectedDiscussion) {
       setNewPostContent(selectedDiscussion.content);
       setPostTitle(selectedDiscussion.title || '');
+      setCategory(selectedDiscussion.category || 'sustainable_living');
     }
   }, [isEditMode, selectedDiscussion, setNewPostContent]);
 
@@ -125,7 +122,8 @@ function useNewPost() {
         console.log('Updating existing post:', postId);
         result = await updateDiscussion(postId, {
           content: formattedContent,
-          title: postTitle.trim() || undefined
+          title: postTitle.trim() || undefined,
+          category,
         });
         
         if (result) {
@@ -144,7 +142,7 @@ function useNewPost() {
       } else {
         // Create new post
         console.log('Creating new post');
-        result = await createDiscussion(formattedContent, postTitle.trim() || undefined);
+        result = await createDiscussion(formattedContent, postTitle.trim() || undefined, category);
         
         if (result) {
           // Reset the form
@@ -193,6 +191,8 @@ function useNewPost() {
     isEditMode,
     postTitle,
     setPostTitle,
+    category,
+    setCategory,
     newPostContent,
     setNewPostContent,
     showMarkdownHelp,
