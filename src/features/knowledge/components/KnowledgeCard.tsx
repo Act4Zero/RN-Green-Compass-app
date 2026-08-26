@@ -9,7 +9,7 @@ import { KNOWLEDGE_TOPICS } from '../data/catalog';
 import { resolveKnowledgeVisual } from '../visuals';
 
 const TYPE_LABELS: Record<KnowledgeItemSummary['type'], string> = {
-  article: 'Article', guide: 'Guide', video: 'Video', quiz: 'Quiz', resource: 'Resource', diy: 'DIY project', tour: 'Virtual tour', simulation: 'Impact lab', webinar: 'Live session', daily_fact: 'Eco fact', daily_quote: 'Leader quote', daily_tip: 'Daily tip',
+  article: 'Article', guide: 'Guide', infographic: 'Infographic', video: 'Video', quiz: 'Quiz', resource: 'Resource', diy: 'DIY project', tour: 'Virtual tour', simulation: 'Impact lab', webinar: 'Live session', daily_fact: 'Eco fact', daily_quote: 'Leader quote', daily_tip: 'Daily tip',
 };
 
 export function KnowledgeCard({ item, reason, progress, compact = false }: { item: KnowledgeItemSummary; reason?: string; progress?: number; compact?: boolean }) {

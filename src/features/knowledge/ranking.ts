@@ -6,6 +6,7 @@ export interface RankingContext {
   activeCategories: string[];
   bookmarkedItemIds: string[];
   progress: KnowledgeProgress[];
+  pathProgressByTopic?: Record<string, number>;
   now?: Date;
 }
 
@@ -21,6 +22,7 @@ export function rankKnowledgeItems(items: KnowledgeItemSummary[], context: Ranki
   const habitTopics = new Set(context.activeCategories.flatMap((category) => HABIT_TOPIC_MAP[category] || []));
   const bookmarks = new Set(context.bookmarkedItemIds);
   const completed = new Set(context.progress.filter((item) => item.completed).map((item) => item.itemId));
+  const completedByDifficulty = (topic: string, difficulty: KnowledgeItemSummary['difficulty']) => items.filter((item) => item.topicSlugs.includes(topic) && item.difficulty === difficulty && completed.has(item.id)).length;
   const now = context.now ?? new Date();
 
   const ranked = items
@@ -44,6 +46,12 @@ export function rankKnowledgeItems(items: KnowledgeItemSummary[], context: Ranki
       if (ageDays <= 45) score += 1;
       if (completed.has(item.id)) score -= 6;
       if (item.editorPick) score += 1;
+      const primaryTopic = item.topicSlugs[0];
+      const desiredDifficulty: KnowledgeItemSummary['difficulty'] = completedByDifficulty(primaryTopic, 'intermediate') >= 2 || (context.pathProgressByTopic?.[primaryTopic] || 0) >= 60 ? 'advanced' : completedByDifficulty(primaryTopic, 'beginner') >= 2 ? 'intermediate' : 'beginner';
+      if (item.difficulty === desiredDifficulty) {
+        score += 2;
+        if (!interestMatch && !habitMatch) reason = desiredDifficulty === 'beginner' ? 'A good place to begin' : `Your next ${desiredDifficulty} step`;
+      } else if ((desiredDifficulty === 'beginner' && item.difficulty !== 'beginner') || (desiredDifficulty === 'intermediate' && item.difficulty === 'advanced')) score -= 2;
 
       return { ...item, score, reason };
     })

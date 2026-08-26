@@ -107,6 +107,10 @@ export default function RootLayout() {
           <Stack.Screen name="knowledge/tour/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="knowledge/simulation/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="knowledge/webinar/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/learning" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/preferences" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/challenge/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="knowledge/quest/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="knowledge/certificate/[code]" options={{ headerShown: false }} />
           <Stack.Screen name="admin/knowledge/index" options={{ headerShown: false }} />
           <Stack.Screen name="admin/community/index" options={{ headerShown: false }} />
