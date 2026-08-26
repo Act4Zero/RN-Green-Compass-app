@@ -1,6 +1,7 @@
 name: Sustainability Marketplace CI
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'app/marketplace/**'
