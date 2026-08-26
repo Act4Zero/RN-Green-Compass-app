@@ -7,4 +7,12 @@ module.exports = {
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
   },
+  overrides: [
+    {
+      files: ['supabase/functions/**/*.{ts,tsx}'],
+      rules: {
+        'import/no-unresolved': 'off',
+      },
+    },
+  ],
 };

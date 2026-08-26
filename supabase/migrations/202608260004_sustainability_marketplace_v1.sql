@@ -465,6 +465,7 @@ grant execute on function public.get_marketplace_home(text,date),public.search_m
 grant execute on function public.get_marketplace_cart(),public.set_marketplace_cart_item(uuid,integer,boolean),public.remove_marketplace_cart_item(uuid),public.get_my_marketplace_orders(),public.get_my_marketplace_order(uuid) to authenticated;
 grant execute on function public.get_my_marketplace_wishlist() to authenticated;
 grant execute on function public.prepare_marketplace_checkout(jsonb,text),public.attach_marketplace_payment_reference(uuid,text,text) to authenticated;
+grant select on public.marketplace_categories,public.marketplace_certifications to anon,authenticated;
 grant select,insert,delete on public.marketplace_wishlist_items to authenticated; grant select,insert,update on public.marketplace_reviews to authenticated; grant select,insert on public.marketplace_return_requests to authenticated;
 grant select,insert,update,delete on public.marketplace_businesses,public.marketplace_business_payment_accounts,public.marketplace_products,public.marketplace_product_categories,public.marketplace_product_certifications,public.marketplace_product_sustainability_evidence,public.marketplace_deals,public.marketplace_impact_factors to authenticated;
 grant select,update on public.marketplace_orders to authenticated; grant select,update on public.marketplace_return_requests to authenticated;
