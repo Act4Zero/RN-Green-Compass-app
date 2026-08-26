@@ -8,36 +8,13 @@ export const categoryConfig: Record<LocationCategory, {
   color: string; 
   label: string 
 }> = {
-  'EV Charging Stations': { 
-    icon: 'flash', 
-    color: '#4CAF50', 
-    label: 'EV Charging' 
-  },
-  'Recycling': { 
-    icon: 'refresh-circle', 
-    color: '#2196F3', 
-    label: 'Recycling' 
-  },
-  'Organic Food': { 
-    icon: 'leaf', 
-    color: '#8BC34A', 
-    label: 'Organic' 
-  },
-  'Zero-Waste': { 
-    icon: 'trash-bin-outline', 
-    color: '#FF9800', 
-    label: 'Zero-Waste' 
-  },
-  'Green Building': { 
-    icon: 'home', 
-    color: '#9C27B0', 
-    label: 'Green Building' 
-  },
-  'Community': { 
-    icon: 'people', 
-    color: '#E91E63', 
-    label: 'Community' 
-  },
+  renewable_energy: { icon: 'sunny-outline', color: '#E3A624', label: 'Renewable energy' },
+  local_organic: { icon: 'leaf-outline', color: '#6E9F42', label: 'Local & organic' },
+  zero_waste: { icon: 'infinite-outline', color: '#C87829', label: 'Zero-waste' },
+  ev_charging: { icon: 'flash-outline', color: '#2F8F67', label: 'EV charging' },
+  recycling: { icon: 'refresh-circle-outline', color: '#347DB8', label: 'Recycling' },
+  green_spaces: { icon: 'trail-sign-outline', color: '#4B8B55', label: 'Green spaces' },
+  community_events: { icon: 'people-outline', color: '#A2588C', label: 'Community & events' },
 };
 
 /**
@@ -46,7 +23,7 @@ export const categoryConfig: Record<LocationCategory, {
  * @returns Object with icon name and color
  */
 export function getCategoryIcon(category: LocationCategory) {
-  const config = categoryConfig[category] || categoryConfig['Community'];
+  const config = categoryConfig[category] || categoryConfig.community_events;
   return { 
     name: config.icon, 
     color: config.color 
@@ -59,7 +36,7 @@ export function getCategoryIcon(category: LocationCategory) {
  * @returns Full category configuration
  */
 export function getCategoryConfig(category: LocationCategory) {
-  return categoryConfig[category] || categoryConfig['Community'];
+  return categoryConfig[category] || categoryConfig.community_events;
 }
 
 /**

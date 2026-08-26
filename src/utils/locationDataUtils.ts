@@ -1,4 +1,4 @@
-import { MapLocation, LocationCategory } from '../types/map';
+import { LocationConnector, MapLocation } from '../types/map';
 
 // Import the locations data when in a bundled environment
 // This is the best practice for importing JSON data in a React Native app
@@ -13,14 +13,7 @@ export const loadEVLocations = async (): Promise<MapLocation[]> => {
   try {
     // Use require for both platforms - safer with current TypeScript config
     // This approach avoids dynamic import issues
-    const locationsData = require('../../assets/data/locations_ev_bulgaria.json');
-    const transformed = transformLocationsData(locationsData);
-    // Check for category consistency
-    const uniqueCategories = Array.from(new Set(transformed.map(l => l.category)));
-    if (uniqueCategories.length > 1 || uniqueCategories[0] !== 'EV Charging Stations') {
-      console.warn('[loadEVLocations] Unexpected categories found:', uniqueCategories);
-    }
-    return transformed;
+    return normalizeLegacyEVLocations(require('../../assets/data/locations_ev_bulgaria.json'));
   } catch (error) {
     console.error('Failed to load EV locations data:', error);
     throw error;
@@ -30,33 +23,76 @@ export const loadEVLocations = async (): Promise<MapLocation[]> => {
 /**
  * Transform raw location data to match the MapLocation type
  */
-const transformLocationsData = (rawData: any[]): MapLocation[] => {
+export const getLegacyEVConnectorRows = (): Record<string, unknown>[] => (
+  require('../../assets/data/locations_ev_bulgaria.json') as Record<string, unknown>[]
+);
+
+/** Groups the 89 licensed connector rows into 57 physical places. */
+export const normalizeLegacyEVLocations = (rawData: any[]): MapLocation[] => {
   if (!Array.isArray(rawData)) {
     console.error('[transformLocationsData] Expected array, got:', typeof rawData, rawData);
     return [];
   }
-  const mapped = rawData.map(item => ({
-    id: item.id,
-    name: item.name,
-    lat: item.lat,
-    lng: item.lng,
-    town: item.town || '',
-    state_or_province: item.state_or_province,
-    address_line_1: item.address_line_1,
-    address_line_2: item.address_line_2,
-    postcode: item.postcode,
-    country: item.country || 'Bulgaria',
-    category: (item.category || 'EV Charging Stations') as LocationCategory,
-    source: item.source,
-    licence: item.licence,
-    description: generateDescription(item),
-    usage_cost: item.usage_cost,
-    connection_type: item.connection_type,
-    power_kw: item.power_kw,
-    level: item.level,
-    is_fast_charge_capable: item.is_fast_charge_capable || false
-  }));
-  return mapped;
+  const grouped = new Map<string, MapLocation>();
+  rawData.forEach((item, index) => {
+    const id = String(item.id);
+    const connector: LocationConnector = {
+      id: `${id}:${item.connection_type || 'connector'}:${item.power_kw || 0}:${index}`,
+      connectionType: item.connection_type || null,
+      powerKw: item.power_kw == null ? null : Number(item.power_kw),
+      level: item.level || null,
+      usageCost: item.usage_cost || null,
+      fastCharge: Boolean(item.is_fast_charge_capable),
+    };
+    const existing = grouped.get(id);
+    if (existing) {
+      existing.connectors.push(connector);
+      if ((connector.powerKw || 0) > (existing.power_kw || 0)) {
+        existing.power_kw = connector.powerKw;
+        existing.connection_type = connector.connectionType;
+        existing.usage_cost = connector.usageCost;
+        existing.level = connector.level;
+      }
+      existing.is_fast_charge_capable = Boolean(existing.is_fast_charge_capable || connector.fastCharge);
+      existing.description = describeConnectors(existing.connectors);
+      return;
+    }
+    grouped.set(id, {
+      id,
+      name: item.name,
+      lat: Number(item.lat),
+      lng: Number(item.lng),
+      town: item.town || '',
+      state_or_province: item.state_or_province || null,
+      address_line_1: item.address_line_1 || null,
+      address_line_2: item.address_line_2 || null,
+      postcode: item.postcode || null,
+      country: item.country || 'Bulgaria',
+      category: 'ev_charging',
+      categories: ['ev_charging'],
+      source: item.source || 'Open Charge Map',
+      licence: item.licence || 'Open Data Commons ODbL',
+      verified: true,
+      connectors: [connector],
+      credentials: [],
+      sustainability_features: [],
+      description: generateDescription(item),
+      usage_cost: connector.usageCost,
+      connection_type: connector.connectionType,
+      power_kw: connector.powerKw,
+      level: connector.level,
+      is_fast_charge_capable: connector.fastCharge,
+    });
+  });
+  return Array.from(grouped.values());
+};
+
+const describeConnectors = (connectors: LocationConnector[]): string => {
+  const power = Math.max(0, ...connectors.map((connector) => connector.powerKw || 0));
+  const types = Array.from(new Set(connectors.map((connector) => connector.connectionType).filter(Boolean)));
+  return [power ? `Up to ${power}kW charging power` : null, types.length ? `${types.join(', ')} connectors` : null]
+    .filter(Boolean)
+    .join(', ') || 'EV charging station';
 };
 
 /**
