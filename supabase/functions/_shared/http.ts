@@ -1,6 +1,6 @@
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cloverly-signature, x-reconciliation-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cloverly-signature, stripe-signature, x-reconciliation-secret',
 };
 
 export const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {

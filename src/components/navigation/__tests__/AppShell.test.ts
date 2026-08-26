@@ -1,14 +1,22 @@
-import { APP_NAV_ITEMS, isNavItemActive } from '../config';
+import { APP_NAV_ITEMS, MOBILE_NAV_ITEMS, isNavItemActive } from '../config';
 
 describe('adaptive app navigation', () => {
-  it('exposes the five primary destinations in product order', () => {
+  it('exposes the six desktop destinations in product order', () => {
     expect(APP_NAV_ITEMS.map((item) => item.label)).toEqual([
       'Home',
       'Habits',
       'Map',
       'Hub',
       'Community',
+      'Marketplace',
     ]);
+  });
+
+  it('keeps mobile navigation to five destinations and groups secondary areas under More', () => {
+    expect(MOBILE_NAV_ITEMS.map((item) => item.label)).toEqual(['Home','Habits','Map','Marketplace','More']);
+    const more = MOBILE_NAV_ITEMS.find((item) => item.label === 'More')!;
+    expect(isNavItemActive('/knowledge/learning', more)).toBe(true);
+    expect(isNavItemActive('/community/groups', more)).toBe(true);
   });
 
   it('keeps nested screens associated with their primary destination', () => {

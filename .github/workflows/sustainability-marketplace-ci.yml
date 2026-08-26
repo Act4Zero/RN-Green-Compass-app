@@ -1,0 +1,47 @@
+name: Sustainability Marketplace CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/marketplace/**'
+      - 'app/admin/marketplace/**'
+      - 'src/features/marketplace/**'
+      - 'supabase/functions/*marketplace*/**'
+      - 'supabase/migrations/*marketplace*'
+      - 'supabase/tests/*marketplace*'
+      - '.github/workflows/sustainability-marketplace-ci.yml'
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  marketplace-database-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: marketplace_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d marketplace_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      MARKETPLACE_TEST_DB_URL: postgresql://postgres:postgres@localhost:5432/marketplace_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply Marketplace migration
+        run: |
+          psql "$MARKETPLACE_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_marketplace.sql
+          psql "$MARKETPLACE_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202608260004_sustainability_marketplace_v1.sql
+      - name: Verify Marketplace contract
+        run: psql "$MARKETPLACE_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/marketplace_contract.sql

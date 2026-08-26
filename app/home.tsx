@@ -24,18 +24,24 @@ import { useAppTheme } from '@/theme';
 import { EnhancedGoal, TimeFrequency } from '@/types/goal.types';
 import useProfileManager from '@/hooks/useProfileManager';
 import { knowledgeService, type KnowledgeItemDetail } from '@/features/knowledge';
+import { marketplaceService, type MarketplaceRecommendation } from '@/features/marketplace';
+import { useAppLocale } from '@/context/AppLocaleContext';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 export default function Home() {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { user, signOut, loading: authLoading } = useAuth();
+  const { locale, t } = useAppLocale();
+  const marketplaceEnabled = useFeatureFlag('sustainability_marketplace_mvp', true);
   const router = useRouter();
   
   // State for UI
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
   const [dailyDose, setDailyDose] = useState<KnowledgeItemDetail | null>(null);
+  const [dailyProduct, setDailyProduct] = useState<MarketplaceRecommendation | null>(null);
   
   // Use the profile manager hook
   const {
@@ -93,6 +99,13 @@ export default function Home() {
   useEffect(() => {
     void knowledgeService.getKnowledgeHome({ userId: user?.id }).then((result) => setDailyDose(result.dailyDose)).catch(() => undefined);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!marketplaceEnabled) return;
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    void marketplaceService.getHome(locale, date).then((result) => setDailyProduct(result.dailyPick)).catch(() => undefined);
+  }, [marketplaceEnabled, locale, user?.id]);
   
   // Get points context to handle daily check-ins
   const { awardDailyCheckIn } = usePoints();
@@ -313,6 +326,18 @@ export default function Home() {
                 <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{dailyDose.title}</Text>
               </View>
               <AppButton label="Learn why" variant="secondary" icon="arrow-forward" onPress={() => router.push(`/knowledge/content/${dailyDose.slug}` as any)} />
+            </Card>
+          ) : null}
+
+          {dailyProduct ? (
+            <Card style={{ padding: 20, marginBottom: 28, flexDirection: isTabletOrLarger ? 'row' : 'column', alignItems: isTabletOrLarger ? 'center' : 'flex-start', gap: 18, backgroundColor: theme.colors.surface }}>
+              <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="storefront-outline" size={23} color={theme.colors.primary} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1 }]}>{t("Today's verified product", 'Днешният проверен продукт')}</Text>
+                <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{dailyProduct.product.name[locale]}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{dailyProduct.reasons[0]?.[locale]}</Text>
+              </View>
+              <AppButton label={t('View Daily Pick', 'Виж Daily Pick')} variant="secondary" icon="arrow-forward" onPress={() => router.push(`/marketplace/product/${dailyProduct.product.slug}` as any)} />
             </Card>
           ) : null}
 
