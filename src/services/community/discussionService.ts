@@ -1,5 +1,6 @@
 import supabase from '../../lib/supabase';
 import { Discussion, PaginationParams, PaginatedResult } from './types';
+import type { DiscussionCategory } from '@/types/community/community';
 import pointsService from '../community/pointsService';
 import { discussFirstTrigger } from '@/badges/triggers/community';
 import badgesService from './badgesService';
@@ -23,7 +24,8 @@ export const discussionService = {
     // First get the count of all discussions
     const { count, error: countError } = await supabase
       .from('discussions')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
 
     if (countError) {
       console.error('Error counting discussions:', countError);
@@ -41,6 +43,8 @@ export const discussionService = {
           avatar_url
         )
       `)
+      .eq('status', 'published')
+      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -146,6 +150,9 @@ export const discussionService = {
         content: item.content,
         created_at: item.created_at,
         updated_at: item.updated_at,
+        category: item.category || 'sustainable_living',
+        status: item.status || 'published',
+        is_pinned: Boolean(item.is_pinned),
         user: {
           id: item.profiles?.id,
           full_name: item.profiles?.display_name,
@@ -179,6 +186,7 @@ export const discussionService = {
         )
       `)
       .eq('id', discussionId)
+      .eq('status', 'published')
       .single();
 
     if (error) {
@@ -244,6 +252,9 @@ export const discussionService = {
       content: data.content,
       created_at: data.created_at,
       updated_at: data.updated_at,
+      category: data.category || 'sustainable_living',
+      status: data.status || 'published',
+      is_pinned: Boolean(data.is_pinned),
       user: {
         id: data.profiles?.id,
         full_name: data.profiles?.display_name,
@@ -261,7 +272,8 @@ export const discussionService = {
   createDiscussion: async (
     userId: string,
     content: string,
-    title?: string
+    title?: string,
+    category: DiscussionCategory = 'sustainable_living'
   ): Promise<Discussion> => {
     const { data, error } = await supabase
       .from('discussions')
@@ -269,6 +281,7 @@ export const discussionService = {
         user_id: userId,
         content,
         title: title || null,
+        category,
       })
       .select()
       .single();
@@ -336,11 +349,11 @@ export const discussionService = {
    */
   updateDiscussion: async (
     discussionId: string,
-    updates: { content?: string; title?: string },
+    updates: { content?: string; title?: string; category?: DiscussionCategory },
     userId: string
   ): Promise<Discussion> => {
     // First check if the discussion exists and belongs to the user
-    const { data: existingDiscussion, error: fetchError } = await supabase
+    const { error: fetchError } = await supabase
       .from('discussions')
       .select('id, user_id')
       .eq('id', discussionId)

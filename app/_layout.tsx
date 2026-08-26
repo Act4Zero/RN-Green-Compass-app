@@ -32,7 +32,7 @@ export default function RootLayout() {
   // Initialize analytics when the app starts
   useEffect(() => {
     // Initialize analytics and log the result
-    const initResult = analyticsService.initialize();
+    analyticsService.initialize();
 
     
     // Set a timeout to ensure analytics is ready before the app fully loads
@@ -77,6 +77,11 @@ export default function RootLayout() {
           <Stack.Screen name="community/post/new-post" options={{ headerShown: false }} />
           <Stack.Screen name="community/post/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="community/leaderboards/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/groups/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/groups/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="community/projects/index" options={{ headerShown: false }} />
+          <Stack.Screen name="community/contribute" options={{ headerShown: false }} />
+          <Stack.Screen name="community/rewards" options={{ headerShown: false }} />
 
           {/* Challenges screens */}
           <Stack.Screen name="community/challenges/index" options={{ headerShown: false }} />
@@ -85,6 +90,10 @@ export default function RootLayout() {
 
           {/* Map screens */}
           <Stack.Screen name="map/index" options={{ headerShown: false }} />
+          <Stack.Screen name="map/contribute" options={{ headerShown: false }} />
+          <Stack.Screen name="map/review/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="map/impact" options={{ headerShown: false }} />
+          <Stack.Screen name="map/routes" options={{ headerShown: false }} />
 
           {/* Knowledge Hub screens */}
           <Stack.Screen name="knowledge/index" options={{ headerShown: false }} />
@@ -104,6 +113,8 @@ export default function RootLayout() {
           <Stack.Screen name="knowledge/quest/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="knowledge/certificate/[code]" options={{ headerShown: false }} />
           <Stack.Screen name="admin/knowledge/index" options={{ headerShown: false }} />
+          <Stack.Screen name="admin/community/index" options={{ headerShown: false }} />
+          <Stack.Screen name="admin/map/index" options={{ headerShown: false }} />
 
 
           {/* Home screen override: hide back button explicitly */}

@@ -5,6 +5,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
+  Pressable,
+  Text,
 } from 'react-native';
 import NewPostStyles from '@/styles/community/NewPostStyles';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
@@ -20,6 +22,16 @@ import PostPreview from '@/components/community/newpost/PostPreview';
 import SubmitButton from '@/components/community/newpost/SubmitButton';
 import LoadingIndicator from '@/components/community/newpost/LoadingIndicator';
 import ToggleButton from '@/components/community/newpost/ToggleButton';
+import type { DiscussionCategory } from '@/types/community/community';
+import { useAppTheme } from '@/theme';
+
+const CATEGORIES: { value: DiscussionCategory; label: string }[] = [
+  { value: 'sustainable_living', label: 'Living tips' },
+  { value: 'diy_projects', label: 'DIY projects' },
+  { value: 'carbon_reduction', label: 'Carbon reduction' },
+  { value: 'community_projects', label: 'Community projects' },
+  { value: 'questions', label: 'Questions' },
+];
 
 // Components
 function LoadingState() {
@@ -28,6 +40,7 @@ function LoadingState() {
 
 // Main component
 export default function NewPost() {
+  const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   
@@ -37,6 +50,8 @@ export default function NewPost() {
     isEditMode,
     postTitle,
     setPostTitle,
+    category,
+    setCategory,
     newPostContent,
     setNewPostContent,
     showMarkdownHelp,
@@ -86,6 +101,7 @@ export default function NewPost() {
           />
 
           {/* Input or Preview */}
+          {!isPreviewMode ? <View style={{ marginBottom: 14, gap: 8 }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>Forum category</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{CATEGORIES.map((option) => { const active = category === option.value; return <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ selected: active }} onPress={() => setCategory(option.value)} style={{ minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, borderRadius: theme.radii.pill, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface }}><Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted }]}>{option.label}</Text></Pressable>; })}</View></View> : null}
           {isPreviewMode ? (
             <PostPreview 
               content={newPostContent} 

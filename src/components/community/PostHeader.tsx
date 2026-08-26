@@ -42,6 +42,7 @@ function PostHeader({
         </Text>
       </View>
       <View style={styles.postHeaderRight}>
+        {discussion.is_pinned ? <Ionicons name="pin" size={16} color="#2E7D32" accessibilityLabel="Pinned discussion" /> : null}
         <Text style={styles.postTimestamp}>
           {new Date(discussion.created_at).toLocaleDateString()}
         </Text>

@@ -62,13 +62,13 @@ export default function MapView() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.background }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>Preparing 89 verified places…</Text>
+        <Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>Preparing the verified sustainability catalogue…</Text>
       </View>
     );
   }
   if (map.error) return <UnavailableState message={map.error.message} />;
   if (isUnsupportedExpoGo) return <UnavailableState message="The 3D globe requires a custom development build and cannot run in Expo Go." />;
-  if (!accessToken) return <UnavailableState message="Add EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to enable the live 3D map." />;
+  if (!accessToken) return <UnavailableState message="Add the platform-specific EXPO_PUBLIC_MAPBOX_*_ACCESS_TOKEN to enable the live 3D map." />;
   if (rendererError) return <UnavailableState message={rendererError} />;
 
   return (

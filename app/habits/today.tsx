@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Share, Text, TextInput, View } from 'react-native';
+import { ChoiceChips } from '@/components/offsetting/OffsettingUI';
 import { AppButton, Card, Content, PageHeader, Screen, Skeleton, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
@@ -26,6 +27,7 @@ export default function TodayScreen() {
   const [error, setError] = useState<string | null>(null);
   const [completing, setCompleting] = useState(false);
   const [savingReflection, setSavingReflection] = useState(false);
+  const [checkInActivity, setCheckInActivity] = useState('none');
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -71,6 +73,16 @@ export default function TodayScreen() {
     setSavingReflection(true);
     try {
       const reflection = await offsettingService.saveReflection(user.id, dashboard.reflection);
+      if (reflection.didSustainableAction && checkInActivity !== 'none') {
+        await offsettingService.saveCarbonActivity(user.id, {
+          factorCode: checkInActivity,
+          comparisonFactorCode: checkInActivity === 'plant-meal' ? 'beef-meal' : 'new-clothing-item',
+          quantity: 1,
+          occurredOn: dateKey(),
+          notes: 'Daily check-in preset',
+          sourceEventId: `daily-check-in:${dateKey()}:${checkInActivity}`,
+        });
+      }
       setDashboard({ ...dashboard, reflection });
       addNotification({ type: 'toast', severity: 'success', message: 'Your private reflection was saved.' });
     } catch {
@@ -122,6 +134,7 @@ export default function TodayScreen() {
               ))}
             </View>
             <ReflectionInput label="What action or intention stands out?" value={reflection.actionNote} onChangeText={(actionNote) => updateReflection({ actionNote })} />
+            {reflection.didSustainableAction ? <ChoiceChips label="Optionally add one measured preset (saved once; private text is never copied)" value={checkInActivity} onChange={setCheckInActivity} options={[{ value: 'none', label: 'Reflection only' }, { value: 'plant-meal', label: 'Plant-forward meal' }, { value: 'reused-clothing-item', label: 'Chose reused clothing' }]} /> : null}
             <ReflectionInput label="What in nature are you grateful for today?" value={reflection.gratitudeNote} onChangeText={(gratitudeNote) => updateReflection({ gratitudeNote })} />
             <ReflectionInput label="A note to your future self (optional)" value={reflection.journalNote} onChangeText={(journalNote) => updateReflection({ journalNote })} />
             <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Private by default. Journal and gratitude text are never added to a share automatically.</Text>

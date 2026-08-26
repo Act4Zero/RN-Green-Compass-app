@@ -7,22 +7,22 @@ describe('mapControllerReducer', () => {
   it('initializes dynamic categories and toggles them without changing other state', () => {
     const ready = mapControllerReducer(INITIAL_MAP_CONTROLLER_STATE, {
       type: 'categories-ready',
-      categories: ['EV Charging Stations'],
+      categories: ['ev_charging'],
     });
     const toggled = mapControllerReducer(ready, {
       type: 'category-toggled',
-      category: 'EV Charging Stations',
+      category: 'ev_charging',
       enabled: false,
     });
 
-    expect(ready.filters.categories).toEqual({ 'EV Charging Stations': true });
-    expect(toggled.filters.categories).toEqual({ 'EV Charging Stations': false });
+    expect(ready.filters.categories).toEqual({ ev_charging: true });
+    expect(toggled.filters.categories).toEqual({ ev_charging: false });
     expect(toggled.camera).toBe(ready.camera);
   });
 
   it('preserves camera, query, and selected location when style changes', () => {
     const location = {
-      id: 'ev-1', name: 'Test', category: 'EV Charging Stations' as const, lat: 42.7, lng: 23.3,
+      id: 'ev-1', name: 'Test', category: 'ev_charging' as const, categories: ['ev_charging' as const], connectors: [], credentials: [], lat: 42.7, lng: 23.3,
       town: 'Sofia', state_or_province: null, address_line_1: null, address_line_2: null,
       postcode: null, country: 'Bulgaria', source: 'Open Charge Map', licence: 'ODbL',
     };

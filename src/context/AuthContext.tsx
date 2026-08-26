@@ -21,7 +21,7 @@ type AuthContextType = {
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
-  signInWithGoogle: () => Promise<{
+  signInWithGoogle: (nextPath?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null } | null;
   }>;
@@ -309,16 +309,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Function to sign in with Google
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (nextPath = '/home') => {
     try {
       setLoading(true);
       // Handle both local and production URLs for web
       let redirectTo: string | undefined;
       if (Platform.OS === 'web') {
-        redirectTo = `${window.location.origin}/home`;
+        const safePath = nextPath === '/map' ? '/map' : '/home';
+        redirectTo = `${window.location.origin}${safePath}`;
       } else {
         // Mobile deep link
-        redirectTo = 'com.act4zero.greencompass://home';
+        redirectTo = nextPath === '/map' ? 'com.act4zero.greencompass://map' : 'com.act4zero.greencompass://home';
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({

@@ -15,7 +15,7 @@ import {
   BackHandler,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
@@ -53,6 +53,8 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
+  const { next } = useLocalSearchParams<{ next?: string }>();
+  const destination = next === '/map' ? '/map' : '/home';
   const { signIn, signInWithGoogle, refreshSession } = useAuth();
   
   // Track screen view when component mounts
@@ -164,7 +166,7 @@ export default function SignIn() {
       // as ensureValidSession() already refreshes the session when needed
       
       // Navigate to home screen
-      router.replace('/home');
+      router.replace(destination);
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign in error:', err);
@@ -178,7 +180,7 @@ export default function SignIn() {
       setGoogleLoading(true);
       setError(undefined);
       
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle(destination);
       
       if (error) {
         setError('Failed to start Google sign in. Please try again.');
@@ -303,7 +305,7 @@ export default function SignIn() {
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
               New here?{' '}
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signup')}>Create an account</Text>
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signup', params: { next: destination } })}>Create an account</Text>
             </Text>
           </View>
         </View>

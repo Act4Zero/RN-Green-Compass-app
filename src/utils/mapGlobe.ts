@@ -47,7 +47,7 @@ function locationSearchText(location: MapLocation): string {
 }
 
 export function getAvailableCategories(locations: MapLocation[]): LocationCategory[] {
-  return Array.from(new Set(locations.map((location) => location.category)));
+  return Array.from(new Set(locations.flatMap((location) => location.categories?.length ? location.categories : [location.category])));
 }
 
 export function filterMapLocations(
@@ -57,7 +57,8 @@ export function filterMapLocations(
 ): MapLocation[] {
   const normalizedQuery = normalizeMapSearch(query);
   return locations.filter((location) => {
-    if (!enabledCategories[location.category]) return false;
+    const categories = location.categories?.length ? location.categories : [location.category];
+    if (!categories.some((category) => enabledCategories[category])) return false;
     return !normalizedQuery || locationSearchText(location).includes(normalizedQuery);
   });
 }
