@@ -1,0 +1,116 @@
+name: Sustainability Map CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - codex/sustainability-map-platform
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sustainability-map-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-and-exports:
+    name: TypeScript, lint, Jest and Expo exports
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build -- --output-dir dist-ci/web
+      - run: npm run build:ios -- --output-dir dist-ci/ios
+      - run: npm run build:android -- --output-dir dist-ci/android
+
+  database-contract:
+    name: Migration, RLS and atomic budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: map_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d map_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      POSTGRES_ADMIN_URL: postgresql://postgres:postgres@localhost:5432/map_test
+      MAP_TEST_DB_URL: postgresql://postgres:postgres@localhost:5432/map_contract
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Create extension-clean test database
+        run: psql "$POSTGRES_ADMIN_URL" -v ON_ERROR_STOP=1 -c "create database map_contract template template0"
+      - name: Apply fixture and sustainability migration
+        run: |
+          psql "$MAP_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_sustainability_map.sql
+          psql "$MAP_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/202608260002_sustainability_map_platform.sql
+      - name: Verify migration and RLS contract
+        run: psql "$MAP_TEST_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/sustainability_map_contract.sql
+      - name: Verify concurrent budget reservations
+        run: bash scripts/test-map-budget-concurrency.sh
+
+  android-debug:
+    name: Android assembleDebug
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: npm ci
+      - name: Build unsigned Android debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --no-daemon
+
+  ios-simulator:
+    name: Unsigned iOS simulator build
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install --repo-update
+      - name: Build for iOS Simulator without signing
+        working-directory: ios
+        run: >-
+          xcodebuild
+          -workspace GreenCompass.xcworkspace
+          -scheme GreenCompass
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+          build
