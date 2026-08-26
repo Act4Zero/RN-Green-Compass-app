@@ -1,15 +1,23 @@
 import supabase from '@/lib/supabase';
 import { knowledgeService, type KnowledgeItemSummary } from '@/features/knowledge';
 import { habitService } from '@/services/habitService';
-import { addImpactMetrics, calculateTravelEstimate, deriveLearningStage, selectDailyChallenge, selectDailyPoll } from './calculations';
+import { ACTIVITY_FACTORS, FOOTPRINT_BENCHMARKS, IMPACT_EQUIVALENCIES, OFFSET_PROJECTS, PERSONALIZED_CARBON_TIPS } from './catalog';
+import { addImpactMetrics, calculateCarbonActivity, calculateCarbonGoalProgress, calculateTravelEstimate, createCarbonBalance, deriveLearningStage, getProgressLevel, selectDailyChallenge, selectDailyPoll } from './calculations';
 import { offsettingStorage } from './storage';
 import type {
+  CarbonActivityEntry,
+  CarbonActivityInput,
+  CarbonBalanceSummary,
+  CarbonGoalDefinition,
+  CarbonGoalProgress,
   DailyChallengeAssignment,
   DailyEcoChallenge,
   DailyReflection,
   GreenIdentityResult,
   ImpactSummary,
   LearningStage,
+  OffsetContribution,
+  OffsetProject,
   OffsettingDashboard,
   SustainabilityPoll,
   TravelEstimate,
@@ -36,8 +44,42 @@ const normalizeIdentity = (row: any): GreenIdentityResult => ({
   annualBaselineKgCo2e: Number(row.annual_baseline_kg_co2e || 0),
   categoryScores: row.category_scores,
   categoryFootprintKgCo2e: row.category_footprint_kg_co2e,
+  countryCode: row.country_code || row.answers?.countryCode || 'GLOBAL',
+  factorVersions: row.factor_versions || [],
+  isPartial: row.assessment_version !== '2026.2',
   answers: row.answers,
   completedAt: row.completed_at,
+});
+
+const normalizeActivity = (row: any): CarbonActivityEntry => ({
+  id: row.id,
+  factorCode: row.factor_code,
+  factorVersion: row.factor_version,
+  category: row.category,
+  label: row.label,
+  quantity: Number(row.quantity),
+  unit: row.unit,
+  grossKgCo2e: Number(row.gross_kg_co2e),
+  comparisonKgCo2e: row.comparison_kg_co2e === null ? null : Number(row.comparison_kg_co2e),
+  avoidedKgCo2e: Number(row.avoided_kg_co2e || 0),
+  occurredOn: row.occurred_on,
+  notes: row.notes || '',
+  sourceEventId: row.source_event_id,
+  createdAt: row.created_at,
+});
+
+const normalizeContribution = (row: any): OffsetContribution => ({
+  id: row.id,
+  projectId: row.project_id,
+  projectName: row.offset_projects?.name || row.project_name || 'Offset project',
+  providerReference: row.provider_reference,
+  status: row.status,
+  quantityKgCo2e: Number(row.quantity_kg_co2e || 0),
+  amountMinor: Number(row.amount_minor || 0),
+  currency: row.currency || 'USD',
+  certificateUrl: row.certificate_url,
+  registryReference: row.registry_reference,
+  contributedAt: row.retired_at || row.fulfilled_at || row.created_at,
 });
 
 function calculateChallengeStreak(dates: string[], today = new Date()): number {
@@ -80,6 +122,8 @@ export const offsettingService = {
         annual_baseline_kg_co2e: result.annualBaselineKgCo2e,
         category_scores: result.categoryScores,
         category_footprint_kg_co2e: result.categoryFootprintKgCo2e,
+        country_code: result.countryCode || result.answers.countryCode || 'GLOBAL',
+        factor_versions: result.factorVersions || [],
         completed_at: result.completedAt,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' });
@@ -235,6 +279,191 @@ export const offsettingService = {
     return estimate;
   },
 
+  getActivityFactors() {
+    return ACTIVITY_FACTORS;
+  },
+
+  previewCarbonActivity(input: CarbonActivityInput): CarbonActivityEntry {
+    return calculateCarbonActivity(input);
+  },
+
+  async getCarbonActivities(userId: string, startDate?: string): Promise<CarbonActivityEntry[]> {
+    try {
+      let query = (supabase as any).from('carbon_activity_entries').select('*').eq('user_id', userId).order('occurred_on', { ascending: false });
+      if (startDate) query = query.gte('occurred_on', startDate);
+      const { data, error } = await query;
+      if (error) throw error;
+      if (data) return data.map(normalizeActivity);
+    } catch {
+      // Owner-scoped device entries keep logging useful while offline or before migration.
+    }
+    const local = await offsettingStorage.getActivityEntries(userId);
+    return startDate ? local.filter((entry) => entry.occurredOn >= startDate) : local;
+  },
+
+  async saveCarbonActivity(userId: string, input: CarbonActivityInput): Promise<CarbonActivityEntry> {
+    const preview = calculateCarbonActivity(input);
+    try {
+      const { data, error } = await (supabase as any).rpc('log_carbon_activity', {
+        p_factor_code: input.factorCode,
+        p_quantity: input.quantity,
+        p_occurred_on: input.occurredOn,
+        p_comparison_factor_code: input.comparisonFactorCode || null,
+        p_notes: (input.notes || '').trim().slice(0, 500),
+        p_source_event_id: input.sourceEventId || null,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) {
+        void (supabase as any).rpc('evaluate_carbon_badges', { p_user_id: userId });
+        return offsettingStorage.saveActivityEntry(userId, normalizeActivity(row));
+      }
+    } catch {
+      // A deterministic sourceEventId prevents an offline check-in from duplicating on retry.
+    }
+    return offsettingStorage.saveActivityEntry(userId, preview);
+  },
+
+  async getCarbonGoals(userId: string): Promise<CarbonGoalProgress[]> {
+    const activities = await this.getCarbonActivities(userId);
+    try {
+      const { data, error } = await (supabase as any).rpc('get_carbon_goals');
+      if (error) throw error;
+      if (Array.isArray(data)) {
+        const goals = data.map(normalizeGoal);
+        await offsettingStorage.saveCarbonGoals(userId, goals);
+        return goals;
+      }
+    } catch {
+      // Recalculate locally from the frozen goal definition and activity ledger.
+    }
+    const stored = await offsettingStorage.getCarbonGoals(userId);
+    return stored.map((goal) => calculateCarbonGoalProgress(goal, activities));
+  },
+
+  async createCarbonGoal(userId: string, definition: CarbonGoalDefinition): Promise<CarbonGoalProgress> {
+    if (!definition.title.trim() || definition.targetValue <= 0 || definition.endsOn < definition.startsOn) throw new Error('Enter a valid goal, target, and date range.');
+    if (definition.goalType === 'percent_reduction' && (!definition.baselineValue || definition.baselineValue <= 0)) throw new Error('A positive baseline is required for a percentage goal.');
+    try {
+      const { data, error } = await (supabase as any).rpc('create_carbon_goal', {
+        p_title: definition.title.trim(), p_category: definition.category, p_goal_type: definition.goalType,
+        p_target_value: definition.targetValue, p_unit: definition.unit, p_starts_on: definition.startsOn,
+        p_ends_on: definition.endsOn, p_baseline_value: definition.baselineValue || null,
+        p_baseline_source: definition.baselineSource || null, p_steps: definition.steps,
+      });
+      if (error) throw error;
+      const goal = normalizeGoal(Array.isArray(data) ? data[0] : data);
+      const stored = await offsettingStorage.getCarbonGoals(userId);
+      await offsettingStorage.saveCarbonGoals(userId, [goal, ...stored.filter((item) => item.id !== goal.id)]);
+      return goal;
+    } catch {
+      const local = calculateCarbonGoalProgress({ ...definition, id: `local-${Date.now()}` }, []);
+      const stored = await offsettingStorage.getCarbonGoals(userId);
+      await offsettingStorage.saveCarbonGoals(userId, [local, ...stored]);
+      return local;
+    }
+  },
+
+  async completeCarbonGoalStep(userId: string, goalId: string, stepId: string, completed: boolean): Promise<void> {
+    try {
+      const { error } = await (supabase as any).rpc('set_carbon_goal_step_completed', { p_goal_id: goalId, p_step_id: stepId, p_completed: completed });
+      if (error) throw error;
+      return;
+    } catch {
+      const goals = await offsettingStorage.getCarbonGoals(userId);
+      await offsettingStorage.saveCarbonGoals(userId, goals.map((goal) => goal.id === goalId ? { ...goal, steps: goal.steps.map((step) => step.id === stepId ? { ...step, completedAt: completed ? new Date().toISOString() : null } : step) } : goal));
+    }
+  },
+
+  async getOffsetProjects(): Promise<OffsetProject[]> {
+    try {
+      const { data, error } = await (supabase as any).from('offset_projects').select('*').eq('active', true).order('name');
+      if (error) throw error;
+      if (data?.length) return data.map(normalizeProject);
+    } catch {
+      // Reviewed sandbox catalog is available before production provider activation.
+    }
+    return OFFSET_PROJECTS;
+  },
+
+  async createOffsetCheckout(projectId: string, quantityKgCo2e: number): Promise<{ checkoutUrl: string; sessionId: string }> {
+    if (!Number.isFinite(quantityKgCo2e) || quantityKgCo2e < 1) throw new Error('Offset quantity must be at least 1 kg CO₂e.');
+    const { data, error } = await (supabase as any).functions.invoke('create-offset-checkout', { body: { projectId, quantityKgCo2e } });
+    if (error) throw error;
+    if (!data?.checkoutUrl || !data?.sessionId) throw new Error('The secure checkout is not available yet.');
+    return data;
+  },
+
+  async getOffsetHistory(userId: string): Promise<OffsetContribution[]> {
+    try {
+      const { data, error } = await (supabase as any).from('offset_contributions').select('*, offset_projects(name)').eq('user_id', userId).order('created_at', { ascending: false });
+      if (error) throw error;
+      if (data) {
+        const contributions = data.map(normalizeContribution);
+        await offsettingStorage.saveOffsetContributions(userId, contributions);
+        return contributions;
+      }
+    } catch {
+      // Keep the last owner-scoped history visible offline.
+    }
+    return offsettingStorage.getOffsetContributions(userId);
+  },
+
+  async getCarbonBalance(userId: string, period: ImpactSummary['period'] = 'week'): Promise<CarbonBalanceSummary> {
+    const startDate = periodStart(period);
+    const [activities, impact, contributions, identity] = await Promise.all([
+      this.getCarbonActivities(userId, startDate), this.getImpactSummary(userId, period), this.getOffsetHistory(userId), this.getIdentity(userId),
+    ]);
+    const retired = contributions.filter((entry) => entry.status === 'retired' || entry.status === 'fulfilled').reduce((sum, entry) => sum + entry.quantityKgCo2e, 0);
+    return createCarbonBalance({ period, activities, retiredOffsetKgCo2e: retired, impact, countryCode: identity?.countryCode || identity?.answers.countryCode || 'GLOBAL' });
+  },
+
+  getBenchmarks() {
+    return FOOTPRINT_BENCHMARKS;
+  },
+
+  getImpactEquivalencies() {
+    return IMPACT_EQUIVALENCIES;
+  },
+
+  async getPersonalizedCarbonTips(userId: string, interests: string[] = [], activeCategories: string[] = []) {
+    const goals = await this.getCarbonGoals(userId).catch(() => []);
+    const priorities = new Set([...activeCategories, ...goals.filter((goal) => goal.status === 'active').map((goal) => goal.category)]);
+    const interestText = interests.join(' ').toLowerCase();
+    if (interestText.includes('food')) priorities.add('food');
+    if (interestText.includes('energy') || interestText.includes('building')) { priorities.add('electricity'); priorities.add('heating'); }
+    if (interestText.includes('transport')) priorities.add('transport');
+    if (interestText.includes('waste') || interestText.includes('fashion')) { priorities.add('waste'); priorities.add('purchases'); }
+    return [...PERSONALIZED_CARBON_TIPS].sort((a, b) => Number(priorities.has(b.category)) - Number(priorities.has(a.category))).slice(0, 3);
+  },
+
+  async getGamificationLevel(userId: string) {
+    try {
+      const { data, error } = await (supabase as any).rpc('get_user_points_total', { user_id_param: userId });
+      if (error) throw error;
+      const totalPoints = Number(data || 0);
+      return { totalPoints, level: getProgressLevel(totalPoints) };
+    } catch {
+      return { totalPoints: 0, level: getProgressLevel(0) };
+    }
+  },
+
+  async getLeaderboardOptIn(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await (supabase as any).from('profiles').select('leaderboard_opt_in').eq('id', userId).maybeSingle();
+      if (error) throw error;
+      return Boolean(data?.leaderboard_opt_in);
+    } catch {
+      return false;
+    }
+  },
+
+  async setLeaderboardOptIn(userId: string, enabled: boolean): Promise<boolean> {
+    const { error } = await (supabase as any).from('profiles').update({ leaderboard_opt_in: enabled, updated_at: new Date().toISOString() }).eq('id', userId);
+    if (error) throw error;
+    return enabled;
+  },
+
   async getImpactSummary(userId: string, period: ImpactSummary['period'] = 'week'): Promise<ImpactSummary> {
     try {
       const { data, error } = await (supabase as any).rpc('get_user_offsetting_impact', { p_period: period });
@@ -267,10 +496,21 @@ export const offsettingService = {
   async getPersonalizedKnowledge(interests: string[], activeCategories: string[], userId?: string, stage: LearningStage = 'beginner'): Promise<KnowledgeItemSummary[]> {
     const home = await knowledgeService.getKnowledgeHome({ userId, interests, activeCategories });
     const allowedDifficulty = stage === 'advanced' ? ['beginner', 'intermediate', 'advanced'] : stage === 'intermediate' ? ['beginner', 'intermediate'] : ['beginner'];
-    return [...home.recommendations, ...home.interactive]
+    const [goals, history] = userId ? await Promise.all([this.getCarbonGoals(userId).catch(() => []), offsettingStorage.getRecommendationHistory(userId)]) : [[], []];
+    const priorityTerms = [...activeCategories, ...goals.filter((goal) => goal.status === 'active').map((goal) => goal.category), ...interests].map((value) => value.toLowerCase().replace(/\s+/g, '-'));
+    const ranked = [...home.recommendations, ...home.interactive]
       .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index)
       .filter((item) => allowedDifficulty.includes(item.difficulty))
+      .map((item, index) => {
+        const searchable = [item.slug, item.title, item.summary, ...(item.topicSlugs || [])].join(' ').toLowerCase();
+        const relevance = priorityTerms.reduce((score, term) => score + Number(searchable.includes(term.replace(/-/g, ' ')) || searchable.includes(term)) * 3, 0);
+        return { item, score: relevance + Number(item.editorPick) - Number(history.includes(item.id)) * 2 - index / 100 };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map(({ item }) => item)
       .slice(0, 4);
+    if (userId) await offsettingStorage.saveRecommendationHistory(userId, [...history, ...ranked.map((item) => item.id)]);
+    return ranked;
   },
 
   calculateChallengeStreak,
@@ -297,5 +537,40 @@ function cryptoRandomId(): string {
 
 function currentLocalDate(): string {
   const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function normalizeGoal(row: any): CarbonGoalProgress {
+  const definition: CarbonGoalDefinition & { id: string } = {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    goalType: row.goal_type || row.goalType,
+    targetValue: Number(row.target_value ?? row.targetValue),
+    unit: row.unit,
+    startsOn: row.starts_on || row.startsOn,
+    endsOn: row.ends_on || row.endsOn,
+    baselineValue: row.baseline_value === null ? null : Number((row.baseline_value ?? row.baselineValue) || 0),
+    baselineSource: row.baseline_source || row.baselineSource || null,
+    steps: (row.steps || []).map((step: any) => ({ id: step.id, title: step.title, completedAt: step.completed_at || step.completedAt || null, knowledgeSlug: step.knowledge_slug || step.knowledgeSlug || null })),
+  };
+  if (row.current_value !== undefined || row.currentValue !== undefined) {
+    return { ...definition, currentValue: Number(row.current_value ?? row.currentValue), percentComplete: Number(row.percent_complete ?? row.percentComplete), status: row.status };
+  }
+  return calculateCarbonGoalProgress(definition, []);
+}
+
+function normalizeProject(row: any): OffsetProject {
+  return {
+    id: row.id, provider: 'cloverly', providerProjectId: row.provider_project_id, name: row.name,
+    summary: row.summary, country: row.country, technology: row.technology, standard: row.standard,
+    registryUrl: row.registry_url, permanence: row.permanence, pricePerTonneMinor: Number(row.price_per_tonne_minor),
+    currency: row.currency, imageUrl: row.image_url, active: row.active,
+  };
+}
+
+function periodStart(period: ImpactSummary['period']): string {
+  const date = new Date();
+  date.setDate(date.getDate() - (period === 'day' ? 0 : period === 'week' ? 6 : 29));
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

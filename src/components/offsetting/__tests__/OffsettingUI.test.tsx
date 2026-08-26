@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import { Pressable } from 'react-native';
-import { ChoiceChips, ImpactBars } from '../OffsettingUI';
+import { CarbonBalanceCards, ChoiceChips, ImpactBars } from '../OffsettingUI';
 
 jest.mock('@/theme', () => ({
   useAppTheme: () => ({
@@ -44,5 +44,17 @@ describe('offsetting UI primitives', () => {
       tree = renderer.create(<ImpactBars points={[]} />);
     });
     expect(tree.root.findByProps({ children: 'Log an action or travel choice to start your chart.' })).toBeTruthy();
+  });
+
+  it('keeps gross, avoided, retired, and remaining carbon values visibly separate', () => {
+    let tree!: renderer.ReactTestRenderer;
+    act(() => {
+      tree = renderer.create(<CarbonBalanceCards summary={{ period: 'week', grossTrackedKgCo2e: 12, avoidedKgCo2e: 4, retiredOffsetKgCo2e: 2, netBalanceKgCo2e: 6, metrics: { co2eKgAvoided: 4, plasticItemsAvoided: 0, wasteKgAvoided: 0, waterLitresSaved: 0 }, totalActions: 2, challengeStreak: 1, series: [], countryBenchmark: null, globalBenchmark: { regionCode: 'GLOBAL', regionName: 'Global', year: 2024, tonnesCo2ePerCapita: 6.56, scope: 'territorial_ghg_excluding_lulucf', version: 'EDGAR-2025-GHG', sourceLabel: 'EDGAR', sourceUrl: 'https://example.com' }, treeSeedlingEquivalent: 0.07 }} />);
+    });
+    const text = JSON.stringify(tree.toJSON());
+    expect(text).toContain('Gross tracked');
+    expect(text).toContain('Estimated avoided');
+    expect(text).toContain('Retired offsets');
+    expect(text).toContain('Remaining balance');
   });
 });

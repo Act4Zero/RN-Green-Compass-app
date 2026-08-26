@@ -3,6 +3,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/components/ui';
 import { useAppTheme } from '@/theme';
+import type { CarbonBalanceSummary } from '@/features/offsetting/types';
 
 export function ActionCard({ title, description, icon, onPress }: { title: string; description: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }) {
   const { theme } = useAppTheme();
@@ -32,6 +33,16 @@ export function MetricCard({ label, value, icon }: { label: string; value: strin
       </View>
     </Card>
   );
+}
+
+export function CarbonBalanceCards({ summary }: { summary: CarbonBalanceSummary }) {
+  const { theme } = useAppTheme();
+  return <View accessibilityLabel="Carbon balance summary" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+    <MetricCard label="Gross tracked" value={`${summary.grossTrackedKgCo2e.toFixed(1)} kg`} icon="analytics-outline" />
+    <MetricCard label="Estimated avoided" value={`${summary.avoidedKgCo2e.toFixed(1)} kg`} icon="leaf-outline" />
+    <MetricCard label="Retired offsets" value={`${summary.retiredOffsetKgCo2e.toFixed(1)} kg`} icon="shield-checkmark-outline" />
+    <MetricCard label="Remaining balance" value={`${summary.netBalanceKgCo2e.toFixed(1)} kg`} icon="scale-outline" />
+  </View>;
 }
 
 export function ChoiceChips<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
