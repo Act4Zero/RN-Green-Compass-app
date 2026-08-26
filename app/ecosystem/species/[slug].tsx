@@ -5,7 +5,7 @@ import { Linking, ScrollView, Text, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
-import { FOREST_MEADOW_SPECIES, useEcosystem } from '@/features/ecosystem';
+import { FOREST_MEADOW_SPECIES, PlantIllustration, useEcosystem } from '@/features/ecosystem';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { useAppTheme } from '@/theme';
 
@@ -34,7 +34,7 @@ export default function EcosystemSpeciesScreen() {
           <Card elevated style={{ padding: 0, overflow: 'hidden', marginBottom: 18 }}>
             <View style={{ minHeight: 210, padding: 28, justifyContent: 'flex-end', backgroundColor: theme.colors.primary }}>
               <View style={{ position: 'absolute', right: -20, top: -30, width: 210, height: 210, borderRadius: 105, backgroundColor: theme.colors.accent, opacity: 0.15 }} />
-              <Ionicons name="leaf" size={58} color={theme.colors.accent} />
+              <View style={{ position: 'absolute', right: 24, bottom: 10, width: 160, height: 180, alignItems: 'center', justifyContent: 'center' }}><PlantIllustration stage="mature" size={160} speciesSlug={species.slug} /></View>
               <Text style={[theme.typography.h1, { color: '#FFFFFF', marginTop: 16 }]}>{species.name[locale]}</Text>
               <Text style={[theme.typography.body, { color: '#D8EAE0', fontStyle: 'italic', marginTop: 3 }]}>{species.scientificName}</Text>
             </View>

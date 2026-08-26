@@ -6,7 +6,7 @@ import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { useKnowledgeLocale } from '@/features/knowledge';
-import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
 
 export default function EcosystemScreen() {
@@ -88,8 +88,8 @@ export default function EcosystemScreen() {
                   style={({ pressed }) => ({ width: wide ? '31.8%' : '100%', minHeight: 150, padding: 18, borderRadius: theme.radii.lg, borderWidth: active ? 2 : 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface, opacity: unlocked ? (pressed ? 0.82 : 1) : 0.55 })}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ width: 42, height: 42, borderRadius: 15, backgroundColor: unlocked ? theme.colors.accentSoft : theme.colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name={unlocked ? 'leaf-outline' : 'lock-closed-outline'} size={21} color={theme.colors.primary} />
+                    <View style={{ width: 58, height: 58, borderRadius: 17, backgroundColor: unlocked ? theme.colors.accentSoft : theme.colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {unlocked ? <PlantIllustration stage="mature" size={54} speciesSlug={species.slug} /> : <Ionicons name="lock-closed-outline" size={21} color={theme.colors.primary} />}
                     </View>
                     {active ? <View style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 999, backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: theme.colors.textInverse, fontSize: 10 }]}>{t('Growing', 'Отглеждаш')}</Text></View> : null}
                   </View>

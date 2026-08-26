@@ -54,7 +54,7 @@ export function EcosystemHero({ snapshot, loading, onOpen }: { snapshot: Ecosyst
           </View>
 
           <View style={{ position: 'absolute', left: compact ? '27%' : '48%', bottom: compact ? 30 : 18 }}>
-            {loading ? <ActivityIndicator color="#174C35" /> : <PlantIllustration stage={snapshot.stage} size={compact ? 150 : 180} />}
+            {loading ? <ActivityIndicator color="#174C35" /> : <PlantIllustration stage={snapshot.stage} size={compact ? 170 : 200} speciesSlug={snapshot.activeSpecies.slug} />}
           </View>
 
           <View style={{ position: 'absolute', right: compact ? 14 : 22, bottom: compact ? 16 : 22, gap: 8, alignItems: 'flex-end' }}>
