@@ -1,5 +1,7 @@
 import { Database } from '../supabase';
 
+export type DiscussionCategory = 'sustainable_living' | 'diy_projects' | 'carbon_reduction' | 'community_projects' | 'questions';
+
 // Type for a discussion/post in the community feed
 export interface Discussion {
   id: string;
@@ -8,6 +10,9 @@ export interface Discussion {
   content: string;
   created_at: string;
   updated_at: string;
+  category?: DiscussionCategory;
+  status?: 'published' | 'hidden' | 'removed';
+  is_pinned?: boolean;
   // Joined fields
   user?: {
     id?: string;
