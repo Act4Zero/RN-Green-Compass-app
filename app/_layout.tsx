@@ -116,6 +116,10 @@ export default function RootLayout() {
           <Stack.Screen name="admin/community/index" options={{ headerShown: false }} />
           <Stack.Screen name="admin/map/index" options={{ headerShown: false }} />
 
+          {/* Living Ecosystem screens */}
+          <Stack.Screen name="ecosystem/index" options={{ headerShown: false }} />
+          <Stack.Screen name="ecosystem/species/[slug]" options={{ headerShown: false }} />
+
 
           {/* Home screen override: hide back button explicitly */}
           <Stack.Screen
