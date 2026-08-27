@@ -12,6 +12,7 @@ import FeedStyles from '@/styles/FeedStyles';
 import { useAppTheme } from '@/theme';
 import { useNotification } from '@/context/NotificationContext';
 import { communityEngagementService } from '@/features/community';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Custom renderer for Markdown images to make them clickable
 const renderImage = (node: any, children: React.ReactNode, parent: any, styles: any) => {
@@ -66,6 +67,7 @@ function PostItem({
   const { theme } = useAppTheme();
   const { user } = useAuth();
   const { addNotification } = useNotification();
+  const { locale, t } = useAppLocale();
   // Get user display name with a fallback
   const userName = user?.email ? user.email.split('@')[0] : undefined;
   
@@ -74,7 +76,7 @@ function PostItem({
   
   // Get author name with fallback
   const authorName = discussion.user?.full_name?.trim() ? 
-    discussion.user.full_name : 'Anonymous';
+    discussion.user.full_name : t('Anonymous', 'Анонимен');
   
   // Prepare post data for sharing
   const postTitle = discussion.title || null;
@@ -112,18 +114,18 @@ function PostItem({
     e.stopPropagation();
     addNotification({
       type: 'modal',
-      title: 'Report discussion',
-      message: 'Send this discussion to the moderation team for review?',
+      title: t('Report discussion', 'Докладвай дискусията'),
+      message: t('Send this discussion to the moderation team for review?', 'Да изпратим ли тази дискусия до екипа за модерация?'),
       severity: 'warning',
       autoClose: false,
       action: {
-        label: 'Send report',
+        label: t('Send report', 'Изпрати сигнал'),
         onPress: async () => {
           try {
             await communityEngagementService.reportDiscussion(discussion.id);
-            addNotification({ type: 'toast', message: 'Report sent to the moderation team.', severity: 'success' });
+            addNotification({ type: 'toast', message: t('Report sent to the moderation team.', 'Сигналът е изпратен до екипа за модерация.'), severity: 'success' });
           } catch (error) {
-            addNotification({ type: 'toast', message: error instanceof Error ? error.message : 'Unable to send report.', severity: 'error' });
+            addNotification({ type: 'toast', message: error instanceof Error ? error.message : t('Unable to send report.', 'Сигналът не можа да се изпрати.'), severity: 'error' });
           }
         },
       },
@@ -160,12 +162,12 @@ function PostItem({
           <Text style={[styles.postAuthor, { color: theme.colors.text }]}>
   {discussion.user?.full_name?.trim()
     ? discussion.user.full_name
-    : 'Anonymous'}
+    : t('Anonymous', 'Анонимен')}
 </Text>
         </View>
         <View style={styles.postHeaderRight}>
           <Text style={[styles.postTimestamp, { color: theme.colors.textMuted }]}>
-            {new Date(discussion.created_at).toLocaleDateString()}
+            {new Date(discussion.created_at).toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-GB')}
           </Text>
           {/* Show options button if the post belongs to the current user */}
           {discussion.user_id === userId && (
@@ -254,9 +256,9 @@ function PostItem({
           onPress={handleSharePress}
         >
           <Ionicons name="share-social-outline" size={20} color={theme.colors.textMuted} />
-          <Text style={postItemStyles.shareText}>Share</Text>
+          <Text style={postItemStyles.shareText}>{t('Share', 'Сподели')}</Text>
         </TouchableOpacity>
-        {discussion.user_id !== user?.id ? <TouchableOpacity style={postItemStyles.shareButton} onPress={handleReportPress} accessibilityLabel="Report discussion"><Ionicons name="flag-outline" size={19} color={theme.colors.textMuted} /><Text style={postItemStyles.shareText}>Report</Text></TouchableOpacity> : null}
+        {discussion.user_id !== user?.id ? <TouchableOpacity style={postItemStyles.shareButton} onPress={handleReportPress} accessibilityLabel={t('Report discussion', 'Докладвай дискусията')}><Ionicons name="flag-outline" size={19} color={theme.colors.textMuted} /><Text style={postItemStyles.shareText}>{t('Report', 'Докладвай')}</Text></TouchableOpacity> : null}
       </View>
     </TouchableOpacity>
     

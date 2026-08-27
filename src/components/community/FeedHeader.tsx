@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import FeedStyles from '@/styles/FeedStyles';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = FeedStyles;
 
 function FeedHeader() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   
   return (
     <>
@@ -26,9 +28,9 @@ function FeedHeader() {
         >
           <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Community</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>{t('Community', 'Общност')}</Text>
       </View>
-      <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Share what works. Find people who keep you moving.</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Share what works. Find people who keep you moving.', 'Споделяйте какво работи. Намерете хора, които ви помагат да продължите.')}</Text>
     </>
   );
 }

@@ -16,13 +16,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { useAppLocale } from '@/context/AppLocaleContext';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Turnstile from '@/components/Turnstile';
-import { ensureValidSession } from '@/lib/supabase';
+import Turnstile, { isTurnstileConfigured } from '@/components/Turnstile';
+import { ensureValidSession, isSupabaseConfigured } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
+import { goBackOrReplace, sanitizeInternalDestination } from '@/utils/navigation';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -46,6 +49,9 @@ interface Styles {
   googleButtonNative: ViewStyle;
   googleButtonImage: ImageStyle;
   googleButtonText: TextStyle;
+  authActions: ViewStyle;
+  actionButton: ViewStyle;
+  actionText: TextStyle;
 }
 
 export default function SignIn() {
@@ -53,9 +59,10 @@ export default function SignIn() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
-  const { next } = useLocalSearchParams<{ next?: string }>();
-  const destination = next === '/map' ? '/map' : '/home';
+  const { next, error: routeError } = useLocalSearchParams<{ next?: string; error?: string }>();
+  const destination = sanitizeInternalDestination(next);
   const { signIn, signInWithGoogle, refreshSession } = useAuth();
+  const { locale, setLocale, t } = useAppLocale();
   
   // Track screen view when component mounts
   useEffect(() => {
@@ -74,6 +81,10 @@ export default function SignIn() {
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (routeError) setError(routeError);
+  }, [routeError]);
+
   const validateEmail = (email: string) => {
     // Trim the email to remove any leading/trailing whitespace
     const trimmedEmail = email.trim();
@@ -82,13 +93,13 @@ export default function SignIn() {
     const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
     
     if (!trimmedEmail) {
-      setEmailError('Email is required');
+      setEmailError(t('Email is required', 'Имейлът е задължителен'));
       return false;
     } else if (!emailRegex.test(trimmedEmail)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError(t('Please enter a valid email address', 'Въведете валиден имейл адрес'));
       return false;
     } else if (trimmedEmail.length > 255) {
-      setEmailError('Email is too long');
+      setEmailError(t('Email is too long', 'Имейлът е твърде дълъг'));
       return false;
     }
     
@@ -98,17 +109,17 @@ export default function SignIn() {
 
   const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError('Password is required');
+      setPasswordError(t('Password is required', 'Паролата е задължителна'));
       return false;
     } else if (password.length > 100) {
-      setPasswordError('Password is too long');
+      setPasswordError(t('Password is too long', 'Паролата е твърде дълга'));
       return false;
     }
     
     // Check for potentially dangerous characters
     const dangerousCharsRegex = /[<>\\]/;
     if (dangerousCharsRegex.test(password)) {
-      setPasswordError('Password contains invalid characters');
+      setPasswordError(t('Password contains invalid characters', 'Паролата съдържа невалидни знаци'));
       return false;
     }
     
@@ -131,6 +142,11 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     setError(undefined);
+
+    if (!isSupabaseConfigured) {
+      setError(t('Sign in is temporarily unavailable. Please try again after the app configuration is restored.', 'Входът временно не е достъпен. Опитайте отново след възстановяване на конфигурацията на приложението.'));
+      return;
+    }
     
     // Sanitize inputs before validation
     const sanitizedEmail = email.trim();
@@ -150,9 +166,9 @@ export default function SignIn() {
       
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          setError('Invalid email or password. Please try again.');
+          setError(t('Invalid email or password. Please try again.', 'Невалиден имейл или парола. Опитайте отново.'));
         } else if (error.message.includes('Email not confirmed')) {
-          setError('Please confirm your email address before signing in.');
+          setError(t('Please confirm your email address before signing in.', 'Потвърдете имейл адреса си преди вход.'));
         } else {
           setError(error.message);
         }
@@ -166,9 +182,9 @@ export default function SignIn() {
       // as ensureValidSession() already refreshes the session when needed
       
       // Navigate to home screen
-      router.replace(destination);
+      router.replace(destination as any);
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('An unexpected error occurred. Please try again.', 'Възникна неочаквана грешка. Опитайте отново.'));
       console.error('Sign in error:', err);
     } finally {
       setLoading(false);
@@ -177,20 +193,24 @@ export default function SignIn() {
   
   const handleGoogleSignIn = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        setError(t('Sign in is temporarily unavailable. Please try again after the app configuration is restored.', 'Входът временно не е достъпен. Опитайте отново след възстановяване на конфигурацията на приложението.'));
+        return;
+      }
       setGoogleLoading(true);
       setError(undefined);
       
       const { error } = await signInWithGoogle(destination);
       
       if (error) {
-        setError('Failed to start Google sign in. Please try again.');
+        setError(t('Failed to start Google sign in. Please try again.', 'Входът с Google не можа да започне. Опитайте отново.'));
         console.error('Google sign in error:', error);
       }
       
       // Note: For OAuth we don't navigate here - the user will be redirected and handled by the OAuth flow
       // The deep link handler will manage the redirect to the home screen
     } catch (err) {
-      setError('An unexpected error occurred with Google sign in.');
+      setError(t('An unexpected error occurred with Google sign in.', 'Възникна неочаквана грешка при вход с Google.'));
       console.error('Google sign in error:', err);
     } finally {
       setGoogleLoading(false);
@@ -207,6 +227,25 @@ export default function SignIn() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, theme.shadows.raised, isTabletOrLarger && { width: '60%', maxWidth: 520 }]}>
+          <View style={styles.authActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => goBackOrReplace(router, '/more')}
+              accessibilityRole="button"
+              accessibilityLabel={t('Back', 'Назад')}
+            >
+              <Ionicons name="arrow-back" size={19} color={theme.colors.primary} />
+              <Text style={[styles.actionText, { color: theme.colors.primary }]}>{t('Back', 'Назад')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => void setLocale(locale === 'bg' ? 'en' : 'bg')}
+              accessibilityRole="button"
+              accessibilityLabel={t('Switch language', 'Смени езика')}
+            >
+              <Text style={[styles.actionText, { color: theme.colors.primary }]}>{locale === 'bg' ? 'EN' : 'BG'}</Text>
+            </TouchableOpacity>
+          </View>
         <View style={styles.logoContainer}>
           <Image
             source={require('../../assets/images/GCLogo-no-bg.png')}
@@ -216,16 +255,16 @@ export default function SignIn() {
         </View>
 
           <View style={styles.header}>
-            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>Welcome back</Text>
-            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>Continue building a greener everyday.</Text>
+            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>{t('Welcome back', 'Добре дошли отново')}</Text>
+            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>{t('Continue building a greener everyday.', 'Продължете да изграждате по-зелено ежедневие.')}</Text>
           </View>
 
           <View style={styles.form}>
             <Input
-              label="Email"
+              label={t('Email', 'Имейл')}
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              placeholder={t('Enter your email', 'Въведете имейла си')}
               keyboardType="email-address"
               autoCapitalize="none"
               error={emailError}
@@ -234,10 +273,10 @@ export default function SignIn() {
             />
 
             <Input
-              label="Password"
+              label={t('Password', 'Парола')}
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              placeholder={t('Enter your password', 'Въведете паролата си')}
               isPassword
               error={passwordError}
               onBlur={() => validatePassword(password)}
@@ -246,7 +285,7 @@ export default function SignIn() {
 
             {/* Changed from asChild pattern to avoid ref forwarding warning */}
             <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
-              <Text style={[styles.forgotPassword, { color: theme.colors.primary }]}>Forgot password?</Text>
+              <Text style={[styles.forgotPassword, { color: theme.colors.primary }]}>{t('Forgot password?', 'Забравена парола?')}</Text>
             </TouchableOpacity>
 
             {/* Invisible Captcha verification */}
@@ -257,6 +296,14 @@ export default function SignIn() {
               }}
             />
 
+            {!isSupabaseConfigured && !error ? (
+              <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
+                <Text style={[styles.errorText, { color: theme.colors.danger }]}>
+                  {t('Sign in is temporarily unavailable. Please try again later.', 'Входът временно не е достъпен. Опитайте отново по-късно.')}
+                </Text>
+              </View>
+            ) : null}
+
             {error && (
               <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
                 <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text>
@@ -264,16 +311,16 @@ export default function SignIn() {
             )}
 
             <Button
-              title="Login"
+              title={t('Login', 'Вход')}
               onPress={handleSignIn}
               loading={loading}
-              disabled={loading || !captchaToken}
-              showSpinnerWhenDisabled={!captchaToken}
+              disabled={loading || !isSupabaseConfigured || (isTurnstileConfigured && !captchaToken)}
+              showSpinnerWhenDisabled={isTurnstileConfigured && !captchaToken}
             />
 
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>{t('or', 'или')}</Text>
               <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             </View>
 
@@ -286,9 +333,9 @@ export default function SignIn() {
                 style={[styles.googleButtonNative, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderStrong, borderRadius: theme.radii.md }]}
                 onPress={handleGoogleSignIn}
                 activeOpacity={0.85}
-                disabled={googleLoading}
+                disabled={googleLoading || !isSupabaseConfigured}
                 accessibilityRole="button"
-                accessibilityLabel="Sign in with Google"
+                accessibilityLabel={t('Sign in with Google', 'Вход с Google')}
               >
                 <Image
                   source={require('../../assets/images/google-logo.png')}
@@ -297,15 +344,15 @@ export default function SignIn() {
                   accessible
                   accessibilityLabel="Google logo"
                 />
-                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>Sign in with Google</Text>
+                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>{t('Sign in with Google', 'Вход с Google')}</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
-              New here?{' '}
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signup', params: { next: destination } })}>Create an account</Text>
+              {t('New here?', 'Нямате профил?')}{' '}
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signup', params: { next: destination } })}>{t('Create an account', 'Създайте профил')}</Text>
             </Text>
           </View>
         </View>
@@ -330,6 +377,24 @@ const styles = StyleSheet.create<Styles>({
     maxWidth: 500,
     padding: 24,
     alignItems: 'center',
+  },
+  authActions: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  actionButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   logoContainer: {
     marginBottom: 24,

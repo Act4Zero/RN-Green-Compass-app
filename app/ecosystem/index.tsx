@@ -8,6 +8,7 @@ import { usePoints } from '@/context/PointsContext';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
+import { goBackOrReplace } from '@/utils/navigation';
 
 export default function EcosystemScreen() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function EcosystemScreen() {
             eyebrow={t('Forest & meadow', 'Гора и поляна')}
             title={t('Your living ecosystem', 'Твоята жива екосистема')}
             description={t('Meaningful actions grow this world. Plants never wither, and every new species opens a short piece of real nature knowledge.', 'Смислените действия развиват този свят. Растенията никога не увяхват, а всеки нов вид отключва кратко и достоверно природно знание.')}
-            action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => router.back()} />}
+            action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/more')} />}
           />
 
           <EcosystemHero
@@ -35,6 +36,24 @@ export default function EcosystemScreen() {
             loading={loading}
             onOpen={() => router.push(`/ecosystem/species/${snapshot.activeSpecies.slug}` as any)}
           />
+
+          <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.borderStrong }}>
+            <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 18 }}>
+              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="layers-outline" size={25} color={theme.colors.accent} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .9 }]}>{t('What they form together', 'Какво образуват заедно')}</Text>
+                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('A layered forest edge—not a row of separate pots', 'Многослоен горски край — не редица отделни саксии')}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{t('Oak and lime shape the canopy; cornelian cherry and dog rose create shelter below; yarrow, clover, poppy and daisy turn the ground layer into a living meadow.', 'Дъбът и липата оформят короните; дрянът и шипката създават укритие отдолу; равнецът, детелината, макът и маргаритката превръщат приземния слой в жива поляна.')}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {[
+                  { icon: 'leaf-outline' as const, en: 'Canopy', bg: 'Корони' },
+                  { icon: 'git-branch-outline' as const, en: 'Shrubs', bg: 'Храсти' },
+                  { icon: 'flower-outline' as const, en: 'Meadow', bg: 'Поляна' },
+                ].map((layer) => <View key={layer.en} style={{ alignItems: 'center', gap: 5 }}><View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={layer.icon} size={19} color={theme.colors.primary} /></View><Text style={[theme.typography.label, { color: theme.colors.textMuted, fontSize: 9 }]}>{locale === 'bg' ? layer.bg : layer.en}</Text></View>)}
+              </View>
+            </View>
+          </Card>
 
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16, marginBottom: 30 }}>
             <Card style={{ flex: 1, padding: 20 }}>

@@ -1,6 +1,10 @@
 // Keep this config file CommonJS. Mixing an ESM import with `module.exports`
 // causes Node/Expo to load an empty config, dropping all `extra` values in
 // the web bundle even when Vercel provides them at build time.
+// Expo evaluates the app config before its public-variable pass in some static
+// export modes. Load local development values explicitly while keeping values
+// supplied by CI/Vercel authoritative (dotenv does not overwrite them).
+require('dotenv').config({ path: '.env.local' });
 require('dotenv').config();
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;

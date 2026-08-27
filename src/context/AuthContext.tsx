@@ -6,6 +6,7 @@ import { Profile } from '../types/profiles';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 import analyticsService from '../services/analyticsService';
 import { processUserEvent } from '../badges/badgeEngine';
+import { sanitizeInternalDestination } from '../utils/navigation';
 
 // Define the shape of the auth context
 type AuthContextType = {
@@ -314,12 +315,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       // Handle both local and production URLs for web
       let redirectTo: string | undefined;
+      const safePath = sanitizeInternalDestination(nextPath);
       if (Platform.OS === 'web') {
-        const safePath = nextPath === '/map' ? '/map' : '/home';
         redirectTo = `${window.location.origin}${safePath}`;
       } else {
         // Mobile deep link
-        redirectTo = nextPath === '/map' ? 'com.act4zero.greencompass://map' : 'com.act4zero.greencompass://home';
+        redirectTo = `com.act4zero.greencompass://${safePath.replace(/^\//, '')}`;
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({

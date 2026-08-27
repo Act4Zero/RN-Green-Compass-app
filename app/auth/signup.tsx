@@ -25,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import supabase, { ensureValidSession } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
+import { sanitizeInternalDestination } from '@/utils/navigation';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -60,7 +61,7 @@ export default function SignUp() {
   const isTabletOrLarger = width > 768;
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
-  const destination = next === '/map' ? '/map' : '/home';
+  const destination = sanitizeInternalDestination(next);
   const { signUp, refreshSession, signInWithGoogle } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -289,9 +290,9 @@ export default function SignUp() {
       
       // Confirmed projects return a session immediately; email-confirmation projects
       // continue through the success screen while preserving the requested map route.
-      router.replace(finalSessionCheck.session
+      router.replace((finalSessionCheck.session
         ? destination
-        : { pathname: '/auth/signup-success', params: { next: destination } });
+        : { pathname: '/auth/signup-success', params: { next: destination } }) as any);
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       console.error('Sign up error:', err);
