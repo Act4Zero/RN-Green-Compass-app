@@ -13,6 +13,8 @@ const SPECIES_ASSETS: Record<string, ImageSourcePropType> = {
   'oxeye-daisy': require('../../../../assets/images/ecosystem/oxeye-daisy-realistic.webp'),
 };
 
+const ENGLISH_OAK_SEED = require('../../../../assets/images/ecosystem/english-oak-seed-realistic.png');
+
 const STAGE_SCALE: Record<EcosystemStage, number> = {
   seed: 0,
   sprout: 0.42,
@@ -25,8 +27,12 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
   if (stage === 'seed') {
     return (
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-        <View style={{ position: 'absolute', left: '18%', right: '18%', bottom: '7%', height: 20, borderRadius: 50, backgroundColor: 'rgba(70,100,55,0.24)' }} />
-        <View style={{ position: 'absolute', left: '40%', bottom: '18%', width: 36, height: 23, borderRadius: 18, backgroundColor: '#825C35', transform: [{ rotate: '-12deg' }], borderWidth: 2, borderColor: '#68472B' }} />
+        <View style={{ position: 'absolute', left: '20%', right: '20%', bottom: '7%', height: 18, borderRadius: 50, backgroundColor: 'rgba(70,100,55,0.2)' }} />
+        <Image
+          source={ENGLISH_OAK_SEED}
+          resizeMode="contain"
+          style={{ position: 'absolute', width: size * 0.68, height: size * 0.68, left: size * 0.16, bottom: size * 0.02 }}
+        />
       </View>
     );
   }
