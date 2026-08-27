@@ -30,7 +30,11 @@ export default function EcosystemScreen() {
             action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => router.back()} />}
           />
 
-          <EcosystemHero snapshot={snapshot} loading={loading} onOpen={() => undefined} />
+          <EcosystemHero
+            snapshot={snapshot}
+            loading={loading}
+            onOpen={() => router.push(`/ecosystem/species/${snapshot.activeSpecies.slug}` as any)}
+          />
 
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16, marginBottom: 30 }}>
             <Card style={{ flex: 1, padding: 20 }}>
