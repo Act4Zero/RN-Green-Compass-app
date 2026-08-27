@@ -14,6 +14,7 @@ const SPECIES_ASSETS: Record<string, ImageSourcePropType> = {
 };
 
 const ENGLISH_OAK_SEED = require('../../../../assets/images/ecosystem/english-oak-seed-realistic.png');
+const FOREST_SOIL = require('../../../../assets/images/ecosystem/forest-soil-patch-realistic.png');
 
 const STAGE_SCALE: Record<EcosystemStage, number> = {
   seed: 0,
@@ -27,11 +28,15 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
   if (stage === 'seed') {
     return (
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-        <View style={{ position: 'absolute', left: '20%', right: '20%', bottom: '7%', height: 18, borderRadius: 50, backgroundColor: 'rgba(70,100,55,0.2)' }} />
         <Image
           source={ENGLISH_OAK_SEED}
           resizeMode="contain"
-          style={{ position: 'absolute', width: size * 0.68, height: size * 0.68, left: size * 0.16, bottom: size * 0.02 }}
+          style={{ position: 'absolute', width: size * 0.56, height: size * 0.56, left: size * 0.22, bottom: size * 0.12 }}
+        />
+        <Image
+          source={FOREST_SOIL}
+          resizeMode="contain"
+          style={{ position: 'absolute', width: size * 0.88, height: size * 0.39, left: size * 0.06, bottom: -size * 0.025 }}
         />
       </View>
     );
@@ -43,7 +48,6 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
 
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-      <View style={{ position: 'absolute', left: '18%', right: '18%', bottom: '5%', height: 18, borderRadius: 50, backgroundColor: 'rgba(70,100,55,0.22)' }} />
       <Image
         source={SPECIES_ASSETS[speciesSlug] || SPECIES_ASSETS['english-oak']}
         resizeMode="contain"
@@ -55,6 +59,11 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
           bottom: -imageHeight * (1 - scale) / 2,
           transform: [{ scale }],
         }}
+      />
+      <Image
+        source={FOREST_SOIL}
+        resizeMode="contain"
+        style={{ position: 'absolute', width: size * 0.94, height: size * 0.42, left: size * 0.03, bottom: -size * 0.035 }}
       />
     </View>
   );
