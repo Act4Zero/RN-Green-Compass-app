@@ -28,7 +28,7 @@ module.exports = {
   slug: "GreenCompass",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/GCLogo-no-bg.png",
+  icon: "./assets/images/GCLogo-rich-premium-app-icon.png",
   scheme: "greencompass",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
@@ -43,15 +43,15 @@ module.exports = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/GCLogo-no-bg.png",
-      backgroundColor: "#ffffff"
+      foregroundImage: "./assets/images/GCLogo-rich-premium-original-shape.png",
+      backgroundColor: "#07503F"
     },
     package: "com.act4zero.GreenCompass"
   },
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/GCLogo-no-bg.png"
+    favicon: "./assets/images/GCLogo-rich-premium-web.png"
   },
   plugins: [
     "expo-router",
@@ -73,7 +73,7 @@ module.exports = {
     [
       "expo-splash-screen",
       {
-        "image": "./assets/images/GCLogo-no-bg.png",
+        "image": "./assets/images/GCLogo-rich-premium-original-shape.png",
         "imageWidth": 200,
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"

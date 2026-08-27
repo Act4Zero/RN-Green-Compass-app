@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
-            <Image source={require('../../../assets/images/GCLogo-no-bg.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
+            <Image source={require('../../../assets/images/GCLogo-rich-premium-original-shape.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
             <View>
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>Green Compass</Text>
               <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>{t('Every action counts', 'Всяко действие има значение')}</Text>

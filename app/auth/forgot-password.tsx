@@ -127,7 +127,7 @@ export default function ForgotPassword() {
         <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, isTabletOrLarger && { width: '100%', maxWidth: 520 }]}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/images/GCLogo-no-bg.png')}
+            source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')}
             style={styles.logo}
             resizeMode="contain"
           />

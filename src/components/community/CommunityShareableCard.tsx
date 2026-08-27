@@ -80,7 +80,7 @@ export function CommunityShareableCard({
       
       <View style={styles.footer}>
         <Image 
-          source={require('../../../assets/images/GCLogo-no-bg.png')} 
+          source={require('../../../assets/images/GCLogo-rich-premium-original-shape.png')}
           style={styles.logo} 
           resizeMode="contain"
         />

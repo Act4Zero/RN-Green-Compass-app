@@ -29,7 +29,7 @@ export default function Welcome() {
         <View style={{ width: '100%', maxWidth: 1320, alignSelf: 'center', flex: 1 }}>
           <View style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Image source={require('../../assets/images/GCLogo-no-bg.png')} style={{ width: 42, height: 42 }} resizeMode="contain" />
+              <Image source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')} style={{ width: 42, height: 42 }} resizeMode="contain" />
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>Green Compass</Text>
             </View>
             <Pressable

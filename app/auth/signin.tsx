@@ -248,7 +248,7 @@ export default function SignIn() {
           </View>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../assets/images/GCLogo-no-bg.png')}
+            source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')}
             style={styles.logo}
             resizeMode="contain"
           />
