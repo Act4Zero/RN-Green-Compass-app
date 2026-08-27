@@ -51,6 +51,18 @@ const pointsService = {
       if (error) {
         throw error;
       }
+
+      // Ecosystem growth is calculated and deduplicated by the database. A
+      // missing migration must never prevent the original points flow.
+      if (data?.id) {
+        void (supabase as any)
+          .rpc('record_ecosystem_growth', { p_point_event_id: data.id })
+          .then(({ error: growthError }: { error?: { message?: string } | null }) => {
+            if (growthError && !growthError.message?.includes('Could not find the function')) {
+              console.warn('Ecosystem growth was not recorded:', growthError.message);
+            }
+          });
+      }
       
       // Calculate updated point balance
       const pointBalance = await pointsService.getUserPointBalance(userId);
