@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { EcosystemHero, useEcosystem } from '@/features/ecosystem';
 import { knowledgeService, type KnowledgeItemDetail, useKnowledgeLocale } from '@/features/knowledge';
+import { marketplaceService, type MarketplaceRecommendation } from '@/features/marketplace';
 import useGoalsManager from '@/hooks/useGoalsManager';
 import useHabitStats from '@/hooks/useHabitStats';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -23,14 +24,16 @@ export default function Home() {
   const wide = width >= 768;
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { t } = useKnowledgeLocale();
+  const { locale, t } = useKnowledgeLocale();
   const ecosystemEnabled = useFeatureFlag('living_ecosystem_v1', true);
+  const marketplaceEnabled = useFeatureFlag('sustainability_marketplace_mvp', true);
   const { pointHistory, awardDailyCheckIn } = usePoints();
   const { snapshot, loading: ecosystemLoading } = useEcosystem(user?.id, pointHistory);
   const { profile, isLoading: profileLoading, loadProfile, getProfileDisplayIdentifier } = useProfileManager();
   const { totalCO2Saved, totalActions, overallStreak, refreshStats } = useHabitStats();
   const { goals, updateGoal, deleteGoal, refreshGoals } = useGoalsManager();
   const [dailyDose, setDailyDose] = useState<KnowledgeItemDetail | null>(null);
+  const [dailyProduct, setDailyProduct] = useState<MarketplaceRecommendation | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<EnhancedGoal | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -63,6 +66,15 @@ export default function Home() {
       .then((result) => setDailyDose(result.dailyDose))
       .catch(() => undefined);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!marketplaceEnabled) return;
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    void marketplaceService.getHome(locale, date)
+      .then((result) => setDailyProduct(result.dailyPick))
+      .catch(() => undefined);
+  }, [locale, marketplaceEnabled]);
 
   useEffect(() => {
     if (!user || typeof document === 'undefined') return;
@@ -133,6 +145,18 @@ export default function Home() {
               </Card>
             ) : null}
           </View>
+
+          {dailyProduct ? (
+            <Card style={{ padding: 20, marginBottom: 28, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 18 }}>
+              <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="storefront-outline" size={23} color={theme.colors.primary} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1 }]}>{t("Today's verified product", 'Днешният проверен продукт')}</Text>
+                <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{dailyProduct.product.name[locale]}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{dailyProduct.reasons[0]?.[locale]}</Text>
+              </View>
+              <AppButton label={t('View Daily Pick', 'Виж Daily Pick')} variant="secondary" icon="arrow-forward" onPress={() => router.push(`/marketplace/product/${dailyProduct.product.slug}` as any)} />
+            </Card>
+          ) : null}
 
           <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{t('Choose your next move', 'Избери следващата си стъпка')}</Text>
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 30 }}>

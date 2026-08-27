@@ -1,31 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { KnowledgeLocale } from './types';
 import type { KnowledgeTopic } from './types';
-
-const STORAGE_KEY = 'green-compass:knowledge:locale';
-
-interface KnowledgeLocaleContextValue {
-  locale: KnowledgeLocale;
-  setLocale: (locale: KnowledgeLocale) => Promise<void>;
-  t: (english: string, bulgarian: string) => string;
-}
-
-const KnowledgeLocaleContext = createContext<KnowledgeLocaleContextValue | null>(null);
-
-export function KnowledgeLocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<KnowledgeLocale>('en');
-  useEffect(() => { void AsyncStorage.getItem(STORAGE_KEY).then((value) => { if (value === 'bg' || value === 'en') setLocaleState(value); }); }, []);
-  const setLocale = async (next: KnowledgeLocale) => { setLocaleState(next); await AsyncStorage.setItem(STORAGE_KEY, next); };
-  const value = useMemo(() => ({ locale, setLocale, t: (english: string, bulgarian: string) => locale === 'bg' ? bulgarian : english }), [locale]);
-  return <KnowledgeLocaleContext.Provider value={value}>{children}</KnowledgeLocaleContext.Provider>;
-}
-
-export function useKnowledgeLocale() {
-  const context = useContext(KnowledgeLocaleContext);
-  if (!context) throw new Error('useKnowledgeLocale must be used within KnowledgeLocaleProvider');
-  return context;
-}
+export { AppLocaleProvider as KnowledgeLocaleProvider, useAppLocale as useKnowledgeLocale } from '@/context/AppLocaleContext';
 
 const TOPIC_BG: Record<string, { name: string; description: string }> = {
   'zero-waste': { name: 'Нулев отпадък', description: 'Предотвратявайте отпадъци, използвайте повторно и рециклирайте правилно.' },
