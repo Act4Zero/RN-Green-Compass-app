@@ -11,6 +11,7 @@ const mockAuthenticatedMap = jest.fn(() => {
 });
 
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: mockUser, loading: mockLoading }) }));
+jest.mock('@/context/AppLocaleContext', () => ({ useAppLocale: () => ({ t: (english: string) => english }) }));
 jest.mock('@/features/sustainability-map', () => ({ reserveMapSession: () => mockReserve() }));
 jest.mock('../AuthenticatedMap', () => ({ __esModule: true, default: () => mockAuthenticatedMap() }));
 jest.mock('../MapPreview', () => {
