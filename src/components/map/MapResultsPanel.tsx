@@ -2,21 +2,23 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { FlatList, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
+import { useAppLocale } from '../../context/AppLocaleContext';
 import { useAppTheme } from '../../theme';
 import { MapLocation } from '../../types/map';
-import { formatAddress } from '../../utils/mapUtils';
+import { formatLocalizedAddress, getLocalizedLocationName } from '../../utils/mapUtils';
 import { getCategoryConfig } from '../../utils/categoryUtils';
 
 function ResultRow({ location }: { location: MapLocation }) {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
   const selected = map.selectedLocation?.id === location.id;
   const category = getCategoryConfig(location.category);
   const recommended = map.recommendationIds.includes(location.id);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open ${location.name}`}
+      accessibilityLabel={t(`Open ${location.name}`, `Отворете ${getLocalizedLocationName(location, 'bg')}`)}
       onPress={() => map.selectLocation(location)}
       style={({ pressed }) => ({
         padding: theme.spacing.sm, borderRadius: theme.radii.md, gap: 4,
@@ -29,8 +31,8 @@ function ResultRow({ location }: { location: MapLocation }) {
           <Ionicons name={category.icon as any} size={17} color={theme.colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text, flexShrink: 1 }]}>{location.name}</Text>{recommended ? <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 10 }]}>FOR YOU</Text> : null}</View>
-          <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{formatAddress(location) || location.town}</Text>
+          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text, flexShrink: 1 }]}>{getLocalizedLocationName(location, locale)}</Text>{recommended ? <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 10 }]}>{t('FOR YOU', 'ЗА ВАС')}</Text> : null}</View>
+          <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{formatLocalizedAddress(location, locale) || location.town}</Text>
         </View>
         {location.power_kw ? <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{location.power_kw} kW</Text> : location.verified ? <Ionicons name="shield-checkmark" size={18} color={theme.colors.primary} /> : null}
       </View>
@@ -41,6 +43,7 @@ function ResultRow({ location }: { location: MapLocation }) {
 export default function MapResultsPanel() {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const { width } = useWindowDimensions();
   const desktop = width >= theme.breakpoints.desktop;
   if (desktop && map.isResultsRailCollapsed) return null;
@@ -56,17 +59,17 @@ export default function MapResultsPanel() {
     }]}>
       <View style={{ padding: theme.spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View>
-          <Text accessibilityLiveRegion="polite" style={[theme.typography.h3, { color: theme.colors.text }]}>{map.visibleLocations.length} places</Text>
-          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{map.query ? 'Matching your search' : 'In the visible area'}</Text>
+          <Text accessibilityLiveRegion="polite" style={[theme.typography.h3, { color: theme.colors.text }]}>{map.visibleLocations.length} {t('places', 'места')}</Text>
+          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{map.query ? t('Matching your search', 'Съвпадения с търсенето') : t('In the visible area', 'Във видимата област')}</Text>
         </View>
-        {!desktop ? <Pressable accessibilityLabel="Close results" onPress={() => map.setResultsOpen(false)} hitSlop={8}><Ionicons name="close" size={24} color={theme.colors.textMuted} /></Pressable> : null}
+        {!desktop ? <Pressable accessibilityLabel={t('Close results', 'Затворете резултатите')} onPress={() => map.setResultsOpen(false)} hitSlop={8}><Ionicons name="close" size={24} color={theme.colors.textMuted} /></Pressable> : null}
       </View>
       <FlatList
         data={map.visibleLocations}
         keyExtractor={(item, index) => `${item.id}:${item.connection_type ?? 'connector'}:${index}`}
         contentContainerStyle={{ padding: theme.spacing.sm, gap: theme.spacing.xs }}
         renderItem={({ item }) => <ResultRow location={item} />}
-        ListEmptyComponent={<View style={{ padding: theme.spacing.xl, alignItems: 'center', gap: theme.spacing.sm }}><Ionicons name="search-outline" size={26} color={theme.colors.textMuted} /><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>No verified places match this view. Clear the search or return to Bulgaria.</Text></View>}
+        ListEmptyComponent={<View style={{ padding: theme.spacing.xl, alignItems: 'center', gap: theme.spacing.sm }}><Ionicons name="search-outline" size={26} color={theme.colors.textMuted} /><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>{t('No verified places match this view. Clear the search or return to Bulgaria.', 'Няма проверени места в този изглед. Изчистете търсенето или се върнете към България.')}</Text></View>}
       />
     </View>
   );

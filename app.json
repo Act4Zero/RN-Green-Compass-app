@@ -35,7 +35,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "@rnmapbox/maps"
+      [
+        "@maplibre/maplibre-react-native",
+        {
+          "android": { "nativeVersion": "11.8.2" },
+          "ios": { "nativeVersion": "6.17.1" }
+        }
+      ]
     ],
     "extra": {
       "router": {

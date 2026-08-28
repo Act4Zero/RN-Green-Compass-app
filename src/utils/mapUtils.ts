@@ -6,6 +6,44 @@ import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { GeographicBounds, MapLocation } from '../types/map';
 
+type SupportedMapLocale = 'en' | 'bg';
+
+const BULGARIAN_PLACE_NAMES: Record<string, string> = {
+  '2700 Blagoevgrad': '2700 Благоевград',
+  Bansko: 'Банско', Blagoevgrad: 'Благоевград', Botevgrad: 'Ботевград',
+  Bourgas: 'Бургас', Burgas: 'Бургас', Dimitrovgrad: 'Димитровград',
+  'Dobrich Region': 'област Добрич', 'Elin Pelin': 'Елин Пелин',
+  Gelemenovo: 'Гелеменово', Kulata: 'Кулата', Luliakovo: 'Люляково',
+  Lyubimets: 'Любимец', Marikostinovo: 'Марикостиново', Melnik: 'Мелник',
+  Montana: 'Монтана', Nessebar: 'Несебър', Obnova: 'Обнова',
+  Pamporovo: 'Пампорово', Petrich: 'Петрич', Pleven: 'Плевен',
+  Plovdiv: 'Пловдив', Ruse: 'Русе', Sandanski: 'Сандански',
+  Sinemorets: 'Синеморец', Smolyan: 'Смолян', Sofia: 'София',
+  'Sofia City': 'София-град', 'Sofia-City Region': 'област София-град',
+  'Stara Zagora': 'Стара Загора', 'Stara Zagora Region': 'област Стара Загора',
+  Stryama: 'Стряма', 'Sunny Beach': 'Слънчев бряг',
+  'Targovishte municipality': 'община Търговище', Varna: 'Варна',
+  'Varna Municipality': 'община Варна', Bulgaria: 'България',
+};
+
+const localizeBulgarianAddressPart = (value: string | null | undefined): string => {
+  if (!value) return '';
+  const exact = BULGARIAN_PLACE_NAMES[value.trim()];
+  if (exact) return exact;
+  if (/[А-Яа-я]/.test(value)) return value;
+  return value
+    .replace(/\b(?:bul\.|boulevard|blvd\.?)\s*/gi, 'бул. ')
+    .replace(/\b(?:ulitsa|ul\.|street|str\.?)\s*/gi, 'ул. ')
+    .replace(/\b(?:square|sq\.?)\s*/gi, 'пл. ')
+    .replace(/\bNorthern Industrial Zone\b/gi, 'Северна промишлена зона')
+    .replace(/\bIndustrial Zone\b/gi, 'Промишлена зона')
+    .replace(/\bmunicipality\b/gi, 'община')
+    .replace(/\bregion\b/gi, 'област');
+};
+
+export const getLocalizedLocationName = (location: MapLocation, locale: SupportedMapLocale): string =>
+  locale === 'bg' ? location.name_bg?.trim() || location.name : location.name;
+
 /**
  * Get the user's current position using the Geolocation API
  * Returns a Promise with the latitude and longitude
@@ -30,6 +68,21 @@ export const formatAddress = (location: MapLocation): string => {
   if (location.country) addressParts.push(location.country);
   
   return addressParts.join(', ');
+};
+
+/** Use available Bulgarian fields and conservative address-term localization without inventing data. */
+export const formatLocalizedAddress = (location: MapLocation, locale: SupportedMapLocale): string => {
+  if (locale === 'en') return formatAddress(location);
+  const parts = [
+    localizeBulgarianAddressPart(location.address_line_1),
+    localizeBulgarianAddressPart(location.address_line_2),
+    localizeBulgarianAddressPart(location.town),
+  ];
+  const region = localizeBulgarianAddressPart(location.state_or_province);
+  const regionPostcode = [region, location.postcode].filter(Boolean).join(' ');
+  if (regionPostcode) parts.push(regionPostcode);
+  parts.push(localizeBulgarianAddressPart(location.country));
+  return parts.filter(Boolean).join(', ');
 };
 
 /**

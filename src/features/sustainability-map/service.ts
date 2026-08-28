@@ -1,5 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import supabase, { isSupabaseConfigured } from '@/lib/supabase';
 import {
   EcoRoute,
@@ -8,28 +6,13 @@ import {
   LocationSubmission,
   MapCheckIn,
   MapLocation,
-  MapSessionReservation,
   PersonalMapImpact,
   SustainabilityEvent,
 } from '@/types/map';
 import { getLegacyEVConnectorRows, normalizeLegacyEVLocations } from '@/utils/locationDataUtils';
 
-const INSTALLATION_KEY = 'green-compass:map-installation-id';
 const rpc = (name: string, params: Record<string, unknown> = {}) => (supabase as any).rpc(name, params);
 const table = (name: string) => (supabase as any).from(name);
-
-function randomInstallationId(): string {
-  const random = () => Math.random().toString(36).slice(2);
-  return `${Date.now().toString(36)}-${random()}-${random()}-${random()}`;
-}
-
-async function getInstallationId(): Promise<string> {
-  const stored = await AsyncStorage.getItem(INSTALLATION_KEY);
-  if (stored && stored.length >= 16) return stored;
-  const next = randomInstallationId();
-  await AsyncStorage.setItem(INSTALLATION_KEY, next);
-  return next;
-}
 
 function asCategory(value: unknown): LocationCategory {
   const categories: LocationCategory[] = ['renewable_energy','local_organic','zero_waste','ev_charging','recycling','green_spaces','community_events'];
@@ -91,48 +74,23 @@ export function mapLocationFromRow(row: any): MapLocation {
   };
 }
 
-export function mapSessionReservationFromValue(value: any): MapSessionReservation {
-  return {
-    allowed: Boolean(value?.allowed),
-    reason: value?.reason || 'unavailable',
-    message: value?.message,
-    used: value?.used == null ? undefined : Number(value.used),
-    limit: value?.limit == null ? undefined : Number(value.limit),
-    percent: value?.percent == null ? undefined : Number(value.percent),
-    periodStart: value?.period_start,
-    periodEnd: value?.period_end,
-  };
-}
-
-export async function reserveMapSession(): Promise<MapSessionReservation> {
-  if (__DEV__ && process.env.EXPO_PUBLIC_MAP_BUDGET_BYPASS === 'true') return { allowed: true, reason: 'reserved' };
-  if (!isSupabaseConfigured) return { allowed: false, reason: 'unavailable', message: 'The account service is not configured, so the paid map cannot be started safely.' };
-  const platform = Platform.OS === 'web' ? 'web' : Platform.OS;
-  const installationId = platform === 'web' ? null : await getInstallationId();
-  const { data, error } = await rpc('reserve_map_session', { p_platform: platform, p_installation_hash: installationId });
-  if (error) return { allowed: false, reason: 'unavailable', message: 'The map budget could not be verified. The globe stayed off to prevent untracked usage.' };
-  const value = Array.isArray(data) ? data[0] : data;
-  return mapSessionReservationFromValue(value);
-}
-
 export async function loadCatalogLocations(): Promise<{ locations: MapLocation[]; source: 'remote' | 'bundled' }> {
   if (isSupabaseConfigured) {
-    const { data, error } = await rpc('get_sustainability_map', { p_limit: 2000 });
+    const { data, error } = await rpc('get_public_sustainability_map', { p_limit: 2000 });
     if (!error && Array.isArray(data) && data.length) return { locations: data.map(mapLocationFromRow), source: 'remote' };
   }
   return { locations: normalizeLegacyEVLocations(getLegacyEVConnectorRows()), source: 'bundled' };
 }
 
 function reviewFromRow(row: any): LocationReview {
-  return { id: row.id, locationId: row.location_id, userId: row.user_id, rating: Number(row.rating), body: row.body, status: row.status, authorName: row.profiles?.display_name || null, createdAt: row.created_at };
+  return { id: row.id, locationId: row.location_id, userId: row.user_id, rating: Number(row.rating), body: row.body, status: row.status, authorName: row.author_name || row.profiles?.display_name || null, createdAt: row.created_at };
 }
 
 export const sustainabilityMapService = {
-  reserveMapSession,
   loadCatalogLocations,
 
   async listApprovedReviews(locationId: string): Promise<LocationReview[]> {
-    const { data, error } = await table('sustainability_reviews').select('*,profiles:user_id(display_name)').eq('location_id', locationId).eq('status', 'approved').order('created_at', { ascending: false }).limit(50);
+    const { data, error } = await rpc('get_public_sustainability_reviews', { p_location_id: locationId, p_limit: 50 });
     if (error) throw new Error(error.message || 'Unable to load reviews.');
     return (data || []).map(reviewFromRow);
   },
@@ -188,21 +146,7 @@ export const sustainabilityMapService = {
   },
 };
 
-export type MapBudgetStatus = { enabled: boolean; webUsed: number; webLimit: number; mobileUsed: number; mobileLimit: number; periodStart: string; periodEnd: string; message: string };
-
 export const sustainabilityMapAdminService = {
-  async getBudgetStatus(): Promise<MapBudgetStatus> {
-    const { data, error } = await rpc('get_map_budget_status');
-    if (error) throw new Error(error.message || 'Unable to load map budget.');
-    const value = Array.isArray(data) ? data[0] : data;
-    return { enabled: Boolean(value.enabled), webUsed: Number(value.web_used || 0), webLimit: Number(value.web_limit), mobileUsed: Number(value.mobile_used || 0), mobileLimit: Number(value.mobile_limit), periodStart: value.period_start, periodEnd: value.period_end, message: value.message };
-  },
-
-  async setBudget(input: { enabled: boolean; webLimit: number; mobileLimit: number; periodStart: string; periodEnd: string; message: string }): Promise<void> {
-    const { error } = await rpc('set_map_runtime_config', { p_enabled: input.enabled, p_web_limit: input.webLimit, p_mobile_limit: input.mobileLimit, p_period_start: input.periodStart, p_period_end: input.periodEnd, p_message: input.message });
-    if (error) throw new Error(error.message || 'Unable to update map budget.');
-  },
-
   async listModerationQueue(): Promise<{ submissions: any[]; reviews: any[]; media: any[] }> {
     const [submissions, reviews, media] = await Promise.all([
       table('sustainability_location_submissions').select('*,profiles:user_id(display_name)').in('status', ['pending','in_review']).order('created_at'),

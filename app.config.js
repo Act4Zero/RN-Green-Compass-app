@@ -14,7 +14,6 @@ const EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIE
 const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const EXPO_PUBLIC_GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI;
 const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
-const EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (process.env.VERCEL_ENV === 'production' && (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY)) {
@@ -56,7 +55,13 @@ module.exports = {
   plugins: [
     "expo-router",
     "expo-notifications",
-    "@rnmapbox/maps",
+    [
+      "@maplibre/maplibre-react-native",
+      {
+        "android": { "nativeVersion": "11.8.2" },
+        "ios": { "nativeVersion": "6.17.1" }
+      }
+    ],
     [
       "@stripe/stripe-react-native",
       {
@@ -95,7 +100,6 @@ module.exports = {
     googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
     // Cloudflare Turnstile site key for captcha
     turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
-    mapboxAccessToken: EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
     stripePublishableKey: EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   }
 };

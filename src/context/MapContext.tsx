@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import analyticsService from '../services/analyticsService';
 import { loadLocations } from '../services/mapService';
@@ -14,8 +13,6 @@ import {
 import {
   BULGARIA_CAMERA,
   EUROPE_GLOBE_CAMERA,
-  isMapStyleId,
-  MAP_STYLE_STORAGE_KEY,
 } from '../config/mapGlobe';
 import {
   filterMapLocations,
@@ -69,7 +66,7 @@ const unavailable = () => undefined;
 
 export const MapContext = createContext<MapContextType>({
   locations: [], filteredLocations: [], visibleLocations: [], availableCategories: [],
-  filters: { categories: {} }, query: '', selectedLocation: null, styleId: 'living-earth',
+  filters: { categories: {} }, query: '', selectedLocation: null, styleId: 'living-planet',
   camera: EUROPE_GLOBE_CAMERA, cameraCommand: null, userLocation: null, isLoading: false,
   error: null, isLocating: false, locationError: null, isOutOfCoverage: false,
   isResultsOpen: false, isResultsRailCollapsed: false, isDataInitialized: false,
@@ -116,11 +113,6 @@ export function MapProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => { void loadAllLocations(); }, [loadAllLocations]);
-  useEffect(() => {
-    void AsyncStorage.getItem(MAP_STYLE_STORAGE_KEY).then((stored) => {
-      if (isMapStyleId(stored)) dispatch({ type: 'style-changed', styleId: stored });
-    }).catch(() => undefined);
-  }, []);
 
   const availableCategories = useMemo(() => getAvailableCategories(locations), [locations]);
   const {
@@ -184,8 +176,6 @@ export function MapProvider({ children }: { children: ReactNode }) {
 
   const setStyleId = useCallback((nextStyleId: MapStyleId) => {
     dispatch({ type: 'style-changed', styleId: nextStyleId });
-    void AsyncStorage.setItem(MAP_STYLE_STORAGE_KEY, nextStyleId).catch(() => undefined);
-    analyticsService.trackEvent('map_style_changed', { style: nextStyleId });
   }, []);
 
   const locateUser = useCallback(async () => {

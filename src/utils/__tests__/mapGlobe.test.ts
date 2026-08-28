@@ -53,9 +53,10 @@ describe('Sustainability Globe data helpers', () => {
     expect(isDetailedCameraOutOfCoverage({ lat: 42.7, lng: 23.32 }, 8)).toBe(false);
   });
 
-  it('defines and validates the three runtime style presets', () => {
-    expect(Object.keys(MAP_STYLE_PRESETS)).toEqual(['living-earth', 'night-canopy', 'satellite']);
-    expect(isMapStyleId('satellite')).toBe(true);
+  it('defines only the automatic Living Planet style', () => {
+    expect(Object.keys(MAP_STYLE_PRESETS)).toEqual(['living-planet']);
+    expect(isMapStyleId('living-planet')).toBe(true);
+    expect(isMapStyleId('satellite')).toBe(false);
     expect(isMapStyleId('streets')).toBe(false);
   });
 });

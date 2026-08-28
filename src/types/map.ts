@@ -73,15 +73,14 @@ export interface MapLocation {
   website?: string;
 }
 
-export type MapStyleId = 'living-earth' | 'night-canopy' | 'satellite';
+export type MapStyleId = 'living-planet';
 
 export interface MapStylePreset {
   id: MapStyleId;
   label: string;
   description: string;
   styleUrl: string;
-  lightPreset: 'day' | 'night';
-  icon: 'earth-outline' | 'moon-outline' | 'planet-outline';
+  icon: 'earth-outline';
   swatches: readonly [string, string, string];
 }
 
@@ -189,15 +188,36 @@ export interface EcoRoute {
   stops: EcoRouteStop[];
 }
 
-export interface MapSessionReservation {
-  allowed: boolean;
-  reason: 'reserved' | 'disabled' | 'budget' | 'unavailable';
-  message?: string;
-  used?: number;
-  limit?: number;
-  percent?: number;
-  periodStart?: string;
-  periodEnd?: string;
+export type MapExperienceMode = 'globe' | 'to-map' | 'map' | 'to-globe';
+export type LivingPlanetQuality = 'high' | 'adaptive' | 'fallback';
+
+export interface MapSourceConfig {
+  onlineStyleUrl: string;
+  attribution: string;
+  offlineStyle?: string | Record<string, unknown> | null;
+}
+
+export interface OfflineMapPackManifest {
+  id: string;
+  name: { en: string; bg: string };
+  version: string;
+  bounds: [west: number, south: number, east: number, north: number];
+  minZoom: number;
+  maxZoom: number;
+  byteSize: number;
+  sha256: string;
+  downloadUrl: string;
+  attribution?: string;
+}
+
+export type OfflineMapPackStatus = 'not-downloaded' | 'downloading' | 'ready' | 'update-available' | 'error';
+
+export interface OfflineMapPackState {
+  manifest: OfflineMapPackManifest;
+  status: OfflineMapPackStatus;
+  progress: number;
+  localUri?: string;
+  error?: string;
 }
 
 export type MapLocationFeature = GeoJSON.Feature<GeoJSON.Point, MapLocationFeatureProperties>;
@@ -207,17 +227,21 @@ export type MapLocationFeatureCollection = GeoJSON.FeatureCollection<
 >;
 
 export interface MapRendererProps {
-  accessToken: string;
   locations: MapLocation[];
   selectedLocationId: string | null;
   styleId: MapStyleId;
   cameraCommand: MapCameraCommand | null;
   userLocation: MapPoint | null;
   reducedMotion: boolean;
+  mode: MapExperienceMode;
+  quality: LivingPlanetQuality;
+  source: MapSourceConfig;
   onReady: () => void;
   onCameraChanged: (camera: MapCameraState) => void;
   onLocationPress: (locationId: string) => void;
   onClusterPress: (center: MapPoint, expansionZoom: number) => void;
+  onRequestMap: (center?: MapPoint, zoom?: number) => void;
+  onRequestGlobe: () => void;
   onError: (message: string) => void;
 }
 

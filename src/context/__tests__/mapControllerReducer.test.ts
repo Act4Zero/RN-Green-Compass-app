@@ -33,9 +33,9 @@ describe('mapControllerReducer', () => {
       query: 'sofia',
       selectedLocation: location,
     };
-    const changed = mapControllerReducer(state, { type: 'style-changed', styleId: 'satellite' });
+    const changed = mapControllerReducer(state, { type: 'style-changed', styleId: 'living-planet' });
 
-    expect(changed).toMatchObject({ styleId: 'satellite', camera, query: 'sofia', selectedLocation: location });
+    expect(changed).toMatchObject({ styleId: 'living-planet', camera, query: 'sofia', selectedLocation: location });
   });
 
   it('stores typed camera commands and panel transitions', () => {
