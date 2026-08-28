@@ -14,6 +14,7 @@ const SPECIES_ASSETS: Record<string, ImageSourcePropType> = {
 };
 
 const ENGLISH_OAK_SEED = require('../../../../assets/images/ecosystem/english-oak-seed-realistic.png');
+const ENGLISH_OAK_MATURE = require('../../../../assets/images/ecosystem/english-oak-mature-v2.png');
 const FOREST_SOIL = require('../../../../assets/images/ecosystem/forest-soil-patch-realistic.png');
 
 const STAGE_SCALE: Record<EcosystemStage, number> = {
@@ -49,7 +50,7 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
       <Image
-        source={SPECIES_ASSETS[speciesSlug] || SPECIES_ASSETS['english-oak']}
+        source={stage === 'mature' && speciesSlug === 'english-oak' ? ENGLISH_OAK_MATURE : SPECIES_ASSETS[speciesSlug] || SPECIES_ASSETS['english-oak']}
         resizeMode="contain"
         style={{
           position: 'absolute',

@@ -8,6 +8,7 @@ import { APP_NAV_ITEMS, MOBILE_NAV_ITEMS, AppNavItem, isNavItemActive } from './
 import { PROFILE_NAV_ITEM } from './config';
 import { useAuth } from '@/context/AuthContext';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export { APP_NAV_ITEMS, MOBILE_NAV_ITEMS, AppNavItem, isNavItemActive } from './config';
 
@@ -15,12 +16,14 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
   const pathname = usePathname();
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { locale } = useAppLocale();
   const active = isNavItemActive(pathname, item);
+  const label = locale === 'bg' ? item.labelBg : item.label;
 
   return (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={item.label}
+      accessibilityLabel={label}
       accessibilityState={{ selected: active }}
       onPress={() => router.replace(item.href as any)}
       style={({ pressed }) => ({
@@ -59,7 +62,7 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
           },
         ]}
       >
-        {item.label}
+        {label}
       </Text>
     </Pressable>
   );
@@ -71,9 +74,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { theme, toggleTheme } = useAppTheme();
+  const { locale, setLocale, t } = useAppLocale();
   const { user, loading: authLoading } = useAuth();
   const knowledgeEnabled = useFeatureFlag('knowledge_hub', true);
-  const marketplaceEnabled = useFeatureFlag('sustainability_marketplace_mvp', false);
+  // Marketplace is a primary destination. Backend flags may control commerce
+  // operations, but they must not make the whole destination disappear.
+  const marketplaceEnabled = true;
   const [hasHydrated, setHasHydrated] = useState(false);
   const isPublicKnowledge = pathname.startsWith('/knowledge') && !user && !authLoading;
   const isPublicMarketplace = pathname.startsWith('/marketplace') && !user && !authLoading;
@@ -104,10 +110,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
-            <Image source={require('../../../assets/images/GCLogo-no-bg.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
+            <Image source={require('../../../assets/images/GCLogo-rich-premium-original-shape.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
             <View>
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>Green Compass</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>Every action counts</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>{t('Every action counts', 'Всяко действие има значение')}</Text>
             </View>
           </View>
           <View style={{ gap: theme.spacing.xs }}>
@@ -117,40 +123,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <View style={{ marginBottom: theme.spacing.sm }}><NavItem item={PROFILE_NAV_ITEM} /></View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Switch to ${theme.mode === 'dark' ? 'light' : 'dark'} theme`}
+            accessibilityLabel={t('Switch language', 'Смени езика')}
+            onPress={() => void setLocale(locale === 'en' ? 'bg' : 'en')}
+            style={{ minHeight: 48, marginBottom: theme.spacing.sm, borderRadius: theme.radii.md, borderWidth: 1, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm }}
+          >
+            <Ionicons name="language-outline" size={19} color={theme.colors.primary} />
+            <Text style={[theme.typography.label, { color: theme.colors.text }]}>{locale === 'bg' ? 'English' : 'Български'}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t(`Switch to ${theme.mode === 'dark' ? 'light' : 'dark'} theme`, `Смени към ${theme.mode === 'dark' ? 'светла' : 'тъмна'} тема`)}
             onPress={toggleTheme}
             style={{ minHeight: 48, borderRadius: theme.radii.md, borderWidth: 1, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm }}
           >
             <Ionicons name={theme.mode === 'dark' ? 'sunny-outline' : 'moon-outline'} size={19} color={theme.colors.primary} />
-            <Text style={[theme.typography.label, { color: theme.colors.text }]}>{theme.mode === 'dark' ? 'Light mode' : 'Dark mode'}</Text>
+            <Text style={[theme.typography.label, { color: theme.colors.text }]}>{theme.mode === 'dark' ? t('Light mode', 'Светъл режим') : t('Dark mode', 'Тъмен режим')}</Text>
           </Pressable>
         </View>
       ) : null}
       <View style={{ flex: 1, paddingBottom: desktop ? 0 : 72 + insets.bottom }}>{children}</View>
-      {!desktop && !pathname.startsWith('/profile') ? (
+      {!desktop ? (
+        <View style={{ position: 'absolute', right: theme.spacing.md, bottom: 80 + insets.bottom, zIndex: 20 }}>
         <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="Open profile"
-          onPress={() => router.replace('/profile')}
-          style={({ pressed }) => ({
-            position: 'absolute',
-            right: theme.spacing.md,
-            top: Math.max(insets.top, theme.spacing.sm),
-            zIndex: 20,
-            width: 42,
-            height: 42,
-            borderRadius: 21,
-            borderWidth: 1,
-            borderColor: theme.colors.borderStrong,
-            backgroundColor: theme.colors.backgroundElevated,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.78 : 1,
-            ...theme.shadows.subtle,
-          })}
+          accessibilityRole="button"
+          accessibilityLabel={t('Switch language', 'Смени езика')}
+          onPress={() => void setLocale(locale === 'en' ? 'bg' : 'en')}
+          style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: theme.colors.borderStrong, backgroundColor: theme.colors.backgroundElevated, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.78 : 1, ...theme.shadows.subtle })}
         >
-          <Ionicons name="person-outline" size={20} color={theme.colors.primary} />
+          <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 11 }]}>{locale === 'en' ? 'BG' : 'EN'}</Text>
         </Pressable>
+        </View>
       ) : null}
       {!desktop ? (
         <View

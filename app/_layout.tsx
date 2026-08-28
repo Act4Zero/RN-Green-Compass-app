@@ -94,6 +94,7 @@ export default function RootLayout() {
           <Stack.Screen name="map/review/[id]" options={{ headerShown: false }} />
           <Stack.Screen name="map/impact" options={{ headerShown: false }} />
           <Stack.Screen name="map/routes" options={{ headerShown: false }} />
+          <Stack.Screen name="map/offline" options={{ headerShown: false }} />
 
           {/* Knowledge Hub screens */}
           <Stack.Screen name="knowledge/index" options={{ headerShown: false }} />

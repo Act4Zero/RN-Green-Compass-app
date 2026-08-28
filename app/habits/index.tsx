@@ -9,6 +9,7 @@ import { offsettingService, type CarbonBalanceSummary, type OffsettingDashboard,
 import type { KnowledgeItemSummary } from '@/features/knowledge';
 import { fetchUserProfile } from '@/services/profile';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const localDate = () => {
   const date = new Date();
@@ -17,6 +18,7 @@ const localDate = () => {
 
 export default function HabitsOverview() {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const router = useRouter();
@@ -45,12 +47,12 @@ export default function HabitsOverview() {
       const activeCategories = Object.keys(data.impact.byCategory || {});
       setRecommendations(await offsettingService.getPersonalizedKnowledge(interests, activeCategories, user.id, data.learningStage));
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load your impact dashboard.');
+      setError(loadError instanceof Error ? loadError.message : t('Unable to load your impact dashboard.', 'Таблото за въздействие не можа да се зареди.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [t, user]);
 
   useFocusEffect(useCallback(() => {
     if (!authLoading && !user) router.replace('/auth/signin');
@@ -58,30 +60,30 @@ export default function HabitsOverview() {
   }, [authLoading, user, router, load]));
 
   const quickActions = [
-    { title: 'Log measured activity', description: 'Record emissions with a reviewed factor snapshot.', icon: 'calculator-outline' as const, route: '/habits/activity' },
-    { title: 'Carbon goals', description: 'Create measurable reduction and consistency goals.', icon: 'flag-outline' as const, route: '/habits/carbon-goals' },
-    { title: 'Review history', description: 'See completed habits, goals, and calendar activity.', icon: 'calendar-outline' as const, route: '/habits/history' },
-    { title: 'Compare travel', description: 'Weigh plane, train, bus, boat, and car options.', icon: 'navigate-outline' as const, route: '/habits/travel' },
-    { title: 'Action reminders', description: 'Schedule local nudges on this device.', icon: 'notifications-outline' as const, route: '/habits/reminders' },
-    { title: 'Offset projects', description: 'Review provider-hosted verified climate contributions.', icon: 'leaf-outline' as const, route: '/habits/offsets' },
-    { title: 'Privacy & leaderboards', description: 'Choose whether aggregate points and streak may be ranked.', icon: 'shield-outline' as const, route: '/habits/privacy' },
+    { title: t('Log measured activity', 'Запиши измерена дейност'), description: t('Record emissions with a reviewed factor snapshot.', 'Запиши емисии с проверен коефициент.'), icon: 'calculator-outline' as const, route: '/habits/activity' },
+    { title: t('Carbon goals', 'Въглеродни цели'), description: t('Create measurable reduction and consistency goals.', 'Създай измерими цели за намаляване и постоянство.'), icon: 'flag-outline' as const, route: '/habits/carbon-goals' },
+    { title: t('Review history', 'Преглед на историята'), description: t('See completed habits, goals, and calendar activity.', 'Виж изпълнените навици, цели и дейности в календара.'), icon: 'calendar-outline' as const, route: '/habits/history' },
+    { title: t('Compare travel', 'Сравни пътуване'), description: t('Weigh plane, train, bus, boat, and car options.', 'Сравни самолет, влак, автобус, кораб и автомобил.'), icon: 'navigate-outline' as const, route: '/habits/travel' },
+    { title: t('Action reminders', 'Напомняния'), description: t('Schedule local nudges on this device.', 'Планирай напомняния на това устройство.'), icon: 'notifications-outline' as const, route: '/habits/reminders' },
+    { title: t('Offset projects', 'Проекти за компенсация'), description: t('Review provider-hosted verified climate contributions.', 'Разгледай проверени климатични приноси от доставчици.'), icon: 'leaf-outline' as const, route: '/habits/offsets' },
+    { title: t('Privacy & leaderboards', 'Поверителност и класации'), description: t('Choose whether aggregate points and streak may be ranked.', 'Избери дали общите точки и серията могат да участват в класация.'), icon: 'shield-outline' as const, route: '/habits/privacy' },
   ];
 
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}>
         <Content wide>
-          <PageHeader eyebrow="Habit-based impact" title="Your sustainability compass" description="Build your green identity, choose one achievable action today, and keep estimated impact visible over time." action={isTablet ? <AppButton label="Today" icon="sunny-outline" onPress={() => router.push('/habits/today' as any)} /> : undefined} />
+          <PageHeader eyebrow={t('Habit-based impact', 'Въздействие чрез навици')} title={t('Your sustainability compass', 'Твоят компас за устойчивост')} description={t('Build your green identity, choose one achievable action today, and keep estimated impact visible over time.', 'Изгради своята зелена идентичност, избери едно постижимо действие днес и следи оцененото въздействие във времето.')} action={isTablet ? <AppButton label={t('Today', 'Днес')} icon="sunny-outline" onPress={() => router.push('/habits/today' as any)} /> : undefined} />
 
-          {loading ? <View style={{ gap: theme.spacing.md }}><Skeleton height={190} /><Skeleton height={120} /></View> : error ? <StatePanel icon="cloud-offline-outline" title="Impact dashboard unavailable" message={error} action={<AppButton label="Try again" onPress={() => void load()} />} /> : dashboard ? (
+          {loading ? <View style={{ gap: theme.spacing.md }}><Skeleton height={190} /><Skeleton height={120} /></View> : error ? <StatePanel icon="cloud-offline-outline" title={t('Impact dashboard unavailable', 'Таблото за въздействие не е достъпно')} message={error} action={<AppButton label={t('Try again', 'Опитай отново')} onPress={() => void load()} />} /> : dashboard ? (
             <>
               {!dashboard.identity ? (
                 <Card elevated style={{ backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, marginBottom: theme.spacing.lg }}>
                   <View style={{ maxWidth: 720, gap: theme.spacing.sm }}>
-                    <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase' }]}>Start with your baseline</Text>
-                    <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>Discover your green identity</Text>
-                    <Text style={[theme.typography.body, { color: '#DDECE3' }]}>Answer a short guided assessment to estimate the travel and household-energy sources you track. Results are directional estimates, not verified offsets.</Text>
-                    <AppButton label="Start assessment" icon="arrow-forward" variant="secondary" onPress={() => router.push('/habits/identity' as any)} style={{ alignSelf: 'flex-start', marginTop: 8 }} />
+                    <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase' }]}>{t('Start with your baseline', 'Започни от своята основа')}</Text>
+                    <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>{t('Discover your green identity', 'Открий своята зелена идентичност')}</Text>
+                    <Text style={[theme.typography.body, { color: '#DDECE3' }]}>{t('Answer a short guided assessment to estimate the travel and household-energy sources you track. Results are directional estimates, not verified offsets.', 'Отговори на кратка насочена оценка за пътуването и домашната енергия. Резултатите са ориентировъчни оценки, а не проверени компенсации.')}</Text>
+                    <AppButton label={t('Start assessment', 'Започни оценката')} icon="arrow-forward" variant="secondary" onPress={() => router.push('/habits/identity' as any)} style={{ alignSelf: 'flex-start', marginTop: 8 }} />
                   </View>
                 </Card>
               ) : (
@@ -93,7 +95,7 @@ export default function HabitsOverview() {
                       <Text style={[theme.typography.body, { color: '#DDECE3' }]}>Estimated tracked baseline: {dashboard.identity.annualBaselineKgCo2e.toFixed(0)} kg CO₂e/year across assessed mobility, energy, food, purchases, and waste.</Text>
                       {dashboard.identity.assessmentVersion !== '2026.2' || dashboard.identity.isPartial ? <Text style={[theme.typography.bodySmall, { color: theme.colors.accent }]}>Your saved assessment is partial. Update to 2026.2 for the expanded baseline and country benchmark.</Text> : null}
                     </View>
-                    <AppButton label="Update identity" variant="secondary" onPress={() => router.push('/habits/identity' as any)} />
+                    <AppButton label={t('Update identity', 'Обнови идентичността')} variant="secondary" onPress={() => router.push('/habits/identity' as any)} />
                   </View>
                 </Card>
               )}
@@ -121,24 +123,24 @@ export default function HabitsOverview() {
                 </Card>
               ) : null}
 
-              <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>Your last seven days</Text>
+              <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>{t('Your last seven days', 'Последните ти седем дни')}</Text>
               <Card style={{ marginBottom: theme.spacing.xl }}><ImpactBars points={dashboard.impact.series} /></Card>
 
-              <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>Choose your next move</Text>
+              <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>{t('Choose your next move', 'Избери следващата си стъпка')}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
                 {quickActions.map((action) => <ActionCard key={action.title} title={action.title} description={action.description} icon={action.icon} onPress={() => router.push(action.route as any)} />)}
               </View>
 
-              {carbonTips.length ? <><Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>Personalized carbon tips</Text><View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>{carbonTips.map((tip) => <Card key={tip.id} style={{ gap: theme.spacing.xs }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{tip.category}</Text><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{tip.title}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>{tip.description}</Text><Text style={[theme.typography.label, { color: theme.colors.success }]}>{tip.expectedImpact}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Assumption: {tip.assumption}</Text><AppButton label="Learn the methodology" variant="ghost" onPress={() => router.push(`/knowledge/content/${tip.knowledgeSlug}` as any)} style={{ alignSelf: 'flex-start' }} /></Card>)}</View></> : null}
+              {carbonTips.length ? <><Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>{t('Personalized carbon tips', 'Персонализирани въглеродни съвети')}</Text><View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>{carbonTips.map((tip) => <Card key={tip.id} style={{ gap: theme.spacing.xs }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{tip.category}</Text><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{tip.title}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>{tip.description}</Text><Text style={[theme.typography.label, { color: theme.colors.success }]}>{tip.expectedImpact}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Assumption', 'Допуск')}: {tip.assumption}</Text><AppButton label={t('Learn the methodology', 'Виж методологията')} variant="ghost" onPress={() => router.push(`/knowledge/content/${tip.knowledgeSlug}` as any)} style={{ alignSelf: 'flex-start' }} /></Card>)}</View></> : null}
 
               {recommendations.length ? (
                 <>
-                  <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>Recommended for you</Text>
+                  <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>{t('Recommended for you', 'Препоръчано за теб')}</Text>
                   <View style={{ gap: theme.spacing.sm }}>
                     {recommendations.slice(0, 3).map((item) => (
                       <Card key={item.id} style={{ flexDirection: isTablet ? 'row' : 'column', alignItems: isTablet ? 'center' : 'flex-start', gap: theme.spacing.md }}>
                         <View style={{ flex: 1 }}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{item.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{item.summary}</Text></View>
-                        <AppButton label={item.type === 'quiz' ? 'Take quiz' : 'Learn why'} variant="secondary" onPress={() => router.push((item.type === 'quiz' ? `/knowledge/quiz/${item.id}` : `/knowledge/content/${item.slug}`) as any)} />
+                        <AppButton label={item.type === 'quiz' ? t('Take quiz', 'Реши теста') : t('Learn why', 'Научи защо')} variant="secondary" onPress={() => router.push((item.type === 'quiz' ? `/knowledge/quiz/${item.id}` : `/knowledge/content/${item.slug}`) as any)} />
                       </Card>
                     ))}
                   </View>

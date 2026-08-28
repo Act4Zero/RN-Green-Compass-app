@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Text, View } from 'react-native';
-import { getMapboxAccessToken, isExpoGoRuntime } from '../../config/mapGlobe';
+import NetInfo from '@react-native-community/netinfo';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { OPENFREEMAP_STYLE_URL } from '../../config/mapGlobe';
 import analyticsService from '../../services/analyticsService';
 import { useAppTheme } from '../../theme';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
@@ -12,8 +14,11 @@ import MapFooter from './MapFooter';
 import MapPopup from './MapPopup';
 import MapResultsPanel from './MapResultsPanel';
 import MapSidebar from './MapSidebar';
+import { mapExperienceReducer } from '../../utils/livingPlanet';
+import { getOfflineSource } from '../../features/offline-maps';
+import type { MapSourceConfig } from '../../types/map';
 
-function UnavailableState({ message }: { message: string }) {
+function UnavailableState({ message, onBack }: { message: string; onBack?: () => void }) {
   const { theme } = useAppTheme();
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl, backgroundColor: theme.colors.background }}>
@@ -23,7 +28,8 @@ function UnavailableState({ message }: { message: string }) {
         </View>
         <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, textAlign: 'center' }]}>The globe is taking a breather</Text>
         <Text style={[theme.typography.body, { color: theme.colors.textMuted, textAlign: 'center' }]}>{message}</Text>
-        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>The location directory remains safely bundled with the app. Check the Mapbox configuration or connection, then reload.</Text>
+        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>The verified location directory remains available. Check the connection or install an offline map pack.</Text>
+        {onBack ? <Pressable accessibilityRole="button" onPress={onBack} style={{ minHeight: 46, borderRadius: theme.radii.md, paddingHorizontal: theme.spacing.lg, justifyContent: 'center', backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>Back to Living Planet</Text></Pressable> : null}
       </View>
     </View>
   );
@@ -35,9 +41,26 @@ export default function MapView() {
   const [mapReady, setMapReady] = useState(false);
   const [rendererError, setRendererError] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [mode, dispatchMode] = useReducer(mapExperienceReducer, 'globe');
+  const [offline, setOffline] = useState(false);
+  const [offlineMapStyle, setOfflineMapStyle] = useState<Record<string, unknown> | null>(null);
+  const { place } = useLocalSearchParams<{ place?: string }>();
   const hasTrackedView = useRef(false);
-  const accessToken = getMapboxAccessToken();
-  const isUnsupportedExpoGo = isExpoGoRuntime();
+  const cameraCenterRef = useRef(map.camera.center);
+  const moveCamera = map.moveCamera;
+  const { width } = useWindowDimensions();
+  const source = useMemo<MapSourceConfig>(() => ({
+    onlineStyleUrl: OPENFREEMAP_STYLE_URL,
+    attribution: offlineMapStyle ? '© OpenStreetMap contributors · Protomaps' : '© OpenStreetMap contributors · OpenFreeMap',
+    offlineStyle: offlineMapStyle,
+  }), [offlineMapStyle]);
+
+  useEffect(() => NetInfo.addEventListener((state) => {
+    const isOffline = state.isConnected === false || state.isInternetReachable === false;
+    setOffline(isOffline);
+    if (!isOffline) setOfflineMapStyle(null);
+    else void getOfflineSource(cameraCenterRef.current).then((result) => setOfflineMapStyle(result?.style || null));
+  }), []);
 
   useEffect(() => {
     if (!map.isDataInitialized || hasTrackedView.current) return;
@@ -58,6 +81,36 @@ export default function MapView() {
     return () => clearTimeout(timeout);
   }, [map.clearLocationError, map.locationError]);
 
+  useEffect(() => {
+    if (mode !== 'to-map' && mode !== 'to-globe') return;
+    const timeout = setTimeout(() => dispatchMode({ type: 'transition-complete' }), reducedMotion ? 150 : 840);
+    return () => clearTimeout(timeout);
+  }, [mode, reducedMotion]);
+
+  const openMap = useCallback((center?: { lat: number; lng: number }, zoom = 6.35) => {
+    if (center) moveCamera({ center, zoom, pitch: zoom > 10 ? 42 : 34 }, reducedMotion ? 0 : 820);
+    map.setResultsRailCollapsed(false);
+    dispatchMode({ type: 'open-map' });
+    setRendererError(null);
+  }, [map, moveCamera, reducedMotion]);
+
+  const openGlobe = useCallback(() => {
+    map.setResultsRailCollapsed(true);
+    dispatchMode({ type: 'open-globe' });
+    setRendererError(null);
+  }, [map]);
+
+  useEffect(() => {
+    if (!place || !map.isDataInitialized) return;
+    const selected = map.locations.find((location) => location.id === place);
+    if (selected) {
+      map.selectLocation(selected, false);
+      openMap(selected, 13);
+    }
+  // The URL handoff is consumed after the public catalogue loads.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map.isDataInitialized, place]);
+
   if (map.isLoading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.background }}>
@@ -67,22 +120,26 @@ export default function MapView() {
     );
   }
   if (map.error) return <UnavailableState message={map.error.message} />;
-  if (isUnsupportedExpoGo) return <UnavailableState message="The 3D globe requires a custom development build and cannot run in Expo Go." />;
-  if (!accessToken) return <UnavailableState message="Add the platform-specific EXPO_PUBLIC_MAPBOX_*_ACCESS_TOKEN to enable the live 3D map." />;
-  if (rendererError) return <UnavailableState message={rendererError} />;
+  if (rendererError && (mode === 'map' || mode === 'to-map')) return <UnavailableState message={rendererError} onBack={openGlobe} />;
 
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: theme.colors.background }}>
       <GlobeRenderer
-        accessToken={accessToken}
         locations={map.filteredLocations}
         selectedLocationId={map.selectedLocation?.id ?? null}
         styleId={map.styleId}
         cameraCommand={map.cameraCommand}
         userLocation={map.userLocation}
         reducedMotion={reducedMotion}
+        mode={mode}
+        quality={width >= 768 && !reducedMotion ? 'high' : 'adaptive'}
+        source={source}
         onReady={() => setMapReady(true)}
-        onCameraChanged={map.updateCamera}
+        onCameraChanged={(camera) => {
+          cameraCenterRef.current = camera.center;
+          map.updateCamera(camera);
+          if (offline) void getOfflineSource(camera.center).then((result) => setOfflineMapStyle(result?.style || null));
+        }}
         onLocationPress={(locationId) => {
           const location = map.filteredLocations.find((candidate) => candidate.id === locationId);
           if (location) map.selectLocation(location, false);
@@ -91,6 +148,8 @@ export default function MapView() {
           analyticsService.trackEvent('map_cluster_opened', { zoom: Math.round(expansionZoom) });
           map.moveCamera({ center, zoom: expansionZoom, pitch: 36 }, 850);
         }}
+        onRequestMap={openMap}
+        onRequestGlobe={openGlobe}
         onError={setRendererError}
       />
       {!mapReady ? (
@@ -99,7 +158,7 @@ export default function MapView() {
           <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>Bringing the planet into view…</Text>
         </View>
       ) : null}
-      <MapSidebar />
+      <MapSidebar compact={mode === 'globe' || mode === 'to-globe'} />
       <MapResultsPanel />
       <LocateButton onPress={map.locateUser} isLoading={map.isLocating} />
       <CoverageAlert />

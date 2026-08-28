@@ -38,12 +38,12 @@ export const INITIAL_MAP_CONTROLLER_STATE: MapControllerState = {
   filters: { categories: {} },
   query: '',
   selectedLocation: null,
-  styleId: 'living-earth',
+  styleId: 'living-planet',
   camera: EUROPE_GLOBE_CAMERA,
   cameraCommand: null,
   userLocation: null,
   isResultsOpen: false,
-  isResultsRailCollapsed: false,
+  isResultsRailCollapsed: true,
 };
 
 export function mapControllerReducer(

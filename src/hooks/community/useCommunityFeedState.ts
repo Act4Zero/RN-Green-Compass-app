@@ -52,13 +52,13 @@ function useCommunityFeedState() {
         discussionsLoadedRef.current = true;
       });
     }
-  }, [authLoading, user]);
+  }, [authLoading, loadDiscussions, user]);
 
   // Redirect to signin if user is not authenticated
   useEffect(() => {
     // Only check after auth loading is complete
     if (!authLoading && !user) {
-      router.replace('/auth/signin');
+      router.replace({ pathname: '/auth/signin', params: { next: '/community' } });
     }
   }, [user, authLoading, router]);
 

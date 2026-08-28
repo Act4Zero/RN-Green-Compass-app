@@ -8,7 +8,8 @@ interface TurnstileProps {
   style?: ViewStyle;
 }
 
-const turnstileSiteKey = Constants.expoConfig?.extra?.turnstileSiteKey || '';
+const turnstileSiteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || Constants.expoConfig?.extra?.turnstileSiteKey || '';
+export const isTurnstileConfigured = Boolean(turnstileSiteKey);
 
 // HTML content for the Turnstile widget - Invisible mode
 const getTurnstileHTML = (siteKey: string) => `
@@ -85,17 +86,18 @@ const WebTurnstile: React.FC<TurnstileProps> = ({ onVerify, style }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    if (!turnstileSiteKey) return;
+
     // Check if the Turnstile script is already loaded
     if (!document.querySelector('script[src*="turnstile/v0/api.js"]')) {
       const script = document.createElement('script');
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback';
       script.async = true;
       script.defer = true;
-      document.head.appendChild(script);
-
       window.onloadTurnstileCallback = () => {
         setIsLoaded(true);
       };
+      document.head.appendChild(script);
     } else {
       setIsLoaded(true);
     }
@@ -175,6 +177,8 @@ const MobileTurnstile: React.FC<TurnstileProps> = ({ onVerify, style }) => {
 
 // Platform-specific component export
 export default function Turnstile(props: TurnstileProps) {
+  if (!isTurnstileConfigured) return null;
+
   return Platform.OS === 'web' ? (
     <WebTurnstile {...props} />
   ) : (

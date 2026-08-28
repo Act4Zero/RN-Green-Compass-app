@@ -117,6 +117,20 @@ const getStorageAdapter = () => {
   }
 };
 
+// Supabase Realtime resolves its WebSocket transport while the client is created.
+// Expo static rendering runs under Node 20, where no native WebSocket exists, even
+// though no realtime connection is opened. Supplying a non-connectable constructor
+// keeps SSR deterministic; browsers and React Native retain their native transport.
+class StaticRenderWebSocket {
+  constructor() {
+    throw new Error('Realtime is unavailable during static rendering.');
+  }
+}
+
+const staticRenderRealtime = typeof globalThis.WebSocket === 'undefined'
+  ? { transport: StaticRenderWebSocket as any }
+  : undefined;
+
 // Initialize Supabase client with platform-specific storage
 const supabase = createClient(
   supabaseUrl,
@@ -130,6 +144,7 @@ const supabase = createClient(
       // Increase the window for token refresh to prevent token expiration issues
       flowType: 'pkce',
     },
+    realtime: staticRenderRealtime,
   }
 );
 

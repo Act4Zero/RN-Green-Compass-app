@@ -1,6 +1,10 @@
 // Keep this config file CommonJS. Mixing an ESM import with `module.exports`
 // causes Node/Expo to load an empty config, dropping all `extra` values in
 // the web bundle even when Vercel provides them at build time.
+// Expo evaluates the app config before its public-variable pass in some static
+// export modes. Load local development values explicitly while keeping values
+// supplied by CI/Vercel authoritative (dotenv does not overwrite them).
+require('dotenv').config({ path: '.env.local' });
 require('dotenv').config();
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -10,7 +14,6 @@ const EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIE
 const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const EXPO_PUBLIC_GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI;
 const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
-const EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (process.env.VERCEL_ENV === 'production' && (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY)) {
@@ -24,7 +27,7 @@ module.exports = {
   slug: "GreenCompass",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/GCLogo-no-bg.png",
+  icon: "./assets/images/GCLogo-rich-premium-app-icon.png",
   scheme: "greencompass",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
@@ -39,20 +42,26 @@ module.exports = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/GCLogo-no-bg.png",
-      backgroundColor: "#ffffff"
+      foregroundImage: "./assets/images/GCLogo-rich-premium-original-shape.png",
+      backgroundColor: "#07503F"
     },
     package: "com.act4zero.GreenCompass"
   },
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/GCLogo-no-bg.png"
+    favicon: "./assets/images/GCLogo-rich-premium-web.png"
   },
   plugins: [
     "expo-router",
     "expo-notifications",
-    "@rnmapbox/maps",
+    [
+      "@maplibre/maplibre-react-native",
+      {
+        "android": { "nativeVersion": "11.8.2" },
+        "ios": { "nativeVersion": "6.17.1" }
+      }
+    ],
     [
       "@stripe/stripe-react-native",
       {
@@ -69,7 +78,7 @@ module.exports = {
     [
       "expo-splash-screen",
       {
-        "image": "./assets/images/GCLogo-no-bg.png",
+        "image": "./assets/images/GCLogo-rich-premium-original-shape.png",
         "imageWidth": 200,
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"
@@ -91,7 +100,6 @@ module.exports = {
     googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
     // Cloudflare Turnstile site key for captcha
     turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
-    mapboxAccessToken: EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
     stripePublishableKey: EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   }
 };

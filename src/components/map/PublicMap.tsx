@@ -1,11 +1,11 @@
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { MapProvider } from '@/context/MapContext';
 import { useAppTheme } from '@/theme';
 import MapView from './MapView';
 
-export default function AuthenticatedMap() {
+export default function PublicMap() {
   const { theme } = useAppTheme();
   return (
     <MapProvider>

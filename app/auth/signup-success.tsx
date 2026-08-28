@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
+import { sanitizeInternalDestination } from '@/utils/navigation';
 
 interface Styles {
   container: ViewStyle;
@@ -32,7 +33,7 @@ export default function SignupSuccess() {
 
   const handleContinue = () => {
     console.log('User not authenticated, redirecting to signin');
-    router.push({ pathname: '/auth/signin', params: { next: next === '/map' ? '/map' : '/home' } });
+    router.push({ pathname: '/auth/signin', params: { next: sanitizeInternalDestination(next) } });
   };
 
   return (

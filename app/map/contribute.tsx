@@ -26,7 +26,8 @@ export default function MapContributionScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
 
-  if (!user) return <Screen><Content><StatePanel icon="lock-closed-outline" title="Sign in to contribute" message="Suggestions are linked to an account so editors can review evidence and reward approved contributions." action={<AppButton label="Sign in" onPress={() => router.replace({ pathname: '/auth/signin', params: { next: '/map' } })} />} /></Content></Screen>;
+  const returnPath = correction ? `/map/contribute?kind=correction&locationId=${encodeURIComponent(params.locationId || '')}&name=${encodeURIComponent(params.name || '')}` : '/map/contribute';
+  if (!user) return <Screen><Content><StatePanel icon="lock-closed-outline" title="Sign in to contribute" message="Suggestions are linked to an account so editors can review evidence and reward approved contributions." action={<AppButton label="Sign in" onPress={() => router.replace({ pathname: '/auth/signin', params: { next: returnPath } })} />} /></Content></Screen>;
 
   const submit = async () => {
     setMessage('');

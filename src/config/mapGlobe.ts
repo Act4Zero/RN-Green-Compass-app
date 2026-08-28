@@ -1,5 +1,3 @@
-import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
 import { MapCameraState, MapStyleId, MapStylePreset, MapViewportBounds } from '../types/map';
 
 export const EUROPE_GLOBE_CAMERA: MapCameraState = {
@@ -24,51 +22,20 @@ export const BULGARIA_BOUNDS: MapViewportBounds = {
 };
 
 export const MAP_STYLE_PRESETS: Record<MapStyleId, MapStylePreset> = {
-  'living-earth': {
-    id: 'living-earth',
-    label: 'Living Earth',
-    description: 'Daylight terrain and cities',
-    styleUrl: 'mapbox://styles/mapbox/standard',
-    lightPreset: 'day',
+  'living-planet': {
+    id: 'living-planet',
+    label: 'Living Planet',
+    description: 'Green Compass day and night map',
+    styleUrl: process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty',
     icon: 'earth-outline',
-    swatches: ['#8DD0BD', '#D7E6A8', '#174C35'],
-  },
-  'night-canopy': {
-    id: 'night-canopy',
-    label: 'Night Canopy',
-    description: 'Low-light globe with bright pins',
-    styleUrl: 'mapbox://styles/mapbox/standard',
-    lightPreset: 'night',
-    icon: 'moon-outline',
     swatches: ['#071C2C', '#174C35', '#C6F177'],
-  },
-  satellite: {
-    id: 'satellite',
-    label: 'Satellite',
-    description: 'Imagery with 3D labels',
-    styleUrl: 'mapbox://styles/mapbox/standard-satellite',
-    lightPreset: 'day',
-    icon: 'planet-outline',
-    swatches: ['#1A3334', '#6C7A4B', '#E8F2C7'],
   },
 };
 
 export const MAP_STYLE_IDS = Object.keys(MAP_STYLE_PRESETS) as MapStyleId[];
 export const MAP_STYLE_STORAGE_KEY = 'green-compass:map-style';
-
-export const getMapboxAccessToken = (): string => {
-  const platformToken = Platform.OS === 'web'
-    ? process.env.EXPO_PUBLIC_MAPBOX_WEB_ACCESS_TOKEN
-    : Platform.OS === 'ios'
-      ? process.env.EXPO_PUBLIC_MAPBOX_IOS_ACCESS_TOKEN
-      : process.env.EXPO_PUBLIC_MAPBOX_ANDROID_ACCESS_TOKEN;
-  return (platformToken || process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '').trim();
-};
-
-export const isExpoGoRuntime = (): boolean => (
-  Platform.OS !== 'web'
-  && Constants.executionEnvironment === ExecutionEnvironment.StoreClient
-);
+export const OPENFREEMAP_STYLE_URL = MAP_STYLE_PRESETS['living-planet'].styleUrl;
+export const MAP_PACK_MANIFEST_URL = process.env.EXPO_PUBLIC_MAP_PACK_MANIFEST_URL || '';
 
 export function isMapStyleId(value: unknown): value is MapStyleId {
   return typeof value === 'string' && MAP_STYLE_IDS.includes(value as MapStyleId);

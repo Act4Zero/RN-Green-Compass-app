@@ -1,5 +1,5 @@
 import legacyRows from '../../../../assets/data/locations_ev_bulgaria.json';
-import { mapLocationFromRow, mapSessionReservationFromValue } from '../service';
+import { mapLocationFromRow } from '../service';
 import { normalizeLegacyEVLocations } from '@/utils/locationDataUtils';
 
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
@@ -29,11 +29,9 @@ describe('sustainability map platform transforms', () => {
     expect(location.credentials[0].evidenceUrl).toBe('https://example.com/evidence');
   });
 
-  it('normalizes the atomic budget response used before Mapbox starts', () => {
-    expect(mapSessionReservationFromValue({ allowed: true, reason: 'reserved', used: '35000', limit: 45000, percent: '77.78', period_start: '2026-08-01', period_end: '2026-09-01' })).toEqual({
-      allowed: true, reason: 'reserved', used: 35000, limit: 45000, percent: 77.78,
-      periodStart: '2026-08-01', periodEnd: '2026-09-01', message: undefined,
-    });
-    expect(mapSessionReservationFromValue({ allowed: false, reason: 'budget', message: 'Paused' })).toMatchObject({ allowed: false, reason: 'budget', message: 'Paused' });
+  it('does not expose private fields when the public RPC omits them', () => {
+    const location = mapLocationFromRow({ id: 'public-1', name: 'Public place', latitude: 42.7, longitude: 23.3, category_ids: ['green_spaces'], connectors: [], credentials: [] });
+    expect(location.phone).toBeNull();
+    expect(location.email).toBeNull();
   });
 });

@@ -26,11 +26,13 @@ import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 import { useAppTheme } from '@/theme';
 import { knowledgeService, type KnowledgeProgress } from '@/features/knowledge';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { theme, preference, setPreference } = useAppTheme();
+  const { t } = useAppLocale();
   const [imageLoadError, setImageLoadError] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -208,7 +210,7 @@ useEffect(() => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>Loading your profile...</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>{t('Loading your profile…', 'Зареждаме профила ви…')}</Text>
       </View>
     );
   }
@@ -250,8 +252,8 @@ useEffect(() => {
             <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={[styles.title, { color: theme.colors.text }]}>Your profile</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Identity, achievements, preferences, and account.</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>{t('Your profile', 'Твоят профил')}</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Identity, achievements, preferences, and account.', 'Самоличност, постижения, предпочитания и профил.')}</Text>
           </View>
         </View>
 
@@ -278,19 +280,19 @@ useEffect(() => {
           <View style={styles.nameContainer}>
             <Text style={[styles.displayName, { color: theme.colors.text }]}>{displayIdentifier}</Text>
             {profile.is_anonymous && (
-              <Text style={[styles.anonymousIndicator, { color: theme.colors.textMuted }]}>Anonymous mode</Text>
+              <Text style={[styles.anonymousIndicator, { color: theme.colors.textMuted }]}>{t('Anonymous mode', 'Анонимен режим')}</Text>
             )}
           </View>
 
           <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.colors.primary }]} onPress={handleEditProfile}>
             <Ionicons name="pencil-outline" size={16} color="white" style={{ marginRight: 8 }} />
-            <Text style={styles.editButtonText}>Edit Profile</Text>
+            <Text style={styles.editButtonText}>{t('Edit Profile', 'Редактирай профила')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Interests Section */}
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Sustainability interests</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Sustainability interests', 'Интереси в устойчивостта')}</Text>
           <View style={styles.interestsContainer}>
             {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
               profile.interests.map((interest) => (
@@ -299,7 +301,7 @@ useEffect(() => {
                 </View>
               ))
             ) : (
-              <Text style={[styles.emptyInterestsText, { color: theme.colors.textMuted }]}>No interests selected yet.</Text>
+              <Text style={[styles.emptyInterestsText, { color: theme.colors.textMuted }]}>{t('No interests selected yet.', 'Все още няма избрани интереси.')}</Text>
             )}
           </View>
         </View>
@@ -308,8 +310,8 @@ useEffect(() => {
         <TouchableOpacity accessibilityRole="link" onPress={() => router.push('/knowledge' as any)} style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }] }>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Knowledge Hub progress</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5 }]}>{learningProgress.filter((entry) => entry.completed).length} completed • {learningProgress.filter((entry) => !entry.completed && entry.percent > 0).length} in progress</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Knowledge Hub progress', 'Напредък в Центъра за знания')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5 }]}>{learningProgress.filter((entry) => entry.completed).length} {t('completed', 'завършени')} • {learningProgress.filter((entry) => !entry.completed && entry.percent > 0).length} {t('in progress', 'в процес')}</Text>
             </View>
             <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="library-outline" size={20} color={theme.colors.primary} /></View>
           </View>
@@ -317,7 +319,7 @@ useEffect(() => {
 
         {/* Points Summary Section */}
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Green points</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Green points', 'Зелени точки')}</Text>
           {isPointsLoading ? (
             <View style={styles.loadingPoints}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -330,7 +332,7 @@ useEffect(() => {
         {/* Badges Summary Section */}
         {isBadgesLoading ? (
           <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Achievements</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Achievements', 'Постижения')}</Text>
             <View style={styles.loadingPoints}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
@@ -349,7 +351,7 @@ useEffect(() => {
         
         {/* Points History Section */}
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Points history</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Points history', 'История на точките')}</Text>
           
           {/* Filters */}
           <View style={styles.filterContainer}>
@@ -455,7 +457,7 @@ useEffect(() => {
         </View>
 
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Appearance</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Appearance', 'Външен вид')}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {(['system', 'light', 'dark'] as const).map((option) => {
               const active = preference === option;
@@ -477,7 +479,7 @@ useEffect(() => {
         {/* Sign Out Button */}
         <TouchableOpacity style={[styles.signOutButton, { borderColor: theme.colors.danger, borderWidth: 1, minHeight: 48 }]} onPress={handleSignOut}>
           <Ionicons name="log-out-outline" size={18} color={theme.colors.danger} style={{ marginRight: 8 }} />
-          <Text style={[styles.signOutButtonText, { color: theme.colors.danger }]}>Sign out</Text>
+          <Text style={[styles.signOutButtonText, { color: theme.colors.danger }]}>{t('Sign out', 'Изход')}</Text>
         </TouchableOpacity>
         </View>
       </ScrollView>
