@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { useKnowledgeLocale } from '@/features/knowledge';
-import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, getEcosystemCompletion, getEcosystemProgress, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
 
@@ -18,7 +18,16 @@ export default function EcosystemScreen() {
   const { pointHistory } = usePoints();
   const { locale, t } = useKnowledgeLocale();
   const { snapshot, loading, selectSpecies } = useEcosystem(user?.id, pointHistory);
+  const [showCompletePreview, setShowCompletePreview] = useState(false);
   const wide = width >= 760;
+  const completion = getEcosystemCompletion(snapshot.growthUnits);
+  const displaySnapshot = showCompletePreview ? {
+    ...snapshot,
+    ...getEcosystemProgress(completion.threshold),
+    unlockedSpecies: FOREST_MEADOW_SPECIES,
+    guests: FOREST_MEADOW_GUESTS,
+    nextGuest: null,
+  } : snapshot;
 
   return (
     <Screen>
@@ -32,10 +41,36 @@ export default function EcosystemScreen() {
           />
 
           <EcosystemHero
-            snapshot={snapshot}
+            snapshot={displaySnapshot}
             loading={loading}
+            preview={showCompletePreview}
             onOpen={() => router.push(`/ecosystem/species/${snapshot.activeSpecies.slug}` as any)}
           />
+
+          {!completion.complete ? (
+            <View style={{ alignItems: wide ? 'flex-end' : 'stretch', marginTop: -6, marginBottom: 18 }}>
+              <AppButton
+                label={showCompletePreview ? t('Back to my progress', 'Назад към моя напредък') : t('Preview the complete ecosystem', 'Виж завършената екосистема')}
+                icon={showCompletePreview ? 'arrow-back-outline' : 'eye-outline'}
+                variant="secondary"
+                onPress={() => setShowCompletePreview((current) => !current)}
+              />
+            </View>
+          ) : null}
+
+          {completion.complete || showCompletePreview ? (
+            <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 16, backgroundColor: '#E6F0DF', borderColor: '#82A46F' }}>
+              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#174C35', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="sparkles" size={25} color="#D7F28E" /></View>
+              <View style={{ flex: 1 }}>
+                <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text }]}>{showCompletePreview ? t('This is how your complete ecosystem will look', 'Така ще изглежда завършената ти екосистема') : t('Your meadow has become a living forest edge', 'Твоята поляна се превърна в жив горски край')}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{showCompletePreview ? t('This is a visual preview only. Your points and unlocked species have not changed.', 'Това е само визуален преглед. Точките и отключените ти видове не са променени.') : t('All eight plants and four wild guests now share one believable habitat. This final landscape remains permanent while your growth continues.', 'Всичките осем растения и четирите диви гости вече споделят едно естествено местообитание. Този завършен пейзаж остава постоянен, докато развитието ти продължава.')}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#174C35' }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>8 {t('plants', 'растения')}</Text></View>
+                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F4F7EF' }}><Text style={[theme.typography.label, { color: '#174C35' }]}>4 {t('guests', 'гости')}</Text></View>
+              </View>
+            </Card>
+          ) : null}
 
           <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.borderStrong }}>
             <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 18 }}>

@@ -1,5 +1,5 @@
 import type { PointEvent, PointSource } from '@/types/community/points';
-import { buildLocalSnapshot, calculateGrowthUnits, getEcosystemProgress } from '../progression';
+import { buildLocalSnapshot, calculateGrowthUnits, ECOSYSTEM_COMPLETION_THRESHOLD, getEcosystemCompletion, getEcosystemProgress } from '../progression';
 
 function event(id: string, source: PointSource, day = '2026-08-26', referenceId = id): PointEvent {
   return { id, user_id: 'user-1', source, reference_id: referenceId, points: 999, created_at: `${day}T10:00:00.000Z` };
@@ -30,6 +30,12 @@ describe('living ecosystem progression', () => {
     expect(getEcosystemProgress(144).stage).toBe('leafy');
     expect(getEcosystemProgress(240).stage).toBe('mature');
     expect(getEcosystemProgress(999).nextStageAt).toBeNull();
+  });
+
+  it('keeps ecosystem completion separate from the active plant stage', () => {
+    expect(ECOSYSTEM_COMPLETION_THRESHOLD).toBe(528);
+    expect(getEcosystemCompletion(240)).toMatchObject({ complete: false, remaining: 288 });
+    expect(getEcosystemCompletion(528)).toMatchObject({ complete: true, progress: 1, remaining: 0 });
   });
 
   it('unlocks species and guests without removing earlier progress', () => {

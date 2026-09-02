@@ -13,6 +13,22 @@ export const ECOSYSTEM_GROWTH_RULES: EcosystemGrowthRule[] = [
 
 const RULE_BY_SOURCE = Object.fromEntries(ECOSYSTEM_GROWTH_RULES.map((rule) => [rule.source, rule])) as Record<string, EcosystemGrowthRule>;
 
+export const ECOSYSTEM_COMPLETION_THRESHOLD = Math.max(
+  ...FOREST_MEADOW_SPECIES.map((species) => species.unlockAt),
+  ...FOREST_MEADOW_GUESTS.map((guest) => guest.unlockAt),
+);
+
+export function getEcosystemCompletion(growthUnits: number) {
+  const safeUnits = Math.max(0, Math.floor(growthUnits));
+  const remaining = Math.max(0, ECOSYSTEM_COMPLETION_THRESHOLD - safeUnits);
+  return {
+    complete: remaining === 0,
+    progress: Math.min(1, safeUnits / ECOSYSTEM_COMPLETION_THRESHOLD),
+    remaining,
+    threshold: ECOSYSTEM_COMPLETION_THRESHOLD,
+  };
+}
+
 export function calculateGrowthUnits(events: PointEvent[]): number {
   const seen = new Set<string>();
   const dailyCounts = new Map<string, number>();
