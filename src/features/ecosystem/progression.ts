@@ -1,6 +1,6 @@
-import { FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, STAGE_ORDER, STAGE_THRESHOLDS } from './catalog';
+import { getBiomeCatalog, STAGE_ORDER, STAGE_THRESHOLDS } from './catalog';
 import type { PointEvent } from '@/types/community/points';
-import type { EcosystemGrowthRule, EcosystemProgress, EcosystemSnapshot } from './types';
+import type { EcosystemBiomeId, EcosystemGrowthRule, EcosystemProgress, EcosystemSnapshot } from './types';
 
 export const ECOSYSTEM_GROWTH_RULES: EcosystemGrowthRule[] = [
   { source: 'daily_login', units: 0, requiresReference: false },
@@ -13,19 +13,21 @@ export const ECOSYSTEM_GROWTH_RULES: EcosystemGrowthRule[] = [
 
 const RULE_BY_SOURCE = Object.fromEntries(ECOSYSTEM_GROWTH_RULES.map((rule) => [rule.source, rule])) as Record<string, EcosystemGrowthRule>;
 
-export const ECOSYSTEM_COMPLETION_THRESHOLD = Math.max(
-  ...FOREST_MEADOW_SPECIES.map((species) => species.unlockAt),
-  ...FOREST_MEADOW_GUESTS.map((guest) => guest.unlockAt),
-);
+export const ECOSYSTEM_COMPLETION_THRESHOLD = 528;
 
-export function getEcosystemCompletion(growthUnits: number) {
+export function getEcosystemCompletion(growthUnits: number, biome: EcosystemBiomeId = 'forest_meadow') {
+  const catalog = getBiomeCatalog(biome);
+  const threshold = Math.max(
+    ...catalog.species.map((species) => species.unlockAt),
+    ...catalog.guests.map((guest) => guest.unlockAt),
+  );
   const safeUnits = Math.max(0, Math.floor(growthUnits));
-  const remaining = Math.max(0, ECOSYSTEM_COMPLETION_THRESHOLD - safeUnits);
+  const remaining = Math.max(0, threshold - safeUnits);
   return {
     complete: remaining === 0,
-    progress: Math.min(1, safeUnits / ECOSYSTEM_COMPLETION_THRESHOLD),
+    progress: Math.min(1, safeUnits / threshold),
     remaining,
-    threshold: ECOSYSTEM_COMPLETION_THRESHOLD,
+    threshold,
   };
 }
 
@@ -74,16 +76,17 @@ export function getEcosystemProgress(growthUnits: number): EcosystemProgress {
   };
 }
 
-export function buildLocalSnapshot(events: PointEvent[], activeSpeciesSlug = FOREST_MEADOW_SPECIES[0].slug): EcosystemSnapshot {
+export function buildLocalSnapshot(events: PointEvent[], activeSpeciesSlug?: string, biome: EcosystemBiomeId = 'forest_meadow'): EcosystemSnapshot {
   const growthUnits = calculateGrowthUnits(events);
-  const activeSpecies = FOREST_MEADOW_SPECIES.find((species) => species.slug === activeSpeciesSlug && species.unlockAt <= growthUnits) || FOREST_MEADOW_SPECIES[0];
-  const guests = FOREST_MEADOW_GUESTS.filter((guest) => guest.unlockAt <= growthUnits);
+  const catalog = getBiomeCatalog(biome);
+  const activeSpecies = catalog.species.find((species) => species.slug === activeSpeciesSlug && species.unlockAt <= growthUnits) || catalog.species[0];
+  const guests = catalog.guests.filter((guest) => guest.unlockAt <= growthUnits);
   return {
-    biome: 'forest_meadow',
+    biome,
     activeSpecies,
-    unlockedSpecies: FOREST_MEADOW_SPECIES.filter((species) => species.unlockAt <= growthUnits),
+    unlockedSpecies: catalog.species.filter((species) => species.unlockAt <= growthUnits),
     guests,
-    nextGuest: FOREST_MEADOW_GUESTS.find((guest) => guest.unlockAt > growthUnits) || null,
+    nextGuest: catalog.guests.find((guest) => guest.unlockAt > growthUnits) || null,
     source: 'local',
     ...getEcosystemProgress(growthUnits),
   };

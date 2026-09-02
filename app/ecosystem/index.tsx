@@ -1,14 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, type ImageSourcePropType, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { useKnowledgeLocale } from '@/features/knowledge';
-import { EcosystemHero, FOREST_MEADOW_GUESTS, FOREST_MEADOW_SPECIES, getEcosystemCompletion, getEcosystemProgress, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemCompletion, getEcosystemProgress, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import type { EcosystemBiomeId } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
+
+const BIOME_PREVIEWS: Record<EcosystemBiomeId, ImageSourcePropType> = {
+  forest_meadow: require('../../assets/images/ecosystem/forest-meadow-biome-card-v1.webp'),
+  savanna: require('../../assets/images/ecosystem/savanna-biome-card-v1.webp'),
+  rainforest: require('../../assets/images/ecosystem/rainforest-biome-card-v1.webp'),
+};
 
 export default function EcosystemScreen() {
   const router = useRouter();
@@ -17,15 +24,16 @@ export default function EcosystemScreen() {
   const { user } = useAuth();
   const { pointHistory } = usePoints();
   const { locale, t } = useKnowledgeLocale();
-  const { snapshot, loading, selectSpecies } = useEcosystem(user?.id, pointHistory);
+  const { snapshot, loading, selectSpecies, selectBiome } = useEcosystem(user?.id, pointHistory);
   const [showCompletePreview, setShowCompletePreview] = useState(false);
   const wide = width >= 760;
-  const completion = getEcosystemCompletion(snapshot.growthUnits);
+  const biome = getBiomeCatalog(snapshot.biome);
+  const completion = getEcosystemCompletion(snapshot.growthUnits, snapshot.biome);
   const displaySnapshot = showCompletePreview ? {
     ...snapshot,
     ...getEcosystemProgress(completion.threshold),
-    unlockedSpecies: FOREST_MEADOW_SPECIES,
-    guests: FOREST_MEADOW_GUESTS,
+    unlockedSpecies: biome.species,
+    guests: biome.guests,
     nextGuest: null,
   } : snapshot;
 
@@ -34,11 +42,44 @@ export default function EcosystemScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content wide>
           <PageHeader
-            eyebrow={t('Forest & meadow', 'Гора и поляна')}
+            eyebrow={biome.name[locale]}
             title={t('Your living ecosystem', 'Твоята жива екосистема')}
             description={t('Meaningful actions grow this world. Plants never wither, and every new species opens a short piece of real nature knowledge.', 'Смислените действия развиват този свят. Растенията никога не увяхват, а всеки нов вид отключва кратко и достоверно природно знание.')}
             action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/more')} />}
           />
+
+          <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 6 }]}>{t('Choose your ecosystem', 'Избери своята екосистема')}</Text>
+          <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginBottom: 14 }]}>{t('Your growth is shared, so you can explore another habitat without losing progress.', 'Растежът ти е общ, така че можеш да изследваш друго местообитание, без да губиш напредък.')}</Text>
+          <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 20 }}>
+            {ECOSYSTEM_BIOMES.map((entry) => {
+              const active = entry.id === snapshot.biome;
+              return (
+                <Pressable
+                  key={entry.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`${entry.name[locale]}. ${active ? t('Selected', 'Избрано') : t('Choose ecosystem', 'Избери екосистема')}`}
+                  onPress={() => {
+                    if (active) return;
+                    setShowCompletePreview(false);
+                    void selectBiome(entry.id);
+                  }}
+                  style={({ pressed }) => ({ flex: 1, minHeight: 154, borderRadius: theme.radii.lg, overflow: 'hidden', borderWidth: active ? 3 : 1, borderColor: active ? theme.colors.primary : theme.colors.borderStrong, opacity: pressed ? 0.88 : 1 })}
+                >
+                  <ImageBackground source={BIOME_PREVIEWS[entry.id]} resizeMode="cover" imageStyle={{ width: '100%', height: '100%', resizeMode: 'cover', objectFit: 'cover' }} style={{ flex: 1, justifyContent: 'flex-end' }}>
+                    <View style={{ padding: 14, backgroundColor: 'rgba(11,37,25,0.82)' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name={entry.icon} size={18} color="#D7F28E" />
+                        <Text style={[theme.typography.h3, { color: '#FFFFFF', flex: 1 }]}>{entry.name[locale]}</Text>
+                        {active ? <Ionicons name="checkmark-circle" size={20} color="#D7F28E" /> : null}
+                      </View>
+                      <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: '#E9F2E8', fontSize: 11, marginTop: 4 }]}>{entry.description[locale]}</Text>
+                    </View>
+                  </ImageBackground>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <EcosystemHero
             snapshot={displaySnapshot}
@@ -62,12 +103,12 @@ export default function EcosystemScreen() {
             <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 16, backgroundColor: '#E6F0DF', borderColor: '#82A46F' }}>
               <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#174C35', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="sparkles" size={25} color="#D7F28E" /></View>
               <View style={{ flex: 1 }}>
-                <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text }]}>{showCompletePreview ? t('This is how your complete ecosystem will look', 'Така ще изглежда завършената ти екосистема') : t('Your meadow has become a living forest edge', 'Твоята поляна се превърна в жив горски край')}</Text>
+                <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text }]}>{showCompletePreview ? t('This is how your complete ecosystem will look', 'Така ще изглежда завършената ти екосистема') : biome.completionTitle[locale]}</Text>
                 <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{showCompletePreview ? t('This is a visual preview only. Your points and unlocked species have not changed.', 'Това е само визуален преглед. Точките и отключените ти видове не са променени.') : t('All eight plants and four wild guests now share one believable habitat. This final landscape remains permanent while your growth continues.', 'Всичките осем растения и четирите диви гости вече споделят едно естествено местообитание. Този завършен пейзаж остава постоянен, докато развитието ти продължава.')}</Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#174C35' }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>8 {t('plants', 'растения')}</Text></View>
-                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F4F7EF' }}><Text style={[theme.typography.label, { color: '#174C35' }]}>4 {t('guests', 'гости')}</Text></View>
+                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#174C35' }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>{biome.species.length} {t('plants', 'растения')}</Text></View>
+                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F4F7EF' }}><Text style={[theme.typography.label, { color: '#174C35' }]}>{biome.guests.length} {t('guests', 'гости')}</Text></View>
               </View>
             </Card>
           ) : null}
@@ -77,14 +118,14 @@ export default function EcosystemScreen() {
               <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="layers-outline" size={25} color={theme.colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .9 }]}>{t('What they form together', 'Какво образуват заедно')}</Text>
-                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('An open meadow that grows into a layered forest', 'Открита поляна, която постепенно се превръща в гора')}</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{t('Every unlocked species occupies its own place. Oak and lime form the future canopy, shrubs create shelter, and wildflowers fill the meadow without covering one another.', 'Всеки отключен вид заема свое място. Дъбът и липата оформят бъдещите корони, храстите създават укритие, а дивите цветя изпълват поляната, без да се застъпват.')}</Text>
+                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{biome.description[locale]}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{biome.growthDescription[locale]}</Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {[
-                  { icon: 'leaf-outline' as const, en: 'Canopy', bg: 'Корони' },
-                  { icon: 'git-branch-outline' as const, en: 'Shrubs', bg: 'Храсти' },
-                  { icon: 'flower-outline' as const, en: 'Meadow', bg: 'Поляна' },
+                  { icon: 'leaf-outline' as const, en: 'Trees', bg: 'Дървета' },
+                  { icon: 'flower-outline' as const, en: 'Ground layer', bg: 'Долен етаж' },
+                  { icon: 'paw-outline' as const, en: 'Wildlife', bg: 'Животни' },
                 ].map((layer) => <View key={layer.en} style={{ alignItems: 'center', gap: 5 }}><View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={layer.icon} size={19} color={theme.colors.primary} /></View><Text style={[theme.typography.label, { color: theme.colors.textMuted, fontSize: 9 }]}>{locale === 'bg' ? layer.bg : layer.en}</Text></View>)}
               </View>
             </View>
@@ -113,7 +154,7 @@ export default function EcosystemScreen() {
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Wild guests', 'Диви гости')}</Text>
               <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5, marginBottom: 18 }]}>{t('Different kinds of action make the habitat more welcoming.', 'Различните видове действия правят местообитанието по-гостоприемно.')}</Text>
               <View style={{ gap: 12 }}>
-                {FOREST_MEADOW_GUESTS.map((guest) => {
+                {biome.guests.map((guest) => {
                   const unlocked = snapshot.growthUnits >= guest.unlockAt;
                   return (
                     <View key={guest.slug} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', opacity: unlocked ? 1 : 0.48 }}>
@@ -134,7 +175,7 @@ export default function EcosystemScreen() {
           <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 6 }]}>{t('Species collection', 'Колекция от видове')}</Text>
           <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginBottom: 16 }]}>{t('Choose any unlocked plant as the focus of your world.', 'Избери всяко отключено растение като фокус на твоя свят.')}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
-            {FOREST_MEADOW_SPECIES.map((species) => {
+            {biome.species.map((species) => {
               const unlocked = snapshot.growthUnits >= species.unlockAt;
               const active = snapshot.activeSpecies.slug === species.slug;
               return (

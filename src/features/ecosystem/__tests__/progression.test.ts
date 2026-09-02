@@ -45,4 +45,12 @@ describe('living ecosystem progression', () => {
     expect(snapshot.unlockedSpecies.length).toBeGreaterThan(2);
     expect(snapshot.guests.length).toBeGreaterThan(2);
   });
+
+  it.each(['forest_meadow', 'savanna', 'rainforest'] as const)('builds an independent %s catalog with shared growth', (biome) => {
+    const snapshot = buildLocalSnapshot([], undefined, biome);
+    expect(snapshot.biome).toBe(biome);
+    expect(snapshot.activeSpecies.unlockAt).toBe(0);
+    expect(snapshot.unlockedSpecies).toHaveLength(1);
+    expect(getEcosystemCompletion(528, biome).complete).toBe(true);
+  });
 });
