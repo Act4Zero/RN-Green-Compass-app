@@ -232,6 +232,7 @@ export interface MapRendererProps {
   styleId: MapStyleId;
   cameraCommand: MapCameraCommand | null;
   userLocation: MapPoint | null;
+  searchPoint?: MapPoint | null;
   reducedMotion: boolean;
   mode: MapExperienceMode;
   quality: LivingPlanetQuality;

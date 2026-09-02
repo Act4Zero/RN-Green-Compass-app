@@ -1,14 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useMapIntegration } from '../../hooks/useMapIntegration';
 import { useAppLocale } from '../../context/AppLocaleContext';
 import { useAppTheme } from '../../theme';
 import { LocationCategory } from '../../types/map';
 import { getCategoryConfig } from '../../utils/categoryUtils';
+import { searchBulgarianAddress } from '../../services/geocodingService';
+import type { GeocodingResult } from '../../services/geocodingService';
 
-export default function MapSidebar({ compact = false }: { compact?: boolean }) {
+export default function MapSidebar({ compact = false, onAddressSearchResult }: { compact?: boolean; onAddressSearchResult?: (result: GeocodingResult) => void }) {
   const map = useMapIntegration();
   const { t } = useAppLocale();
   const { theme } = useAppTheme();
@@ -17,6 +19,33 @@ export default function MapSidebar({ compact = false }: { compact?: boolean }) {
   const { utm_source } = useLocalSearchParams<{ utm_source?: string }>();
   const pulse = useRef(new Animated.Value(1)).current;
   const desktop = width >= theme.breakpoints.desktop;
+  const [isAddressSearching, setIsAddressSearching] = useState(false);
+  const [addressResult, setAddressResult] = useState<GeocodingResult | null>(null);
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  const submitAddressSearch = async () => {
+    const query = map.query.trim();
+    setAddressResult(null);
+    setAddressError(null);
+    if (query.length < 3) {
+      setAddressError(t('Enter at least 3 characters.', 'Въведете поне 3 знака.'));
+      return;
+    }
+    setIsAddressSearching(true);
+    try {
+      const result = await searchBulgarianAddress(query);
+      if (!result) {
+        setAddressError(t('No address was found in Bulgaria.', 'Не е намерен такъв адрес в България.'));
+        return;
+      }
+      setAddressResult(result);
+      onAddressSearchResult?.(result);
+    } catch {
+      setAddressError(t('Address search is temporarily unavailable.', 'Търсенето на адрес временно не е достъпно.'));
+    } finally {
+      setIsAddressSearching(false);
+    }
+  };
 
   useEffect(() => {
     if (utm_source !== 'landing') return;
@@ -49,14 +78,18 @@ export default function MapSidebar({ compact = false }: { compact?: boolean }) {
             <Ionicons name="search" size={19} color={theme.colors.textMuted} />
             <TextInput
               value={map.query}
-              onChangeText={map.setQuery}
-              placeholder={t('Search places, towns or postcodes', 'Търсете места, градове или пощенски кодове')}
+              onChangeText={(value) => { map.setQuery(value); setAddressResult(null); setAddressError(null); }}
+              onSubmitEditing={() => void submitAddressSearch()}
+              placeholder={t('Search a place or address', 'Търсете място или адрес')}
               placeholderTextColor={theme.colors.textMuted}
-              accessibilityLabel={t('Search sustainability locations', 'Търсете устойчиви места')}
+              accessibilityLabel={t('Search places and addresses', 'Търсете места и адреси')}
               returnKeyType="search"
               style={[theme.typography.bodySmall, { flex: 1, color: theme.colors.text, paddingHorizontal: theme.spacing.sm, paddingVertical: Platform.OS === 'web' ? 10 : 8 }]}
             />
-            {map.query ? <Pressable accessibilityLabel={t('Clear search', 'Изчистете търсенето')} onPress={() => map.setQuery('')} hitSlop={8}><Ionicons name="close-circle" size={20} color={theme.colors.textMuted} /></Pressable> : null}
+            {map.query ? <Pressable accessibilityLabel={t('Clear search', 'Изчистете търсенето')} onPress={() => { map.setQuery(''); setAddressResult(null); setAddressError(null); }} hitSlop={8}><Ionicons name="close-circle" size={20} color={theme.colors.textMuted} /></Pressable> : null}
+            <Pressable accessibilityRole="button" accessibilityLabel={t('Find address', 'Намерете адреса')} disabled={isAddressSearching} onPress={() => void submitAddressSearch()} hitSlop={8} style={{ width: 34, height: 34, marginLeft: 6, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}>
+              {isAddressSearching ? <ActivityIndicator size="small" color={theme.colors.textInverse} /> : <Ionicons name="arrow-forward" size={18} color={theme.colors.textInverse} />}
+            </Pressable>
           </View>
           {desktop ? (
             <Pressable
@@ -103,6 +136,7 @@ export default function MapSidebar({ compact = false }: { compact?: boolean }) {
           <Pressable accessibilityRole="button" accessibilityLabel={t('Suggest a sustainable place', 'Предложете устойчиво място')} onPress={() => router.push('/map/contribute' as any)} style={{ minHeight: 40, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Ionicons name="add-circle-outline" size={17} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>{t('Suggest', 'Предложете')}</Text></Pressable>
         </ScrollView> : null}
       </View>
+      {addressResult || addressError ? <View accessibilityLiveRegion="polite" style={[theme.shadows.raised, { width: '100%', maxWidth: 620, alignSelf: 'center', marginTop: 8, borderRadius: theme.radii.md, paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.colors.backgroundElevated, borderWidth: 1, borderColor: addressError ? theme.colors.warning : theme.colors.borderStrong }]}><Ionicons name={addressError ? 'alert-circle-outline' : 'location'} size={19} color={addressError ? theme.colors.warning : theme.colors.primary} /><Text numberOfLines={2} style={[theme.typography.bodySmall, { flex: 1, color: addressError ? theme.colors.text : theme.colors.textMuted }]}>{addressError || addressResult?.label}</Text></View> : null}
     </View>
   );
 }

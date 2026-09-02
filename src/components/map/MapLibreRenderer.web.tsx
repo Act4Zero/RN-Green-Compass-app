@@ -16,6 +16,7 @@ import { getLocalizedMapNameExpression, isMapNameTextField } from '../../utils/m
 
 const LOCATIONS_SOURCE = 'green-compass-locations';
 const USER_SOURCE = 'green-compass-user-location';
+const SEARCH_SOURCE = 'green-compass-address-search';
 
 function userFeature(point: { lat: number; lng: number } | null): GeoJSON.FeatureCollection {
   return { type: 'FeatureCollection', features: point ? [{ type: 'Feature', geometry: { type: 'Point', coordinates: [point.lng, point.lat] }, properties: {} }] : [] };
@@ -93,6 +94,9 @@ export default function MapLibreRenderer(props: MapRendererProps) {
       map.addLayer({ id: 'selected-pin', type: 'circle', source: LOCATIONS_SOURCE, filter: ['==', ['get', 'id'], latest.current.selectedLocationId ?? ''], paint: { 'circle-color': '#C6F177', 'circle-radius': 15, 'circle-stroke-width': 4, 'circle-stroke-color': '#FFFFFF', 'circle-opacity': 0.45 } });
       map.addSource(USER_SOURCE, { type: 'geojson', data: userFeature(latest.current.userLocation) });
       map.addLayer({ id: 'user-location', type: 'circle', source: USER_SOURCE, paint: { 'circle-radius': 8, 'circle-color': '#2E89FF', 'circle-stroke-width': 3, 'circle-stroke-color': '#FFFFFF' } });
+      map.addSource(SEARCH_SOURCE, { type: 'geojson', data: userFeature(latest.current.searchPoint ?? null) });
+      map.addLayer({ id: 'address-search-halo', type: 'circle', source: SEARCH_SOURCE, paint: { 'circle-radius': 17, 'circle-color': '#C6F177', 'circle-opacity': 0.28 } });
+      map.addLayer({ id: 'address-search-point', type: 'circle', source: SEARCH_SOURCE, paint: { 'circle-radius': 8, 'circle-color': '#C6F177', 'circle-stroke-width': 4, 'circle-stroke-color': '#174C35' } });
       syncVisibleMarkers(map);
       try { applyMapLabelLocale(map, localeRef.current); } catch { /* Base-map labels must never block location rendering. */ }
       latest.current.onReady();
@@ -138,6 +142,17 @@ export default function MapLibreRenderer(props: MapRendererProps) {
   useEffect(() => { (mapRef.current?.getSource(LOCATIONS_SOURCE) as GeoJSONSource | undefined)?.setData(geoJson as MapLocationFeatureCollection); }, [geoJson]);
   useEffect(() => { const map = mapRef.current; if (map?.isStyleLoaded()) syncVisibleMarkers(map); }, [props.locations, props.selectedLocationId, locale]);
   useEffect(() => { (mapRef.current?.getSource(USER_SOURCE) as GeoJSONSource | undefined)?.setData(userFeature(props.userLocation)); }, [props.userLocation]);
+  useEffect(() => { (mapRef.current?.getSource(SEARCH_SOURCE) as GeoJSONSource | undefined)?.setData(userFeature(props.searchPoint ?? null)); }, [props.searchPoint]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !props.searchPoint) return;
+    const moveToAddress = () => {
+      const next = { center: [props.searchPoint!.lng, props.searchPoint!.lat] as [number, number], zoom: 13.5, pitch: 42, duration: props.reducedMotion ? 0 : 850 };
+      if (props.reducedMotion) map.jumpTo(next);
+      else map.flyTo(next);
+    };
+    moveToAddress();
+  }, [props.reducedMotion, props.searchPoint]);
   useEffect(() => { if (mapRef.current?.getLayer('selected-pin')) mapRef.current.setFilter('selected-pin', ['==', ['get', 'id'], props.selectedLocationId ?? '']); }, [props.selectedLocationId]);
   useEffect(() => {
     const map = mapRef.current;

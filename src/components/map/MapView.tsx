@@ -18,6 +18,7 @@ import { mapExperienceReducer } from '../../utils/livingPlanet';
 import { getOfflineSource } from '../../features/offline-maps';
 import type { MapSourceConfig } from '../../types/map';
 import { useAppLocale } from '../../context/AppLocaleContext';
+import type { GeocodingResult } from '../../services/geocodingService';
 
 function UnavailableState({ message, onBack }: { message: string; onBack?: () => void }) {
   const { theme } = useAppTheme();
@@ -47,6 +48,7 @@ export default function MapView() {
   const [mode, dispatchMode] = useReducer(mapExperienceReducer, 'map');
   const [offline, setOffline] = useState(false);
   const [offlineMapStyle, setOfflineMapStyle] = useState<Record<string, unknown> | null>(null);
+  const [searchedAddress, setSearchedAddress] = useState<GeocodingResult | null>(null);
   const { place } = useLocalSearchParams<{ place?: string }>();
   const hasTrackedView = useRef(false);
   const cameraCenterRef = useRef(map.camera.center);
@@ -133,6 +135,7 @@ export default function MapView() {
         styleId={map.styleId}
         cameraCommand={map.cameraCommand}
         userLocation={map.userLocation}
+        searchPoint={searchedAddress}
         reducedMotion={reducedMotion}
         mode={mode}
         quality={width >= 768 && !reducedMotion ? 'high' : 'adaptive'}
@@ -161,7 +164,7 @@ export default function MapView() {
           <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>{t('Loading the map…', 'Зареждаме картата…')}</Text>
         </View>
       ) : null}
-      <MapSidebar compact={mode === 'globe' || mode === 'to-globe'} />
+      <MapSidebar compact={mode === 'globe' || mode === 'to-globe'} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} />
       <MapResultsPanel />
       <LocateButton onPress={map.locateUser} isLoading={map.isLocating} />
       <CoverageAlert />
