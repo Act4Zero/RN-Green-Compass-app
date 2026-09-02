@@ -13,7 +13,7 @@ export function CompletedGoals({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Completed Goals</Text>
+      <Text style={styles.sectionTitle}>Завършени цели</Text>
       <View style={{ paddingBottom: 16 }} />
 
       {completedGoals.length > 0 ? (
@@ -26,7 +26,7 @@ export function CompletedGoals({
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            No completed goals yet. Keep working towards your targets!
+            Все още няма завършени цели. Продължавай към целта си!
           </Text>
         </View>
       )}

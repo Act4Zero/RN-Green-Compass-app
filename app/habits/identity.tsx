@@ -6,6 +6,7 @@ import { AppButton, AppInput, Card, Content, PageHeader, Screen } from '@/compon
 import { useAuth } from '@/context/AuthContext';
 import { calculateGreenIdentity, FACTOR_SOURCE_URL, FACTOR_VERSION, offsettingService, type GreenIdentityAnswers, type GreenIdentityResult, type HeatingType, type ShoppingLevel, type TravelMode, type WasteFrequency } from '@/features/offsetting';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const defaults: GreenIdentityAnswers = {
   countryCode: 'BG',
@@ -26,6 +27,7 @@ const defaults: GreenIdentityAnswers = {
 
 export default function GreenIdentityScreen() {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const router = useRouter();
   const { user } = useAuth();
   const [answers, setAnswers] = useState(defaults);
@@ -52,57 +54,57 @@ export default function GreenIdentityScreen() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content>
-          <PageHeader eyebrow="Green identity · assessment 2026.2" title="Build your starting estimate" description="Estimate mobility, home energy, food, purchases, reuse, and waste. Results are directional personal guidance—not an inventory, certification, or offset claim." />
+          <PageHeader eyebrow={t('Green identity · assessment 2026.2', 'Зелена идентичност · оценка 2026.2')} title={t('Build your starting estimate', 'Създай началната си оценка')} description={t('Estimate mobility, home energy, food, purchases, reuse, and waste. Results are directional personal guidance—not an inventory, certification, or offset claim.', 'Оцени мобилността, домашната енергия, храната, покупките, повторната употреба и отпадъците. Резултатите са ориентир, а не инвентаризация, сертификат или твърдение за компенсация.')} />
           <View style={{ gap: theme.spacing.lg }}>
             <Card style={{ gap: theme.spacing.lg }}>
-              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Location</Text>
-              <ChoiceChips label="Benchmark country" value={answers.countryCode || 'GLOBAL'} onChange={(countryCode) => setAnswers((current) => ({ ...current, countryCode }))} options={[{ value: 'BG', label: 'Bulgaria' }, { value: 'GB', label: 'United Kingdom' }, { value: 'DE', label: 'Germany' }, { value: 'US', label: 'United States' }, { value: 'GLOBAL', label: 'Global only' }]} />
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Country selection changes only the reference benchmark. The current activity factors remain individually disclosed.</Text>
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('Location', 'Местоположение')}</Text>
+              <ChoiceChips label={t('Benchmark country', 'Държава за сравнение')} value={answers.countryCode || 'GLOBAL'} onChange={(countryCode) => setAnswers((current) => ({ ...current, countryCode }))} options={[{ value: 'BG', label: t('Bulgaria', 'България') }, { value: 'GB', label: t('United Kingdom', 'Обединеното кралство') }, { value: 'DE', label: t('Germany', 'Германия') }, { value: 'US', label: t('United States', 'САЩ') }, { value: 'GLOBAL', label: t('Global only', 'Само глобално') }]} />
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Country selection changes only the reference benchmark. The current activity factors remain individually disclosed.', 'Изборът на държава променя само референтното сравнение. Коефициентите за дейностите остават показани поотделно.')}</Text>
             </Card>
 
             <Card style={{ gap: theme.spacing.lg }}>
-              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Travel</Text>
-              <ChoiceChips<TravelMode> label="Your main travel mode" value={answers.primaryTravelMode} onChange={(primaryTravelMode) => setAnswers((current) => ({ ...current, primaryTravelMode }))} options={[{ value: 'car', label: 'Car' }, { value: 'bus', label: 'Bus' }, { value: 'train', label: 'Train' }, { value: 'boat', label: 'Boat' }, { value: 'plane', label: 'Plane' }]} />
-              <AppInput label="Distance travelled in a typical week (km)" keyboardType="decimal-pad" value={`${answers.weeklyDistanceKm}`} onChangeText={(value) => setNumber('weeklyDistanceKm', value)} />
-              <AppInput label="One-way flights in a typical year" keyboardType="number-pad" value={`${answers.flightsPerYear}`} onChangeText={(value) => setNumber('flightsPerYear', value)} />
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('Travel', 'Пътуване')}</Text>
+              <ChoiceChips<TravelMode> label={t('Your main travel mode', 'Основен начин на пътуване')} value={answers.primaryTravelMode} onChange={(primaryTravelMode) => setAnswers((current) => ({ ...current, primaryTravelMode }))} options={[{ value: 'car', label: t('Car', 'Автомобил') }, { value: 'bus', label: t('Bus', 'Автобус') }, { value: 'train', label: t('Train', 'Влак') }, { value: 'boat', label: t('Boat', 'Кораб') }, { value: 'plane', label: t('Plane', 'Самолет') }]} />
+              <AppInput label={t('Distance travelled in a typical week (km)', 'Изминато разстояние за типична седмица (km)')} keyboardType="decimal-pad" value={`${answers.weeklyDistanceKm}`} onChangeText={(value) => setNumber('weeklyDistanceKm', value)} />
+              <AppInput label={t('One-way flights in a typical year', 'Еднопосочни полети за типична година')} keyboardType="number-pad" value={`${answers.flightsPerYear}`} onChangeText={(value) => setNumber('flightsPerYear', value)} />
             </Card>
 
             <Card style={{ gap: theme.spacing.lg }}>
-              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Home energy</Text>
-              <AppInput label="Household electricity per month (kWh)" keyboardType="decimal-pad" value={`${answers.householdEnergyKwhMonth}`} onChangeText={(value) => setNumber('householdEnergyKwhMonth', value)} />
-              <AppInput label="Renewable electricity share (%)" keyboardType="decimal-pad" value={`${answers.renewableEnergyPercent}`} onChangeText={(value) => setNumber('renewableEnergyPercent', value)} />
-              <AppInput label="People in your household" keyboardType="number-pad" value={`${answers.householdSize}`} onChangeText={(value) => setNumber('householdSize', value)} />
-              <ChoiceChips<HeatingType> label="Main heating source" value={answers.heatingType || 'none'} onChange={(heatingType) => setAnswers((current) => ({ ...current, heatingType }))} options={[{ value: 'none', label: 'None / unknown' }, { value: 'electricity', label: 'Electric' }, { value: 'natural_gas', label: 'Natural gas' }, { value: 'heating_oil', label: 'Heating oil' }, { value: 'district', label: 'District heat' }]} />
-              <AppInput label="Heating energy in a typical month (kWh)" keyboardType="decimal-pad" value={`${answers.heatingEnergyKwhMonth || 0}`} onChangeText={(value) => setNumber('heatingEnergyKwhMonth', value)} />
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('Home energy', 'Енергия у дома')}</Text>
+              <AppInput label={t('Household electricity per month (kWh)', 'Електроенергия за дома на месец (kWh)')} keyboardType="decimal-pad" value={`${answers.householdEnergyKwhMonth}`} onChangeText={(value) => setNumber('householdEnergyKwhMonth', value)} />
+              <AppInput label={t('Renewable electricity share (%)', 'Дял на възобновяемата електроенергия (%)')} keyboardType="decimal-pad" value={`${answers.renewableEnergyPercent}`} onChangeText={(value) => setNumber('renewableEnergyPercent', value)} />
+              <AppInput label={t('People in your household', 'Хора в домакинството')} keyboardType="number-pad" value={`${answers.householdSize}`} onChangeText={(value) => setNumber('householdSize', value)} />
+              <ChoiceChips<HeatingType> label={t('Main heating source', 'Основен източник на отопление')} value={answers.heatingType || 'none'} onChange={(heatingType) => setAnswers((current) => ({ ...current, heatingType }))} options={[{ value: 'none', label: t('None / unknown', 'Няма / неизвестно') }, { value: 'electricity', label: t('Electric', 'Електричество') }, { value: 'natural_gas', label: t('Natural gas', 'Природен газ') }, { value: 'heating_oil', label: t('Heating oil', 'Нафта') }, { value: 'district', label: t('District heat', 'Централно отопление') }]} />
+              <AppInput label={t('Heating energy in a typical month (kWh)', 'Енергия за отопление за типичен месец (kWh)')} keyboardType="decimal-pad" value={`${answers.heatingEnergyKwhMonth || 0}`} onChangeText={(value) => setNumber('heatingEnergyKwhMonth', value)} />
             </Card>
 
             <Card style={{ gap: theme.spacing.lg }}>
-              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Food and circular living</Text>
-              <ChoiceChips label="Your usual diet" value={answers.diet} onChange={(diet) => setAnswers((current) => ({ ...current, diet }))} options={[{ value: 'meat_most_days', label: 'Meat most days' }, { value: 'meat_some_days', label: 'Meat some days' }, { value: 'vegetarian', label: 'Vegetarian' }, { value: 'vegan', label: 'Vegan' }]} />
-              <ChoiceChips label="How often do you repair, borrow, or reuse?" value={answers.reuseFrequency} onChange={(reuseFrequency) => setAnswers((current) => ({ ...current, reuseFrequency }))} options={[{ value: 'rarely', label: 'Rarely' }, { value: 'sometimes', label: 'Sometimes' }, { value: 'often', label: 'Often' }]} />
-              <ChoiceChips label="How often do you separate recyclable materials?" value={answers.recyclingFrequency} onChange={(recyclingFrequency) => setAnswers((current) => ({ ...current, recyclingFrequency }))} options={[{ value: 'rarely', label: 'Rarely' }, { value: 'sometimes', label: 'Sometimes' }, { value: 'often', label: 'Often' }]} />
-              <ChoiceChips<ShoppingLevel> label="How much new non-essential stuff do you buy?" value={answers.shoppingLevel || 'average'} onChange={(shoppingLevel) => setAnswers((current) => ({ ...current, shoppingLevel }))} options={[{ value: 'low', label: 'Less than average' }, { value: 'average', label: 'Average' }, { value: 'high', label: 'More than average' }]} />
-              <ChoiceChips<WasteFrequency> label="How often is edible food discarded?" value={answers.foodWasteFrequency || 'sometimes'} onChange={(foodWasteFrequency) => setAnswers((current) => ({ ...current, foodWasteFrequency }))} options={[{ value: 'rarely', label: 'Rarely' }, { value: 'sometimes', label: 'Sometimes' }, { value: 'often', label: 'Often' }]} />
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('Food and circular living', 'Храна и кръгов начин на живот')}</Text>
+              <ChoiceChips label={t('Your usual diet', 'Обичаен начин на хранене')} value={answers.diet} onChange={(diet) => setAnswers((current) => ({ ...current, diet }))} options={[{ value: 'meat_most_days', label: t('Meat most days', 'Месо почти всеки ден') }, { value: 'meat_some_days', label: t('Meat some days', 'Месо няколко дни') }, { value: 'vegetarian', label: t('Vegetarian', 'Вегетариански') }, { value: 'vegan', label: t('Vegan', 'Вегански') }]} />
+              <ChoiceChips label={t('How often do you repair, borrow, or reuse?', 'Колко често поправяте, вземате назаем или използвате повторно?')} value={answers.reuseFrequency} onChange={(reuseFrequency) => setAnswers((current) => ({ ...current, reuseFrequency }))} options={[{ value: 'rarely', label: t('Rarely', 'Рядко') }, { value: 'sometimes', label: t('Sometimes', 'Понякога') }, { value: 'often', label: t('Often', 'Често') }]} />
+              <ChoiceChips label={t('How often do you separate recyclable materials?', 'Колко често събирате разделно рециклируеми материали?')} value={answers.recyclingFrequency} onChange={(recyclingFrequency) => setAnswers((current) => ({ ...current, recyclingFrequency }))} options={[{ value: 'rarely', label: t('Rarely', 'Рядко') }, { value: 'sometimes', label: t('Sometimes', 'Понякога') }, { value: 'often', label: t('Often', 'Често') }]} />
+              <ChoiceChips<ShoppingLevel> label={t('How much new non-essential stuff do you buy?', 'Колко нови вещи извън необходимото купувате?')} value={answers.shoppingLevel || 'average'} onChange={(shoppingLevel) => setAnswers((current) => ({ ...current, shoppingLevel }))} options={[{ value: 'low', label: t('Less than average', 'Под средното') }, { value: 'average', label: t('Average', 'Средно') }, { value: 'high', label: t('More than average', 'Над средното') }]} />
+              <ChoiceChips<WasteFrequency> label={t('How often is edible food discarded?', 'Колко често се изхвърля годна храна?')} value={answers.foodWasteFrequency || 'sometimes'} onChange={(foodWasteFrequency) => setAnswers((current) => ({ ...current, foodWasteFrequency }))} options={[{ value: 'rarely', label: t('Rarely', 'Рядко') }, { value: 'sometimes', label: t('Sometimes', 'Понякога') }, { value: 'often', label: t('Often', 'Често') }]} />
             </Card>
 
             {preview ? (
               <Card elevated style={{ gap: theme.spacing.sm, backgroundColor: theme.colors.primarySoft }}>
-                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{titleForTier(preview.identityTier)}</Text>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{t(titleForTier(preview.identityTier), preview.identityTier === 'impact_leader' ? 'Лидер по въздействие' : preview.identityTier === 'green_builder' ? 'Зелен създател' : 'Еко изследовател')}</Text>
                 <Text style={[theme.typography.h1, { color: theme.colors.text }]}>{preview.identityScore}/100</Text>
-                <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{preview.annualBaselineKgCo2e.toFixed(0)} kg CO₂e/year estimated tracked baseline</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Mobility: {(preview.categoryFootprintKgCo2e.mobility || 0).toFixed(0)} kg · Energy: {(preview.categoryFootprintKgCo2e.energy || 0).toFixed(0)} kg · Food: {(preview.categoryFootprintKgCo2e.food || 0).toFixed(0)} kg · Purchases: {(preview.categoryFootprintKgCo2e.consumption || 0).toFixed(0)} kg · Waste: {(preview.categoryFootprintKgCo2e.waste || 0).toFixed(0)} kg</Text>
+                <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{preview.annualBaselineKgCo2e.toFixed(0)} {t('kg CO₂e/year estimated tracked baseline', 'kg CO₂e/година оценена проследявана база')}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Mobility', 'Мобилност')}: {(preview.categoryFootprintKgCo2e.mobility || 0).toFixed(0)} kg · {t('Energy', 'Енергия')}: {(preview.categoryFootprintKgCo2e.energy || 0).toFixed(0)} kg · {t('Food', 'Храна')}: {(preview.categoryFootprintKgCo2e.food || 0).toFixed(0)} kg · {t('Purchases', 'Покупки')}: {(preview.categoryFootprintKgCo2e.consumption || 0).toFixed(0)} kg · {t('Waste', 'Отпадъци')}: {(preview.categoryFootprintKgCo2e.waste || 0).toFixed(0)} kg</Text>
               </Card>
             ) : null}
 
             <Card style={{ gap: theme.spacing.xs }}>
-              <Text style={[theme.typography.label, { color: theme.colors.warning }]}>Estimate, not an offset claim</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Factor version {FACTOR_VERSION}. Results omit many sources and should guide choices rather than certify emissions or carbon neutrality.</Text>
-              <AppButton label="Read the 2026 factor source" variant="ghost" icon="open-outline" onPress={() => void Linking.openURL(FACTOR_SOURCE_URL)} style={{ alignSelf: 'flex-start' }} />
+              <Text style={[theme.typography.label, { color: theme.colors.warning }]}>{t('Estimate, not an offset claim', 'Оценка, а не твърдение за компенсация')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t(`Factor version ${FACTOR_VERSION}. Results omit many sources and should guide choices rather than certify emissions or carbon neutrality.`, `Версия на коефициентите ${FACTOR_VERSION}. Резултатите не обхващат всички източници и служат за ориентир, а не за сертифициране на емисии или въглеродна неутралност.`)}</Text>
+              <AppButton label={t('Read the 2026 factor source', 'Прочети източника на коефициентите за 2026 г.')} variant="ghost" icon="open-outline" onPress={() => void Linking.openURL(FACTOR_SOURCE_URL)} style={{ alignSelf: 'flex-start' }} />
             </Card>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
-              <AppButton label="Calculate estimate" variant="secondary" icon="calculator-outline" onPress={calculate} style={{ flex: 1 }} />
-              <AppButton label="Save identity" icon="checkmark" loading={saving} onPress={() => void save()} style={{ flex: 1 }} />
+              <AppButton label={t('Calculate estimate', 'Изчисли оценката')} variant="secondary" icon="calculator-outline" onPress={calculate} style={{ flex: 1 }} />
+              <AppButton label={t('Save identity', 'Запази идентичността')} icon="checkmark" loading={saving} onPress={() => void save()} style={{ flex: 1 }} />
             </View>
           </View>
         </Content>

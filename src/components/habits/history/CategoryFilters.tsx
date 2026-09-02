@@ -13,7 +13,7 @@ export function CategoryFilters({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Filter by Category</Text>
+      <Text style={styles.sectionTitle}>Филтрирай по категория</Text>
       <View style={{ paddingBottom: 16 }} />
 
       <ScrollView
@@ -36,7 +36,7 @@ export function CategoryFilters({
                 selectedCategory === id && styles.filterTextActive,
               ]}
             >
-              {name}
+              {({ all: 'Всички', mobility: 'Придвижване', food: 'Храна', household: 'Домакинство', heating: 'Отопление' } as Record<string, string>)[id] || name}
             </Text>
           </TouchableOpacity>
         ))}

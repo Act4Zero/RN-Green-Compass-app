@@ -3,6 +3,7 @@ import {
   GeoJSONSource,
   Map as MapLibreMap,
   MapLayerMouseEvent,
+  Marker,
   NavigationControl,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -34,11 +35,37 @@ export default function MapLibreRenderer(props: MapRendererProps) {
   const { locale } = useAppLocale();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const markersRef = useRef<Marker[]>([]);
   const localeRef = useRef(locale);
   const latest = useRef(props);
   const geoJson = useMemo(() => locationsToFeatureCollection(props.locations), [props.locations]);
   latest.current = props;
   localeRef.current = locale;
+
+  const syncVisibleMarkers = (map: MapLibreMap) => {
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = latest.current.locations.map((location) => {
+      const selected = location.id === latest.current.selectedLocationId;
+      const markerButton = document.createElement('button');
+      markerButton.type = 'button';
+      markerButton.setAttribute('aria-label', `${localeRef.current === 'bg' ? 'Отворете' : 'Open'} ${location.name}`);
+      markerButton.style.width = selected ? '28px' : '20px';
+      markerButton.style.height = selected ? '28px' : '20px';
+      markerButton.style.padding = '0';
+      markerButton.style.borderRadius = '50%';
+      markerButton.style.border = selected ? '4px solid #FFFFFF' : '3px solid #C6F177';
+      markerButton.style.background = selected ? '#C6F177' : '#174C35';
+      markerButton.style.boxShadow = '0 3px 10px rgba(11, 23, 17, 0.35)';
+      markerButton.style.cursor = 'pointer';
+      markerButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        latest.current.onLocationPress(location.id);
+      });
+      const marker = new Marker({ element: markerButton, anchor: 'center' }).setLngLat([location.lng, location.lat]).addTo(map);
+      marker.getElement().setAttribute('aria-label', `${localeRef.current === 'bg' ? 'Отворете' : 'Open'} ${location.name}`);
+      return marker;
+    });
+  };
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -59,7 +86,6 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
     map.addControl(new NavigationControl({ showCompass: true }), 'bottom-right');
     map.on('load', () => {
-      applyMapLabelLocale(map, localeRef.current);
       map.addSource(LOCATIONS_SOURCE, { type: 'geojson', data: locationsToFeatureCollection(latest.current.locations), cluster: true, clusterRadius: 54, clusterMaxZoom: 13 });
       map.addLayer({ id: 'location-clusters', type: 'circle', source: LOCATIONS_SOURCE, filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#76D49B', 25, '#B8E36B', 60, '#F0B15D'], 'circle-radius': ['step', ['get', 'point_count'], 19, 25, 24, 60, 29], 'circle-stroke-width': 3, 'circle-stroke-color': '#FFFFFF' } });
       map.addLayer({ id: 'cluster-count', type: 'symbol', source: LOCATIONS_SOURCE, filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 13 }, paint: { 'text-color': '#0B1711' } });
@@ -67,11 +93,13 @@ export default function MapLibreRenderer(props: MapRendererProps) {
       map.addLayer({ id: 'selected-pin', type: 'circle', source: LOCATIONS_SOURCE, filter: ['==', ['get', 'id'], latest.current.selectedLocationId ?? ''], paint: { 'circle-color': '#C6F177', 'circle-radius': 15, 'circle-stroke-width': 4, 'circle-stroke-color': '#FFFFFF', 'circle-opacity': 0.45 } });
       map.addSource(USER_SOURCE, { type: 'geojson', data: userFeature(latest.current.userLocation) });
       map.addLayer({ id: 'user-location', type: 'circle', source: USER_SOURCE, paint: { 'circle-radius': 8, 'circle-color': '#2E89FF', 'circle-stroke-width': 3, 'circle-stroke-color': '#FFFFFF' } });
+      syncVisibleMarkers(map);
+      try { applyMapLabelLocale(map, localeRef.current); } catch { /* Base-map labels must never block location rendering. */ }
       latest.current.onReady();
     });
     map.on('error', (event: any) => {
       const message = event.error?.message;
-      if (message && !message.includes('AbortError')) latest.current.onError(message);
+      if (message && !message.includes('AbortError') && !message.includes('timeout exceeded')) latest.current.onError(message);
     });
     const reportCamera = () => {
       const center = map.getCenter();
@@ -98,6 +126,8 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     const observer = new ResizeObserver(resize);
     observer.observe(containerRef.current);
     return () => {
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
       observer.disconnect();
       window.removeEventListener('resize', resize);
       map.remove();
@@ -106,6 +136,7 @@ export default function MapLibreRenderer(props: MapRendererProps) {
   }, []);
 
   useEffect(() => { (mapRef.current?.getSource(LOCATIONS_SOURCE) as GeoJSONSource | undefined)?.setData(geoJson as MapLocationFeatureCollection); }, [geoJson]);
+  useEffect(() => { const map = mapRef.current; if (map?.isStyleLoaded()) syncVisibleMarkers(map); }, [props.locations, props.selectedLocationId, locale]);
   useEffect(() => { (mapRef.current?.getSource(USER_SOURCE) as GeoJSONSource | undefined)?.setData(userFeature(props.userLocation)); }, [props.userLocation]);
   useEffect(() => { if (mapRef.current?.getLayer('selected-pin')) mapRef.current.setFilter('selected-pin', ['==', ['get', 'id'], props.selectedLocationId ?? '']); }, [props.selectedLocationId]);
   useEffect(() => {
@@ -122,5 +153,5 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     else map.flyTo(next);
   }, [props.cameraCommand, props.reducedMotion]);
 
-  return <View style={{ flex: 1, overflow: 'hidden' }}><div ref={containerRef} aria-label="Detailed sustainability map" style={{ width: '100%', height: '100%' }} /></View>;
+  return <View style={{ flex: 1, overflow: 'hidden' }}><div ref={containerRef} aria-label={locale === 'bg' ? 'Подробна карта на устойчивите места' : 'Detailed sustainability map'} style={{ width: '100%', height: '100%' }} /></View>;
 }

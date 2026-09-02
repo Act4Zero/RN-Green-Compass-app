@@ -23,9 +23,9 @@ function formatBytes(bytes: number): string {
 
 function confirmCellular(): Promise<boolean> {
   return new Promise((resolve) => Alert.alert(
-    'Use mobile data?',
-    'This map is larger than 50 MB. Wi-Fi is recommended.',
-    [{ text: 'Cancel', style: 'cancel', onPress: () => resolve(false) }, { text: 'Download', onPress: () => resolve(true) }],
+    'Използване на мобилни данни?',
+    'Картата е по-голяма от 50 MB. Препоръчва се Wi-Fi.',
+    [{ text: 'Отказ', style: 'cancel', onPress: () => resolve(false) }, { text: 'Изтегли', onPress: () => resolve(true) }],
     { cancelable: true, onDismiss: () => resolve(false) },
   ));
 }
@@ -85,6 +85,6 @@ export default function OfflineMapsScreen() {
       <View style={{ flexDirection: 'row', gap: 8 }}>{state.status === 'ready' ? <><AppButton label={t('Update', 'Обнови')} variant="secondary" disabled={!downloadable || Boolean(busy)} onPress={() => void download(state)} /><AppButton label={t('Delete', 'Изтрий')} variant="danger" disabled={Boolean(busy)} loading={busy === pack.id} onPress={() => void remove(pack.id)} /></> : <AppButton label={state.status === 'update-available' ? t('Update', 'Обнови') : t('Download', 'Изтегли')} icon="download-outline" disabled={!downloadable || Boolean(busy)} loading={busy === pack.id} onPress={() => void download(state)} />}</View>
     </Card>;
   })}</View>
-  <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 18, textAlign: 'center' }]}>Map data © OpenStreetMap contributors · packages by Protomaps</Text>
+  <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 18, textAlign: 'center' }]}>Данни за картата © сътрудници на OpenStreetMap · пакети от Protomaps</Text>
   </Content></ScrollView></Screen>;
 }

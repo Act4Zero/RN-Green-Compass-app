@@ -111,7 +111,7 @@ function HubHeader({ compact, locale, profile, onLocale, onSearch, onLearning }:
     <View style={{ flexDirection: compact ? 'column' : 'row', justifyContent: 'space-between', alignItems: compact ? 'stretch' : 'flex-end', gap: 16, marginBottom: 20 }}>
       <View style={{ flex: 1 }}>
         <Text style={[theme.typography.label, { color: theme.colors.primary, letterSpacing: 1.1 }]}>{t('LEARN • PRACTICE • ACT', 'УЧИ • ПРАКТИКУВАЙ • ДЕЙСТВАЙ')}</Text>
-        <Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 4 }]}>Knowledge Hub</Text>
+        <Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 4 }]}>{t('Knowledge Hub', 'Център за знания')}</Text>
         <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6, maxWidth: 650 }]}>{t('A clear, reviewed learning library for practical sustainability.', 'Подредена и проверена библиотека за практична устойчивост.')}</Text>
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>

@@ -5,6 +5,7 @@ import { KnowledgeBlockRenderer } from '../components/KnowledgeBlockRenderer';
 import type { KnowledgeBlock, KnowledgeSource } from '../types';
 
 jest.mock('@/theme', () => ({ useAppTheme: () => ({ theme: require('@/theme/tokens').createTheme('light') }) }));
+jest.mock('@/context/AppLocaleContext', () => ({ useAppLocale: () => ({ locale: 'en', t: (english: string) => english }) }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 

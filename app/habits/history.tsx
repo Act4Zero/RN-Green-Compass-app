@@ -63,7 +63,7 @@ export default function HabitHistory() {
   // Render functions for list items
   const renderLogItem = ({ item }: { item: HabitLog }) => {
     // Find the habit name from the habit_id
-    const habitName = habits?.find(h => h.id === item.habit_id)?.name || 'Unknown habit';
+    const habitName = habits?.find(h => h.id === item.habit_id)?.name || 'Неизвестен навик';
     
     return (
       <View style={styles.logItem}>
@@ -75,7 +75,7 @@ export default function HabitHistory() {
           <Text style={styles.logDescription}>{item.notes}</Text>
         )}
         <View style={styles.logDetails}>
-          <Text style={styles.logCO2}>{Number(item.co2_saving).toFixed(2)} kg CO₂ saved</Text>
+          <Text style={styles.logCO2}>{Number(item.co2_saving).toFixed(2)} kg спестен CO₂</Text>
         </View>
       </View>
     );
@@ -86,11 +86,11 @@ export default function HabitHistory() {
       <View style={styles.completedGoalItem}>
         <View style={styles.completedGoalHeader}>
           <Text style={styles.completedGoalTitle}>{item.goal_name}</Text>
-          <Text style={styles.completedGoalCategory}>{item.category || 'General'}</Text>
+          <Text style={styles.completedGoalCategory}>{item.category || 'Общи'}</Text>
         </View>
         <View style={styles.completedGoalProgress}>
           <Text style={styles.completedGoalProgressText}>
-            Completed: {item.current_value}/{item.target_value} {item.unit || 'units'}
+            Завършено: {item.current_value}/{item.target_value} {item.unit || 'единици'}
           </Text>
         </View>
       </View>
@@ -118,8 +118,8 @@ export default function HabitHistory() {
               <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={[styles.title, { color: theme.colors.text }]}>Impact history</Text>
-              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>See the patterns behind your progress.</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>История на въздействието</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Проследи закономерностите в напредъка си.</Text>
             </View>
           </View>
 

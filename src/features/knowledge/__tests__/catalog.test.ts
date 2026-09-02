@@ -20,4 +20,10 @@ describe('Knowledge Hub launch catalog', () => {
     const issues = KNOWLEDGE_ITEMS.flatMap((item) => validateKnowledgeItem(item).map((issue) => ({ item: item.slug, issue })));
     expect(issues).toEqual([]);
   });
+
+  it('does not leak English topic names into Bulgarian catalog titles', () => {
+    const englishTopicNames = KNOWLEDGE_TOPICS.map((topic) => topic.name);
+    const bulgarianTitles = KNOWLEDGE_ITEMS.filter((item) => item.locale === 'bg').map((item) => item.title);
+    expect(bulgarianTitles.some((title) => englishTopicNames.some((name) => title.includes(name)))).toBe(false);
+  });
 });

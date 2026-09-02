@@ -6,6 +6,7 @@ import { homeStyles } from '../../styles/Home.styles';
 import { ShareModal } from '@/components/sharing';
 import { formatDashboardForSharing } from '@/utils/sharing/dashboardShareUtils';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 
 interface DashboardStatsProps {
@@ -17,6 +18,7 @@ interface DashboardStatsProps {
 export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: DashboardStatsProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const { displayName } = useUserDisplayName();
+  const { t } = useAppLocale();
   
   // Format the current date for the achievement date
   const currentDate = new Date();
@@ -28,7 +30,7 @@ export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: D
   
   // Prepare achievement data for sharing
   const achievementData = {
-    title: `${safeActions} Actions · ${safeCO2.toFixed(1)} kg CO₂ Saved · ${safeStreak} Day Streak`,
+    title: t(`${safeActions} Actions · ${safeCO2.toFixed(1)} kg CO₂ Saved · ${safeStreak} Day Streak`, `${safeActions} действия · ${safeCO2.toFixed(1)} kg спестен CO₂ · ${safeStreak} дни серия`),
     date: currentDate,
     icon: undefined, // We could add a custom icon here in the future
   };
@@ -54,16 +56,16 @@ export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: D
   // Handle share error
   const handleShareError = useCallback((error: string) => {
     Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing your dashboard. Please try again.'
+      t('Sharing Error', 'Грешка при споделяне'),
+      t('There was a problem sharing your dashboard. Please try again.', 'Възникна проблем при споделянето на таблото. Опитайте отново.')
     );
-  }, []);
+  }, [t]);
 
   return (
     <>
       <View style={homeStyles.card}>
         <View style={styles.titleContainer}>
-          <Text style={homeStyles.cardTitle}>Your Sustainability Dashboard</Text>
+          <Text style={homeStyles.cardTitle}>{t('Your Sustainability Dashboard', 'Твоето табло за устойчивост')}</Text>
           <TouchableOpacity 
             style={styles.shareButton}
             onPress={handleSharePress}
@@ -74,21 +76,21 @@ export function DashboardStats({ totalActions, totalCO2Saved, overallStreak }: D
         </View>
         
         <Text style={homeStyles.cardContent}>
-          Track your progress and see how your actions are making a difference.
+          {t('Track your progress and see how your actions are making a difference.', 'Следи напредъка си и виж как действията ти водят до промяна.')}
         </Text>
 
         <View style={homeStyles.statsContainer}>
           <View style={homeStyles.statItem}>
             <Text style={homeStyles.statValue}>{totalActions || 0}</Text>
-            <Text style={homeStyles.statLabel}>Actions Taken</Text>
+            <Text style={homeStyles.statLabel}>{t('Actions Taken', 'Изпълнени действия')}</Text>
           </View>
           <View style={homeStyles.statItem}>
             <Text style={homeStyles.statValue}>{totalCO2Saved?.toFixed(1) || '0'}</Text>
-            <Text style={homeStyles.statLabel}>CO₂ Saved (kg)</Text>
+            <Text style={homeStyles.statLabel}>{t('CO₂ Saved (kg)', 'Спестен CO₂ (kg)')}</Text>
           </View>
           <View style={homeStyles.statItem}>
             <Text style={homeStyles.statValue}>{overallStreak || 0}</Text>
-            <Text style={homeStyles.statLabel}>Streak Days</Text>
+            <Text style={homeStyles.statLabel}>{t('Streak Days', 'Дни в серия')}</Text>
           </View>
         </View>
       </View>

@@ -205,14 +205,15 @@ export function addImpactMetrics(...metrics: (Partial<ImpactMetrics> | undefined
   }), { co2eKgAvoided: 0, plasticItemsAvoided: 0, wasteKgAvoided: 0, waterLitresSaved: 0 });
 }
 
-export function createPrivacySafeShareSummary({ challengeTitle, metrics, streak }: { challengeTitle?: string; metrics: ImpactMetrics; streak: number }): string {
-  const lines = ['My Green Compass impact'];
-  if (challengeTitle) lines.push(`Completed: ${challengeTitle}`);
-  if (metrics.co2eKgAvoided > 0) lines.push(`${round(metrics.co2eKgAvoided)} kg CO₂e avoided`);
-  if (metrics.plasticItemsAvoided > 0) lines.push(`${metrics.plasticItemsAvoided} plastic items avoided`);
-  if (metrics.wasteKgAvoided > 0) lines.push(`${round(metrics.wasteKgAvoided)} kg waste avoided`);
-  if (metrics.waterLitresSaved > 0) lines.push(`${round(metrics.waterLitresSaved, 0)} L water saved`);
-  if (streak > 0) lines.push(`${streak}-day eco-challenge streak`);
+export function createPrivacySafeShareSummary({ challengeTitle, metrics, streak, locale = 'en' }: { challengeTitle?: string; metrics: ImpactMetrics; streak: number; locale?: 'en' | 'bg' }): string {
+  const bg = locale === 'bg';
+  const lines = [bg ? 'Моето въздействие в Green Compass' : 'My Green Compass impact'];
+  if (challengeTitle) lines.push(`${bg ? 'Завършено' : 'Completed'}: ${challengeTitle}`);
+  if (metrics.co2eKgAvoided > 0) lines.push(`${round(metrics.co2eKgAvoided)} kg CO₂e ${bg ? 'избегнати' : 'avoided'}`);
+  if (metrics.plasticItemsAvoided > 0) lines.push(`${metrics.plasticItemsAvoided} ${bg ? 'избегнати пластмасови предмета' : 'plastic items avoided'}`);
+  if (metrics.wasteKgAvoided > 0) lines.push(`${round(metrics.wasteKgAvoided)} kg ${bg ? 'избегнат отпадък' : 'waste avoided'}`);
+  if (metrics.waterLitresSaved > 0) lines.push(`${round(metrics.waterLitresSaved, 0)} L ${bg ? 'спестена вода' : 'water saved'}`);
+  if (streak > 0) lines.push(bg ? `${streak} дни серия от еко предизвикателства` : `${streak}-day eco-challenge streak`);
   lines.push('#GreenCompass #Sustainability');
   return lines.join('\n');
 }

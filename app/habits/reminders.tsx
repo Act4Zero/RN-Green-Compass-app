@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getSustainabilityReminder, saveSustainabilityReminder } from '@/features/offsetting';
 import { useAppTheme } from '@/theme';
 
-const days = [{ value: 2, label: 'Mon' }, { value: 3, label: 'Tue' }, { value: 4, label: 'Wed' }, { value: 5, label: 'Thu' }, { value: 6, label: 'Fri' }, { value: 7, label: 'Sat' }, { value: 1, label: 'Sun' }];
+const days = [{ value: 2, label: 'Пн' }, { value: 3, label: 'Вт' }, { value: 4, label: 'Ср' }, { value: 5, label: 'Чт' }, { value: 6, label: 'Пт' }, { value: 7, label: 'Сб' }, { value: 1, label: 'Нд' }];
 
 export default function SustainabilityRemindersScreen() {
   const { theme } = useAppTheme();
@@ -31,24 +31,24 @@ export default function SustainabilityRemindersScreen() {
     setBusy(true); setError(null); setSaved(false);
     try {
       const h = Number(hour); const m = Number(minute);
-      if (!Number.isInteger(h) || h < 0 || h > 23 || !Number.isInteger(m) || m < 0 || m > 59) throw new Error('Enter a valid 24-hour time.');
-      if (enabled === 'yes' && weekdays.length === 0) throw new Error('Choose at least one reminder day.');
+      if (!Number.isInteger(h) || h < 0 || h > 23 || !Number.isInteger(m) || m < 0 || m > 59) throw new Error('Въведи валиден час в 24-часов формат.');
+      if (enabled === 'yes' && weekdays.length === 0) throw new Error('Избери поне един ден за напомняне.');
       await saveSustainabilityReminder(user.id, { enabled: enabled === 'yes', hour: h, minute: m, weekdays }); setSaved(true);
-    } catch (value) { setError(value instanceof Error ? value.message : 'Unable to save reminder.'); }
+    } catch (value) { setError(value instanceof Error ? value.message : 'Напомнянето не можа да се запази.'); }
     finally { setBusy(false); }
   };
 
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content>
-    <PageHeader eyebrow="Gentle nudges" title="Sustainability reminders" description={Platform.OS === 'web' ? 'Web uses an in-app daily nudge. Background push is intentionally unavailable in this release.' : 'Choose when this device should remind you. Permission is requested only when you save an enabled reminder.'} action={<AppButton label="Back" icon="arrow-back" variant="ghost" onPress={() => router.back()} />} />
+    <PageHeader eyebrow="Леки напомняния" title="Напомняния за устойчивост" description={Platform.OS === 'web' ? 'Уеб версията показва дневно напомняне в приложението. Фоновите известия не са включени в тази версия.' : 'Избери кога устройството да ти напомня. Разрешение се иска само при запазване на включено напомняне.'} action={<AppButton label="Назад" icon="arrow-back" variant="ghost" onPress={() => router.back()} />} />
     <View style={{ gap: theme.spacing.lg }}>
-      {error ? <StatePanel icon="notifications-off-outline" title="Reminder not scheduled" message={error} /> : null}
-      {saved ? <StatePanel icon="checkmark-circle-outline" title="Reminder settings saved" message={Platform.OS === 'web' ? 'Your in-app nudge preference is ready.' : 'This device will use the selected local schedule.'} /> : null}
+      {error ? <StatePanel icon="notifications-off-outline" title="Напомнянето не е насрочено" message={error} /> : null}
+      {saved ? <StatePanel icon="checkmark-circle-outline" title="Настройките са запазени" message={Platform.OS === 'web' ? 'Настройката за напомняне в приложението е готова.' : 'Устройството ще използва избрания график.'} /> : null}
       <Card style={{ gap: theme.spacing.lg }}>
-        <ChoiceChips label="Daily action reminder" value={enabled} onChange={setEnabled} options={[{ value: 'yes', label: 'Enabled' }, { value: 'no', label: 'Disabled' }]} />
-        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}><AppInput label="Hour (0–23)" value={hour} onChangeText={setHour} keyboardType="number-pad" style={{ flex: 1 }} /><AppInput label="Minute" value={minute} onChangeText={setMinute} keyboardType="number-pad" style={{ flex: 1 }} /></View>
-        <View style={{ gap: theme.spacing.sm }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>Days</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{days.map((day) => { const selected = weekdays.includes(day.value); return <Pressable key={day.value} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => toggleDay(day.value)} style={{ minHeight: 44, minWidth: 54, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radii.pill, borderWidth: 1, borderColor: selected ? theme.colors.primary : theme.colors.border, backgroundColor: selected ? theme.colors.primarySoft : theme.colors.surface }}><Text style={[theme.typography.label, { color: selected ? theme.colors.primary : theme.colors.text }]}>{day.label}</Text></Pressable>; })}</View></View>
-        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>The schedule follows this device's timezone and is rebuilt when you change these settings. Denying notification permission never blocks Habits.</Text>
-        <AppButton label="Save reminder" icon="notifications-outline" loading={busy} onPress={() => void save()} />
+        <ChoiceChips label="Дневно напомняне за действие" value={enabled} onChange={setEnabled} options={[{ value: 'yes', label: 'Включено' }, { value: 'no', label: 'Изключено' }]} />
+        <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}><AppInput label="Час (0–23)" value={hour} onChangeText={setHour} keyboardType="number-pad" style={{ flex: 1 }} /><AppInput label="Минути" value={minute} onChangeText={setMinute} keyboardType="number-pad" style={{ flex: 1 }} /></View>
+        <View style={{ gap: theme.spacing.sm }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>Дни</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{days.map((day) => { const selected = weekdays.includes(day.value); return <Pressable key={day.value} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => toggleDay(day.value)} style={{ minHeight: 44, minWidth: 54, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radii.pill, borderWidth: 1, borderColor: selected ? theme.colors.primary : theme.colors.border, backgroundColor: selected ? theme.colors.primarySoft : theme.colors.surface }}><Text style={[theme.typography.label, { color: selected ? theme.colors.primary : theme.colors.text }]}>{day.label}</Text></Pressable>; })}</View></View>
+        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Графикът следва часовата зона на устройството и се обновява при промяна. Отказът на известия не блокира раздел „Навици“.</Text>
+        <AppButton label="Запази напомнянето" icon="notifications-outline" loading={busy} onPress={() => void save()} />
       </Card>
     </View>
   </Content></ScrollView></Screen>;

@@ -66,10 +66,10 @@ export default function Goal() {
             >
               <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
-            <Text style={[goalStyles.title, { color: theme.colors.text }]}>Shape a new goal</Text>
+            <Text style={[goalStyles.title, { color: theme.colors.text }]}>Създай нова цел</Text>
           </View>
 
-          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>1. Choose a focus area</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>1. Избери област</Text>
 
           <FocusAreasComponent
             focusAreas={focusAreas}
@@ -77,13 +77,13 @@ export default function Goal() {
             toggleFocusArea={toggleFocusArea}
           />
 
-          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>2. Choose frequency</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>2. Избери честота</Text>
           <FrequencySelector
             frequency={frequency}
             onFrequencyChange={setFrequency}
           />
 
-          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>3. Set your target</Text>
+          <Text style={[goalStyles.subtitle, { color: theme.colors.text }]}>3. Определи целта</Text>
           <GoalInput
             targetInputValue={targetInputValue}
             decrementTarget={decrementTarget}
@@ -95,17 +95,17 @@ export default function Goal() {
           {selectedFocusAreas.length > 0 && (
             <View style={[goalStyles.summaryContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
               <Text style={[goalStyles.summaryText, { color: theme.colors.textMuted }]}>
-                Your initial target: <Text style={goalStyles.summaryHighlight}>{targetValue} actions {frequency !== 'one-time' ? frequency : ''}</Text>
+                Начална цел: <Text style={goalStyles.summaryHighlight}>{targetValue} действия</Text>
                 {selectedFocusAreas.length === 1 
-                  ? ` to ${focusAreas.find(a => a.id === selectedFocusAreas[0])?.name.toLowerCase()}`
-                  : ` across ${selectedFocusAreas.length} focus areas`}
+                  ? ` за ${focusAreas.find(a => a.id === selectedFocusAreas[0])?.name.toLowerCase()}`
+                  : ` в ${selectedFocusAreas.length} области`}
               </Text>
             </View>
           )}
 
           <View style={goalStyles.buttonContainer}>
             <Button
-              title="Create Goal"
+              title="Създай цел"
               onPress={handleContinue}
               variant="primary"
               style={{ marginTop: 24, marginBottom: 40 }}

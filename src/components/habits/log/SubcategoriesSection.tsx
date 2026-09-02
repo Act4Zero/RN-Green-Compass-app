@@ -1,6 +1,7 @@
 import LogStyles from '@/styles/LogStyles';
 import { TouchableOpacity, Text, View, ScrollView } from 'react-native';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = LogStyles;
 
@@ -14,9 +15,10 @@ export function SubcategoriesSection({
     handleSelectSubcategory: (id: string) => void;
 }) {
     const { theme } = useAppTheme();
+    const { t } = useAppLocale();
     return (
         <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>2. Refine your focus</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('2. Refine your focus', '2. Уточни избора си')}</Text>
             
             <ScrollView 
               horizontal 

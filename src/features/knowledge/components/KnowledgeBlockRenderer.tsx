@@ -5,10 +5,12 @@ import { Linking, Pressable, Text, View } from 'react-native';
 import { AppButton, Card } from '@/components/ui';
 import { useAppTheme } from '@/theme';
 import type { KnowledgeBlock, KnowledgeSource } from '../types';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export function KnowledgeBlockRenderer({ blocks, sources, sourceContentId, easyRead = false }: { blocks: KnowledgeBlock[]; sources: KnowledgeSource[]; sourceContentId: string; easyRead?: boolean }) {
   const { theme } = useAppTheme();
   const router = useRouter();
+  const { t } = useAppLocale();
 
   return (
     <View style={{ gap: 18 }}>
@@ -24,7 +26,7 @@ export function KnowledgeBlockRenderer({ blocks, sources, sourceContentId, easyR
         if (block.type === 'quote') return <View key={block.id} style={{ borderLeftWidth: 3, borderLeftColor: theme.colors.accent, paddingLeft: 18 }}><Text style={[theme.typography.h3, { color: theme.colors.text, fontStyle: 'italic' }]}>“{block.text}”</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{block.attribution} [{sourceNumber(sources, block.sourceId)}]</Text></View>;
         if (block.type === 'infographic') return <InfographicBlock key={block.id} block={block} sources={sources} />;
         if (block.type === 'video') return <VideoBlock key={block.id} block={block} />;
-        if (block.type === 'download') return <Card key={block.id}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{block.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginVertical: 8 }]}>{block.description} • {block.sizeLabel}</Text>{block.uri ? <AppButton label="Open toolkit" icon="download-outline" onPress={() => void Linking.openURL(block.uri!)} /> : null}</Card>;
+        if (block.type === 'download') return <Card key={block.id}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{block.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginVertical: 8 }]}>{block.description} • {block.sizeLabel}</Text>{block.uri ? <AppButton label={t('Open toolkit', 'Отвори материалите')} icon="download-outline" onPress={() => void Linking.openURL(block.uri!)} /> : null}</Card>;
         if (block.type === 'action') return <Card key={block.id} elevated style={{ backgroundColor: theme.colors.primarySoft }}><Text style={[theme.typography.h3, { color: theme.colors.text }]}>{block.title}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted, marginVertical: 10 }]}>{block.text}</Text><AppButton label={block.action.label} icon="arrow-forward" onPress={() => router.push({ pathname: block.action.route as any, params: { category: 'category' in block.action ? block.action.category : undefined, query: 'query' in block.action ? block.action.query : undefined, sourceContentId } })} /></Card>;
         return null;
       })}
@@ -34,25 +36,27 @@ export function KnowledgeBlockRenderer({ blocks, sources, sourceContentId, easyR
 
 function InfographicBlock({ block, sources }: { block: Extract<KnowledgeBlock, { type: 'infographic' }>; sources: KnowledgeSource[] }) {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const max = Math.max(...block.dataPoints.map((point) => point.value), 1);
   return <View accessible accessibilityRole="summary" accessibilityLabel={block.textAlternative}><Card elevated style={{ padding: 22, backgroundColor: theme.colors.surfaceMuted }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><View style={{ width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primarySoft }}><Ionicons name="stats-chart-outline" size={21} color={theme.colors.primary} /></View><View style={{ flex: 1 }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{block.template.replace('-', ' ')}</Text><Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginTop: 2 }]}>{block.title}</Text></View></View>
     <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 12 }]}>{block.description}</Text>
-    <View style={{ gap: 14, marginTop: 20 }}>{block.dataPoints.map((point, index) => <View key={point.id} accessible accessibilityLabel={`${index + 1}. ${point.label}. ${point.displayValue}${point.unit ? ` ${point.unit}` : ''}. Source ${sourceNumber(sources, point.sourceId)}.`}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>{index + 1}</Text></View><Text style={[theme.typography.body, { color: theme.colors.text, flex: 1 }]}>{point.label}</Text><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{point.displayValue}{point.unit ? ` ${point.unit}` : ''}</Text></View><View style={{ height: 7, marginLeft: 40, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, overflow: 'hidden' }}><View style={{ height: '100%', width: `${Math.max(12, (point.value / max) * 100)}%`, backgroundColor: index % 2 ? theme.colors.accent : theme.colors.primary }} /></View></View>)}</View>
-    <View style={{ marginTop: 22, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>{block.takeaways.join(' • ')}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 7 }]}>{[...new Set(block.dataPoints.map((point) => sourceNumber(sources, point.sourceId)))].map((number) => `[${number}]`).join(' ')} Source-linked visual summary</Text></View>
+    <View style={{ gap: 14, marginTop: 20 }}>{block.dataPoints.map((point, index) => <View key={point.id} accessible accessibilityLabel={`${index + 1}. ${point.label}. ${point.displayValue}${point.unit ? ` ${point.unit}` : ''}. ${t('Source', 'Източник')} ${sourceNumber(sources, point.sourceId)}.`}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>{index + 1}</Text></View><Text style={[theme.typography.body, { color: theme.colors.text, flex: 1 }]}>{point.label}</Text><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{point.displayValue}{point.unit ? ` ${point.unit}` : ''}</Text></View><View style={{ height: 7, marginLeft: 40, borderRadius: 4, backgroundColor: theme.colors.surfaceStrong, overflow: 'hidden' }}><View style={{ height: '100%', width: `${Math.max(12, (point.value / max) * 100)}%`, backgroundColor: index % 2 ? theme.colors.accent : theme.colors.primary }} /></View></View>)}</View>
+    <View style={{ marginTop: 22, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>{block.takeaways.join(' • ')}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 7 }]}>{[...new Set(block.dataPoints.map((point) => sourceNumber(sources, point.sourceId)))].map((number) => `[${number}]`).join(' ')} {t('Source-linked visual summary', 'Визуално обобщение, свързано с източници')}</Text></View>
   </Card></View>;
 }
 
 function VideoBlock({ block }: { block: Extract<KnowledgeBlock, { type: 'video' }> }) {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const [consented, setConsented] = useState(!block.consentRequired);
   const [showTranscript, setShowTranscript] = useState(false);
   return <Card>
     <Ionicons name="play-circle-outline" size={38} color={theme.colors.primary} />
     <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 10 }]}>{block.title}</Text>
-    <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginVertical: 8 }]}>{block.captionsUrl ? 'Captions available' : 'Accessible transcript available'} • Approved external provider</Text>
-    {!consented ? <View style={{ gap: 9 }}><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>The external provider receives network information only after you choose to continue.</Text><AppButton label="Allow external video" icon="shield-checkmark-outline" onPress={() => setConsented(true)} /></View> : <AppButton label="Open video" icon="open-outline" onPress={() => void Linking.openURL(block.url)} />}
-    <Pressable accessibilityRole="button" accessibilityState={{ expanded: showTranscript }} onPress={() => setShowTranscript((value) => !value)} style={{ marginTop: 12, minHeight: 42, justifyContent: 'center' }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{showTranscript ? 'Hide transcript' : 'Read transcript'}</Text></Pressable>
+    <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginVertical: 8 }]}>{block.captionsUrl ? t('Captions available', 'Налични са субтитри') : t('Accessible transcript available', 'Наличен е достъпен текстов запис')} • {t('Approved external provider', 'Одобрен външен доставчик')}</Text>
+    {!consented ? <View style={{ gap: 9 }}><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('The external provider receives network information only after you choose to continue.', 'Външният доставчик получава мрежова информация само след като изберете да продължите.')}</Text><AppButton label={t('Allow external video', 'Разреши външното видео')} icon="shield-checkmark-outline" onPress={() => setConsented(true)} /></View> : <AppButton label={t('Open video', 'Отвори видеото')} icon="open-outline" onPress={() => void Linking.openURL(block.url)} />}
+    <Pressable accessibilityRole="button" accessibilityState={{ expanded: showTranscript }} onPress={() => setShowTranscript((value) => !value)} style={{ marginTop: 12, minHeight: 42, justifyContent: 'center' }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{showTranscript ? t('Hide transcript', 'Скрий текста') : t('Read transcript', 'Прочети текста')}</Text></Pressable>
     {showTranscript ? <Text selectable style={[theme.typography.bodySmall, { color: theme.colors.text, lineHeight: 22, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.colors.border }]}>{block.transcript}</Text> : null}
   </Card>;
 }

@@ -7,15 +7,15 @@ import { STAGE_LABELS } from '../catalog';
 import type { EcosystemSnapshot } from '../types';
 import { PlantIllustration } from './PlantIllustration';
 
-const BACKGROUND = require('../../../../assets/images/ecosystem/bulgarian-forest-meadow-v2.png');
+const BACKGROUND = require('../../../../assets/images/ecosystem/open-bulgarian-meadow-v3.webp');
 
 const PLANT_POSITIONS = [
-  { left: '38%' as const, bottom: 4, size: 210 },
-  { left: '62%' as const, bottom: 2, size: 138 },
-  { left: '17%' as const, bottom: -2, size: 120 },
-  { left: '73%' as const, bottom: -8, size: 94 },
-  { left: '48%' as const, bottom: -14, size: 82 },
-  { left: '28%' as const, bottom: -15, size: 78 },
+  { left: '62%' as const, bottom: -4, size: 218 },
+  { left: '82%' as const, bottom: -5, size: 132 },
+  { left: '39%' as const, bottom: -8, size: 116 },
+  { left: '19%' as const, bottom: -10, size: 94 },
+  { left: '48%' as const, bottom: -12, size: 80 },
+  { left: '72%' as const, bottom: -14, size: 76 },
 ];
 
 export function EcosystemHero({ snapshot, loading, onOpen }: { snapshot: EcosystemSnapshot; loading?: boolean; onOpen: () => void }) {
@@ -43,7 +43,7 @@ export function EcosystemHero({ snapshot, loading, onOpen }: { snapshot: Ecosyst
         imageStyle={{ borderRadius: theme.radii.xl }}
         style={{ minHeight: compact ? 520 : 470, borderRadius: theme.radii.xl, overflow: 'hidden', borderWidth: 1, borderColor: '#8FA68A', ...theme.shadows.raised }}
       >
-        <View style={{ flex: 1, padding: compact ? 16 : 26, backgroundColor: 'rgba(9,35,22,0.08)' }}>
+          <View style={{ flex: 1, padding: compact ? 16 : 26, backgroundColor: 'rgba(9,35,22,0.04)' }}>
           <View style={{ maxWidth: compact ? '100%' : 405, alignSelf: 'flex-start', padding: compact ? 16 : 20, borderRadius: 22, backgroundColor: 'rgba(250,248,238,0.94)', borderWidth: 1, borderColor: 'rgba(23,76,53,0.18)', ...theme.shadows.subtle }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#174C35', alignItems: 'center', justifyContent: 'center' }}>
@@ -75,7 +75,7 @@ export function EcosystemHero({ snapshot, loading, onOpen }: { snapshot: Ecosyst
 
           <View style={{ position: 'absolute', left: compact ? 14 : 24, bottom: compact ? 15 : 22, maxWidth: compact ? 235 : 340, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(16,48,32,0.86)' }}>
             <Text style={[theme.typography.label, { color: '#D7F28E', fontSize: 10, textTransform: 'uppercase', letterSpacing: .8 }]}>{t('Your habitat is taking shape', 'Твоето местообитание оживява')}</Text>
-            <Text style={[theme.typography.bodySmall, { color: '#FFFFFF', fontSize: 12, marginTop: 3 }]}>{t('Trees, shrubs, flowers and wildlife build one connected forest edge.', 'Дървета, храсти, цветя и диви гости изграждат свързан горски край.')}</Text>
+            <Text style={[theme.typography.bodySmall, { color: '#FFFFFF', fontSize: 12, marginTop: 3 }]}>{t('Each unlocked species takes root in the open meadow. Over time, your actions turn it into a diverse forest.', 'Всеки отключен вид се вкоренява в свободно място на поляната. С времето действията ти я превръщат в разнообразна гора.')}</Text>
           </View>
 
           <View style={{ position: 'absolute', right: compact ? 14 : 22, bottom: compact ? 16 : 22, gap: 8, alignItems: 'flex-end' }}>

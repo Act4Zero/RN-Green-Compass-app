@@ -17,19 +17,21 @@ import MapSidebar from './MapSidebar';
 import { mapExperienceReducer } from '../../utils/livingPlanet';
 import { getOfflineSource } from '../../features/offline-maps';
 import type { MapSourceConfig } from '../../types/map';
+import { useAppLocale } from '../../context/AppLocaleContext';
 
 function UnavailableState({ message, onBack }: { message: string; onBack?: () => void }) {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl, backgroundColor: theme.colors.background }}>
       <View style={{ maxWidth: 520, alignItems: 'center', gap: theme.spacing.sm }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primarySoft }}>
           <Ionicons name="earth-outline" size={31} color={theme.colors.primary} />
         </View>
-        <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, textAlign: 'center' }]}>The globe is taking a breather</Text>
+        <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, textAlign: 'center' }]}>{t('The map is temporarily unavailable', 'Картата временно не е достъпна')}</Text>
         <Text style={[theme.typography.body, { color: theme.colors.textMuted, textAlign: 'center' }]}>{message}</Text>
-        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>The verified location directory remains available. Check the connection or install an offline map pack.</Text>
-        {onBack ? <Pressable accessibilityRole="button" onPress={onBack} style={{ minHeight: 46, borderRadius: theme.radii.md, paddingHorizontal: theme.spacing.lg, justifyContent: 'center', backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>Back to Living Planet</Text></Pressable> : null}
+        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'center' }]}>{t('Check your connection or use a downloaded offline map.', 'Проверете връзката си или използвайте изтеглена офлайн карта.')}</Text>
+        {onBack ? <Pressable accessibilityRole="button" onPress={onBack} style={{ minHeight: 46, borderRadius: theme.radii.md, paddingHorizontal: theme.spacing.lg, justifyContent: 'center', backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>{t('Back to the globe', 'Назад към глобуса')}</Text></Pressable> : null}
       </View>
     </View>
   );
@@ -38,10 +40,11 @@ function UnavailableState({ message, onBack }: { message: string; onBack?: () =>
 export default function MapView() {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const [mapReady, setMapReady] = useState(false);
   const [rendererError, setRendererError] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [mode, dispatchMode] = useReducer(mapExperienceReducer, 'globe');
+  const [mode, dispatchMode] = useReducer(mapExperienceReducer, 'map');
   const [offline, setOffline] = useState(false);
   const [offlineMapStyle, setOfflineMapStyle] = useState<Record<string, unknown> | null>(null);
   const { place } = useLocalSearchParams<{ place?: string }>();
@@ -115,7 +118,7 @@ export default function MapView() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.background }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>Preparing the verified sustainability catalogue…</Text>
+        <Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>{t('Preparing the verified sustainability catalogue…', 'Подготвяме каталога с проверени устойчиви места…')}</Text>
       </View>
     );
   }
@@ -155,7 +158,7 @@ export default function MapView() {
       {!mapReady ? (
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.overlay }}>
           <ActivityIndicator size="large" color={theme.colors.accent} />
-          <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>Bringing the planet into view…</Text>
+          <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>{t('Loading the map…', 'Зареждаме картата…')}</Text>
         </View>
       ) : null}
       <MapSidebar compact={mode === 'globe' || mode === 'to-globe'} />

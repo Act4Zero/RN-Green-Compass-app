@@ -42,8 +42,8 @@ export default function EcosystemScreen() {
               <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="layers-outline" size={25} color={theme.colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .9 }]}>{t('What they form together', 'Какво образуват заедно')}</Text>
-                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('A layered forest edge—not a row of separate pots', 'Многослоен горски край — не редица отделни саксии')}</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{t('Oak and lime shape the canopy; cornelian cherry and dog rose create shelter below; yarrow, clover, poppy and daisy turn the ground layer into a living meadow.', 'Дъбът и липата оформят короните; дрянът и шипката създават укритие отдолу; равнецът, детелината, макът и маргаритката превръщат приземния слой в жива поляна.')}</Text>
+                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('An open meadow that grows into a layered forest', 'Открита поляна, която постепенно се превръща в гора')}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{t('Every unlocked species occupies its own place. Oak and lime form the future canopy, shrubs create shelter, and wildflowers fill the meadow without covering one another.', 'Всеки отключен вид заема свое място. Дъбът и липата оформят бъдещите корони, храстите създават укритие, а дивите цветя изпълват поляната, без да се застъпват.')}</Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {[
