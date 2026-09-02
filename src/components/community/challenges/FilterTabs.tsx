@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import { ChallengeFilter } from '@/hooks/challenge/types';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface FilterTabsProps {
   activeFilter: ChallengeFilter;
@@ -11,6 +12,7 @@ interface FilterTabsProps {
 const styles = ChallengeStyles;
 
 function FilterTabs({ activeFilter, onFilterChange }: FilterTabsProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.filterTabs}>
       <TouchableOpacity
@@ -18,7 +20,7 @@ function FilterTabs({ activeFilter, onFilterChange }: FilterTabsProps) {
         onPress={() => onFilterChange('all')}
       >
         <Text style={activeFilter === 'all' ? styles.filterTabTextActive : styles.filterTabText}>
-          All
+          {t('All', 'Всички')}
         </Text>
       </TouchableOpacity>
       
@@ -27,7 +29,7 @@ function FilterTabs({ activeFilter, onFilterChange }: FilterTabsProps) {
         onPress={() => onFilterChange('active')}
       >
         <Text style={activeFilter === 'active' ? styles.filterTabTextActive : styles.filterTabText}>
-          Active
+          {t('Active', 'Активни')}
         </Text>
       </TouchableOpacity>
       
@@ -36,7 +38,7 @@ function FilterTabs({ activeFilter, onFilterChange }: FilterTabsProps) {
         onPress={() => onFilterChange('participating')}
       >
         <Text style={activeFilter === 'participating' ? styles.filterTabTextActive : styles.filterTabText}>
-          Mine
+          {t('Mine', 'Моите')}
         </Text>
       </TouchableOpacity>
       
@@ -45,7 +47,7 @@ function FilterTabs({ activeFilter, onFilterChange }: FilterTabsProps) {
         onPress={() => onFilterChange('completed')}
       >
         <Text style={activeFilter === 'completed' ? styles.filterTabTextActive : styles.filterTabText}>
-          Completed
+          {t('Completed', 'Завършени')}
         </Text>
       </TouchableOpacity>
     </View>

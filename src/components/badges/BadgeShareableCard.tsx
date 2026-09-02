@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle, ImageStyle, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeShareableCardProps {
   badgeName: string;
@@ -21,13 +22,14 @@ function BadgeShareableCard({
   imageUrl,
   userName
 }: BadgeShareableCardProps) {
+  const { locale, t } = useAppLocale();
   // Format the earned date if available
   let formattedDate = '';
   if (earnedDate) {
     try {
       const date = new Date(earnedDate);
       if (!isNaN(date.getTime())) {
-        formattedDate = date.toLocaleDateString('en-US', { 
+        formattedDate = date.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', {
           month: 'long', 
           day: 'numeric', 
           year: 'numeric' 
@@ -41,7 +43,7 @@ function BadgeShareableCard({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{badgeName} Badge</Text>
+        <Text style={styles.title}>{badgeName} {t('Badge', 'значка')}</Text>
         <View style={styles.logoContainer}>
           <Ionicons name="leaf" size={20} color="#2E7D32" />
         </View>
@@ -76,7 +78,7 @@ function BadgeShareableCard({
             </View>
             
             {formattedDate && (
-              <Text style={styles.earnedDate}>Earned on {formattedDate}</Text>
+              <Text style={styles.earnedDate}>{t('Earned on', 'Спечелена на')} {formattedDate}</Text>
             )}
           </View>
         </View>
@@ -84,11 +86,11 @@ function BadgeShareableCard({
 
       <View style={styles.footer}>
         {userName ? (
-          <Text style={styles.footerText}>{userName}'s sustainability journey</Text>
+          <Text style={styles.footerText}>{t(`${userName}'s sustainability journey`, `Устойчивият път на ${userName}`)}</Text>
         ) : (
-          <Text style={styles.footerText}>My sustainability journey</Text>
+          <Text style={styles.footerText}>{t('My sustainability journey', 'Моят път към устойчивостта')}</Text>
         )}
-        <Text style={styles.appPromo}>via Green Compass App</Text>
+        <Text style={styles.appPromo}>{t('via Green Compass App', 'чрез Green Compass')}</Text>
       </View>
     </View>
   );

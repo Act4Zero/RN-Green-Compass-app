@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import EmptyState from '@/components/community/challenges/EmptyState';
 import FilterTabs from '@/components/community/challenges/FilterTabs';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Styles for this component
 const styles = ChallengeStyles;
@@ -26,6 +27,7 @@ export default function ChallengesList() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   
@@ -120,8 +122,8 @@ export default function ChallengesList() {
               <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
             <View>
-              <Text style={[styles.title, { color: theme.colors.text }]}>Community challenges</Text>
-              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Build momentum with people working toward the same goal.</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>{t('Community challenges', 'Предизвикателства на общността')}</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Build momentum with people working toward the same goal.', 'Напредвайте заедно с хора, които работят за същата цел.')}</Text>
             </View>
           </View>
 
@@ -138,14 +140,14 @@ export default function ChallengesList() {
             </View>
           ) : error ? (
             <EmptyState 
-              message="Error loading challenges. Please try again."
-              buttonText="Try Again" 
+              message={t('Error loading challenges. Please try again.', 'Предизвикателствата не можаха да се заредят. Опитайте отново.')}
+              buttonText={t('Try Again', 'Опитайте отново')}
               onButtonPress={refreshChallenges}
             />
           ) : challenges.length === 0 ? (
             <EmptyState 
-              message="No challenges found. Check back later for new opportunities!"
-              buttonText="Refresh" 
+              message={t('No challenges found. Check back later for new opportunities!', 'Няма намерени предизвикателства. Проверете отново по-късно!')}
+              buttonText={t('Refresh', 'Обнови')}
               onButtonPress={refreshChallenges}
             />
           ) : (
@@ -162,14 +164,14 @@ export default function ChallengesList() {
                 <EmptyState
                   message={
                     filter === 'active'
-                      ? 'No active challenges found.'
+                      ? t('No active challenges found.', 'Няма активни предизвикателства.')
                       : filter === 'completed'
-                      ? 'No completed challenges found.'
+                      ? t('No completed challenges found.', 'Няма завършени предизвикателства.')
                       : filter === 'participating'
-                      ? "You're not participating in any active challenges."
-                      : 'No challenges found.'
+                      ? t("You're not participating in any active challenges.", 'Не участвате в активно предизвикателство.')
+                      : t('No challenges found.', 'Няма намерени предизвикателства.')
                   }
-                  buttonText="Refresh"
+                  buttonText={t('Refresh', 'Обнови')}
                   onButtonPress={refreshChallenges}
                 />
               )}
@@ -184,7 +186,7 @@ export default function ChallengesList() {
                   {isLoading ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={styles.joinButtonText}>Load More</Text>
+                    <Text style={styles.joinButtonText}>{t('Load More', 'Зареди още')}</Text>
                   )}
                 </TouchableOpacity>
               )}

@@ -19,6 +19,7 @@ import BadgeShareableCard from './BadgeShareableCard';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
 import ShareButton from '../sharing/ShareButton';
 import { shareToSocialPlatform, SocialPlatform } from '../../utils/sharing/shareUtils';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeShareModalProps {
   isVisible: boolean;
@@ -48,6 +49,7 @@ function BadgeShareModal({
   badgeData,
   shareContent,
 }: BadgeShareModalProps) {
+  const { t } = useAppLocale();
   const viewShotRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
   const [isSharing, setIsSharing] = useState(false);
@@ -154,7 +156,7 @@ function BadgeShareModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Share Badge</Text>
+            <Text style={styles.modalTitle}>{t('Share Badge', 'Споделяне на значка')}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#444" />
             </TouchableOpacity>
@@ -179,7 +181,7 @@ function BadgeShareModal({
           </View>
 
           <View style={styles.shareOptionsContainer}>
-            <Text style={styles.shareOptionsTitle}>Share to:</Text>
+            <Text style={styles.shareOptionsTitle}>{t('Share to:', 'Сподели чрез:')}</Text>
             
             {isSharing ? (
               <ActivityIndicator size="large" color="#2E7D32" />
@@ -206,7 +208,7 @@ function BadgeShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="General"
+                      label={t('General', 'Други')}
                       platformIcon="general"
                       onPress={() => handleShare('general')}
                       disabled={isSharing}

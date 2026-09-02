@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { formatBadgeSummaryForSharing } from '@/utils/sharing/badgeShareUtils';
 import BadgeSummaryShareModal from '@/components/badges/BadgeSummaryShareModal';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeSummaryProps {
   badgeCount: number;
@@ -14,6 +15,7 @@ interface BadgeSummaryProps {
 
 function BadgeSummary({ badgeCount, totalBadgeCount, recentBadgeNames = [], userName }: BadgeSummaryProps) {
   const router = useRouter();
+  const { t } = useAppLocale();
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   
   // Prepare the sharing content
@@ -45,11 +47,11 @@ function BadgeSummary({ badgeCount, totalBadgeCount, recentBadgeNames = [], user
   
   const handleShareError = useCallback((error: string) => {
     Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing your badge achievements. Please try again.'
+      t('Sharing Error', 'Грешка при споделяне'),
+      t('There was a problem sharing your badge achievements. Please try again.', 'Възникна проблем при споделянето на постиженията. Опитайте отново.')
     );
     console.error('Error sharing badges:', error);
-  }, []);
+  }, [t]);
 
   return (
     <>
@@ -57,17 +59,17 @@ function BadgeSummary({ badgeCount, totalBadgeCount, recentBadgeNames = [], user
         <View style={styles.summaryHeader}>
           <View style={styles.titleContainer}>
             <Ionicons name="trophy" size={20} color="#2E7D32" style={{marginRight: 8}} />
-            <Text style={styles.title}>Achievements</Text>
+            <Text style={styles.title}>{t('Achievements', 'Постижения')}</Text>
           </View>
           <View style={styles.badgeActions}>
             <Text style={styles.count}>
-              {badgeCount} {badgeCount === 1 ? 'badge' : 'badges'} earned
+              {badgeCount} {t(badgeCount === 1 ? 'badge earned' : 'badges earned', badgeCount === 1 ? 'спечелена значка' : 'спечелени значки')}
             </Text>
             {badgeCount > 0 && (
               <TouchableOpacity 
                 style={styles.shareButton} 
                 onPress={handleSharePress}
-                accessibilityLabel="Share badge achievements"
+                accessibilityLabel={t('Share badge achievements', 'Сподели постиженията')}
               >
                 <Ionicons name="share-social-outline" size={18} color="#2E7D32" />
               </TouchableOpacity>
@@ -79,7 +81,7 @@ function BadgeSummary({ badgeCount, totalBadgeCount, recentBadgeNames = [], user
           style={styles.viewAllButton} 
           onPress={handleViewAllBadges}
         >
-          <Text style={styles.viewAllButtonText}>View all badges</Text>
+          <Text style={styles.viewAllButtonText}>{t('View all badges', 'Виж всички значки')}</Text>
           <Ionicons name="chevron-forward" size={16} color="#2E7D32" />
         </TouchableOpacity>
       </View>

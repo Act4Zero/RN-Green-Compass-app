@@ -5,6 +5,7 @@ import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useActivityLogs from '@/hooks/challenge/useActivityLogs';
 import { ActivityLog } from '@/types/community/challenge';
 import formatDate from '@/utils/formatDate';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ActivityLogsListProps {
   challengeId: string;
@@ -14,6 +15,7 @@ interface ActivityLogsListProps {
 const styles = ChallengeStyles;
 
 function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
+  const { t } = useAppLocale();
   // Use the activity logs hook to get logs data
   const { logs: activityLogs, loadActivityLogs, isLoading, error } = useActivityLogs({ challengeId, userId });
   
@@ -28,10 +30,10 @@ function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
     
     return (
       <View style={styles.logItem}>
-        <Text style={styles.logTitle}>{item.title || item.description || item.user?.full_name || 'Unknown'}</Text>
+        <Text style={styles.logTitle}>{item.title || item.description || item.user?.full_name || t('Unknown', 'Неизвестен')}</Text>
         <Text style={styles.logDescription}>{item.description}</Text>
         <Text style={styles.logDate}>
-          {formatDate(logDate)} • {item.impact_value} points
+          {formatDate(logDate)} • {item.impact_value} {t('points', 'точки')}
         </Text>
       </View>
     );
@@ -40,7 +42,7 @@ function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
   return (
     <View style={styles.detailCard}>
       <Text style={styles.progressLabel}>
-        {userId ? 'Your Activity Logs' : 'Recent Activities'}
+        {userId ? t('Your Activity Logs', 'Вашите записи') : t('Recent Activities', 'Последни дейности')}
       </Text>
       
       {isLoading ? (
@@ -55,7 +57,7 @@ function ActivityLogsList({ challengeId, userId }: ActivityLogsListProps) {
         <View style={{ alignItems: 'center', padding: 16 }}>
           <Ionicons name="document-text-outline" size={32} color="#777777" />
           <Text style={{ fontSize: 14, color: '#777777', marginTop: 8 }}>
-            No activity logs yet. Log your first activity!
+            {t('No activity logs yet. Log your first activity!', 'Все още няма записи. Добавете първата си дейност!')}
           </Text>
         </View>
       ) : (

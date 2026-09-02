@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FeedStyles from '@/styles/FeedStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PostHeaderProps {
   discussion: any;
@@ -22,6 +23,7 @@ function PostHeader({
   handleEditPost,
   handleDeletePost
 }: PostHeaderProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.postHeader}>
       <View style={styles.authorContainer}>
@@ -42,7 +44,7 @@ function PostHeader({
         </Text>
       </View>
       <View style={styles.postHeaderRight}>
-        {discussion.is_pinned ? <Ionicons name="pin" size={16} color="#2E7D32" accessibilityLabel="Pinned discussion" /> : null}
+        {discussion.is_pinned ? <Ionicons name="pin" size={16} color="#2E7D32" accessibilityLabel={t('Pinned discussion', 'Закачена дискусия')} /> : null}
         <Text style={styles.postTimestamp}>
           {new Date(discussion.created_at).toLocaleDateString()}
         </Text>
@@ -69,7 +71,7 @@ function PostHeader({
               }}
             >
               <Ionicons name="pencil-outline" size={16} color="#2E7D32" />
-              <Text style={styles.optionText}>Edit</Text>
+              <Text style={styles.optionText}>{t('Edit', 'Редактирай')}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.optionItem}
@@ -79,7 +81,7 @@ function PostHeader({
               }}
             >
               <Ionicons name="trash-outline" size={16} color="#D32F2F" />
-              <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete</Text>
+              <Text style={[styles.optionText, { color: '#D32F2F' }]}>{t('Delete', 'Изтрий')}</Text>
             </TouchableOpacity>
           </View>
         )}

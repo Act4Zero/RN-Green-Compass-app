@@ -18,6 +18,14 @@ import {
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SUSTAINABILITY_INTERESTS } from '../../types/profiles';
+import { useAppLocale } from '@/context/AppLocaleContext';
+
+const INTERESTS_BG: Record<string, string> = {
+  'Zero Waste': 'Нулеви отпадъци', 'Clean Energy': 'Чиста енергия', 'Sustainable Food': 'Устойчива храна',
+  'Ethical Fashion': 'Етична мода', Conservation: 'Опазване на природата', 'Climate Action': 'Действия за климата',
+  'Water Conservation': 'Опазване на водата', 'Green Transportation': 'Зелен транспорт', Permaculture: 'Пермакултура',
+  'Sustainable Building': 'Устойчиво строителство',
+};
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -73,6 +81,7 @@ export default function ProfileForm({
   isLoading,
   error,
 }: ProfileFormProps) {
+  const { locale, t } = useAppLocale();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const [displayName, setDisplayName] = useState(initialValues.display_name);
@@ -92,7 +101,7 @@ export default function ProfileForm({
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
+      alert(t('Sorry, we need photo library permission to make this work!', 'Необходимо е разрешение за достъп до снимките.'));
       return;
     }
     
@@ -141,17 +150,17 @@ export default function ProfileForm({
     }
     
     if (!trimmedName) {
-      setValidationErrors(prev => ({ ...prev, displayName: 'Display name is required when not anonymous' }));
+      setValidationErrors(prev => ({ ...prev, displayName: t('Display name is required when not anonymous', 'Името е задължително, когато профилът не е анонимен') }));
       return false;
     } else if (trimmedName.length > 40) {
-      setValidationErrors(prev => ({ ...prev, displayName: 'Display name is too long' }));
+      setValidationErrors(prev => ({ ...prev, displayName: t('Display name is too long', 'Името е твърде дълго') }));
       return false;
     }
     
     // Check for potentially dangerous characters (HTML/script injection)
     const dangerousCharsRegex = /[<>\\]/;
     if (dangerousCharsRegex.test(trimmedName)) {
-      setValidationErrors(prev => ({ ...prev, displayName: 'Display name contains invalid characters' }));
+      setValidationErrors(prev => ({ ...prev, displayName: t('Display name contains invalid characters', 'Името съдържа невалидни знаци') }));
       return false;
     }
     
@@ -165,7 +174,7 @@ export default function ProfileForm({
     const interestsArray = Array.isArray(selectedInterests) ? selectedInterests : [];
     
     if (interestsArray.length === 0) {
-      setValidationErrors(prev => ({ ...prev, interests: 'Please select at least one interest' }));
+      setValidationErrors(prev => ({ ...prev, interests: t('Please select at least one interest', 'Изберете поне един интерес') }));
       return false;
     }
     
@@ -175,7 +184,7 @@ export default function ProfileForm({
     );
     
     if (invalidInterests.length > 0) {
-      setValidationErrors(prev => ({ ...prev, interests: 'Contains invalid interest selections' }));
+      setValidationErrors(prev => ({ ...prev, interests: t('Contains invalid interest selections', 'Има невалидно избрани интереси') }));
       return false;
     }
     
@@ -236,19 +245,19 @@ export default function ProfileForm({
               />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Text style={{ color: '#2E7D32' }}>No Image</Text>
+                <Text style={{ color: '#2E7D32' }}>{t('No Image', 'Няма снимка')}</Text>
               </View>
             )}
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Text style={styles.uploadButtonText}>
-                {avatarUrl ? 'Change Photo' : 'Upload Photo'}
+                {avatarUrl ? t('Change Photo', 'Смени снимката') : t('Upload Photo', 'Качи снимка')}
               </Text>
             </TouchableOpacity>
           </View>
           
           {/* Display Name */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Display Name</Text>
+            <Text style={styles.label}>{t('Display Name', 'Показвано име')}</Text>
             <TextInput
               style={styles.input as any}
               value={displayName}
@@ -259,7 +268,7 @@ export default function ProfileForm({
                   setValidationErrors(prev => ({ ...prev, displayName: undefined }));
                 }
               }}
-              placeholder="How would you like to be known?"
+              placeholder={t('How would you like to be known?', 'Как искате да ви познават?')}
               autoCapitalize="words"
               maxLength={40}
               onBlur={() => validateDisplayName(displayName)}
@@ -272,7 +281,7 @@ export default function ProfileForm({
           {/* Anonymity Toggle */}
           <View style={styles.formGroup}>
             <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Stay Anonymous</Text>
+              <Text style={styles.switchLabel}>{t('Stay Anonymous', 'Остани анонимен')}</Text>
               <Switch
                 value={isAnonymous}
                 onValueChange={setIsAnonymous}
@@ -282,14 +291,14 @@ export default function ProfileForm({
             </View>
             <Text style={styles.switchDescription}>
               {isAnonymous
-                ? 'Your identity will be hidden in community features'
-                : 'Your display name will be visible to others'}
+                ? t('Your identity will be hidden in community features', 'Самоличността ви ще бъде скрита в общността')
+                : t('Your display name will be visible to others', 'Показваното ви име ще е видимо за другите')}
             </Text>
           </View>
           
           {/* Interests Selection */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Your Sustainability Interests</Text>
+            <Text style={styles.label}>{t('Your Sustainability Interests', 'Вашите интереси в устойчивостта')}</Text>
             <View style={styles.interestsContainer}>
               {SUSTAINABILITY_INTERESTS.map((interest) => (
                 <TouchableOpacity
@@ -306,7 +315,7 @@ export default function ProfileForm({
                       selectedInterests.includes(interest) && styles.selectedInterestText,
                     ]}
                   >
-                    {interest}
+                    {locale === 'bg' ? INTERESTS_BG[interest] || interest : interest}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -326,7 +335,7 @@ export default function ProfileForm({
             disabled={isLoading}
           >
             <Text style={styles.submitButtonText}>
-              {isLoading ? 'Saving...' : 'Save Profile'}
+              {isLoading ? t('Saving...', 'Запазване...') : t('Save Profile', 'Запази профила')}
             </Text>
           </TouchableOpacity>
         </View>

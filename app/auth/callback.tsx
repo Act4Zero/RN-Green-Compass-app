@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import supabase from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // This component handles OAuth redirects
 export default function AuthCallback() {
@@ -12,6 +13,7 @@ export default function AuthCallback() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -61,7 +63,7 @@ export default function AuthCallback() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ActivityIndicator size="large" color={theme.colors.primary} />
-      <Text style={[styles.text, { color: theme.colors.text }]}>Completing sign in…</Text>
+      <Text style={[styles.text, { color: theme.colors.text }]}>{t('Completing sign in…', 'Завършване на входа…')}</Text>
     </View>
   );
 }

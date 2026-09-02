@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LeaderboardStyles from '@/styles/LeaderboardStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ErrorStateProps {
   error: Error | null;
@@ -10,18 +11,19 @@ interface ErrorStateProps {
 
 function ErrorState({ error, onRetry }: ErrorStateProps) {
   const styles = LeaderboardStyles;
+  const { t } = useAppLocale();
   
   return (
     <View style={styles.errorContainer}>
       <Ionicons name="alert-circle-outline" size={48} color="#D32F2F" />
       <Text style={styles.errorText}>
-        {error?.message || 'An error occurred while loading the leaderboard'}
+        {error?.message || t('An error occurred while loading the leaderboard', 'Възникна грешка при зареждане на класацията')}
       </Text>
       <TouchableOpacity 
         style={styles.retryButton}
         onPress={onRetry}
       >
-        <Text style={styles.retryButtonText}>Try Again</Text>
+        <Text style={styles.retryButtonText}>{t('Try Again', 'Опитайте отново')}</Text>
       </TouchableOpacity>
     </View>
   );

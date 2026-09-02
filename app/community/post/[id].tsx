@@ -117,8 +117,6 @@ export default function PostDetail() {
         visible={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={confirmDeleteComment}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment? This action cannot be undone."
       />
       
       {/* Post Options Menu */}
@@ -202,5 +200,4 @@ export default function PostDetail() {
     </KeyboardAvoidingView>
   );
 }
-
 

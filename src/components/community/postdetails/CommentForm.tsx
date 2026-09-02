@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import PostDetailStyles from '@/styles/community/PostDetailStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = PostDetailStyles;
 
@@ -25,6 +26,7 @@ function CommentForm({
   submitError,
   characterInfo
 }: CommentFormProps) {
+  const { t } = useAppLocale();
   const isDisabled = !content.trim() || characterInfo.isAtLimit || isSubmitting;
 
   return (
@@ -34,7 +36,7 @@ function CommentForm({
           styles.commentInput, 
           characterInfo.isAtLimit ? styles.commentInputAtLimit : undefined
         ]}
-        placeholder="Add a comment..."
+        placeholder={t('Add a comment...', 'Добавете коментар...')}
         placeholderTextColor="#757575"
         value={content}
         onChangeText={onContentChange}
@@ -47,7 +49,7 @@ function CommentForm({
           characterInfo.isNearLimit ? styles.characterCountNearLimit : undefined,
           characterInfo.isAtLimit ? styles.characterCountAtLimit : undefined
         ]}>
-          {characterInfo.remaining} characters left
+          {characterInfo.remaining} {t('characters left', 'оставащи знака')}
         </Text>
         <TouchableOpacity 
           style={[
@@ -60,7 +62,7 @@ function CommentForm({
           {isSubmitting ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitButtonText}>Post</Text>
+            <Text style={styles.submitButtonText}>{t('Post', 'Публикувай')}</Text>
           )}
         </TouchableOpacity>
         {submitError && (

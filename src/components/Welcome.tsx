@@ -5,6 +5,7 @@ import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from 'r
 import analyticsService from '../services/analyticsService';
 import { AppButton, Card } from './ui';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const BENEFITS = [
   { icon: 'analytics-outline' as const, title: 'See your real impact', text: 'Turn everyday choices into clear CO₂ savings, streaks, and progress.' },
@@ -16,6 +17,7 @@ export default function Welcome() {
   const { width } = useWindowDimensions();
   const router = useRouter();
   const { theme, toggleTheme } = useAppTheme();
+  const { t } = useAppLocale();
   const desktop = width >= 960;
 
   const navigate = (route: '/auth/signup' | '/auth/signin', event: string) => {
@@ -34,7 +36,7 @@ export default function Welcome() {
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Switch to ${theme.mode === 'dark' ? 'light' : 'dark'} mode`}
+              accessibilityLabel={t(`Switch to ${theme.mode === 'dark' ? 'light' : 'dark'} mode`, `Превключи към ${theme.mode === 'dark' ? 'светъл' : 'тъмен'} режим`)}
               onPress={toggleTheme}
               style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface }}
             >
@@ -46,17 +48,17 @@ export default function Welcome() {
             <View style={{ flex: 1, width: '100%', maxWidth: 650 }}>
               <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: theme.colors.accentSoft, marginBottom: 22 }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.success }} />
-                <Text style={[theme.typography.label, { color: theme.colors.primary }]}>A clearer path to everyday climate action</Text>
+                <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('A clearer path to everyday climate action', 'По-ясен път към ежедневни действия за климата')}</Text>
               </View>
               <Text style={[theme.typography.display, { color: theme.colors.text, fontSize: desktop ? 58 : 42, lineHeight: desktop ? 66 : 49, letterSpacing: -1.6 }]}>
-                Small habits.{`\n`}Measurable change.
+                {t('Small habits.', 'Малки навици.')}{`\n`}{t('Measurable change.', 'Измерима промяна.')}
               </Text>
-              <Text style={[theme.typography.body, { color: theme.colors.textMuted, fontSize: 18, lineHeight: 28, maxWidth: 570, marginTop: 22 }]}>Create a sustainability practice that fits real life. Green Compass helps you act, understand your impact, and keep moving forward.</Text>
+              <Text style={[theme.typography.body, { color: theme.colors.textMuted, fontSize: 18, lineHeight: 28, maxWidth: 570, marginTop: 22 }]}>{t('Create a sustainability practice that fits real life. Green Compass helps you act, understand your impact, and keep moving forward.', 'Изградете устойчиви навици, подходящи за реалния живот. Green Compass ви помага да действате, да разбирате въздействието си и да продължавате напред.')}</Text>
               <View style={{ flexDirection: desktop ? 'row' : 'column', gap: 12, marginTop: 32, maxWidth: desktop ? 430 : undefined }}>
-                <AppButton label="Start your journey" icon="arrow-forward" onPress={() => navigate('/auth/signup', 'welcome_signup_button_press')} style={{ flex: desktop ? 1 : undefined }} />
-                <AppButton label="Sign in" variant="ghost" onPress={() => navigate('/auth/signin', 'welcome_login_button_press')} style={{ minWidth: 130 }} />
+                <AppButton label={t('Start your journey', 'Започнете')} icon="arrow-forward" onPress={() => navigate('/auth/signup', 'welcome_signup_button_press')} style={{ flex: desktop ? 1 : undefined }} />
+                <AppButton label={t('Sign in', 'Вход')} variant="ghost" onPress={() => navigate('/auth/signin', 'welcome_login_button_press')} style={{ minWidth: 130 }} />
               </View>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 16 }]}>Free to begin · Private by design · Built for meaningful progress</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 16 }]}>{t('Free to begin · Private by design · Built for meaningful progress', 'Безплатно начало · Поверителност по дизайн · Създадено за смислен напредък')}</Text>
             </View>
 
             <View style={{ flex: 1, width: '100%', maxWidth: 560 }}>
@@ -64,8 +66,8 @@ export default function Welcome() {
                 <View style={{ position: 'absolute', right: -50, top: -70, width: 190, height: 190, borderRadius: 95, backgroundColor: theme.colors.accentSoft }} />
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 26 }}>
                   <View>
-                    <Text style={[theme.typography.label, { color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }]}>This month</Text>
-                    <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 4 }]}>Your impact grows here</Text>
+                    <Text style={[theme.typography.label, { color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 }]}>{t('This month', 'Този месец')}</Text>
+                    <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 4 }]}>{t('Your impact grows here', 'Въздействието ви расте тук')}</Text>
                   </View>
                   <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="leaf" size={24} color={theme.colors.textInverse} />
@@ -73,9 +75,9 @@ export default function Welcome() {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 10, marginBottom: 26 }}>
                   {[
-                    ['24', 'actions'],
+                    ['24', t('actions', 'действия')],
                     ['18.6', 'kg CO₂'],
-                    ['8', 'day streak'],
+                    ['8', t('day streak', 'дневна серия')],
                   ].map(([value, label]) => (
                     <View key={label} style={{ flex: 1, padding: 14, borderRadius: theme.radii.md, backgroundColor: theme.colors.surfaceMuted }}>
                       <Text style={[theme.typography.metric, { color: theme.colors.primary, fontSize: 22 }]}>{value}</Text>
@@ -90,8 +92,8 @@ export default function Welcome() {
                         <Ionicons name={benefit.icon} size={20} color={theme.colors.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={[theme.typography.h3, { color: theme.colors.text, fontSize: 15 }]}>{benefit.title}</Text>
-                        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 2 }]}>{benefit.text}</Text>
+                        <Text style={[theme.typography.h3, { color: theme.colors.text, fontSize: 15 }]}>{t(benefit.title, benefit.icon === 'analytics-outline' ? 'Вижте реалното си въздействие' : benefit.icon === 'compass-outline' ? 'Открийте по-зелени места' : 'Действайте заедно')}</Text>
+                        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 2 }]}>{t(benefit.text, benefit.icon === 'analytics-outline' ? 'Превърнете ежедневните избори в ясни CO₂ спестявания, серии и напредък.' : benefit.icon === 'compass-outline' ? 'Открийте устойчиви услуги и зарядни станции около вас.' : 'Включвайте се в практически предизвикателства и учете от действаща общност.')}</Text>
                       </View>
                     </View>
                   ))}

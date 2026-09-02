@@ -6,6 +6,7 @@ import { formatLeaderboardForSharing } from '@/utils/sharing/leaderboardShareUti
 import LeaderboardShareModal from './LeaderboardShareModal';
 import styles from './MotivationalMessage.styles';
 import LeaderboardStyles from '@/styles/LeaderboardStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface MotivationalMessageProps {
   motivationalInfo: MotivationalInfo;
@@ -30,6 +31,7 @@ function MotivationalMessage({
   currentStreak,
   totalEntries
 }: MotivationalMessageProps) {
+  const { t } = useAppLocale();
   // State for controlling the share modal visibility
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   
@@ -46,10 +48,10 @@ function MotivationalMessage({
   // Handle share error
   const handleShareError = useCallback((error: string) => {
     Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing your leaderboard ranking. Please try again.'
+      t('Sharing Error', 'Грешка при споделяне'),
+      t('There was a problem sharing your leaderboard ranking. Please try again.', 'Възникна проблем при споделяне на класирането. Опитайте отново.')
     );
-  }, []);
+  }, [t]);
   
   // If there's no message and user isn't ranked, don't render anything
   if (!motivationalInfo.message && (!currentUserRank || currentUserRank === 0)) {
@@ -86,7 +88,7 @@ function MotivationalMessage({
       <View style={styles.container}>
         <View style={styles.messageWithButton}>
           <Text style={LeaderboardStyles.motivationalText}>
-            {motivationalInfo.message || `You're ranked #${currentUserRank} on the ${leaderboardType === 'points' ? 'Impact' : 'Streak'} Leaderboard`}
+            {motivationalInfo.message || t(`You're ranked #${currentUserRank} on the ${leaderboardType === 'points' ? 'Impact' : 'Streak'} Leaderboard`, `Вие сте №${currentUserRank} в класацията за ${leaderboardType === 'points' ? 'въздействие' : 'серия'}`)}
           </Text>
         </View>
         
@@ -97,7 +99,7 @@ function MotivationalMessage({
             activeOpacity={0.7}
           >
             <Ionicons name="share-social" size={16} style={styles.shareIcon} />
-            <Text style={styles.shareButtonText}>Share</Text>
+            <Text style={styles.shareButtonText}>{t('Share', 'Сподели')}</Text>
           </TouchableOpacity>
         )}
       </View>
