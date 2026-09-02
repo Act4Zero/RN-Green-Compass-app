@@ -13,6 +13,10 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
 }));
 
+jest.mock('@/context/AppLocaleContext', () => ({
+  useAppLocale: () => ({ locale: 'en', t: (english: string) => english }),
+}));
+
 describe('offsetting UI primitives', () => {
   it('exposes selected choice state and updates through an accessible control', () => {
     const onChange = jest.fn();
