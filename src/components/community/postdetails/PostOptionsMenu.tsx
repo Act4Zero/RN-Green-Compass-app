@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useWindowDimensions } from 'react-native';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PostOptionsMenuProps {
   postId: string;
@@ -29,6 +30,7 @@ export function PostOptionsMenu({
   onDelete 
 }: PostOptionsMenuProps) {
   const { width } = useWindowDimensions();
+  const { t } = useAppLocale();
   const isTabletOrLarger = width >= 768;
 
   if (!isOpen) return null;
@@ -47,14 +49,14 @@ export function PostOptionsMenu({
         styles.menuContainer,
         { width: isTabletOrLarger ? 240 : 200 }
       ]}>
-        <Text style={styles.titleText}>Post Options</Text>
+        <Text style={styles.titleText}>{t('Post Options', 'Опции за публикацията')}</Text>
         
         <TouchableOpacity 
           style={styles.optionItem}
           onPress={() => onEdit(postId)}
         >
           <Ionicons name="pencil-outline" size={20} color="#2E7D32" />
-          <Text style={[styles.optionText, { color: '#424242' }]}>Edit Post</Text>
+          <Text style={[styles.optionText, { color: '#424242' }]}>{t('Edit Post', 'Редактирай')}</Text>
         </TouchableOpacity>
         
         <View style={styles.divider} />
@@ -64,7 +66,7 @@ export function PostOptionsMenu({
           onPress={() => onDelete(postId)}
         >
           <Ionicons name="trash-outline" size={20} color="#D32F2F" />
-          <Text style={[styles.optionText, { color: '#D32F2F' }]}>Delete Post</Text>
+          <Text style={[styles.optionText, { color: '#D32F2F' }]}>{t('Delete Post', 'Изтрий')}</Text>
         </TouchableOpacity>
       </View>
     </View>

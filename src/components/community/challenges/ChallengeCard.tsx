@@ -8,6 +8,7 @@ import { formatChallengeForSharing } from '@/utils/sharing/challengeShareUtils';
 import ChallengeShareModal from './ChallengeShareModal';
 import formatDate from '@/utils/formatDate';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -19,6 +20,7 @@ const styles = ChallengeStyles;
 function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const { displayName } = useUserDisplayName();
+  const { t } = useAppLocale();
   
   // Format the dates for display
   const startDate = new Date(challenge.start_date);
@@ -34,7 +36,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   const getStatusInfo = () => {
     if (hasEnded) {
       return { 
-        label: 'Completed',
+        label: t('Completed', 'Завършено'),
         icon: 'checkmark-circle',
         color: '#9E9E9E'
       };
@@ -42,7 +44,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
     
     if (!isActive) {
       return {
-        label: 'Upcoming',
+        label: t('Upcoming', 'Предстоящо'),
         icon: 'time',
         color: '#FFB74D'
       };
@@ -50,14 +52,14 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
     
     if (challenge.is_participant) {
       return {
-        label: 'Participating',
+        label: t('Participating', 'Участвате'),
         icon: 'people',
         color: '#2E7D32'
       };
     }
     
     return {
-      label: 'Active',
+      label: t('Active', 'Активно'),
       icon: 'flame',
       color: '#4CAF50'
     };
@@ -104,12 +106,12 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
       setIsShareModalVisible(true);
     } else {
       Alert.alert(
-        'Sharing Unavailable',
-        'You can only share active or completed challenges.',
-        [{ text: 'OK' }]
+        t('Sharing Unavailable', 'Споделянето не е достъпно'),
+        t('You can only share active or completed challenges.', 'Можете да споделяте само активни или завършени предизвикателства.'),
+        [{ text: t('OK', 'Добре') }]
       );
     }
-  }, [challenge.start_date, challenge.end_date]);
+  }, [challenge.start_date, challenge.end_date, t]);
   
   // Handle closing the share modal
   const handleCloseShareModal = useCallback(() => {
@@ -119,10 +121,10 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   // Handle share error
   const handleShareError = useCallback((error: string) => {
     Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing this challenge. Please try again.'
+      t('Sharing Error', 'Грешка при споделяне'),
+      t('There was a problem sharing this challenge. Please try again.', 'Възникна проблем при споделянето. Опитайте отново.')
     );
-  }, []);
+  }, [t]);
 
   return (
     <>
@@ -155,7 +157,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
               />
             </View>
             <Text style={{ fontSize: 12, color: '#2E7D32', fontWeight: '500' }}>
-              Your progress: {challenge.progress_metric || 0}%
+              {t('Your progress', 'Вашият напредък')}: {challenge.progress_metric || 0}%
             </Text>
           </View>
         )}
@@ -164,7 +166,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
           <Text style={styles.challengeDates}>{dateString}</Text>
           <Text style={styles.participantCount}>
             <Ionicons name="people" size={12} color="#2E7D32" /> {' '}
-            {challenge.participant_count || 0} participants
+            {challenge.participant_count || 0} {t('participants', 'участници')}
           </Text>
           
           {/* Share Button - visually indicate if sharing is available */}
@@ -185,7 +187,7 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
               <Text style={[cardStyles.shareButtonText, 
                 !(isActive || hasEnded) && cardStyles.disabledShareButtonText
               ]}>
-                Share
+                {t('Share', 'Сподели')}
               </Text>
             </TouchableOpacity>
           </View>

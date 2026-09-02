@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import PostDetailStyles from '@/styles/community/PostDetailStyles';
 import CommentItem from '../CommentItem';
 import CommentEditForm from '../CommentEditForm';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = PostDetailStyles;
 
@@ -54,20 +55,21 @@ function CommentsSection({
   onSaveEdit,
   onCancelEdit
 }: CommentsSectionProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.commentsContainer}>
       <Text style={styles.commentsTitle}>
-        Comments ({comments.length})
+        {t('Comments', 'Коментари')} ({comments.length})
       </Text>
       
       {isLoading ? (
         <View style={styles.loadingCommentsContainer}>
           <ActivityIndicator size="small" color="#2E7D32" />
-          <Text style={styles.loadingCommentsText}>Loading comments...</Text>
+          <Text style={styles.loadingCommentsText}>{t('Loading comments...', 'Зареждане на коментарите...')}</Text>
         </View>
       ) : error ? (
         <View style={styles.errorCommentsContainer}>
-          <Text style={styles.errorCommentsText}>Error loading comments: {error}</Text>
+          <Text style={styles.errorCommentsText}>{t('Error loading comments', 'Грешка при зареждане на коментарите')}: {error}</Text>
         </View>
       ) : comments.length > 0 ? (
         comments.map(comment => (
@@ -93,7 +95,7 @@ function CommentsSection({
         ))
       ) : (
         <View style={styles.noCommentsContainer}>
-          <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+          <Text style={styles.noCommentsText}>{t('No comments yet. Be the first to comment!', 'Все още няма коментари. Напишете първия!')}</Text>
         </View>
       )}
     </View>

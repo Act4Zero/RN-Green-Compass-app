@@ -106,4 +106,10 @@ describe('offsetting service fallback contracts', () => {
     const recommendations = await offsettingService.getPersonalizedKnowledge([], [], 'user-4', 'intermediate');
     expect(recommendations.map((item) => item.id)).toEqual(['beginner', 'intermediate']);
   });
+
+  it('requests personalized learning content in the selected app language', async () => {
+    await offsettingService.getPersonalizedKnowledge([], [], 'user-bg', 'beginner', 'bg');
+
+    expect(mockGetKnowledgeHome).toHaveBeenCalledWith(expect.objectContaining({ locale: 'bg', userId: 'user-bg' }));
+  });
 });

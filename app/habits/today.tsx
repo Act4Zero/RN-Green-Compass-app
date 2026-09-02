@@ -41,14 +41,14 @@ export default function TodayScreen() {
       const interests = profile?.interests || [];
       const data = await offsettingService.getDashboard(user.id, dateKey(), interests);
       setDashboard(data);
-      setKnowledge(await offsettingService.getPersonalizedKnowledge(interests, Object.keys(data.impact.byCategory || {}), user.id, data.learningStage));
+      setKnowledge(await offsettingService.getPersonalizedKnowledge(interests, Object.keys(data.impact.byCategory || {}), user.id, data.learningStage, locale));
     } catch (loadError) {
       setDashboard(null);
       setError(loadError instanceof Error ? loadError.message : t('Unable to load today’s practice.', 'Днешната практика не може да бъде заредена.'));
     } finally {
       setLoading(false);
     }
-  }, [t, user]);
+  }, [locale, t, user]);
 
   useFocusEffect(useCallback(() => { if (user) void load(); }, [user, load]));
 

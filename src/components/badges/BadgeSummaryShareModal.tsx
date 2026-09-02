@@ -19,6 +19,7 @@ import * as FileSystem from 'expo-file-system';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
 import ShareButton from '../sharing/ShareButton';
 import { shareToSocialPlatform, SocialPlatform } from '../../utils/sharing/shareUtils';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeSummaryShareModalProps {
   isVisible: boolean;
@@ -45,6 +46,7 @@ function BadgeSummaryShareModal({
   badgeData,
   shareContent,
 }: BadgeSummaryShareModalProps) {
+  const { t } = useAppLocale();
   const viewShotRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
   const [isSharing, setIsSharing] = useState(false);
@@ -155,7 +157,7 @@ function BadgeSummaryShareModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Share Badge Achievements</Text>
+            <Text style={styles.modalTitle}>{t('Share Badge Achievements', 'Споделяне на постиженията')}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#444" />
             </TouchableOpacity>
@@ -169,7 +171,7 @@ function BadgeSummaryShareModal({
             >
               <View style={styles.shareCard}>
                 <View style={styles.shareCardHeader}>
-                  <Text style={styles.shareCardTitle}>Badge Achievements</Text>
+                  <Text style={styles.shareCardTitle}>{t('Badge Achievements', 'Постижения със значки')}</Text>
                   <View style={styles.logoContainer}>
                     <Ionicons name="leaf" size={24} color="#2E7D32" />
                   </View>
@@ -179,11 +181,11 @@ function BadgeSummaryShareModal({
                   <View style={styles.progressInfo}>
                     <Text style={styles.progressText}>
                       <Text style={styles.progressHighlight}>{badgeData.earnedBadgeCount}</Text>
-                      {" of "}
+                      {t(' of ', ' от ')}
                       <Text style={styles.totalBadges}>{badgeData.totalBadgeCount}</Text>
-                      {" badges earned"}
+                      {t(' badges earned', ' спечелени значки')}
                     </Text>
-                    <Text style={styles.progressPercentage}>{completionPercentage}% Complete</Text>
+                    <Text style={styles.progressPercentage}>{completionPercentage}% {t('Complete', 'завършено')}</Text>
                   </View>
                   
                   <View style={styles.progressBarContainer}>
@@ -198,7 +200,7 @@ function BadgeSummaryShareModal({
                 
                 {badgeData.recentBadgeNames.length > 0 && (
                   <View style={styles.recentBadgesContainer}>
-                    <Text style={styles.recentBadgesTitle}>Recent Achievements:</Text>
+                    <Text style={styles.recentBadgesTitle}>{t('Recent Achievements:', 'Последни постижения:')}</Text>
                     {badgeData.recentBadgeNames.map((name, index) => (
                       <View key={index} style={styles.badgeItem}>
                         <Ionicons name="trophy" size={14} color="#2E7D32" style={{marginRight: 6}} />
@@ -210,18 +212,18 @@ function BadgeSummaryShareModal({
                 
                 <View style={styles.shareCardFooter}>
                   {displayName ? (
-                    <Text style={styles.footerText}>{displayName}'s sustainability journey</Text>
+                    <Text style={styles.footerText}>{t(`${displayName}'s sustainability journey`, `Устойчивият път на ${displayName}`)}</Text>
                   ) : (
-                    <Text style={styles.footerText}>My sustainability journey</Text>
+                    <Text style={styles.footerText}>{t('My sustainability journey', 'Моят път към устойчивостта')}</Text>
                   )}
-                  <Text style={styles.appPromo}>via Green Compass App</Text>
+                  <Text style={styles.appPromo}>{t('via Green Compass App', 'чрез Green Compass')}</Text>
                 </View>
               </View>
             </ViewShot>
           </View>
 
           <View style={styles.shareOptionsContainer}>
-            <Text style={styles.shareOptionsTitle}>Share to:</Text>
+            <Text style={styles.shareOptionsTitle}>{t('Share to:', 'Сподели чрез:')}</Text>
             
             {isSharing ? (
               <ActivityIndicator size="large" color="#2E7D32" />
@@ -248,7 +250,7 @@ function BadgeSummaryShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="General"
+                      label={t('General', 'Други')}
                       platformIcon="general"
                       onPress={() => handleShare('general')}
                       disabled={isSharing}

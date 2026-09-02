@@ -5,6 +5,7 @@ import ChallengeStyles from '@/styles/community/ChallengeStyles';
 import useParticipants from '@/hooks/challenge/useParticipants';
 import { ChallengeParticipant } from '@/types/community/challenge';
 import { useAvatarUrl } from '@/hooks/useAvatarUrl';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ChallengeParticipantsProps {
   challengeId: string;
@@ -23,6 +24,7 @@ const imageStyles = {
 };
 
 function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
+  const { t } = useAppLocale();
   const { participants, isLoading, error, loadParticipants } = useParticipants({ challengeId });
   
   // Load participants when the component mounts
@@ -38,7 +40,7 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
 
   // Component for individual participant items with cached avatar URLs
   function ParticipantItem({ user, progress_metric }: { user?: { display_name: string | null; full_name?: string | null; avatar_url: string | null }, progress_metric: number }) {
-    const displayName = user?.display_name || user?.full_name || 'Unknown';
+    const displayName = user?.display_name || user?.full_name || t('Unknown', 'Неизвестен');
     const initial = displayName.charAt(0) || '?';
     const { url: avatarUrl, loading: avatarLoading } = useAvatarUrl(user?.avatar_url);
     return (
@@ -73,10 +75,10 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
   if (!isLoading && participants.length === 0) {
     return (
       <View style={styles.detailCard}>
-        <Text style={styles.progressLabel}>Participants</Text>
+        <Text style={styles.progressLabel}>{t('Participants', 'Участници')}</Text>
         <View style={{ alignItems: 'center', padding: 16 }}>
           <Text style={{ fontSize: 14, color: '#777777', marginTop: 8 }}>
-            No participants yet. Be the first to join!
+            {t('No participants yet. Be the first to join!', 'Все още няма участници. Бъдете първият!')}
           </Text>
         </View>
       </View>
@@ -85,7 +87,7 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
 
   return (
     <View style={styles.detailCard}>
-      <Text style={styles.progressLabel}>Participants ({participants.length})</Text>
+      <Text style={styles.progressLabel}>{t('Participants', 'Участници')} ({participants.length})</Text>
       
       {isLoading ? (
         <View style={{ padding: 16, alignItems: 'center' }}>
@@ -103,7 +105,7 @@ function ChallengeParticipants({ challengeId }: ChallengeParticipantsProps) {
           scrollEnabled={false}
           ListEmptyComponent={
             <Text style={{ textAlign: 'center', padding: 16, color: '#777777' }}>
-              No participants yet.
+              {t('No participants yet.', 'Все още няма участници.')}
             </Text>
           }
         />

@@ -24,6 +24,7 @@ import LoadingIndicator from '@/components/community/newpost/LoadingIndicator';
 import ToggleButton from '@/components/community/newpost/ToggleButton';
 import type { DiscussionCategory } from '@/types/community/community';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const CATEGORIES: { value: DiscussionCategory; label: string }[] = [
   { value: 'sustainable_living', label: 'Living tips' },
@@ -41,6 +42,7 @@ function LoadingState() {
 // Main component
 export default function NewPost() {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   
@@ -96,12 +98,12 @@ export default function NewPost() {
         <View style={[styles.content, isTabletOrLarger && { alignSelf: 'center', width: '60%', maxWidth: 700 }]}>
           {/* Header */}
           <NewPostHeader 
-            title={isEditMode ? 'Edit Post' : 'Create Post'}
+            title={isEditMode ? t('Edit Post', 'Редактиране на публикация') : t('Create Post', 'Нова публикация')}
             onBack={goBack}
           />
 
           {/* Input or Preview */}
-          {!isPreviewMode ? <View style={{ marginBottom: 14, gap: 8 }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>Forum category</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{CATEGORIES.map((option) => { const active = category === option.value; return <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ selected: active }} onPress={() => setCategory(option.value)} style={{ minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, borderRadius: theme.radii.pill, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface }}><Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted }]}>{option.label}</Text></Pressable>; })}</View></View> : null}
+          {!isPreviewMode ? <View style={{ marginBottom: 14, gap: 8 }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>{t('Forum category', 'Категория във форума')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{CATEGORIES.map((option) => { const active = category === option.value; const bg = option.value === 'sustainable_living' ? 'Устойчив живот' : option.value === 'diy_projects' ? 'Направи си сам' : option.value === 'carbon_reduction' ? 'Намаляване на въглерода' : option.value === 'community_projects' ? 'Общностни проекти' : 'Въпроси'; return <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ selected: active }} onPress={() => setCategory(option.value)} style={{ minHeight: 40, justifyContent: 'center', paddingHorizontal: 12, borderRadius: theme.radii.pill, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface }}><Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted }]}>{t(option.label, bg)}</Text></Pressable>; })}</View></View> : null}
           {isPreviewMode ? (
             <PostPreview 
               content={newPostContent} 
@@ -127,7 +129,7 @@ export default function NewPost() {
                 />
                 <ToggleButton 
                   icon={isPreviewMode ? "create-outline" : "eye-outline"}
-                  label={isPreviewMode ? "Edit" : "Preview"}
+                  label={isPreviewMode ? t('Edit', 'Редактирай') : t('Preview', 'Преглед')}
                   onPress={togglePreviewMode}
                 />
               </View>

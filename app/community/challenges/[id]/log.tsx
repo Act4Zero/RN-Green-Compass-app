@@ -18,6 +18,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
 import useSelectedChallenge from '@/hooks/challenge/useSelectedChallenge';
 import useActivityLogs from '@/hooks/challenge/useActivityLogs';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Styles for this component
 const styles = ChallengeStyles;
@@ -35,6 +36,7 @@ export default function LogActivity() {
   const [progress, setProgress] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addNotification } = useNotification();
+  const { t } = useAppLocale();
   
   // Use our selected challenge hook to get challenge details
   const {
@@ -69,7 +71,7 @@ export default function LogActivity() {
     if (!activityTitle.trim()) {
       addNotification({
         type: 'toast',
-        message: 'Please enter an activity title',
+        message: t('Please enter an activity title', 'Въведете заглавие на дейността'),
         severity: 'error',
       });
       return;
@@ -83,7 +85,7 @@ export default function LogActivity() {
       await logActivity(activityTitle, activityDescription, progressValue);
       addNotification({
         type: 'toast',
-        message: 'Your activity has been logged successfully!',
+        message: t('Your activity has been logged successfully!', 'Дейността е записана успешно!'),
         severity: 'success',
         duration: 2000,
       });
@@ -94,7 +96,7 @@ export default function LogActivity() {
       console.error('Error logging activity:', error);
       addNotification({
         type: 'toast',
-        message: 'Failed to log your activity. Please try again.',
+        message: t('Failed to log your activity. Please try again.', 'Дейността не можа да бъде записана. Опитайте отново.'),
         severity: 'error',
       });
     } finally {
@@ -149,7 +151,7 @@ export default function LogActivity() {
                 <Ionicons name="arrow-back" size={24} color="#2E7D32" />
               </TouchableOpacity>
               <View>
-                <Text style={styles.title}>Log Activity</Text>
+                <Text style={styles.title}>{t('Log Activity', 'Добавяне на дейност')}</Text>
                 <Text style={styles.subtitle}>{challenge.title}</Text>
               </View>
             </View>
@@ -158,7 +160,7 @@ export default function LogActivity() {
           <View style={styles.detailCard}>
             {/* Activity Title */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>Activity Title *</Text>
+              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>{t('Activity Title *', 'Заглавие на дейността *')}</Text>
               <TextInput
                 style={{
                   backgroundColor: '#F5F5F5',
@@ -167,7 +169,7 @@ export default function LogActivity() {
                   fontSize: 16,
                   color: '#333333',
                 }}
-                placeholder="e.g., Used reusable water bottle today"
+                placeholder={t('e.g., Used reusable water bottle today', 'напр. Днес използвах бутилка за многократна употреба')}
                 value={activityTitle}
                 onChangeText={setActivityTitle}
               />
@@ -175,7 +177,7 @@ export default function LogActivity() {
             
             {/* Activity Description */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>Description (Optional)</Text>
+              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>{t('Description (Optional)', 'Описание (незадължително)')}</Text>
               <TextInput
                 style={{
                   backgroundColor: '#F5F5F5',
@@ -186,7 +188,7 @@ export default function LogActivity() {
                   height: 100,
                   textAlignVertical: 'top',
                 }}
-                placeholder="Describe your activity in detail..."
+                placeholder={t('Describe your activity in detail...', 'Опишете дейността си подробно...')}
                 value={activityDescription}
                 onChangeText={setActivityDescription}
                 multiline
@@ -195,7 +197,7 @@ export default function LogActivity() {
             
             {/* Progress */}
             <View style={{ marginBottom: 24 }}>
-              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>Progress Points (1-10)</Text>
+              <Text style={[styles.progressLabel, { marginBottom: 8 }]}>{t('Progress Points (1-10)', 'Точки за напредък (1–10)')}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TouchableOpacity
                   style={{
@@ -248,7 +250,7 @@ export default function LogActivity() {
                 </TouchableOpacity>
               </View>
               <Text style={{ fontSize: 12, color: '#777777', marginTop: 4 }}>
-                Estimate how much impact this activity had (1 = small, 10 = large)
+                {t('Estimate how much impact this activity had (1 = small, 10 = large)', 'Оценете въздействието на дейността (1 = малко, 10 = голямо)')}
               </Text>
             </View>
             
@@ -261,7 +263,7 @@ export default function LogActivity() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.joinButtonText}>Log Activity</Text>
+                <Text style={styles.joinButtonText}>{t('Log Activity', 'Запиши дейността')}</Text>
               )}
             </TouchableOpacity>
           </View> {/* close detailCard */}

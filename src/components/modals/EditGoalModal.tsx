@@ -6,6 +6,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { EnhancedGoal, TimeFrequency } from '../../types/goal.types';
 import { editGoalModalStyles } from '../home/styles/EditGoalModal.styles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface EditGoalModalProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export default function EditGoalModal({
   onDelete,
   loading 
 }: EditGoalModalProps) {
+  const { t } = useAppLocale();
   const [editedGoalName, setEditedGoalName] = useState('');
   const [editedGoalCategory, setEditedGoalCategory] = useState('');
   const [editedGoalTarget, setEditedGoalTarget] = useState('');
@@ -69,13 +71,13 @@ export default function EditGoalModal({
       if (result.success) {
         notification?.addNotification({
           type: 'toast',
-          message: 'Goal deleted successfully',
+          message: t('Goal deleted successfully', 'Целта е изтрита успешно'),
           severity: 'success',
         });
       } else {
         notification?.addNotification({
           type: 'toast',
-          message: result.error || 'Failed to delete goal',
+          message: result.error || t('Failed to delete goal', 'Целта не можа да бъде изтрита'),
           severity: 'error',
         });
       }
@@ -110,11 +112,11 @@ export default function EditGoalModal({
         onClose();
         notification?.addNotification({
           type: 'toast',
-          message: 'Goal updated successfully',
+          message: t('Goal updated successfully', 'Целта е обновена успешно'),
           severity: 'success',
         });
       } else {
-        setError(result.error || 'Failed to update goal. Please try again.');
+        setError(result.error || t('Failed to update goal. Please try again.', 'Целта не можа да бъде обновена. Опитайте отново.'));
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -133,7 +135,7 @@ export default function EditGoalModal({
       <View style={editGoalModalStyles.modalContainer}>
         <View style={editGoalModalStyles.modalContent}>
           <View style={editGoalModalStyles.modalHeader}>
-            <Text style={editGoalModalStyles.modalTitle}>Edit Goal</Text>
+            <Text style={editGoalModalStyles.modalTitle}>{t('Edit Goal', 'Редактиране на цел')}</Text>
             <TouchableOpacity style={editGoalModalStyles.modalCloseButton} onPress={onClose}>
               <Ionicons name="close" size={24} color="#2E7D32" />
             </TouchableOpacity>
@@ -144,7 +146,7 @@ export default function EditGoalModal({
               <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
             )}
             
-            <Text style={editGoalModalStyles.modalLabel}>Goal Name</Text>
+            <Text style={editGoalModalStyles.modalLabel}>{t('Goal Name', 'Име на целта')}</Text>
             <Input
               value={editedGoalName}
               onChangeText={(text) => {
@@ -153,12 +155,12 @@ export default function EditGoalModal({
                   setEditedGoalName(text);
                 }
               }}
-              placeholder="Enter goal name (max 50 characters)"
+              placeholder={t('Enter goal name (max 50 characters)', 'Въведете име на целта (до 50 знака)')}
               maxLength={50}
               error={error && error.includes('Goal name') ? error : undefined}
             />
             
-            <Text style={editGoalModalStyles.modalLabel}>Category</Text>
+            <Text style={editGoalModalStyles.modalLabel}>{t('Category', 'Категория')}</Text>
             <View style={{ marginBottom: 16 }}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={{ flexDirection: 'row', flexWrap: 'nowrap' }}>
@@ -179,7 +181,7 @@ export default function EditGoalModal({
                           { color: editedGoalCategory === category ? 'white' : '#2E7D32' }
                         ]}
                       >
-                        {category}
+                        {t(category, category === 'Mobility' ? 'Мобилност' : category === 'Food' ? 'Храна' : category === 'Heating' ? 'Отопление' : 'Домакински дейности')}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -187,7 +189,7 @@ export default function EditGoalModal({
               </ScrollView>
             </View>
             
-            <Text style={editGoalModalStyles.modalLabel}>Target Value</Text>
+            <Text style={editGoalModalStyles.modalLabel}>{t('Target Value', 'Целева стойност')}</Text>
             <Input
               value={editedGoalTarget}
               onChangeText={(text) => {
@@ -201,7 +203,7 @@ export default function EditGoalModal({
               error={error && error.includes('Target value') ? error : undefined}
             />
             
-            <Text style={editGoalModalStyles.modalLabel}>Current Value</Text>
+            <Text style={editGoalModalStyles.modalLabel}>{t('Current Value', 'Текуща стойност')}</Text>
             <Input
               value={editedGoalCurrent}
               onChangeText={(text) => {
@@ -215,7 +217,7 @@ export default function EditGoalModal({
               error={error && error.includes('Current value') ? error : undefined}
             />
             
-            <Text style={editGoalModalStyles.modalLabel}>Time Frequency</Text>
+            <Text style={editGoalModalStyles.modalLabel}>{t('Time Frequency', 'Честота')}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
               {(['daily', 'weekly', 'monthly', 'one-time'] as TimeFrequency[]).map((frequency) => (
                 <TouchableOpacity 
@@ -263,7 +265,7 @@ export default function EditGoalModal({
               activeOpacity={0.7}
             >
               <Ionicons name="trash-outline" size={20} color="#D32F2F" />
-              <Text style={editGoalModalStyles.deleteButtonText}>Delete Goal</Text>
+              <Text style={editGoalModalStyles.deleteButtonText}>{t('Delete Goal', 'Изтрий целта')}</Text>
             </TouchableOpacity>
           </View>
         </View>

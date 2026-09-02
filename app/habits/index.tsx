@@ -46,14 +46,14 @@ export default function HabitsOverview() {
       const [balance, progress, tips] = await Promise.all([offsettingService.getCarbonBalance(user.id, 'week'), offsettingService.getGamificationLevel(user.id), offsettingService.getPersonalizedCarbonTips(user.id, interests, Object.keys(data.impact.byCategory || {}))]);
       setCarbonBalance(balance); setGamification(progress); setCarbonTips(tips);
       const activeCategories = Object.keys(data.impact.byCategory || {});
-      setRecommendations(await offsettingService.getPersonalizedKnowledge(interests, activeCategories, user.id, data.learningStage));
+      setRecommendations(await offsettingService.getPersonalizedKnowledge(interests, activeCategories, user.id, data.learningStage, locale));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : t('Unable to load your impact dashboard.', 'Таблото за въздействие не можа да се зареди.'));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [t, user]);
+  }, [locale, t, user]);
 
   useFocusEffect(useCallback(() => {
     if (!authLoading && !user) router.replace('/auth/signin');

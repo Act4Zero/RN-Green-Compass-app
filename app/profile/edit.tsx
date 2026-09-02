@@ -7,6 +7,7 @@ import ProfileForm from '@/components/profile/ProfileForm';
 import { Ionicons } from '@expo/vector-icons';
 import profileEditStyles from '@/styles/ProfileEdit.styles';
 import useProfileManager from '@/hooks/useProfileManager';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export default function EditProfileScreen() {
   const { width } = useWindowDimensions();
@@ -16,6 +17,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const styles = profileEditStyles;
   const { addNotification } = useNotification();
+  const { t } = useAppLocale();
 
   // Track if we've already tracked this screen view
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -81,7 +83,7 @@ export default function EditProfileScreen() {
       // Show success message and navigate back to profile screen
       addNotification({
         type: 'toast',
-        message: 'Your profile has been updated!',
+        message: t('Your profile has been updated!', 'Профилът ви е обновен!'),
         severity: 'success',
         duration: 3000,
       });
@@ -102,7 +104,7 @@ export default function EditProfileScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
+        <Text style={styles.loadingText}>{t('Loading your profile...', 'Зареждане на профила...')}</Text>
       </View>
     );
   }
@@ -133,8 +135,8 @@ export default function EditProfileScreen() {
               <Ionicons name="arrow-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Edit Profile</Text>
-              <Text style={styles.subtitle}>Update your personal information</Text>
+              <Text style={styles.title}>{t('Edit Profile', 'Редактиране на профила')}</Text>
+              <Text style={styles.subtitle}>{t('Update your personal information', 'Обновете личната си информация')}</Text>
             </View>
           </View>
           {profile && (

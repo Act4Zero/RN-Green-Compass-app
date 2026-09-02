@@ -17,6 +17,7 @@ import { useBadges } from '@/context/BadgesContext';
 import BadgeList from '@/components/badges/BadgeList';
 import badgesStyles from '@/styles/Badges.styles';
 import { Badge, BadgeCategoryType } from '@/types/community/badges';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export default function BadgesScreen() {
   const { width } = useWindowDimensions();
@@ -24,6 +25,7 @@ export default function BadgesScreen() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const styles = badgesStyles;
+  const { t } = useAppLocale();
   
   const {
     userBadges,
@@ -85,7 +87,7 @@ const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCat
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading badges...</Text>
+        <Text style={styles.loadingText}>{t('Loading badges...', 'Зареждане на значките...')}</Text>
       </View>
     );
   }
@@ -119,17 +121,17 @@ const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCat
               <Ionicons name="arrow-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Badges</Text>
-              <Text style={styles.subtitle}>Track your achievements</Text>
+              <Text style={styles.title}>{t('Badges', 'Значки')}</Text>
+              <Text style={styles.subtitle}>{t('Track your achievements', 'Следете постиженията си')}</Text>
             </View>
           </View>
           
           {/* Earned Badges Section */}
           <View style={styles.sectionContainer}>
             <View style={styles.headerContainer}>
-              <Text style={styles.sectionTitle}>Your Earned Badges</Text>
+              <Text style={styles.sectionTitle}>{t('Your Earned Badges', 'Вашите спечелени значки')}</Text>
               <Text style={styles.badgeCountLabel}>
-                {userBadges.length} {userBadges.length === 1 ? 'badge' : 'badges'} earned
+                {userBadges.length} {t(userBadges.length === 1 ? 'badge earned' : 'badges earned', userBadges.length === 1 ? 'спечелена значка' : 'спечелени значки')}
               </Text>
             </View>
             
@@ -139,16 +141,16 @@ const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCat
               availableCategories={availableCategories}
               selectedCategory={earnedCategory}
               onSelectCategory={setEarnedCategory}
-              emptyMessage="You haven't earned any badges yet. Complete activities to earn badges!"
+              emptyMessage={t("You haven't earned any badges yet. Complete activities to earn badges!", 'Все още нямате спечелени значки. Изпълнявайте дейности, за да печелите значки!')}
             />
           </View>
           
           {/* Available Badges Section */}
           <View style={styles.sectionContainer}>
             <View style={styles.headerContainer}>
-              <Text style={styles.sectionTitle}>All Available Badges</Text>
+              <Text style={styles.sectionTitle}>{t('All Available Badges', 'Всички налични значки')}</Text>
               <Text style={styles.badgeCountLabel}>
-                {badgesWithEarnedStatus.length} total badges
+                {badgesWithEarnedStatus.length} {t('total badges', 'значки общо')}
               </Text>
             </View>
             
@@ -158,7 +160,7 @@ const earnedBadgesByCategory = getBadgesByCategory(mappedEarnedBadges, earnedCat
               availableCategories={availableCategories}
               selectedCategory={availableCategory}
               onSelectCategory={setAvailableCategory}
-              emptyMessage="No available badges found."
+              emptyMessage={t('No available badges found.', 'Няма налични значки.')}
             />
           </View>
         </View>

@@ -1,5 +1,5 @@
 import supabase from '@/lib/supabase';
-import { knowledgeService, type KnowledgeItemSummary } from '@/features/knowledge';
+import { knowledgeService, type KnowledgeItemSummary, type KnowledgeLocale } from '@/features/knowledge';
 import { habitService } from '@/services/habitService';
 import { ACTIVITY_FACTORS, FOOTPRINT_BENCHMARKS, IMPACT_EQUIVALENCIES, OFFSET_PROJECTS, PERSONALIZED_CARBON_TIPS } from './catalog';
 import { addImpactMetrics, calculateCarbonActivity, calculateCarbonGoalProgress, calculateTravelEstimate, createCarbonBalance, deriveLearningStage, getProgressLevel, selectDailyChallenge, selectDailyPoll } from './calculations';
@@ -493,8 +493,8 @@ export const offsettingService = {
     return { identity, learningStage, impact, reflection, dailyChallenge, poll };
   },
 
-  async getPersonalizedKnowledge(interests: string[], activeCategories: string[], userId?: string, stage: LearningStage = 'beginner'): Promise<KnowledgeItemSummary[]> {
-    const home = await knowledgeService.getKnowledgeHome({ userId, interests, activeCategories });
+  async getPersonalizedKnowledge(interests: string[], activeCategories: string[], userId?: string, stage: LearningStage = 'beginner', locale: KnowledgeLocale = 'en'): Promise<KnowledgeItemSummary[]> {
+    const home = await knowledgeService.getKnowledgeHome({ locale, userId, interests, activeCategories });
     const allowedDifficulty = stage === 'advanced' ? ['beginner', 'intermediate', 'advanced'] : stage === 'intermediate' ? ['beginner', 'intermediate'] : ['beginner'];
     const [goals, history] = userId ? await Promise.all([this.getCarbonGoals(userId).catch(() => []), offsettingStorage.getRecommendationHistory(userId)]) : [[], []];
     const priorityTerms = [...activeCategories, ...goals.filter((goal) => goal.status === 'active').map((goal) => goal.category), ...interests].map((value) => value.toLowerCase().replace(/\s+/g, '-'));

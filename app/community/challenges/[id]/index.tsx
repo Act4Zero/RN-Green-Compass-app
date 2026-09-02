@@ -20,6 +20,7 @@ import ChallengeParticipants from '@/components/community/challenges/ChallengePa
 import ChallengeProgress from '@/components/community/challenges/ChallengeProgress';
 import ActivityLogsList from '@/components/community/challenges/ActivityLogsList';
 import formatDate from '@/utils/formatDate';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Styles for this component
 const styles = ChallengeStyles;
@@ -32,6 +33,7 @@ export default function ChallengeDetail() {
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
   const { user, loading: authLoading } = useAuth();
   const { addNotification } = useNotification();
+  const { t } = useAppLocale();
   
   // Use our selected challenge hook
   const { loadChallenge, updateParticipantCount, updateProgressMetrics, clearChallenge, challenge, isLoading, error } = useSelectedChallenge();
@@ -55,8 +57,8 @@ export default function ChallengeDetail() {
     if (!user) {
       addNotification({
         type: 'modal',
-        title: 'Authentication Required',
-        message: 'Please sign in to join this challenge.',
+        title: t('Authentication Required', 'Необходим е вход'),
+        message: t('Please sign in to join this challenge.', 'Влезте в профила си, за да се включите в предизвикателството.'),
         severity: 'warning',
         autoClose: true,
       });
@@ -71,13 +73,13 @@ export default function ChallengeDetail() {
         refresh();
         addNotification({
           type: 'toast',
-          message: 'You have joined the challenge!',
+          message: t('You have joined the challenge!', 'Включихте се в предизвикателството!'),
           severity: 'success',
         });
       } else if (!result.success) {
         addNotification({
           type: 'toast',
-          message: 'Failed to join the challenge. The challenge may have ended or you have already joined.',
+          message: t('Failed to join the challenge. The challenge may have ended or you have already joined.', 'Неуспешно включване. Предизвикателството може да е приключило или вече да участвате.'),
           severity: 'error',
         });
       }
@@ -85,7 +87,7 @@ export default function ChallengeDetail() {
       console.error('Error joining challenge:', error);
       addNotification({
         type: 'toast',
-        message: 'Failed to join the challenge. Please try again.',
+        message: t('Failed to join the challenge. Please try again.', 'Неуспешно включване. Опитайте отново.'),
         severity: 'error',
       });
     }
@@ -102,13 +104,13 @@ export default function ChallengeDetail() {
         refresh();
         addNotification({
           type: 'toast',
-          message: 'You have left the challenge.',
+          message: t('You have left the challenge.', 'Напуснахте предизвикателството.'),
           severity: 'success',
         });
       } else {
         addNotification({
           type: 'toast',
-          message: 'Failed to leave the challenge. Please try again.',
+          message: t('Failed to leave the challenge. Please try again.', 'Предизвикателството не можа да бъде напуснато. Опитайте отново.'),
           severity: 'error',
         });
       }
@@ -116,7 +118,7 @@ export default function ChallengeDetail() {
       console.error('Error leaving challenge:', error);
       addNotification({
         type: 'toast',
-        message: 'Failed to leave the challenge. Please try again.',
+        message: t('Failed to leave the challenge. Please try again.', 'Предизвикателството не можа да бъде напуснато. Опитайте отново.'),
         severity: 'error',
       });
     }
@@ -157,7 +159,7 @@ export default function ChallengeDetail() {
           style={[styles.joinButton, { marginTop: 24 }]} 
           onPress={() => loadChallenge(id as string)}
         >
-          <Text style={styles.joinButtonText}>Try Again</Text>
+          <Text style={styles.joinButtonText}>{t('Try Again', 'Опитайте отново')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -198,8 +200,8 @@ export default function ChallengeDetail() {
               <Ionicons name="arrow-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
             <View>
-              <Text style={styles.title}>Challenge Details</Text>
-              <Text style={styles.subtitle}>View progress and participate</Text>
+              <Text style={styles.title}>{t('Challenge Details', 'Детайли за предизвикателството')}</Text>
+              <Text style={styles.subtitle}>{t('View progress and participate', 'Вижте напредъка и участвайте')}</Text>
             </View>
           </View>
 
@@ -215,14 +217,14 @@ export default function ChallengeDetail() {
             <View style={styles.creatorInfo}>
               <Ionicons name="person-circle-outline" size={24} color="#555555" />
               <Text style={styles.creatorName}>
-                Created by {challenge.creator?.display_name || 'Anonymous'}
+                {t('Created by', 'Създадено от')} {challenge.creator?.display_name || t('Anonymous', 'Анонимен')}
               </Text>
             </View>
             
             {/* Progress Bars */}
             <View style={styles.progressContainer}>
               {/* Group Progress */}
-              <Text style={styles.progressLabel}>Group Progress</Text>
+              <Text style={styles.progressLabel}>{t('Group Progress', 'Групов напредък')}</Text>
               <ChallengeProgress 
                 value={challenge.group_progress_metric || 0}
                 total={100}
@@ -232,7 +234,7 @@ export default function ChallengeDetail() {
               {/* Personal Progress - only shown if participating */}
               {challenge.is_participant && (
                 <>
-                  <Text style={[styles.progressLabel, { marginTop: 16 }]}>Your Progress</Text>
+                  <Text style={[styles.progressLabel, { marginTop: 16 }]}>{t('Your Progress', 'Вашият напредък')}</Text>
                   <ChallengeProgress
                     value={challenge.progress_metric || 0}
                     total={100}
@@ -253,7 +255,7 @@ export default function ChallengeDetail() {
                   onPress={challenge?.is_participant ? handleLeaveChallenge : handleJoinChallenge}
                 >
                   <Text style={styles.joinButtonText}>
-                    {challenge.is_participant ? 'Leave Challenge' : 'Join Challenge'}
+                    {challenge.is_participant ? t('Leave Challenge', 'Напусни') : t('Join Challenge', 'Включи се')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -263,19 +265,19 @@ export default function ChallengeDetail() {
                   style={styles.logButton} 
                   onPress={handleLogActivity}
                 >
-                  <Text style={styles.logButtonText}>Log Activity</Text>
+                  <Text style={styles.logButtonText}>{t('Log Activity', 'Добави дейност')}</Text>
                 </TouchableOpacity>
               )}
               
               {!isActive && now < startDate && (
                 <View style={[styles.joinButton, { backgroundColor: '#9E9E9E' }]}>
-                  <Text style={styles.joinButtonText}>Challenge hasn't started yet</Text>
+                  <Text style={styles.joinButtonText}>{t("Challenge hasn't started yet", 'Предизвикателството още не е започнало')}</Text>
                 </View>
               )}
               
               {!isActive && now > endDate && (
                 <View style={[styles.joinButton, { backgroundColor: '#9E9E9E' }]}>
-                  <Text style={styles.joinButtonText}>Challenge has ended</Text>
+                  <Text style={styles.joinButtonText}>{t('Challenge has ended', 'Предизвикателството приключи')}</Text>
                 </View>
               )}
             </View>

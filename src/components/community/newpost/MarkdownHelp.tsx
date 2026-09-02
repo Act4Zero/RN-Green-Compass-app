@@ -1,29 +1,31 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 function MarkdownHelp() {
+  const { t } = useAppLocale();
   return (
     <View style={styles.markdownHelpContainer}>
-      <Text style={styles.markdownHelpTitle}>Markdown Formatting</Text>
+      <Text style={styles.markdownHelpTitle}>{t('Markdown Formatting', 'Markdown форматиране')}</Text>
       <View style={styles.markdownHelpItem}>
         <Text style={styles.markdownHelpCode}>**bold**</Text>
-        <Text style={styles.markdownHelpDescription}>Bold text</Text>
+        <Text style={styles.markdownHelpDescription}>{t('Bold text', 'Получер текст')}</Text>
       </View>
       <View style={styles.markdownHelpItem}>
         <Text style={styles.markdownHelpCode}>*italic*</Text>
-        <Text style={styles.markdownHelpDescription}>Italic text</Text>
+        <Text style={styles.markdownHelpDescription}>{t('Italic text', 'Курсив')}</Text>
       </View>
       <View style={styles.markdownHelpItem}>
         <Text style={styles.markdownHelpCode}>- item</Text>
-        <Text style={styles.markdownHelpDescription}>Bullet list</Text>
+        <Text style={styles.markdownHelpDescription}>{t('Bullet list', 'Списък')}</Text>
       </View>
       <View style={styles.markdownHelpItem}>
         <Text style={styles.markdownHelpCode}>[link](url)</Text>
-        <Text style={styles.markdownHelpDescription}>Hyperlink</Text>
+        <Text style={styles.markdownHelpDescription}>{t('Hyperlink', 'Връзка')}</Text>
       </View>
       <View style={styles.markdownHelpItem}>
         <Text style={styles.markdownHelpCode}>![alt text](image_url)</Text>
-        <Text style={styles.markdownHelpDescription}>Image</Text>
+        <Text style={styles.markdownHelpDescription}>{t('Image', 'Изображение')}</Text>
       </View>
     </View>
   );

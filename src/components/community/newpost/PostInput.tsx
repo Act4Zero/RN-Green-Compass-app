@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
 import { getCharacterInfo } from '@/utils/sanitizeMarkdownInput';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PostInputProps {
   title: string;
@@ -13,23 +14,24 @@ interface PostInputProps {
 const MAX_CHARACTERS = 2000;
 
 function PostInput({ title, setTitle, content, setContent }: PostInputProps) {
+  const { t } = useAppLocale();
   // Calculate remaining characters using the utility function
   const characterInfo = getCharacterInfo(content || '');
   const { remaining: remainingChars, isNearLimit, isAtLimit } = characterInfo;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.inputLabel}>Share your thoughts or question</Text>
+      <Text style={styles.inputLabel}>{t('Share your thoughts or question', 'Споделете мнение или въпрос')}</Text>
       <TextInput
         style={styles.titleInput}
-        placeholder="Title (optional)"
+        placeholder={t('Title (optional)', 'Заглавие (незадължително)')}
         value={title}
         onChangeText={setTitle}
         maxLength={100}
       />
       <TextInput
         style={[styles.postInput, isAtLimit && styles.inputLimitReached]}
-        placeholder="What's on your mind? Share your sustainability journey, ask questions, or post tips..."
+        placeholder={t("What's on your mind? Share your sustainability journey, ask questions, or post tips...", 'Какво искате да споделите? Разкажете за своя път, задайте въпрос или споделете съвет...')}
         value={content}
         onChangeText={(text) => {
           // Limit text input to MAX_CHARACTERS
@@ -51,7 +53,7 @@ function PostInput({ title, setTitle, content, setContent }: PostInputProps) {
             isAtLimit && styles.characterCountLimit
           ]}
         >
-          {remainingChars} characters remaining
+          {remainingChars} {t('characters remaining', 'оставащи знака')}
         </Text>
       </View>
     </View>

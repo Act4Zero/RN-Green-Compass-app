@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Pressable, Modal, TouchableWithoutFee
 import { Ionicons } from '@expo/vector-icons';
 import { Notification } from '@/context/NotificationContext';
 import { ViewStyle, TextStyle } from 'react-native';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ModalNotificationProps {
   notification: Notification;
@@ -10,6 +11,7 @@ interface ModalNotificationProps {
 }
 
 export default function ModalNotification({ notification, onDismiss }: ModalNotificationProps) {
+  const { t } = useAppLocale();
   const { id, title, message, severity, action } = notification;
   const scale = useRef(new Animated.Value(0.8)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -75,7 +77,7 @@ export default function ModalNotification({ notification, onDismiss }: ModalNoti
                       style={styles.cancelButton}
                       onPress={() => onDismiss(id)}
                     >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                      <Text style={styles.cancelButtonText}>{t('Cancel', 'Отказ')}</Text>
                     </Pressable>
                     <Pressable
                       style={styles.actionButton}
@@ -92,7 +94,7 @@ export default function ModalNotification({ notification, onDismiss }: ModalNoti
                     style={styles.okButton}
                     onPress={() => onDismiss(id)}
                   >
-                    <Text style={styles.okButtonText}>OK</Text>
+                    <Text style={styles.okButtonText}>{t('OK', 'Добре')}</Text>
                   </Pressable>
                 )}
               </View>

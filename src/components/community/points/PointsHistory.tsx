@@ -4,6 +4,7 @@ import { PointEvent, PointSource } from '@/types/community/points';
 import PointsHistoryItem from './PointsHistoryItem';
 import PointsHistoryFilter from './PointsHistoryFilter';
 import pointsStyles from '@/styles/community/Points.styles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PointsHistoryProps {
   historyByDate: Record<string, PointEvent[]>;
@@ -22,6 +23,7 @@ function PointsHistory({
   onClearFilters,
   isLoading
 }: PointsHistoryProps) {
+  const { t } = useAppLocale();
   // Convert the grouped history object to a format that SectionList can use
   const sectionData = Object.entries(historyByDate).map(([date, events]) => ({
     title: date,
@@ -30,7 +32,7 @@ function PointsHistory({
 
   return (
     <View style={pointsStyles.historyContainer}>
-      <Text style={pointsStyles.sectionTitle}>Points History</Text>
+      <Text style={pointsStyles.sectionTitle}>{t('Points History', 'История на точките')}</Text>
       
       <PointsHistoryFilter
         activeFilters={activeFilters}
@@ -54,8 +56,8 @@ function PointsHistory({
         <View style={pointsStyles.emptyState}>
           <Text style={pointsStyles.emptyStateText}>
             {isLoading 
-              ? "Loading your points history..." 
-              : "No points history found. Start earning points by logging in daily and tracking sustainable habits!"}
+              ? t('Loading your points history...', 'Зареждане на историята на точките...')
+              : t('No points history found. Start earning points by logging in daily and tracking sustainable habits!', 'Няма история на точки. Печелете точки с ежедневно влизане и проследяване на устойчиви навици!')}
           </Text>
         </View>
       )}
