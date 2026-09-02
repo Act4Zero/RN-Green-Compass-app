@@ -7,25 +7,31 @@ import { useAppTheme } from '@/theme';
 import type { KnowledgeItemSummary } from '../types';
 import { KNOWLEDGE_TOPICS } from '../data/catalog';
 import { resolveKnowledgeVisual } from '../visuals';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const TYPE_LABELS: Record<KnowledgeItemSummary['type'], string> = {
   article: 'Article', guide: 'Guide', infographic: 'Infographic', video: 'Video', quiz: 'Quiz', resource: 'Resource', diy: 'DIY project', tour: 'Virtual tour', simulation: 'Impact lab', webinar: 'Live session', daily_fact: 'Eco fact', daily_quote: 'Leader quote', daily_tip: 'Daily tip',
+};
+const TYPE_LABELS_BG: Record<KnowledgeItemSummary['type'], string> = {
+  article: 'Статия', guide: 'Ръководство', infographic: 'Инфографика', video: 'Видео', quiz: 'Тест', resource: 'Ресурс', diy: 'Направи си сам', tour: 'Виртуална обиколка', simulation: 'Лаборатория', webinar: 'На живо', daily_fact: 'Еко факт', daily_quote: 'Цитат', daily_tip: 'Дневен съвет',
 };
 
 export function KnowledgeCard({ item, reason, progress, compact = false }: { item: KnowledgeItemSummary; reason?: string; progress?: number; compact?: boolean }) {
   const { theme } = useAppTheme();
   const router = useRouter();
+  const { locale, t } = useAppLocale();
+  const typeLabel = locale === 'bg' ? TYPE_LABELS_BG[item.type] : TYPE_LABELS[item.type];
   const topic = item.topicSlugs[0]?.replace(/-/g, ' ') || 'Sustainability';
   const { source, visual } = resolveKnowledgeVisual(item, KNOWLEDGE_TOPICS);
   const href = item.type === 'quiz' ? `/knowledge/quiz/${item.id}` : item.type === 'tour' ? `/knowledge/tour/${item.id}` : item.type === 'simulation' ? `/knowledge/simulation/${item.id}` : item.type === 'webinar' ? `/knowledge/webinar/${item.id}` : `/knowledge/content/${item.slug}`;
   return (
-    <Pressable accessibilityRole="link" accessibilityLabel={`${item.title}, ${TYPE_LABELS[item.type]}`} onPress={() => router.push(href as any)} style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1, flex: compact ? undefined : 1, minWidth: compact ? 270 : 280 })}>
+    <Pressable accessibilityRole="link" accessibilityLabel={`${item.title}, ${typeLabel}`} onPress={() => router.push(href as any)} style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1, flex: compact ? undefined : 1, minWidth: compact ? 270 : 280 })}>
       <Card elevated style={{ minHeight: compact ? 260 : 330, height: '100%', padding: 0, overflow: 'hidden', backgroundColor: theme.mode === 'dark' ? visual.palette.darkSurface : visual.palette.surface }}>
         <Image source={source} accessibilityLabel={visual.alt[item.locale]} resizeMode="cover" style={{ width: '100%', height: compact ? 112 : 148 }} />
         <View style={{ padding: theme.spacing.lg, flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 }}>
-            <Text style={[theme.typography.label, { color: visual.palette.primary, textTransform: 'uppercase', letterSpacing: 0.8 }]}>{TYPE_LABELS[item.type]}</Text>
-            <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>• {item.estimatedMinutes} min</Text>
+            <Text style={[theme.typography.label, { color: visual.palette.primary, textTransform: 'uppercase', letterSpacing: 0.8 }]}>{typeLabel}</Text>
+            <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>• {item.estimatedMinutes} {t('min', 'мин')}</Text>
           </View>
           <Text numberOfLines={2} style={[theme.typography.h3, { color: theme.colors.text }]}>{item.title}</Text>
           <Text numberOfLines={compact ? 2 : 3} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8, flex: 1 }]}>{item.summary}</Text>
@@ -33,7 +39,7 @@ export function KnowledgeCard({ item, reason, progress, compact = false }: { ite
           {typeof progress === 'number' ? (
             <View style={{ marginTop: 14 }}>
               <View style={{ height: 5, borderRadius: 3, backgroundColor: theme.colors.surfaceStrong, overflow: 'hidden' }}><View style={{ height: '100%', width: `${Math.max(0, Math.min(100, progress))}%`, backgroundColor: theme.colors.primary }} /></View>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5 }]}>{progress}% complete</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5 }]}>{progress}% {t('complete', 'завършено')}</Text>
             </View>
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>

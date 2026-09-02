@@ -35,7 +35,7 @@ export function StatsContainer({
   
   // Prepare achievement data for sharing
   const achievementData = {
-    title: `${safeActions} Actions · ${safeCO2.toFixed(1)} kg CO₂ Saved · ${safeStreak} Day Streak`,
+    title: `${safeActions} действия · ${safeCO2.toFixed(1)} kg спестен CO₂ · ${safeStreak} дни поред`,
     date: currentDate,
     icon: undefined, // We could add a custom icon here in the future
   };
@@ -65,14 +65,14 @@ export function StatsContainer({
   // Handle share error
   const handleShareError = useCallback((error: string) => {
     Alert.alert(
-      'Sharing Error',
-      'There was a problem sharing your habit history. Please try again.'
+      'Грешка при споделяне',
+      'Историята на навиците не можа да бъде споделена. Опитай отново.'
     );
   }, []);
   return (
     <>
       <View style={statsStyles.headerContainer}>
-        <Text style={styles.sectionTitle}>Your Sustainability Stats</Text>
+        <Text style={styles.sectionTitle}>Твоята устойчива статистика</Text>
         <TouchableOpacity 
           style={statsStyles.shareButton}
           onPress={handleSharePress}
@@ -85,15 +85,15 @@ export function StatsContainer({
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{totalActions || 0}</Text>
-          <Text style={styles.statLabel}>Actions Taken</Text>
+          <Text style={styles.statLabel}>Извършени действия</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{totalCO2Saved?.toFixed(1) || '0'}</Text>
-          <Text style={styles.statLabel}>CO₂ Saved (kg)</Text>
+          <Text style={styles.statLabel}>Спестен CO₂ (kg)</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{overallStreak || 0}</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
+          <Text style={styles.statLabel}>Поредни дни</Text>
         </View>
       </View>
       

@@ -64,9 +64,8 @@ returns table(id uuid,location_id uuid,rating integer,body text,status text,auth
 language sql stable security definer
 set search_path=public,pg_temp
 as $$
-  select r.id,r.location_id,r.rating,r.body,r.status,p.display_name,r.created_at
+  select r.id,r.location_id,r.rating,r.body,r.status,null::text,r.created_at
   from public.sustainability_reviews r
-  left join public.profiles p on p.id=r.user_id
   join public.sustainability_locations l on l.id=r.location_id and l.status='published'
   where r.location_id=p_location_id and r.status='approved'
   order by r.created_at desc

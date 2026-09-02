@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import LogStyles from '@/styles/LogStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = LogStyles;
 
@@ -15,9 +16,10 @@ export function CategoriesSection({
     handleSelectCategory: (id: string) => void;
 }) {
     const { theme } = useAppTheme();
+    const { t } = useAppLocale();
     return (
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>1. Choose a category</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('1. Choose a category', '1. Избери категория')}</Text>
           
           <ScrollView 
             horizontal 

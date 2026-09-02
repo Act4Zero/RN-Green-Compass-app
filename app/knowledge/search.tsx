@@ -11,6 +11,12 @@ const TYPES: { label: string; value?: KnowledgeContentType }[] = [{ label: 'All'
 const DIFFICULTIES: { label: string; value?: KnowledgeDifficulty }[] = [{ label: 'Any level' }, { label: 'Beginner', value: 'beginner' }, { label: 'Intermediate', value: 'intermediate' }, { label: 'Advanced', value: 'advanced' }];
 const DURATIONS = [{ label: 'Any length', value: undefined }, { label: 'Under 5 min', value: 5 }, { label: 'Under 10 min', value: 10 }, { label: 'Under 20 min', value: 20 }];
 const SORTS: { label: string; value: NonNullable<KnowledgeSearchFilters['sort']> }[] = [{ label: 'Relevant', value: 'relevance' }, { label: 'Newest', value: 'newest' }, { label: 'Recently reviewed', value: 'reviewed' }, { label: 'Shortest', value: 'shortest' }];
+const BG_LABELS: Record<string, string> = {
+  All: 'Всички', Articles: 'Статии', Guides: 'Ръководства', Infographics: 'Инфографики', Videos: 'Видеа', DIY: 'Направи си сам', Tours: 'Обиколки', Labs: 'Лаборатории', Quizzes: 'Тестове', Live: 'На живо', Resources: 'Ресурси',
+  'Any level': 'Всяко ниво', Beginner: 'Начално', Intermediate: 'Средно', Advanced: 'Напреднало',
+  'Any length': 'Всякаква продължителност', 'Under 5 min': 'До 5 мин', 'Under 10 min': 'До 10 мин', 'Under 20 min': 'До 20 мин',
+  Relevant: 'Най-подходящи', Newest: 'Най-нови', 'Recently reviewed': 'Наскоро проверени', Shortest: 'Най-кратки',
+};
 
 export default function KnowledgeSearchScreen() {
   const { theme } = useAppTheme();
@@ -29,6 +35,7 @@ export default function KnowledgeSearchScreen() {
   const [nextCursor, setNextCursor] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(width >= theme.breakpoints.tablet);
+  const label = useCallback((value: string) => locale === 'bg' ? BG_LABELS[value] || value : value, [locale]);
   const filters = useMemo<KnowledgeSearchFilters>(() => ({ topic: topic || undefined, type, difficulty, maxMinutes, downloadable: downloadable || undefined, sort }), [topic, type, difficulty, maxMinutes, downloadable, sort]);
 
   const search = useCallback(async (cursor = 0, append = false) => {
@@ -55,27 +62,27 @@ export default function KnowledgeSearchScreen() {
 
           {width < theme.breakpoints.tablet ? <AppButton label={showFilters ? t('Hide filters', 'Скрий филтрите') : t('Filters', 'Филтри')} icon="options-outline" variant="secondary" onPress={() => setShowFilters((value) => !value)} style={{ marginTop: 12, alignSelf: 'flex-start' }} /> : null}
           {showFilters ? <><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 14 }}>
-            {TYPES.map((option) => <FilterChip key={option.label} label={option.label} active={type === option.value} onPress={() => setType(option.value)} />)}
-            <FilterChip label="Downloadable" active={downloadable} onPress={() => setDownloadable((value) => !value)} icon="download-outline" />
+            {TYPES.map((option) => <FilterChip key={option.label} label={label(option.label)} active={type === option.value} onPress={() => setType(option.value)} />)}
+            <FilterChip label={t('Downloadable', 'За изтегляне')} active={downloadable} onPress={() => setDownloadable((value) => !value)} icon="download-outline" />
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 22 }}>
-            <FilterChip label="All topics" active={!topic} onPress={() => setTopic('')} />
+            <FilterChip label={t('All topics', 'Всички теми')} active={!topic} onPress={() => setTopic('')} />
             {KNOWLEDGE_TOPICS.map((entry) => <FilterChip key={entry.id} label={localizedTopic(entry, locale).name} active={topic === entry.slug} onPress={() => setTopic(entry.slug)} />)}
           </ScrollView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>
-            {DIFFICULTIES.map((option) => <FilterChip key={option.label} label={option.label} active={difficulty === option.value} onPress={() => setDifficulty(option.value)} />)}
-            {DURATIONS.map((option) => <FilterChip key={option.label} label={option.label} active={maxMinutes === option.value} onPress={() => setMaxMinutes(option.value)} />)}
+            {DIFFICULTIES.map((option) => <FilterChip key={option.label} label={label(option.label)} active={difficulty === option.value} onPress={() => setDifficulty(option.value)} />)}
+            {DURATIONS.map((option) => <FilterChip key={option.label} label={label(option.label)} active={maxMinutes === option.value} onPress={() => setMaxMinutes(option.value)} />)}
             <FilterChip label={locale === 'bg' ? 'Български' : 'English'} active onPress={() => undefined} icon="language-outline" />
           </ScrollView></> : null}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 22 }}>
-            {SORTS.map((option) => <FilterChip key={option.value} label={`Sort: ${option.label}`} active={sort === option.value} onPress={() => setSort(option.value)} />)}
+            {SORTS.map((option) => <FilterChip key={option.value} label={`${t('Sort', 'Подреждане')}: ${label(option.label)}`} active={sort === option.value} onPress={() => setSort(option.value)} />)}
           </ScrollView>
 
-          <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{loading ? 'Searching…' : `${items.length}${nextCursor ? '+' : ''} result${items.length === 1 ? '' : 's'}`}</Text>
-          {!loading && items.length === 0 ? <StatePanel icon="search-outline" title="No results yet" message="Try a broader phrase, choose a suggested topic, or tell the community what you want to learn next." action={<View style={{ gap: 9 }}><AppButton label="Explore Climate Action" onPress={() => { setQuery(''); setTopic('climate-action'); }} /><AppButton label="Clear filters" variant="secondary" onPress={() => { setQuery(''); setTopic(''); setType(undefined); setDifficulty(undefined); setMaxMinutes(undefined); setDownloadable(false); setSort('relevance'); }} /><AppButton label="Suggest a missing topic" variant="ghost" onPress={() => router.push({ pathname: '/community/post/new-post' as any, params: { source: 'knowledge-search' } })} /></View>} /> : null}
+          <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{loading ? t('Searching…', 'Търсене…') : t(`${items.length}${nextCursor ? '+' : ''} result${items.length === 1 ? '' : 's'}`, `${items.length}${nextCursor ? '+' : ''} резултата`)}</Text>
+          {!loading && items.length === 0 ? <StatePanel icon="search-outline" title={t('No results yet', 'Все още няма резултати')} message={t('Try a broader phrase, choose a suggested topic, or tell the community what you want to learn next.', 'Опитайте с по-обща фраза, изберете предложена тема или кажете на общността какво искате да научите.')} action={<View style={{ gap: 9 }}><AppButton label={t('Explore Climate Action', 'Разгледай „Действия за климата“')} onPress={() => { setQuery(''); setTopic('climate-action'); }} /><AppButton label={t('Clear filters', 'Изчисти филтрите')} variant="secondary" onPress={() => { setQuery(''); setTopic(''); setType(undefined); setDifficulty(undefined); setMaxMinutes(undefined); setDownloadable(false); setSort('relevance'); }} /><AppButton label={t('Suggest a missing topic', 'Предложи липсваща тема')} variant="ghost" onPress={() => router.push({ pathname: '/community/post/new-post' as any, params: { source: 'knowledge-search' } })} /></View>} /> : null}
           {items.length ? <Card style={{ padding: 0, overflow: 'hidden' }}>{items.map((item, index) => <SearchResultRow key={item.id} item={item} last={index === items.length - 1} />)}</Card> : null}
-          {nextCursor !== null ? <AppButton label="Load more" variant="secondary" onPress={() => void search(nextCursor, true)} style={{ marginTop: 20, alignSelf: 'center' }} /> : null}
-          <AppButton label="Back to Hub" variant="ghost" onPress={() => router.back()} style={{ marginTop: 22, alignSelf: 'center' }} />
+          {nextCursor !== null ? <AppButton label={t('Load more', 'Зареди още')} variant="secondary" onPress={() => void search(nextCursor, true)} style={{ marginTop: 20, alignSelf: 'center' }} /> : null}
+          <AppButton label={t('Back to Hub', 'Назад към центъра')} variant="ghost" onPress={() => router.back()} style={{ marginTop: 22, alignSelf: 'center' }} />
         </Content>
       </ScrollView>
     </Screen>

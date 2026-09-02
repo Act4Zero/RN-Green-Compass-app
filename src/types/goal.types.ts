@@ -35,8 +35,8 @@ export type FocusArea = {
 };
 
 export const focusAreas: FocusArea[] = [
-  { id: '1', name: 'Mobility', icon: 'bicycle-outline', category: 'Mobility' },
-  { id: '2', name: 'Food', icon: 'nutrition-outline', category: 'Food' },
-  { id: '3', name: 'Household Activities', icon: 'home-outline', category: 'Household Activities' },
-  { id: '4', name: 'Heating', icon: 'thermometer-outline', category: 'Heating' }
+  { id: '1', name: 'Придвижване', icon: 'bicycle-outline', category: 'Mobility' },
+  { id: '2', name: 'Храна', icon: 'nutrition-outline', category: 'Food' },
+  { id: '3', name: 'Домакинство', icon: 'home-outline', category: 'Household Activities' },
+  { id: '4', name: 'Отопление', icon: 'thermometer-outline', category: 'Heating' }
 ];

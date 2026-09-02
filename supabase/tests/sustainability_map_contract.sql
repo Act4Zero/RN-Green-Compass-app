@@ -63,10 +63,22 @@ end
 $$;
 reset role;
 
--- Publisher-only budget configuration and exact serial reservation limits.
+-- The legacy budget functions remain available for a rollback release, but
+-- must not be callable by app clients after the public Living Planet rollout.
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000003', false);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000000003","app_metadata":{"knowledge_roles":["publisher"]}}', false);
-set role authenticated;
+do $$
+begin
+  if has_function_privilege('authenticated', 'public.set_map_runtime_config(boolean,integer,integer,date,date,text)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.reserve_map_session(text,text)', 'EXECUTE')
+    or has_function_privilege('authenticated', 'public.get_map_budget_status()', 'EXECUTE') then
+    raise exception 'Legacy map budget functions must not be executable by app clients';
+  end if;
+end
+$$;
+
+-- The retained rollback implementation is still exercised as the database
+-- owner so its limits stay verifiable without granting client access.
 select public.set_map_runtime_config(true, 3, 2, current_date, current_date + 30, 'Budget paused for safety');
 
 do $$

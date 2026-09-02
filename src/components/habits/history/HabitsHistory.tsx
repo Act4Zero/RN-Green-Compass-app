@@ -19,12 +19,12 @@ export function HabitsHistory({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>
-          {selectedDate ? `Habits on ${formatSelectedDate(selectedDate)}` : 'Select a date'}
+          {selectedDate ? `Навици на ${formatSelectedDate(selectedDate)}` : 'Избери дата'}
         </Text>
         {selectedDate && filteredLogs.length > 0 && (
           <View style={styles.actionCountBadge}>
             <Text style={styles.actionCountText}>
-              {filteredLogs.length} action{filteredLogs.length !== 1 ? 's' : ''}
+              {filteredLogs.length} {filteredLogs.length === 1 ? 'действие' : 'действия'}
             </Text>
           </View>
         )}
@@ -39,7 +39,7 @@ export function HabitsHistory({
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            {selectedDate ? 'No habits logged for this date and filter' : 'Select a date to view logged habits'}
+            {selectedDate ? 'Няма записани навици за тази дата и филтър' : 'Избери дата, за да видиш записаните навици'}
           </Text>
         </View>
       )}

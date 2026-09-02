@@ -2,6 +2,8 @@ import LogStyles from '@/styles/LogStyles';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Habit } from '../../../types/supabase';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeHabit } from '@/features/habits/localization';
 
 const styles = LogStyles;
 
@@ -15,13 +17,16 @@ export function HabitsSection({
     handleSelectHabit: (habit: Habit) => void;
 }) {
     const { theme } = useAppTheme();
+    const { locale, t } = useAppLocale();
     return (
         <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>3. Select an action</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('3. Select an action', '3. Избери действие')}</Text>
             
             <View style={styles.habitsContainer}>
               {/* If a habit is selected, only show that habit in the list */}
-              {(selectedHabit ? [selectedHabit] : availableHabits).map((habit) => (
+              {(selectedHabit ? [selectedHabit] : availableHabits).map((habit) => {
+                const copy = localizeHabit(habit, locale);
+                return (
                 <TouchableOpacity
                   key={habit.id}
                   style={[styles.habitItemWrapper]}
@@ -43,7 +48,7 @@ export function HabitsSection({
                         ]}
                         numberOfLines={2}
                       >
-                        {habit.name}
+                        {copy.name}
                       </Text>
                       <Text
                         style={[
@@ -52,7 +57,7 @@ export function HabitsSection({
                         ]}
                         numberOfLines={3}
                       >
-                        {habit.description}
+                        {copy.description}
                       </Text>
                     </View>
                     <Text
@@ -65,7 +70,8 @@ export function HabitsSection({
                     </Text>
                   </View>
                 </TouchableOpacity>
-              ))}
+                );
+              })}
             </View>
           </View>
     )

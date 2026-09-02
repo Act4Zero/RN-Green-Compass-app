@@ -7,7 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { FACTOR_SOURCE_URL, offsettingService, type TravelEstimate, type TravelMode } from '@/features/offsetting';
 import { useAppTheme } from '@/theme';
 
-const modes: { value: TravelMode; label: string }[] = [{ value: 'plane', label: 'Plane' }, { value: 'train', label: 'Train' }, { value: 'bus', label: 'Bus' }, { value: 'boat', label: 'Boat' }, { value: 'car', label: 'Car' }];
+const modes: { value: TravelMode; label: string }[] = [{ value: 'plane', label: 'Самолет' }, { value: 'train', label: 'Влак' }, { value: 'bus', label: 'Автобус' }, { value: 'boat', label: 'Кораб' }, { value: 'car', label: 'Автомобил' }];
+const modeLabels = Object.fromEntries(modes.map((mode) => [mode.value, mode.label])) as Record<TravelMode, string>;
 
 export default function TravelFootprintScreen() {
   const { theme } = useAppTheme();
@@ -28,7 +29,7 @@ export default function TravelFootprintScreen() {
       setError(null);
     } catch (calculationError) {
       setEstimate(null);
-      setError(calculationError instanceof Error ? calculationError.message : 'Enter a valid distance.');
+      setError(calculationError instanceof Error ? calculationError.message : 'Въведи валидно разстояние.');
     }
   };
 
@@ -44,36 +45,36 @@ export default function TravelFootprintScreen() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content>
-          <PageHeader eyebrow="Travel footprint" title="Compare your options" description="Estimate emissions for the same journey across plane, train, bus, boat, and car. Saving is always optional." />
+          <PageHeader eyebrow="Отпечатък от пътуване" title="Сравни възможностите" description="Изчисли ориентировъчните емисии за едно и също пътуване със самолет, влак, автобус, кораб или автомобил. Запазването е по избор." />
           <View style={{ gap: theme.spacing.lg }}>
             <Card style={{ gap: theme.spacing.lg }}>
-              <AppInput label="One-way distance (km)" keyboardType="decimal-pad" value={distance} onChangeText={setDistance} error={error || undefined} />
-              <ChoiceChips label="Journey" value={roundTrip ? 'round' : 'one'} onChange={(value) => setRoundTrip(value === 'round')} options={[{ value: 'one', label: 'One way' }, { value: 'round', label: 'Round trip' }]} />
-              <ChoiceChips label="Your planned option" value={selectedMode} onChange={setSelectedMode} options={modes} />
-              <ChoiceChips label="Compare against" value={comparisonMode} onChange={setComparisonMode} options={modes} />
-              <AppInput label="People sharing the car" keyboardType="number-pad" value={occupancy} onChangeText={setOccupancy} />
-              <AppButton label="Compare modes" icon="calculator-outline" onPress={calculate} />
+              <AppInput label="Разстояние в едната посока (km)" keyboardType="decimal-pad" value={distance} onChangeText={setDistance} error={error || undefined} />
+              <ChoiceChips label="Пътуване" value={roundTrip ? 'round' : 'one'} onChange={(value) => setRoundTrip(value === 'round')} options={[{ value: 'one', label: 'Еднопосочно' }, { value: 'round', label: 'Двупосочно' }]} />
+              <ChoiceChips label="Планиран транспорт" value={selectedMode} onChange={setSelectedMode} options={modes} />
+              <ChoiceChips label="Сравни с" value={comparisonMode} onChange={setComparisonMode} options={modes} />
+              <AppInput label="Хора в автомобила" keyboardType="number-pad" value={occupancy} onChangeText={setOccupancy} />
+              <AppButton label="Сравни транспорта" icon="calculator-outline" onPress={calculate} />
             </Card>
 
             {estimate ? (
               <Card elevated style={{ gap: theme.spacing.md }}>
-                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{estimate.totalDistanceKm.toFixed(0)} km journey</Text>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{estimate.totalDistanceKm.toFixed(0)} km пътуване</Text>
                 {estimate.options.sort((a, b) => a.emissionsKgCo2e - b.emissionsKgCo2e).map((option) => {
                   const selected = option.mode === selectedMode;
-                  return <View key={option.mode} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: theme.radii.md, padding: theme.spacing.md, backgroundColor: selected ? theme.colors.primarySoft : theme.colors.surfaceMuted }}><Text style={[theme.typography.body, { color: theme.colors.text, textTransform: 'capitalize' }]}>{option.mode}{selected ? ' · planned' : ''}</Text><Text style={[theme.typography.label, { color: theme.colors.text }]}>{option.emissionsKgCo2e.toFixed(2)} kg CO₂e</Text></View>;
+                  return <View key={option.mode} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: theme.radii.md, padding: theme.spacing.md, backgroundColor: selected ? theme.colors.primarySoft : theme.colors.surfaceMuted }}><Text style={[theme.typography.body, { color: theme.colors.text }]}>{modeLabels[option.mode]}{selected ? ' · планиран' : ''}</Text><Text style={[theme.typography.label, { color: theme.colors.text }]}>{option.emissionsKgCo2e.toFixed(2)} kg CO₂e</Text></View>;
                 })}
                 <View style={{ borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: theme.spacing.md }}>
-                  <Text style={[theme.typography.h3, { color: estimate.differenceKgCo2e <= 0 ? theme.colors.success : theme.colors.warning }]}>{estimate.differenceKgCo2e <= 0 ? `${estimate.avoidedKgCo2e.toFixed(2)} kg CO₂e lower` : `${estimate.differenceKgCo2e.toFixed(2)} kg CO₂e higher`} than {comparisonMode}</Text>
+                  <Text style={[theme.typography.h3, { color: estimate.differenceKgCo2e <= 0 ? theme.colors.success : theme.colors.warning }]}>{estimate.differenceKgCo2e <= 0 ? `${estimate.avoidedKgCo2e.toFixed(2)} kg CO₂e по-малко` : `${estimate.differenceKgCo2e.toFixed(2)} kg CO₂e повече`} спрямо {modeLabels[comparisonMode]}</Text>
                 </View>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Factor version {estimate.selected.factor.version}. Direct and well-to-tank emissions are included; flights include radiative forcing. Car is calculated per vehicle-km then divided by the occupancy you entered. Other modes use passenger-km.</Text>
-                <AppButton label="Save this comparison" icon="bookmark-outline" loading={saving} onPress={() => void save()} />
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Версия на фактора {estimate.selected.factor.version}. Включени са преките емисии и тези от добива до резервоара; при полетите е включено радиационното въздействие. Автомобилът се изчислява на километър и се разделя на броя пътници.</Text>
+                <AppButton label="Запази сравнението" icon="bookmark-outline" loading={saving} onPress={() => void save()} />
               </Card>
             ) : null}
 
             <Card style={{ gap: theme.spacing.xs }}>
-              <Text style={[theme.typography.label, { color: theme.colors.warning }]}>Directional estimate</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Factors use the revised July 2026 DESNZ reporting set. Actual emissions vary by vehicle, route, occupancy, fuel, and operating conditions.</Text>
-              <AppButton label="View methodology source" icon="open-outline" variant="ghost" onPress={() => void Linking.openURL(FACTOR_SOURCE_URL)} style={{ alignSelf: 'flex-start' }} />
+              <Text style={[theme.typography.label, { color: theme.colors.warning }]}>Ориентировъчна оценка</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Факторите използват актуализирания набор DESNZ от юли 2026 г. Реалните емисии зависят от превозното средство, маршрута, пътниците, горивото и условията.</Text>
+              <AppButton label="Виж източника на методологията" icon="open-outline" variant="ghost" onPress={() => void Linking.openURL(FACTOR_SOURCE_URL)} style={{ alignSelf: 'flex-start' }} />
             </Card>
           </View>
         </Content>

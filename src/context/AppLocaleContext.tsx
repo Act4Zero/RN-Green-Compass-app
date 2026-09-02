@@ -14,7 +14,7 @@ interface AppLocaleContextValue {
 const AppLocaleContext = createContext<AppLocaleContextValue | null>(null);
 
 export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<AppLocale>('en');
+  const [locale, setLocaleState] = useState<AppLocale>('bg');
   useEffect(() => {
     void Promise.all([AsyncStorage.getItem(STORAGE_KEY), AsyncStorage.getItem(LEGACY_STORAGE_KEY)]).then(([current, legacy]) => {
       const saved = current || legacy;

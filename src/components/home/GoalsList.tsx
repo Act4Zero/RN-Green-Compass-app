@@ -6,6 +6,7 @@ import { EnhancedGoal } from '@/types/goal.types';
 import GoalCard from './GoalCard';
 import { homeStyles } from '../../styles/Home.styles';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface GoalsListProps {
   goals: EnhancedGoal[];
@@ -15,13 +16,14 @@ interface GoalsListProps {
 export function GoalsList({ goals, onEditGoal }: GoalsListProps) {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
 
   // Empty state for no goals
   if (!goals || goals.length === 0) {
     return (
       <View style={[homeStyles.emptyGoalsContainer, { backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.md }]}>
         <Text style={[homeStyles.emptyGoalsText, theme.typography.body, { color: theme.colors.textMuted }]}>
-          No active goals yet. Add one small target to make your next step visible.
+          {t('No active goals yet. Add one small target to make your next step visible.', 'Все още няма активни цели. Добави една малка цел, за да стане следващата стъпка ясна.')}
         </Text>
       </View>
     );
@@ -80,16 +82,17 @@ export function GoalsList({ goals, onEditGoal }: GoalsListProps) {
 
 export function GoalsHeader({ onAddGoal }: { onAddGoal: () => void }) {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   return (
     <View style={homeStyles.sectionHeader}>
-      <Text style={[theme.typography.h2, { color: theme.colors.text }]}>Your goals</Text>
+      <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('Your goals', 'Твоите цели')}</Text>
       <TouchableOpacity 
         accessibilityRole="button"
         style={[homeStyles.addGoalButton, { minHeight: 44, paddingHorizontal: 12, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radii.md }]}
         onPress={onAddGoal}
       >
         <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
-        <Text style={[homeStyles.addGoalText, theme.typography.label, { color: theme.colors.primary }]}>Add goal</Text>
+        <Text style={[homeStyles.addGoalText, theme.typography.label, { color: theme.colors.primary }]}>{t('Add goal', 'Добави цел')}</Text>
       </TouchableOpacity>
     </View>
   );

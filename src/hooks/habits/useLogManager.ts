@@ -3,6 +3,8 @@ import { Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import useHabitTracking from '../../hooks/useHabitTracking';
 import { Habit } from '../../types/supabase';
+import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeHabitCategory, localizeHabitSubcategory } from '@/features/habits/localization';
 
 // Map category names to icons and display names based on habits_rows.csv
 const categoryIcons: Record<string, {name: string, icon: string}> = {
@@ -54,6 +56,7 @@ interface UseLogManagerReturn {
 
 export default function useLogManager(): UseLogManagerReturn {
   const router = useRouter();
+  const { locale, t } = useAppLocale();
   // Get category parameter from navigation if available
   const { category: initialCategory } = useLocalSearchParams();
   
@@ -85,9 +88,9 @@ export default function useLogManager(): UseLogManagerReturn {
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error);
+      Alert.alert(t('Error', 'Грешка'), error);
     }
-  }, [error]);
+  }, [error, t]);
 
   // Extract categories from habits
   useEffect(() => {
@@ -98,7 +101,7 @@ export default function useLogManager(): UseLogManagerReturn {
       // Create category objects for UI
       const categoryList = uniqueCategories.map(category => ({
         id: category as string,
-        name: categoryIcons[category as string]?.name || category as string,
+        name: localizeHabitCategory(categoryIcons[category as string]?.name || category as string, locale),
         icon: categoryIcons[category as string]?.icon || 'options-outline'
       }));
       
@@ -119,7 +122,7 @@ export default function useLogManager(): UseLogManagerReturn {
         }
       }
     }
-  }, [habits, initialCategory, getHabitsByCategory]);
+  }, [habits, initialCategory, getHabitsByCategory, locale]);
 
   // Update subcategories when category changes
   useEffect(() => {
@@ -135,7 +138,7 @@ export default function useLogManager(): UseLogManagerReturn {
       // Create subcategory objects for UI
       const subcategoryList = uniqueSubcategories.map(subcategory => ({
         id: subcategory as string,
-        name: subcategory as string
+        name: localizeHabitSubcategory(subcategory as string, locale)
       }));
       
       setSubcategories(subcategoryList);
@@ -148,7 +151,7 @@ export default function useLogManager(): UseLogManagerReturn {
       setSubcategories([]);
       setSelectedSubcategory(null);
     }
-  }, [selectedCategory, habits]);
+  }, [selectedCategory, habits, locale]);
 
   // Filter habits by subcategory when it changes
   useEffect(() => {
@@ -226,7 +229,7 @@ export default function useLogManager(): UseLogManagerReturn {
   
   const handleLogHabit = useCallback(async () => {
     if (!selectedHabit) {
-      Alert.alert('Please select a habit to log');
+      Alert.alert(t('Please select a habit to log', 'Моля, изберете навик, който да запишете'));
       return;
     }
     
@@ -235,7 +238,7 @@ export default function useLogManager(): UseLogManagerReturn {
     
     // Validate notes if they exist
     if (sanitizedNotes && !validateNotes(sanitizedNotes)) {
-      Alert.alert('Invalid Input', 'Notes contain invalid characters or are too long. Please revise.');
+      Alert.alert(t('Invalid input', 'Невалидни данни'), t('Notes contain invalid characters or are too long. Please revise.', 'Бележката съдържа невалидни знаци или е прекалено дълга. Моля, редактирайте я.'));
       return;
     }
 
@@ -252,10 +255,10 @@ export default function useLogManager(): UseLogManagerReturn {
       }, 1000);
     } catch (err) {
       console.error('Error logging habit:', err);
-      Alert.alert('Error', 'Failed to log habit. Please try again.');
+      Alert.alert(t('Error', 'Грешка'), t('Failed to log habit. Please try again.', 'Навикът не можа да бъде записан. Опитайте отново.'));
       setIsSubmitting(false);
     }
-  }, [selectedHabit, notes, validateNotes, logCompletedHabit, quantity, router]);
+  }, [selectedHabit, notes, validateNotes, logCompletedHabit, quantity, router, t]);
 
   return {
     // States

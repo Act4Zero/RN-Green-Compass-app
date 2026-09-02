@@ -18,6 +18,7 @@ import SelectedHabitSection from '@/components/habits/log/SelectedHabitSection';
 import useLogManager from '@/hooks/habits/useLogManager';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Styles for this component
 const styles = LogStyles;
@@ -26,6 +27,7 @@ export default function LogHabit() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const { user, loading: authLoading } = useAuth();  
   // Use our custom hook to manage all the log screen logic
   const {
@@ -86,8 +88,8 @@ export default function LogHabit() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <View>
-            <Text style={[styles.title, { color: theme.colors.text }]}>Log an action</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>Choose a category, then capture the impact.</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>{t('Log an action', 'Запиши действие')}</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Choose a category, then capture the impact.', 'Избери категория и запиши въздействието.')}</Text>
           </View>
         </View>
 
@@ -135,7 +137,7 @@ export default function LogHabit() {
         <View style={styles.toastWrapper}>
           <View style={styles.toastContainer}>
             <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-            <Text style={styles.toastText}>Habit logged successfully!</Text>
+            <Text style={styles.toastText}>{t('Habit logged successfully!', 'Навикът е записан успешно!')}</Text>
           </View>
         </View>
       )}

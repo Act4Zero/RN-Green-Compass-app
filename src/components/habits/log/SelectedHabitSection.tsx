@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Habit } from '../../../types/supabase';
 import Input from '@/components/Input';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeHabit } from '@/features/habits/localization';
 
 const styles = LogStyles;
 
@@ -32,17 +34,19 @@ export function SelectedHabitSection({
     loading: boolean;
 }) {
     const { theme } = useAppTheme();
+    const { locale, t } = useAppLocale();
+    const selectedCopy = selectedHabit ? localizeHabit(selectedHabit, locale) : null;
     return (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            {selectedHabit ? '4. Add the details' : '4. Add the details'}
+            {t('4. Add the details', '4. Добави подробности')}
           </Text>
           
           {selectedHabit ? (
             <View style={[styles.selectedHabitContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <View style={styles.selectedHabitHeader}>
                 <View style={styles.selectedHabitInfo}>
-                  <Text style={[styles.selectedHabitTitle, { color: theme.colors.text }]}>{selectedHabit.name}</Text>
+                  <Text style={[styles.selectedHabitTitle, { color: theme.colors.text }]}>{selectedCopy?.name}</Text>
                   <Text style={[styles.selectedHabitCO2, { color: theme.colors.primary }]}>{selectedHabit.estimated_co2_saving} kg CO₂</Text>
                 </View>
                 <TouchableOpacity 
@@ -52,10 +56,10 @@ export function SelectedHabitSection({
                   <Ionicons name="close-circle-outline" size={24} color={theme.colors.textMuted} />
                 </TouchableOpacity>
               </View>
-              <Text style={[styles.selectedHabitDescription, { color: theme.colors.textMuted }]}>{selectedHabit.description}</Text>
+              <Text style={[styles.selectedHabitDescription, { color: theme.colors.textMuted }]}>{selectedCopy?.description}</Text>
               
               <View style={styles.quantityContainer}>
-                <Text style={[styles.quantityLabel, { color: theme.colors.text }]}>How many times did you do this?</Text>
+                <Text style={[styles.quantityLabel, { color: theme.colors.text }]}>{t('How many times did you do this?', 'Колко пъти извърши това действие?')}</Text>
                 
                 <View style={styles.quantityControls}>
                   <TouchableOpacity
@@ -77,7 +81,7 @@ export function SelectedHabitSection({
               </View>
               
               <View style={styles.notesContainer}>
-                <Text style={[styles.notesLabel, { color: theme.colors.text }]}>Notes (optional)</Text>
+                <Text style={[styles.notesLabel, { color: theme.colors.text }]}>{t('Notes (optional)', 'Бележки (незадължително)')}</Text>
                 <Input
                   value={notes}
                   onChangeText={(text) => {
@@ -86,7 +90,7 @@ export function SelectedHabitSection({
                       setNotes(text);
                     }
                   }}
-                  placeholder="Add any additional details... (max 500 characters)"
+                  placeholder={t('Add any additional details... (max 500 characters)', 'Добави подробности... (до 500 знака)')}
                   multiline
                   numberOfLines={3}
                   maxLength={500} // Enforce character limit at the UI level
@@ -94,7 +98,7 @@ export function SelectedHabitSection({
               </View>
               
               <Button
-                title="Log Habit"
+                title={t('Log Habit', 'Запиши навика')}
                 onPress={handleLogHabit}
                 variant="primary"
                 style={styles.confirmButton}
@@ -104,7 +108,7 @@ export function SelectedHabitSection({
             </View>
           ) : (
             <View style={[styles.noHabitSelectedContainer, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border }]}>
-              <Text style={[styles.noHabitText, { color: theme.colors.textMuted }]}>Select an action above to see impact and logging controls.</Text>
+              <Text style={[styles.noHabitText, { color: theme.colors.textMuted }]}>{t('Select an action above to see impact and logging controls.', 'Избери действие, за да видиш въздействието и настройките за запис.')}</Text>
             </View>
           )}
         </View>

@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Card } from '@/components/ui';
 import { useAppTheme } from '@/theme';
 import type { CarbonBalanceSummary } from '@/features/offsetting/types';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 export function ActionCard({ title, description, icon, onPress }: { title: string; description: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void }) {
   const { theme } = useAppTheme();
@@ -37,11 +38,12 @@ export function MetricCard({ label, value, icon }: { label: string; value: strin
 
 export function CarbonBalanceCards({ summary }: { summary: CarbonBalanceSummary }) {
   const { theme } = useAppTheme();
-  return <View accessibilityLabel="Carbon balance summary" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
-    <MetricCard label="Gross tracked" value={`${summary.grossTrackedKgCo2e.toFixed(1)} kg`} icon="analytics-outline" />
-    <MetricCard label="Estimated avoided" value={`${summary.avoidedKgCo2e.toFixed(1)} kg`} icon="leaf-outline" />
-    <MetricCard label="Retired offsets" value={`${summary.retiredOffsetKgCo2e.toFixed(1)} kg`} icon="shield-checkmark-outline" />
-    <MetricCard label="Remaining balance" value={`${summary.netBalanceKgCo2e.toFixed(1)} kg`} icon="scale-outline" />
+  const { t } = useAppLocale();
+  return <View accessibilityLabel={t('Carbon balance summary', 'Обобщение на въглеродния баланс')} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+    <MetricCard label={t('Gross tracked', 'Общо проследено')} value={`${summary.grossTrackedKgCo2e.toFixed(1)} kg`} icon="analytics-outline" />
+    <MetricCard label={t('Estimated avoided', 'Оценено избегнато')} value={`${summary.avoidedKgCo2e.toFixed(1)} kg`} icon="leaf-outline" />
+    <MetricCard label={t('Retired offsets', 'Приключени компенсации')} value={`${summary.retiredOffsetKgCo2e.toFixed(1)} kg`} icon="shield-checkmark-outline" />
+    <MetricCard label={t('Remaining balance', 'Оставащ баланс')} value={`${summary.netBalanceKgCo2e.toFixed(1)} kg`} icon="scale-outline" />
   </View>;
 }
 
@@ -66,11 +68,12 @@ export function ChoiceChips<T extends string>({ label, value, options, onChange 
 
 export function ImpactBars({ points }: { points: { date: string; co2eKgAvoided: number; actions: number }[] }) {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const visible = points.slice(-7);
   const max = Math.max(1, ...visible.map((point) => point.co2eKgAvoided));
-  if (!visible.length) return <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>Log an action or travel choice to start your chart.</Text>;
+  if (!visible.length) return <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Log an action or travel choice to start your chart.', 'Запишете действие или избор за пътуване, за да започнете графиката.')}</Text>;
   return (
-    <View accessibilityLabel="Seven day avoided emissions chart" style={{ flexDirection: 'row', alignItems: 'flex-end', height: 150, gap: theme.spacing.xs }}>
+    <View accessibilityLabel={t('Seven day avoided emissions chart', 'Графика на избегнатите емисии за седем дни')} style={{ flexDirection: 'row', alignItems: 'flex-end', height: 150, gap: theme.spacing.xs }}>
       {visible.map((point) => (
         <View key={point.date} style={{ flex: 1, height: '100%', justifyContent: 'flex-end', alignItems: 'center', gap: 6 }}>
           <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11 }]}>{point.co2eKgAvoided.toFixed(1)}</Text>

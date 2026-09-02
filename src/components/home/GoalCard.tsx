@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { EnhancedGoal } from '@/types/goal.types';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface GoalCardProps {
   goal: EnhancedGoal;
@@ -13,6 +14,7 @@ interface GoalCardProps {
 export default function GoalCard({ goal, onEdit }: GoalCardProps) {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const progress = Math.max(0, Math.min(100, goal.target > 0 ? (goal.progress / goal.target) * 100 : 0));
 
   return (
@@ -38,7 +40,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           />
         </View>
         <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, textAlign: 'right', fontSize: 12 }]}>
-          {goal.progress} of {goal.target} actions completed
+          {goal.progress} {t('of', 'от')} {goal.target} {t('actions completed', 'изпълнени действия')}
         </Text>
       </View>
       
@@ -48,7 +50,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
           style={{ minHeight: 40, justifyContent: 'center', backgroundColor: theme.colors.surfaceMuted, borderRadius: theme.radii.sm, paddingHorizontal: 14 }}
           onPress={() => onEdit(goal)}
         >
-          <Text style={[theme.typography.label, { color: theme.colors.primary }]}>Edit</Text>
+          <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('Edit', 'Редактирай')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           accessibilityRole="button"
@@ -58,7 +60,7 @@ export default function GoalCard({ goal, onEdit }: GoalCardProps) {
             params: { category: goal.category }
           } as any)}
         >
-          <Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>Log action</Text>
+          <Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>{t('Log action', 'Запиши действие')}</Text>
         </TouchableOpacity>
       </View>
     </View>

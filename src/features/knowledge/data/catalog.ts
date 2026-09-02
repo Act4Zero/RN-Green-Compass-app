@@ -8,6 +8,7 @@ import type {
   KnowledgeVisual,
 } from '../types';
 import { EXPERIENCE_ITEMS, EXTRA_DAILY_ITEMS, EXTRA_QUIZZES } from './experienceCatalog';
+import { localizedTopic } from '../topicLocalization';
 
 const REVIEWED_AT = '2026-08-01';
 const NEXT_REVIEW_AT = '2027-02-01';
@@ -254,25 +255,26 @@ const quizItems = [
 
 const bootstrapBgItems: KnowledgeItemDetail[] = [...coreItems, ...quizItems, ...DAILY_DOSES].map((item) => {
   const topic = KNOWLEDGE_TOPICS.find((entry) => entry.slug === item.topicSlugs[0])!;
+  const topicBg = localizedTopic(topic, 'bg');
   const kind = item.type === 'article' ? 'Обяснение' : item.type === 'guide' ? 'Практическо ръководство' : item.type === 'quiz' ? 'Проверка на знанията' : 'Ежедневна идея';
   const dailyIndex = item.type === 'daily_fact' ? Number(item.id.replace('daily-', '')) - 1 : -1;
-  const title = dailyIndex >= 0 ? dailyFactsBg[dailyIndex] : `${topic.name}: ${kind}`;
+  const title = dailyIndex >= 0 ? dailyFactsBg[dailyIndex] : `${topicBg.name}: ${kind}`;
   return {
     ...item,
     versionId: `${item.versionId}-bg`,
     slug: `${item.slug}-bg`,
     locale: 'bg',
     title,
-    summary: `Проверено въведение в темата „${topic.name}“ с ясни стъпки, източници и практично действие.`,
+    summary: `Проверено въведение в темата „${topicBg.name}“ с ясни стъпки, източници и практично действие.`,
     body: dailyIndex >= 0 ? [
       { id: `${item.id}-bg-body`, type: 'paragraph', text: dailyFactsBg[dailyIndex] },
       { id: `${item.id}-bg-context`, type: 'callout', tone: 'success', title: 'Опитайте днес', text: 'Открийте къде тази идея се вписва в рутината ви и проследете резултата.' },
     ] : [
-      { id: `${item.id}-bg-intro`, type: 'paragraph', text: `${topic.description} Материалът свързва надеждната информация с изпълнима ежедневна стъпка.` },
+      { id: `${item.id}-bg-intro`, type: 'paragraph', text: `${topicBg.description} Материалът свързва надеждната информация с изпълнима ежедневна стъпка.` },
       { id: `${item.id}-bg-why`, type: 'callout', tone: 'info', title: 'Защо това е важно', text: 'Устойчивата промяна започва с контекст, измерима цел и редовен преглед на резултата.' },
       { id: `${item.id}-bg-steps`, type: 'checklist', items: ['Наблюдавайте сегашната си рутина.', 'Изберете една измерима промяна.', 'Опитайте я за седем дни.', 'Прегледайте резултата и коригирайте.'] },
     ],
-    searchText: `${title} ${topic.name} устойчивост ${item.sources[0]?.publisher || ''}`.toLowerCase(),
+    searchText: `${title} ${topicBg.name} устойчивост ${item.sources[0]?.publisher || ''}`.toLowerCase(),
     checksum: `${item.checksum}-bg`,
   } as KnowledgeItemDetail;
 });
