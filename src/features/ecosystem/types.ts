@@ -2,6 +2,7 @@ import type { PointEvent, PointSource } from '@/types/community/points';
 
 export type LocalizedText = { en: string; bg: string };
 export type EcosystemStage = 'seed' | 'sprout' | 'young' | 'leafy' | 'mature';
+export type EcosystemBiomeId = 'forest_meadow' | 'savanna' | 'rainforest';
 
 export interface EcosystemSpecies {
   slug: string;
@@ -23,6 +24,18 @@ export interface EcosystemGuest {
   unlockAt: number;
 }
 
+export interface EcosystemBiomeCatalog {
+  id: EcosystemBiomeId;
+  name: LocalizedText;
+  eyebrow: LocalizedText;
+  description: LocalizedText;
+  growthDescription: LocalizedText;
+  completionTitle: LocalizedText;
+  species: EcosystemSpecies[];
+  guests: EcosystemGuest[];
+  icon: 'leaf-outline' | 'sunny-outline' | 'rainy-outline';
+}
+
 export interface EcosystemGrowthRule {
   source: PointSource;
   units: number;
@@ -41,7 +54,7 @@ export interface EcosystemProgress {
 }
 
 export interface EcosystemSnapshot extends EcosystemProgress {
-  biome: 'forest_meadow';
+  biome: EcosystemBiomeId;
   activeSpecies: EcosystemSpecies;
   unlockedSpecies: EcosystemSpecies[];
   guests: EcosystemGuest[];

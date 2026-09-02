@@ -1,15 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ActivityIndicator, ImageBackground, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, type ImageSourcePropType, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { useAppTheme } from '@/theme';
-import { STAGE_LABELS } from '../catalog';
+import { getBiomeCatalog, STAGE_LABELS } from '../catalog';
 import { getEcosystemCompletion } from '../progression';
-import type { EcosystemSnapshot } from '../types';
+import type { EcosystemBiomeId, EcosystemSnapshot } from '../types';
 import { PlantIllustration } from './PlantIllustration';
 
-const BACKGROUND = require('../../../../assets/images/ecosystem/open-bulgarian-meadow-v3.webp');
-const FULLY_UNLOCKED_BACKGROUND = require('../../../../assets/images/ecosystem/fully-unlocked-forest-meadow-v1.webp');
+const BACKGROUNDS: Record<EcosystemBiomeId, ImageSourcePropType> = {
+  forest_meadow: require('../../../../assets/images/ecosystem/open-bulgarian-meadow-v3.webp'),
+  savanna: require('../../../../assets/images/ecosystem/open-savanna-v1.webp'),
+  rainforest: require('../../../../assets/images/ecosystem/open-rainforest-v1.webp'),
+};
+
+const FULLY_UNLOCKED_BACKGROUNDS: Record<EcosystemBiomeId, ImageSourcePropType> = {
+  forest_meadow: require('../../../../assets/images/ecosystem/fully-unlocked-forest-meadow-v1.webp'),
+  savanna: require('../../../../assets/images/ecosystem/fully-unlocked-savanna-v1.webp'),
+  rainforest: require('../../../../assets/images/ecosystem/fully-unlocked-rainforest-v1.webp'),
+};
 
 const PLANT_POSITIONS = [
   { left: '62%' as const, bottom: -4, size: 218 },
@@ -27,9 +36,10 @@ export function EcosystemHero({ snapshot, loading, preview = false, onOpen }: { 
   const { width } = useWindowDimensions();
   const { locale, t } = useKnowledgeLocale();
   const compact = width < 720;
+  const biome = getBiomeCatalog(snapshot.biome);
   const stageLabel = STAGE_LABELS[snapshot.stage][locale];
   const plantName = snapshot.activeSpecies.name[locale];
-  const completion = getEcosystemCompletion(snapshot.growthUnits);
+  const completion = getEcosystemCompletion(snapshot.growthUnits, snapshot.biome);
   const growthLabel = completion.complete
     ? t('Every species and wild guest has found a place here.', 'Всеки вид и див гост вече е намерил своето място тук.')
     : snapshot.nextStageAt == null
@@ -45,10 +55,10 @@ export function EcosystemHero({ snapshot, loading, preview = false, onOpen }: { 
       style={({ pressed }) => ({ marginBottom: 20, opacity: pressed ? 0.96 : 1 })}
     >
       <ImageBackground
-        source={completion.complete ? FULLY_UNLOCKED_BACKGROUND : BACKGROUND}
+        source={completion.complete ? FULLY_UNLOCKED_BACKGROUNDS[snapshot.biome] : BACKGROUNDS[snapshot.biome]}
         resizeMode={completion.complete ? 'contain' : 'cover'}
-        imageStyle={{ borderRadius: theme.radii.xl }}
-        style={{ minHeight: completion.complete ? (compact ? 320 : 520) : (compact ? 520 : 470), aspectRatio: completion.complete && !compact ? 1672 / 941 : undefined, backgroundColor: '#172918', borderRadius: theme.radii.xl, overflow: 'hidden', borderWidth: 1, borderColor: '#8FA68A', ...theme.shadows.raised }}
+        imageStyle={{ borderRadius: theme.radii.xl, width: '100%', height: '100%', resizeMode: completion.complete ? 'contain' : 'cover', objectFit: completion.complete ? 'contain' : 'cover' }}
+        style={{ minHeight: completion.complete ? undefined : (compact ? 520 : 470), aspectRatio: completion.complete ? 1672 / 941 : undefined, backgroundColor: '#172918', borderRadius: theme.radii.xl, overflow: 'hidden', borderWidth: 1, borderColor: '#8FA68A', ...theme.shadows.raised }}
       >
         <View style={{ flex: 1, padding: compact ? 16 : 26, backgroundColor: completion.complete ? 'rgba(9,35,22,0.01)' : 'rgba(9,35,22,0.04)' }}>
           {completion.complete ? (
@@ -93,7 +103,7 @@ export function EcosystemHero({ snapshot, loading, preview = false, onOpen }: { 
           {!completion.complete ? (
             <View style={{ position: 'absolute', left: compact ? 14 : 24, bottom: compact ? 15 : 22, maxWidth: compact ? 235 : 340, paddingHorizontal: 13, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(16,48,32,0.86)' }}>
               <Text style={[theme.typography.label, { color: '#D7F28E', fontSize: 10, textTransform: 'uppercase', letterSpacing: .8 }]}>{t('Your habitat is taking shape', 'Твоето местообитание оживява')}</Text>
-              <Text style={[theme.typography.bodySmall, { color: '#FFFFFF', fontSize: 12, marginTop: 3 }]}>{t('Each unlocked species takes root in the open meadow. Over time, your actions turn it into a diverse forest.', 'Всеки отключен вид се вкоренява в свободно място на поляната. С времето действията ти я превръщат в разнообразна гора.')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: '#FFFFFF', fontSize: 12, marginTop: 3 }]}>{biome.growthDescription[locale]}</Text>
             </View>
           ) : null}
 

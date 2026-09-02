@@ -11,11 +11,32 @@ const SPECIES_ASSETS: Record<string, ImageSourcePropType> = {
   'red-clover': require('../../../../assets/images/ecosystem/red-clover-realistic.webp'),
   'corn-poppy': require('../../../../assets/images/ecosystem/corn-poppy-realistic.webp'),
   'oxeye-daisy': require('../../../../assets/images/ecosystem/oxeye-daisy-realistic.webp'),
+  'umbrella-thorn': require('../../../../assets/images/ecosystem/umbrella-thorn-realistic.webp'),
+  'african-baobab': require('../../../../assets/images/ecosystem/african-baobab-realistic.webp'),
+  marula: require('../../../../assets/images/ecosystem/marula-realistic.webp'),
+  'silver-cluster-leaf': require('../../../../assets/images/ecosystem/silver-cluster-leaf-realistic.webp'),
+  'red-oat-grass': require('../../../../assets/images/ecosystem/red-oat-grass-realistic.webp'),
+  'elephant-grass': require('../../../../assets/images/ecosystem/elephant-grass-realistic.webp'),
+  'devils-thorn': require('../../../../assets/images/ecosystem/devils-thorn-realistic.webp'),
+  'african-wild-sage': require('../../../../assets/images/ecosystem/african-wild-sage-realistic.webp'),
+  'kapok-tree': require('../../../../assets/images/ecosystem/kapok-tree-realistic.webp'),
+  'brazil-nut-tree': require('../../../../assets/images/ecosystem/brazil-nut-tree-realistic.webp'),
+  'cacao-tree': require('../../../../assets/images/ecosystem/cacao-tree-realistic.webp'),
+  'rubber-tree': require('../../../../assets/images/ecosystem/rubber-tree-realistic.webp'),
+  'acai-palm': require('../../../../assets/images/ecosystem/acai-palm-realistic.webp'),
+  'lobster-claw-heliconia': require('../../../../assets/images/ecosystem/lobster-claw-heliconia-realistic.webp'),
+  'vanilla-orchid': require('../../../../assets/images/ecosystem/vanilla-orchid-realistic.webp'),
+  'giant-taro': require('../../../../assets/images/ecosystem/giant-taro-realistic.webp'),
 };
 
 const ENGLISH_OAK_SEED = require('../../../../assets/images/ecosystem/english-oak-seed-realistic.png');
 const ENGLISH_OAK_MATURE = require('../../../../assets/images/ecosystem/english-oak-mature-transparent-v3.webp');
 const FOREST_SOIL = require('../../../../assets/images/ecosystem/forest-soil-patch-realistic.png');
+const SEED_ASSETS: Record<string, ImageSourcePropType> = {
+  'english-oak': ENGLISH_OAK_SEED,
+  'umbrella-thorn': require('../../../../assets/images/ecosystem/umbrella-thorn-seed-realistic.webp'),
+  'kapok-tree': require('../../../../assets/images/ecosystem/kapok-seed-realistic.webp'),
+};
 
 const STAGE_SCALE: Record<EcosystemStage, number> = {
   seed: 0,
@@ -30,7 +51,7 @@ export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oa
     return (
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
         <Image
-          source={ENGLISH_OAK_SEED}
+          source={SEED_ASSETS[speciesSlug] || ENGLISH_OAK_SEED}
           resizeMode="contain"
           style={{ position: 'absolute', width: size * 0.56, height: size * 0.56, left: size * 0.22, bottom: size * 0.12 }}
         />

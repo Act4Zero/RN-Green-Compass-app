@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { PointEvent } from '@/types/community/points';
 import { buildLocalSnapshot } from './progression';
 import { ecosystemService } from './service';
-import type { EcosystemSnapshot } from './types';
+import type { EcosystemBiomeId, EcosystemSnapshot } from './types';
 
 export function useEcosystem(userId: string | undefined, pointEvents: PointEvent[]) {
   const [snapshot, setSnapshot] = useState<EcosystemSnapshot>(() => buildLocalSnapshot(pointEvents));
@@ -25,5 +25,11 @@ export function useEcosystem(userId: string | undefined, pointEvents: PointEvent
     return selected;
   }, [refresh, snapshot.growthUnits, userId]);
 
-  return { snapshot, loading, refresh, selectSpecies };
+  const selectBiome = useCallback(async (biome: EcosystemBiomeId) => {
+    const selected = await ecosystemService.selectBiome(userId, biome);
+    if (selected) await refresh();
+    return selected;
+  }, [refresh, userId]);
+
+  return { snapshot, loading, refresh, selectSpecies, selectBiome };
 }

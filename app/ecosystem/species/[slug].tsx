@@ -5,7 +5,7 @@ import { Linking, ScrollView, Text, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
-import { FOREST_MEADOW_SPECIES, PlantIllustration, useEcosystem } from '@/features/ecosystem';
+import { ALL_ECOSYSTEM_SPECIES, getSpeciesBiome, PlantIllustration, useEcosystem } from '@/features/ecosystem';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
@@ -18,7 +18,7 @@ export default function EcosystemSpeciesScreen() {
   const { user } = useAuth();
   const { pointHistory } = usePoints();
   const { snapshot, selectSpecies } = useEcosystem(user?.id, pointHistory);
-  const species = FOREST_MEADOW_SPECIES.find((entry) => entry.slug === slug);
+  const species = ALL_ECOSYSTEM_SPECIES.find((entry) => entry.slug === slug);
 
   if (!species) {
     return <Screen><Content><StatePanel title={t('Species not found', 'Видът не е намерен')} message={t('Return to your ecosystem and choose another plant.', 'Върни се в екосистемата и избери друго растение.')} action={<AppButton label={t('Back', 'Назад')} onPress={() => goBackOrReplace(router, '/ecosystem')} />} /></Content></Screen>;
@@ -26,12 +26,13 @@ export default function EcosystemSpeciesScreen() {
 
   const unlocked = snapshot.growthUnits >= species.unlockAt;
   const active = snapshot.activeSpecies.slug === species.slug;
+  const speciesBiome = getSpeciesBiome(species.slug);
 
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content>
-          <PageHeader eyebrow={t('Species field note', 'Полеви бележки за вида')} title={species.name[locale]} description={species.scientificName} action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/ecosystem')} />} />
+          <PageHeader eyebrow={speciesBiome?.name[locale] || t('Species field note', 'Полеви бележки за вида')} title={species.name[locale]} description={species.scientificName} action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/ecosystem')} />} />
           <Card elevated style={{ padding: 0, overflow: 'hidden', marginBottom: 18 }}>
             <View style={{ minHeight: 210, padding: 28, justifyContent: 'flex-end', backgroundColor: theme.colors.primary }}>
               <View style={{ position: 'absolute', right: -20, top: -30, width: 210, height: 210, borderRadius: 105, backgroundColor: theme.colors.accent, opacity: 0.15 }} />
