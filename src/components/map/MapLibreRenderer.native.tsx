@@ -52,6 +52,11 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     cameraRef.current?.setCamera({ centerCoordinate: command.center ? [command.center.lng, command.center.lat] : undefined, zoomLevel: command.zoom, pitch: command.pitch, heading: command.heading, animationDuration: props.reducedMotion ? 0 : command.durationMs ?? 850, animationMode: props.reducedMotion ? 'moveTo' : 'flyTo' });
   }, [props.cameraCommand, props.reducedMotion]);
 
+  useEffect(() => {
+    if (!props.searchPoint) return;
+    cameraRef.current?.setCamera({ centerCoordinate: [props.searchPoint.lng, props.searchPoint.lat], zoomLevel: 13.5, pitch: 42, animationDuration: props.reducedMotion ? 0 : 850, animationMode: props.reducedMotion ? 'moveTo' : 'flyTo' });
+  }, [props.reducedMotion, props.searchPoint]);
+
   if (!localizedStyle) return <View style={{ flex: 1, backgroundColor: '#EAF1EC' }} />;
 
   return (
@@ -96,6 +101,7 @@ export default function MapLibreRenderer(props: MapRendererProps) {
         <CircleLayer id="location-pins" filter={['!', ['has', 'point_count']]} style={{ circleColor: '#174C35', circleRadius: 9, circleStrokeWidth: 3, circleStrokeColor: '#C6F177' }} />
         <CircleLayer id="selected-pin" filter={['==', ['get', 'id'], props.selectedLocationId ?? '']} style={{ circleColor: '#C6F177', circleRadius: 15, circleStrokeWidth: 4, circleStrokeColor: '#FFFFFF', circleOpacity: 0.45 }} />
       </ShapeSource>
+      {props.searchPoint ? <ShapeSource id="green-compass-address-search" shape={{ type: 'Feature', geometry: { type: 'Point', coordinates: [props.searchPoint.lng, props.searchPoint.lat] }, properties: {} }}><CircleLayer id="address-search-halo" style={{ circleRadius: 17, circleColor: '#C6F177', circleOpacity: 0.28 }} /><CircleLayer id="address-search-point" style={{ circleRadius: 8, circleColor: '#C6F177', circleStrokeWidth: 4, circleStrokeColor: '#174C35' }} /></ShapeSource> : null}
       {props.userLocation ? <UserLocation visible animated /> : null}
     </MapView>
   );

@@ -2,6 +2,8 @@ import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import MapSidebar from '../MapSidebar';
 
+const mockSearchBulgarianAddress = jest.fn();
+
 let mockLocale: 'en' | 'bg' = 'en';
 const mockSidebarMap: any = {
   query: '',
@@ -19,6 +21,7 @@ const mockSidebarMap: any = {
   setResultsRailCollapsed: jest.fn(),
 };
 
+jest.mock('@/services/geocodingService', () => ({ searchBulgarianAddress: (...args: unknown[]) => mockSearchBulgarianAddress(...args) }));
 jest.mock('@/hooks/useMapIntegration', () => ({ useMapIntegration: () => mockSidebarMap }));
 jest.mock('@/context/AppLocaleContext', () => ({
   useAppLocale: () => ({
@@ -35,13 +38,17 @@ jest.mock('@expo/vector-icons', () => {
 });
 
 describe('MapSidebar discovery controls', () => {
-  beforeEach(() => { mockLocale = 'en'; });
+  beforeEach(() => {
+    mockLocale = 'en';
+    mockSidebarMap.query = '';
+    jest.clearAllMocks();
+  });
 
   it('uses local search and only renders categories derived from the dataset', () => {
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapSidebar />); });
 
-    const search = tree.root.findByProps({ accessibilityLabel: 'Search sustainability locations' });
+    const search = tree.root.findByProps({ accessibilityLabel: 'Search places and addresses' });
     act(() => search.props.onChangeText('Sofía'));
     expect(mockSidebarMap.setQuery).toHaveBeenCalledWith('Sofía');
     expect(tree.root.findByProps({ children: 'EV charging' })).toBeTruthy();
@@ -50,6 +57,23 @@ describe('MapSidebar discovery controls', () => {
     const selectedControls = tree.root.findAll((node) => node.props.accessibilityState?.selected === true);
     act(() => selectedControls[0].props.onPress());
     expect(mockSidebarMap.toggleCategory).toHaveBeenCalledWith('ev_charging', false);
+  });
+
+  it('geocodes an explicitly submitted address and returns its map point', async () => {
+    mockSidebarMap.query = 'пл. Народно събрание 2, София';
+    const result = { id: '42', label: 'Народно събрание, София, България', lat: 42.694, lng: 23.332 };
+    mockSearchBulgarianAddress.mockResolvedValue(result);
+    const onAddressSearchResult = jest.fn();
+    let tree!: renderer.ReactTestRenderer;
+    act(() => { tree = renderer.create(<MapSidebar onAddressSearchResult={onAddressSearchResult} />); });
+
+    await act(async () => {
+      await tree.root.findByProps({ accessibilityLabel: 'Find address' }).props.onPress();
+    });
+
+    expect(mockSearchBulgarianAddress).toHaveBeenCalledWith('пл. Народно събрание 2, София');
+    expect(onAddressSearchResult).toHaveBeenCalledWith(result);
+    expect(tree.root.findByProps({ children: result.label })).toBeTruthy();
   });
 
   it('offers offline maps without a paid satellite style selector', () => {
@@ -63,7 +87,8 @@ describe('MapSidebar discovery controls', () => {
     mockLocale = 'bg';
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapSidebar />); });
-    expect(tree.root.findByProps({ accessibilityLabel: 'Търсете устойчиви места' })).toBeTruthy();
+    expect(tree.root.findByProps({ accessibilityLabel: 'Търсете места и адреси' })).toBeTruthy();
+    expect(tree.root.findByProps({ accessibilityLabel: 'Намерете адреса' })).toBeTruthy();
     expect(tree.root.findByProps({ children: 'Зареждане на електромобили' })).toBeTruthy();
     expect(tree.root.findByProps({ accessibilityLabel: 'Управление на офлайн картите' })).toBeTruthy();
   });
