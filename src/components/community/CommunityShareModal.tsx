@@ -18,6 +18,7 @@ import CommunityShareableCard, { captureCommunityShareableCard } from './Communi
 import ShareButton from '../sharing/ShareButton';
 import { shareToSocialPlatform, SocialPlatform } from '../../utils/sharing/shareUtils';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   modalContainer: ViewStyle;
@@ -61,6 +62,7 @@ export function CommunityShareModal({
   onClose,
   postData
 }: CommunityShareModalProps) {
+  const { t } = useAppLocale();
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
@@ -97,7 +99,7 @@ export function CommunityShareModal({
       if (result.success) {
         setShareResult({
           success: true,
-          message: 'Successfully shared!'
+          message: t('Successfully shared!', 'Споделено успешно!')
         });
 
         // Auto close after successful share with a slight delay
@@ -107,15 +109,15 @@ export function CommunityShareModal({
       } else {
         setShareResult({
           success: false,
-          message: result.error || 'Failed to share. Please try again.'
+          message: result.error || t('Failed to share. Please try again.', 'Споделянето е неуспешно. Опитайте отново.')
         });
       }
-    } catch (error) {
+    } catch {
       setShareResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
+        message: t('Unknown error occurred', 'Възникна неизвестна грешка')
       });
-      Alert.alert('Sharing Error', 'Failed to share this post. Please try again later.');
+      Alert.alert(t('Sharing Error', 'Грешка при споделяне'), t('Failed to share this post. Please try again later.', 'Публикацията не можа да бъде споделена. Опитайте отново по-късно.'));
     } finally {
       setIsSharing(false);
     }
@@ -132,7 +134,7 @@ export function CommunityShareModal({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>
-              Share This Post
+              {t('Share This Post', 'Споделяне на публикацията')}
             </Text>
             <TouchableOpacity 
               style={styles.closeButton}
@@ -158,7 +160,7 @@ export function CommunityShareModal({
           {/* Social sharing options */}
           <View style={styles.sharingOptions}>
             <Text style={styles.sharingOptionsTitle}>
-              Share to
+              {t('Share to', 'Сподели чрез')}
             </Text>
             
             {isSharing ? (
@@ -186,7 +188,7 @@ export function CommunityShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="General"
+                      label={t('General', 'Други')}
                       platformIcon="general"
                       onPress={() => handleShare('general')}
                       disabled={isSharing}

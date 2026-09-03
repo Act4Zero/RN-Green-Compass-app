@@ -33,12 +33,12 @@ export function validateCommunitySubmission(input: { type: CommunitySubmissionTy
   return { ...input, title, body, url };
 }
 
-export function getCountdownLabel(endsAt: string, now = new Date()): string {
+export function getCountdownLabel(endsAt: string, now = new Date(), locale: 'en' | 'bg' = 'en'): string {
   const remaining = new Date(endsAt).getTime() - now.getTime();
-  if (remaining <= 0) return 'Ended';
+  if (remaining <= 0) return locale === 'bg' ? 'Приключило' : 'Ended';
   const days = Math.ceil(remaining / 86_400_000);
-  if (days === 1) return '1 day left';
-  return `${days} days left`;
+  if (days === 1) return locale === 'bg' ? 'Остава 1 ден' : '1 day left';
+  return locale === 'bg' ? `Остават ${days} дни` : `${days} days left`;
 }
 
 export function getRewardProgress(points: number, tiers = COMMUNITY_REWARD_TIERS) {

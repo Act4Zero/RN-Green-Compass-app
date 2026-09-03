@@ -46,7 +46,7 @@ function BadgeSummaryShareModal({
   badgeData,
   shareContent,
 }: BadgeSummaryShareModalProps) {
-  const { t } = useAppLocale();
+  const { locale, t } = useAppLocale();
   const viewShotRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
   const [isSharing, setIsSharing] = useState(false);
@@ -87,7 +87,7 @@ function BadgeSummaryShareModal({
       setShareResult({});
 
       // Create share content with the display name - using the user's name if available
-      const userName = displayName || 'I';
+      const userName = displayName || t('I', 'Аз');
       const possessiveSuffix = displayName ? 'has' : 've';
       
       // Create a single message format without duplication
@@ -100,7 +100,9 @@ function BadgeSummaryShareModal({
       } = {
         title: shareContent.title,
         url: 'https://app.greencompass.app', // Correct app URL
-        message: `${userName} ${possessiveSuffix} earned ${badgeData.earnedBadgeCount} of ${badgeData.totalBadgeCount} badges on Green Compass! Join the movement for sustainable living.`
+        message: locale === 'bg'
+          ? `${userName} спечели ${badgeData.earnedBadgeCount} от ${badgeData.totalBadgeCount} значки в Green Compass! Присъедини се към движението за устойчив начин на живот.`
+          : `${userName} ${possessiveSuffix} earned ${badgeData.earnedBadgeCount} of ${badgeData.totalBadgeCount} badges on Green Compass! Join the movement for sustainable living.`
       };
 
       // Capture image for all sharing platforms
@@ -117,7 +119,7 @@ function BadgeSummaryShareModal({
       if (result.success) {
         setShareResult({
           success: true,
-          message: 'Successfully shared!'
+          message: t('Successfully shared!', 'Споделено успешно!')
         });
 
         // Auto close after successful share with a slight delay
@@ -127,13 +129,13 @@ function BadgeSummaryShareModal({
       } else {
         setShareResult({
           success: false,
-          message: result.error || 'Failed to share. Please try again.'
+          message: locale === 'bg' ? 'Споделянето е неуспешно. Опитайте отново.' : result.error || 'Failed to share. Please try again.'
         });
       }
     } catch (error) {
       setShareResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
+        message: locale === 'bg' ? 'Възникна грешка при споделянето.' : error instanceof Error ? error.message : 'Unknown error occurred'
       });
       if (onError) {
         onError(error instanceof Error ? error.message : String(error));

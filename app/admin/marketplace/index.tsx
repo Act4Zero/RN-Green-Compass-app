@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
 
 import { AppButton, Card, Content, PageHeader, Screen, Skeleton, StatePanel } from '@/components/ui';
+import { useAppLocale } from '@/context/AppLocaleContext';
 import { marketplaceAdminService } from '@/features/marketplace';
 import { useAppTheme } from '@/theme';
 
@@ -11,6 +12,7 @@ type AdminQueue = Awaited<ReturnType<typeof marketplaceAdminService.getQueue>>;
 
 export default function MarketplaceAdminScreen() {
   const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
   const [data, setData] = useState<AdminQueue | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +20,10 @@ export default function MarketplaceAdminScreen() {
     setError(null);
     try {
       setData(await marketplaceAdminService.getQueue());
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+    } catch {
+      setError(t('The administration queue could not be loaded.', 'Административната опашка не може да бъде заредена.'));
     }
-  }, []);
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -33,8 +35,8 @@ export default function MarketplaceAdminScreen() {
     try {
       await run();
       await load();
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+    } catch {
+      setError(t('The action could not be completed.', 'Действието не можа да бъде изпълнено.'));
     }
   };
 
@@ -43,8 +45,8 @@ export default function MarketplaceAdminScreen() {
       const result = await marketplaceAdminService.createPartnerOnboarding(businessId);
       if (Platform.OS === 'web') window.location.assign(result.onboardingUrl);
       else await WebBrowser.openBrowserAsync(result.onboardingUrl);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+    } catch {
+      setError(t('Partner onboarding could not be opened.', 'Регистрацията на партньора не можа да бъде отворена.'));
     }
   };
 
@@ -53,30 +55,30 @@ export default function MarketplaceAdminScreen() {
       <ScrollView>
         <Content wide>
           <PageHeader
-            eyebrow="Marketplace operations"
-            title="Review and fulfillment"
-            description="Curated partner, product, review, return and order queues."
+            eyebrow={t('Marketplace operations', 'Операции на пазара')}
+            title={t('Review and fulfillment', 'Преглед и изпълнение')}
+            description={t('Curated partner, product, review, return and order queues.', 'Опашки за партньори, продукти, отзиви, връщания и поръчки.')}
           />
           {!data && !error ? <Skeleton height={360} /> : null}
           {error ? (
             <StatePanel
-              title="Admin queue unavailable"
+              title={t('Admin queue unavailable', 'Административната опашка не е достъпна')}
               message={error}
-              action={<AppButton label="Try again" onPress={() => void load()} />}
+              action={<AppButton label={t('Try again', 'Опитай отново')} onPress={() => void load()} />}
             />
           ) : null}
           {data ? (
             <View style={{ gap: 18 }}>
-              <Queue title="Businesses" empty="No businesses await verification.">
+              <Queue title={t('Businesses', 'Бизнеси')} empty={t('No businesses await verification.', 'Няма бизнеси, които очакват проверка.')}>
                 {data.businesses.map((row) => (
                   <QueueItem key={row.id} title={row.name} detail={row.verification_status}>
                     <AppButton
-                      label="Verify"
+                      label={t('Verify', 'Потвърди')}
                       onPress={() => void action(() => marketplaceAdminService.setBusinessStatus(row.id, 'verified'))}
                     />
-                    <AppButton label="Stripe onboarding" variant="secondary" onPress={() => void onboard(row.id)} />
+                    <AppButton label={t('Stripe onboarding', 'Регистрация в Stripe')} variant="secondary" onPress={() => void onboard(row.id)} />
                     <AppButton
-                      label="Reject"
+                      label={t('Reject', 'Отхвърли')}
                       variant="danger"
                       onPress={() => void action(() => marketplaceAdminService.setBusinessStatus(row.id, 'rejected'))}
                     />
@@ -84,19 +86,19 @@ export default function MarketplaceAdminScreen() {
                 ))}
               </Queue>
 
-              <Queue title="Products" empty="No products await review.">
+              <Queue title={t('Products', 'Продукти')} empty={t('No products await review.', 'Няма продукти, които очакват преглед.')}>
                 {data.products.map((row) => (
                   <QueueItem
                     key={row.id}
-                    title={row.name_en}
-                    detail={`${row.marketplace_businesses?.name || ''} · ${row.status} · stock ${row.stock_quantity}`}
+                    title={locale === 'bg' ? row.name_bg : row.name_en}
+                    detail={`${row.marketplace_businesses?.name || ''} · ${localizeStatus(row.status, locale)} · ${t('stock', 'наличност')} ${row.stock_quantity}`}
                   >
                     <AppButton
-                      label="Publish"
+                      label={t('Publish', 'Публикувай')}
                       onPress={() => void action(() => marketplaceAdminService.setProductStatus(row.id, 'published'))}
                     />
                     <AppButton
-                      label="Keep in review"
+                      label={t('Keep in review', 'Остави за преглед')}
                       variant="secondary"
                       onPress={() => void action(() => marketplaceAdminService.setProductStatus(row.id, 'in_review'))}
                     />
@@ -104,19 +106,19 @@ export default function MarketplaceAdminScreen() {
                 ))}
               </Queue>
 
-              <Queue title="Reviews" empty="No reviews await moderation.">
+              <Queue title={t('Reviews', 'Отзиви')} empty={t('No reviews await moderation.', 'Няма отзиви, които очакват модерация.')}>
                 {data.reviews.map((row) => (
                   <QueueItem
                     key={row.id}
-                    title={row.marketplace_products?.name_en || 'Product review'}
+                    title={(locale === 'bg' ? row.marketplace_products?.name_bg : row.marketplace_products?.name_en) || t('Product review', 'Отзив за продукт')}
                     detail={`${row.rating}/5 · ${row.body}`}
                   >
                     <AppButton
-                      label="Approve"
+                      label={t('Approve', 'Одобри')}
                       onPress={() => void action(() => marketplaceAdminService.moderateReview(row.id, 'approved'))}
                     />
                     <AppButton
-                      label="Reject"
+                      label={t('Reject', 'Отхвърли')}
                       variant="danger"
                       onPress={() => void action(() => marketplaceAdminService.moderateReview(row.id, 'rejected'))}
                     />
@@ -124,44 +126,44 @@ export default function MarketplaceAdminScreen() {
                 ))}
               </Queue>
 
-              <Queue title="Orders" empty="No orders require fulfillment.">
+              <Queue title={t('Orders', 'Поръчки')} empty={t('No orders require fulfillment.', 'Няма поръчки, които изискват изпълнение.')}>
                 {data.orders.map((row) => (
                   <QueueItem
                     key={row.id}
                     title={row.order_number}
-                    detail={`${row.marketplace_businesses?.name || ''} · ${row.status}`}
+                    detail={`${row.marketplace_businesses?.name || ''} · ${localizeStatus(row.status, locale)}`}
                   >
                     <AppButton
-                      label="Processing"
+                      label={t('Processing', 'Обработва се')}
                       variant="secondary"
                       onPress={() => void action(() => marketplaceAdminService.updateOrder(row.id, 'processing'))}
                     />
                     <AppButton
-                      label="Delivered"
+                      label={t('Delivered', 'Доставена')}
                       onPress={() => void action(() => marketplaceAdminService.updateOrder(row.id, 'delivered'))}
                     />
                   </QueueItem>
                 ))}
               </Queue>
 
-              <Queue title="Returns" empty="No active return requests.">
+              <Queue title={t('Returns', 'Връщания')} empty={t('No active return requests.', 'Няма активни заявки за връщане.')}>
                 {data.returns.map((row) => (
                   <QueueItem
                     key={row.id}
-                    title={row.marketplace_orders?.order_number || 'Return'}
-                    detail={`${row.reason} · ${row.status}`}
+                    title={row.marketplace_orders?.order_number || t('Return', 'Връщане')}
+                    detail={`${row.reason} · ${localizeStatus(row.status, locale)}`}
                   >
                     <AppButton
-                      label="Refund"
+                      label={t('Refund', 'Възстанови сумата')}
                       onPress={() => void action(() => marketplaceAdminService.decideReturn(row.id, 'refund'))}
                     />
                     <AppButton
-                      label="Reject"
+                      label={t('Reject', 'Отхвърли')}
                       variant="danger"
                       onPress={() => void action(() => marketplaceAdminService.decideReturn(row.id, 'reject'))}
                     />
                     <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>
-                      Refunds are executed server-side on the partner's Stripe account.
+                      {t("Refunds are executed server-side on the partner's Stripe account.", 'Сумите се възстановяват от сървъра чрез Stripe профила на партньора.')}
                     </Text>
                   </QueueItem>
                 ))}
@@ -172,6 +174,16 @@ export default function MarketplaceAdminScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+function localizeStatus(status: string, locale: 'en' | 'bg') {
+  if (locale !== 'bg') return status.replaceAll('_', ' ');
+  const labels: Record<string, string> = {
+    pending: 'чака', verified: 'потвърден', rejected: 'отхвърлен', draft: 'чернова', in_review: 'в преглед',
+    published: 'публикуван', approved: 'одобрен', processing: 'обработва се', delivered: 'доставена',
+    refund_requested: 'поискано възстановяване', refunded: 'възстановена сума', closed: 'приключен',
+  };
+  return labels[status] || status.replaceAll('_', ' ');
 }
 
 function Queue({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) {

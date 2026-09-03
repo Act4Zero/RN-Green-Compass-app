@@ -11,7 +11,7 @@ export default function OffsetProjectsScreen() {
   const [projects, setProjects] = useState<OffsetProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(async () => { setLoading(true); setError(null); try { setProjects(await offsettingService.getOffsetProjects()); } catch (value) { setError(value instanceof Error ? value.message : 'Проектите не можаха да се заредят.'); } finally { setLoading(false); } }, []);
+  const load = useCallback(async () => { setLoading(true); setError(null); try { setProjects(await offsettingService.getOffsetProjects()); } catch { setError('Проектите не можаха да се заредят.'); } finally { setLoading(false); } }, []);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content>
     <PageHeader eyebrow="Проверени климатични приноси" title="Проекти за компенсация" description="Намаляването е първата стъпка. Ако решиш да компенсираш оставащите проследени емисии, плащането се извършва чрез Cloverly и в баланса се отчитат само потвърдени записи." action={<AppButton label="История" icon="time-outline" variant="secondary" onPress={() => router.push('/habits/offsets/history' as any)} />} />

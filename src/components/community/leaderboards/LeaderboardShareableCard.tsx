@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface LeaderboardShareableCardProps {
   rank: number;
@@ -32,6 +32,7 @@ export function LeaderboardShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: LeaderboardShareableCardProps) {
+  const { locale, t } = useAppLocale();
   // Always use light theme
   const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
@@ -39,7 +40,7 @@ export function LeaderboardShareableCard({
   
   // Format date for the card
   const currentDate = new Date();
-  const formattedDate = format(currentDate, 'MMM d, yyyy');
+  const formattedDate = currentDate.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
   
   // Get medal icon based on rank
   const getMedalIcon = () => {
@@ -84,8 +85,8 @@ export function LeaderboardShareableCard({
           </Text>
           
           <Text style={styles.rankLabel}>
-            {leaderboardType === 'points' ? 'Impact Leaderboard' : 'Streak Leaderboard'}
-            {totalEntries ? ` (of ${totalEntries})` : ''}
+            {leaderboardType === 'points' ? t('Impact Leaderboard', 'Класация по въздействие') : t('Streak Leaderboard', 'Класация по серия')}
+            {totalEntries ? t(` (of ${totalEntries})`, ` (от ${totalEntries})`) : ''}
           </Text>
         </View>
         
@@ -100,7 +101,7 @@ export function LeaderboardShareableCard({
             <View style={styles.statItem}>
               <Ionicons name="star" size={20} color="#2E7D32" />
               <Text style={styles.statValue}>
-                {totalPoints || 0} points
+                {totalPoints || 0} {t('points', 'точки')}
               </Text>
             </View>
           )}
@@ -110,7 +111,7 @@ export function LeaderboardShareableCard({
               <View style={styles.statItem}>
                 <Ionicons name="flame" size={20} color="#2E7D32" />
                 <Text style={styles.statValue}>
-                  {longestStreak || 0} day longest streak
+                  {longestStreak || 0} {t('day longest streak', 'дни най-дълга серия')}
                 </Text>
               </View>
               
@@ -118,7 +119,7 @@ export function LeaderboardShareableCard({
                 <View style={styles.statItem}>
                   <Ionicons name="timer-outline" size={20} color="#2E7D32" />
                   <Text style={styles.statValue}>
-                    {currentStreak} day current streak
+                    {currentStreak} {t('day current streak', 'дни текуща серия')}
                   </Text>
                 </View>
               )}
@@ -134,7 +135,7 @@ export function LeaderboardShareableCard({
         {/* Motivational Message */}
         <View style={styles.motivationalContainer}>
           <Text style={styles.motivationalText}>
-            Join me in making sustainable choices every day!
+            {t('Join me in making sustainable choices every day!', 'Присъедини се към мен в устойчивите ежедневни избори!')}
           </Text>
         </View>
       </View>
