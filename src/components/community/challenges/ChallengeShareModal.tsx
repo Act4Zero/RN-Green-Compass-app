@@ -17,6 +17,7 @@ import ViewShot from 'react-native-view-shot';
 import ChallengeShareableCard, { captureChallengeShareableCard } from './ChallengeShareableCard';
 import ShareButton from '../../sharing/ShareButton';
 import { shareToSocialPlatform, SocialPlatform } from '../../../utils/sharing/shareUtils';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   modalContainer: ViewStyle;
@@ -63,6 +64,7 @@ export function ChallengeShareModal({
   onClose,
   challengeData
 }: ChallengeShareModalProps) {
+  const { t } = useAppLocale();
   const { width } = useWindowDimensions();
   const cardRef = useRef<ViewShot>(null);
   
@@ -74,7 +76,7 @@ export function ChallengeShareModal({
 
   // Simple helper to get modal title
   const getShareModalTitle = () => {
-    return challengeData.isParticipant ? 'Share Your Challenge' : 'Share This Challenge';
+    return challengeData.isParticipant ? t('Share Your Challenge', 'Споделете своето предизвикателство') : t('Share This Challenge', 'Споделяне на предизвикателството');
   };
 
   /**
@@ -103,7 +105,7 @@ export function ChallengeShareModal({
       if (result.success) {
         setShareResult({
           success: true,
-          message: 'Successfully shared!'
+          message: t('Successfully shared!', 'Споделено успешно!')
         });
 
         // Auto close after successful share with a slight delay
@@ -113,15 +115,15 @@ export function ChallengeShareModal({
       } else {
         setShareResult({
           success: false,
-          message: result.error || 'Failed to share. Please try again.'
+          message: result.error || t('Failed to share. Please try again.', 'Споделянето е неуспешно. Опитайте отново.')
         });
       }
-    } catch (error) {
+    } catch {
       setShareResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
+        message: t('Unknown error occurred', 'Възникна неизвестна грешка')
       });
-      Alert.alert('Sharing Error', 'Failed to share this challenge. Please try again later.');
+      Alert.alert(t('Sharing Error', 'Грешка при споделяне'), t('Failed to share this challenge. Please try again later.', 'Предизвикателството не можа да бъде споделено. Опитайте отново по-късно.'));
     } finally {
       setIsSharing(false);
     }
@@ -166,7 +168,7 @@ export function ChallengeShareModal({
           {/* Social sharing options */}
           <View style={styles.sharingOptions}>
             <Text style={styles.sharingOptionsTitle}>
-              Share to
+              {t('Share to', 'Сподели чрез')}
             </Text>
             
             {isSharing ? (
@@ -194,7 +196,7 @@ export function ChallengeShareModal({
                 <View style={styles.platformRow}>
                   <View style={styles.buttonContainer}>
                     <ShareButton
-                      label="General"
+                      label={t('General', 'Други')}
                       platformIcon="general"
                       onPress={() => handleShare('general')}
                       disabled={isSharing}

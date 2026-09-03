@@ -124,8 +124,8 @@ export default function MapView() {
       </View>
     );
   }
-  if (map.error) return <UnavailableState message={map.error.message} />;
-  if (rendererError && (mode === 'map' || mode === 'to-map')) return <UnavailableState message={rendererError} onBack={openGlobe} />;
+  if (map.error) return <UnavailableState message={t('The sustainability catalogue could not be loaded.', 'Каталогът с устойчиви места не можа да бъде зареден.')} />;
+  if (rendererError && (mode === 'map' || mode === 'to-map')) return <UnavailableState message={t('The map view could not be opened.', 'Картата не можа да бъде отворена.')} onBack={openGlobe} />;
 
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: theme.colors.background }}>

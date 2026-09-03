@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { Linking } from 'react-native';
 import { markdownStyles } from '@/styles/community/NewPostStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PostPreviewProps {
   content: string | undefined;
@@ -10,6 +11,7 @@ interface PostPreviewProps {
 }
 
 function PostPreview({ content, sanitizeMarkdown }: PostPreviewProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.previewContainer}>
       <ScrollView style={styles.previewScroll}>
@@ -71,7 +73,7 @@ function PostPreview({ content, sanitizeMarkdown }: PostPreviewProps) {
           </Markdown>
         ) : (
           <Text style={styles.previewPlaceholder}>
-            Your preview will appear here. Start typing in edit mode to see the preview.
+            {t('Your preview will appear here. Start typing in edit mode to see the preview.', 'Прегледът ще се появи тук. Започнете да пишете в режим за редактиране.')}
           </Text>
         )}
       </ScrollView>

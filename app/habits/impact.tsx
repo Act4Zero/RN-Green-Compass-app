@@ -22,9 +22,9 @@ export default function ImpactScreen() {
     setError(null);
     try {
       setSummary(await offsettingService.getCarbonBalance(user.id, period));
-    } catch (loadError) {
+    } catch {
       setSummary(null);
-      setError(loadError instanceof Error ? loadError.message : 'Данните за въздействието не можаха да се заредят.');
+      setError('Данните за въздействието не можаха да се заредят.');
     } finally {
       setLoading(false);
     }

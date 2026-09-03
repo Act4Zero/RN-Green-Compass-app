@@ -9,17 +9,17 @@ import { PointEvent, PointSource } from '../types/community/points';
  * @param source The point source identifier
  * @returns A user-friendly display name
  */
-export function formatPointSource(source: PointSource): string {
-  const sourceMap: Record<PointSource, string> = {
-    'daily_login': 'Daily Check-in',
-    'habit_log': 'Sustainable Habit',
-    'discussion_participation': 'Community Participation',
-    'habit_streak': 'Habit Streak',
-    'learning_milestone': 'Learning Milestone',
-    'daily_challenge': 'Daily Eco-Challenge'
+export function formatPointSource(source: PointSource, locale: 'en' | 'bg' = 'en'): string {
+  const sourceMap: Record<PointSource, { en: string; bg: string }> = {
+    'daily_login': { en: 'Daily Check-in', bg: 'Ежедневно влизане' },
+    'habit_log': { en: 'Sustainable Habit', bg: 'Устойчив навик' },
+    'discussion_participation': { en: 'Community Participation', bg: 'Участие в общността' },
+    'habit_streak': { en: 'Habit Streak', bg: 'Серия от навици' },
+    'learning_milestone': { en: 'Learning Milestone', bg: 'Учебен етап' },
+    'daily_challenge': { en: 'Daily Eco-Challenge', bg: 'Ежедневно еко предизвикателство' }
   };
   
-  return sourceMap[source] || source;
+  return sourceMap[source]?.[locale] || source;
 }
 
 /**
@@ -27,8 +27,18 @@ export function formatPointSource(source: PointSource): string {
  * @param pointEvent The point event to describe
  * @returns A user-friendly description
  */
-export function getPointEventDescription(pointEvent: PointEvent): string {
-  const source = formatPointSource(pointEvent.source);
+export function getPointEventDescription(pointEvent: PointEvent, locale: 'en' | 'bg' = 'en'): string {
+  const source = formatPointSource(pointEvent.source, locale);
+
+  if (locale === 'bg') {
+    switch (pointEvent.source) {
+      case 'habit_log': return `${source} — записахте устойчив навик (+${pointEvent.points} точки)`;
+      case 'discussion_participation': return `${source} — благодарим за приноса (+${pointEvent.points} точки)`;
+      case 'learning_milestone': return `${source} — завършихте етап в Центъра за знания (+${pointEvent.points} точки)`;
+      case 'daily_challenge': return `${source} — завършихте днешното предизвикателство (+${pointEvent.points} точки)`;
+      default: return `${source} — спечелихте ${pointEvent.points} точки`;
+    }
+  }
   
   switch (pointEvent.source) {
     case 'daily_login':

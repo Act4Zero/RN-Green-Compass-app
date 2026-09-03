@@ -15,12 +15,12 @@ export default function OffsetProjectDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { void offsettingService.getOffsetProjects().then((items) => setProject(items.find((item) => item.id === id) || null)).catch((value) => setError(value.message)).finally(() => setLoading(false)); }, [id]);
+  useEffect(() => { void offsettingService.getOffsetProjects().then((items) => setProject(items.find((item) => item.id === id) || null)).catch(() => setError('Проектът не можа да бъде зареден.')).finally(() => setLoading(false)); }, [id]);
   const checkout = async () => {
     if (!project) return;
     setBusy(true); setError(null);
     try { const session = await offsettingService.createOffsetCheckout(project.id, Number(quantity)); await WebBrowser.openBrowserAsync(session.checkoutUrl); router.push('/habits/offsets/history' as any); }
-    catch (value) { setError(value instanceof Error ? value.message : 'Защитеното плащане не е достъпно.'); }
+    catch { setError('Защитеното плащане не е достъпно.'); }
     finally { setBusy(false); }
   };
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content>

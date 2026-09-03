@@ -27,7 +27,7 @@ export default function KnowledgePathScreen() {
   }, [user?.id, slug, locale]);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
   if (progress === undefined) return <Screen><Content><StatePanel title={t('Loading your path', 'Зареждане на пътеката')} message={t('Checking modules and assessments…', 'Проверка на модулите и оценките…')} /></Content></Screen>;
-  if (!progress) return <Screen><Content><StatePanel title={t('Path unavailable', 'Пътеката не е налична')} message={t('Choose a published path from Knowledge Hub.', 'Изберете публикувана пътека от Knowledge Hub.')} action={<AppButton label={t('Back to Hub', 'Назад към Hub')} onPress={() => router.replace('/knowledge' as any)} />} /></Content></Screen>;
+  if (!progress) return <Screen><Content><StatePanel title={t('Path unavailable', 'Пътеката не е налична')} message={t('Choose a published path from Knowledge Hub.', 'Изберете публикувана пътека от Центъра за знания.')} action={<AppButton label={t('Back to Hub', 'Назад към Центъра за знания')} onPress={() => router.replace('/knowledge' as any)} />} /></Content></Screen>;
   const openItem = (id: string) => {
     const item = items.find((entry) => entry.id === id);
     if (!item) return;

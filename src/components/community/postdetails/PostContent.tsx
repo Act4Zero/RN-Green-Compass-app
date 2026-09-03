@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Markdown, { RenderRules } from 'react-native-markdown-display';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import PostDetailStyles from '@/styles/community/PostDetailStyles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 const styles = PostDetailStyles;
 
@@ -62,6 +63,7 @@ function PostContent({
   onLike,
   onToggleOptions
 }: PostContentProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.postContainer}>
       <View style={styles.postHeader}>
@@ -128,7 +130,7 @@ function PostContent({
             color={userHasReacted ? "#2E7D32" : "#757575"} 
           />
           <Text style={[styles.likeText, userHasReacted && styles.likeTextActive]}>
-            {reactionCount || 0} likes
+            {reactionCount || 0} {t('likes', 'харесвания')}
           </Text>
         </TouchableOpacity>
       </View>

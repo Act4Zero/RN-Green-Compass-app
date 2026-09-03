@@ -23,10 +23,10 @@ export default function OrderDetailScreen() {
   const load = useCallback(async () => {
     try {
       setOrder(await marketplaceService.getOrder(id));
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+    } catch {
+      setError(t('Order could not be loaded.', 'Поръчката не можа да бъде заредена.'));
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     void load();
@@ -38,8 +38,8 @@ export default function OrderDetailScreen() {
       await marketplaceService.requestReturn(user.id, id, reason, details);
       setSubmitted(true);
       await load();
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError));
+    } catch {
+      setError(t('Return request could not be sent.', 'Заявката за връщане не можа да бъде изпратена.'));
     }
   };
 
@@ -56,7 +56,7 @@ export default function OrderDetailScreen() {
               <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{order.orderNumber}</Text>
               <Text style={[theme.typography.h1, { color: theme.colors.text, marginTop: 5 }]}>{t('Order details', 'Детайли за поръчката')}</Text>
               <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6, marginBottom: 18 }]}>
-                {order.business.name} · {order.status.replace(/_/g, ' ')}
+                {order.business.name} · {locale === 'bg' ? ({ payment_pending: 'очаква плащане', paid: 'платена', processing: 'обработва се', shipped: 'изпратена', delivered: 'доставена', cancelled: 'отказана', refund_requested: 'поискано възстановяване', partially_refunded: 'частично възстановена', refunded: 'възстановена', disputed: 'оспорена' }[order.status]) : order.status.replace(/_/g, ' ')}
               </Text>
 
               {order.items.map((item) => (

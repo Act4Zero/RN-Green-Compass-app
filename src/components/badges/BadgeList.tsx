@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
 import { BadgeCategoryType } from '@/types/community/badges';
 import BadgeItem from './BadgeItem';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeListProps {
   title: string;
@@ -20,6 +21,7 @@ function BadgeList({
   onSelectCategory,
   emptyMessage
 }: BadgeListProps) {
+  const { t } = useAppLocale();
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -44,7 +46,7 @@ function BadgeList({
               selectedCategory === 'all' && styles.filterChipTextActive
             ]}
           >
-            All
+            {t('All', 'Всички')}
           </Text>
         </TouchableOpacity>
 

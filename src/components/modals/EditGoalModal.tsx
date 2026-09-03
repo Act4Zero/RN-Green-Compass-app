@@ -82,7 +82,7 @@ export default function EditGoalModal({
         });
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage = t('An unexpected error occurred', 'Възникна неочаквана грешка');
       notification?.addNotification({
         type: 'toast',
         message: errorMessage,
@@ -119,7 +119,7 @@ export default function EditGoalModal({
         setError(result.error || t('Failed to update goal. Please try again.', 'Целта не можа да бъде обновена. Опитайте отново.'));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage = t('An unexpected error occurred', 'Възникна неочаквана грешка');
       setError(errorMessage);
       console.error('Error updating goal:', err);
     }
@@ -198,7 +198,7 @@ export default function EditGoalModal({
                   setEditedGoalTarget(text);
                 }
               }}
-              placeholder="Enter target value (positive number)"
+              placeholder={t('Enter target value (positive number)', 'Въведете положителна целева стойност')}
               keyboardType="numeric"
               error={error && error.includes('Target value') ? error : undefined}
             />
@@ -212,7 +212,7 @@ export default function EditGoalModal({
                   setEditedGoalCurrent(text);
                 }
               }}
-              placeholder="Enter current value (non-negative number)"
+              placeholder={t('Enter current value (non-negative number)', 'Въведете текуща стойност, не по-малка от нула')}
               keyboardType="numeric"
               error={error && error.includes('Current value') ? error : undefined}
             />
@@ -236,7 +236,7 @@ export default function EditGoalModal({
                       { color: editedTimeFrequency === frequency ? 'white' : '#2E7D32' }
                     ]}
                   >
-                    {frequency.charAt(0).toUpperCase() + frequency.slice(1)}
+                    {t(frequency.charAt(0).toUpperCase() + frequency.slice(1), frequency === 'daily' ? 'Ежедневно' : frequency === 'weekly' ? 'Седмично' : frequency === 'monthly' ? 'Месечно' : 'Еднократно')}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -244,13 +244,13 @@ export default function EditGoalModal({
             
             <View style={editGoalModalStyles.modalButtonContainer}>
               <Button
-                title="Cancel"
+                title={t('Cancel', 'Отказ')}
                 onPress={onClose}
                 variant="outline"
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button
-                title={loading ? "Saving..." : "Save Changes"}
+                title={loading ? t('Saving...', 'Запазване...') : t('Save Changes', 'Запази промените')}
                 onPress={handleSaveGoal}
                 disabled={loading}
                 style={{ flex: 1, marginLeft: 8 }}
