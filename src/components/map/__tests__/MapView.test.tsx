@@ -59,7 +59,7 @@ describe('Living Planet shell', () => {
     mockMapFacade.error = new Error('Dataset unavailable');
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapView />); });
-    expect(tree.root.findByProps({ children: 'Dataset unavailable' })).toBeTruthy();
+    expect(tree.root.findByProps({ children: 'The sustainability catalogue could not be loaded.' })).toBeTruthy();
     expect(tree.root.findAllByProps({ testID: 'globe-renderer' })).toHaveLength(0);
   });
 
