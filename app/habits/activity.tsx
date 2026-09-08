@@ -33,13 +33,13 @@ export default function CarbonActivityScreen() {
   const input = () => ({ factorCode, quantity: Number(quantity.replace(',', '.')), occurredOn, comparisonFactorCode: comparisonCode === 'none' ? null : comparisonCode, notes });
   const calculate = () => {
     setError(null);
-    try { setPreview(offsettingService.previewCarbonActivity(input())); } catch (value) { setPreview(null); setError(value instanceof Error ? value.message : 'Действието не може да бъде изчислено.'); }
+    try { setPreview(offsettingService.previewCarbonActivity(input())); } catch { setPreview(null); setError('Действието не може да бъде изчислено.'); }
   };
   const save = async () => {
     if (!user) return;
     setSaving(true); setError(null);
     try { await offsettingService.saveCarbonActivity(user.id, input()); router.replace('/habits/impact' as any); }
-    catch (value) { setError(value instanceof Error ? value.message : 'Действието не можа да бъде запазено.'); }
+    catch { setError('Действието не можа да бъде запазено.'); }
     finally { setSaving(false); }
   };
 

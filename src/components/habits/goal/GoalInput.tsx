@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import goalStyles from '@/styles/Goal.styles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface GoalInputProps {
   targetInputValue: string;
@@ -16,10 +17,11 @@ const GoalInput: React.FC<GoalInputProps> = ({
   incrementTarget,
   handleTargetInputChange,
   handleTargetInputBlur,
-}) => (
-  <View style={goalStyles.section}>
+}) => {
+  const { t } = useAppLocale();
+  return <View style={goalStyles.section}>
     <Text style={goalStyles.sectionTitle}>
-      Set your target number of actions
+      {t('Set your target number of actions', 'Задайте целевия брой действия')}
     </Text>
     <View style={goalStyles.goalInputContainer}>
       <TouchableOpacity
@@ -49,7 +51,7 @@ const GoalInput: React.FC<GoalInputProps> = ({
         <Text style={goalStyles.goalNumberButtonText}>+</Text>
       </TouchableOpacity>
     </View>
-  </View>
-);
+  </View>;
+};
 
 export default GoalInput;

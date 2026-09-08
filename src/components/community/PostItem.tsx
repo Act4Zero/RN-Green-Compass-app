@@ -124,13 +124,13 @@ function PostItem({
           try {
             await communityEngagementService.reportDiscussion(discussion.id);
             addNotification({ type: 'toast', message: t('Report sent to the moderation team.', 'Сигналът е изпратен до екипа за модерация.'), severity: 'success' });
-          } catch (error) {
-            addNotification({ type: 'toast', message: error instanceof Error ? error.message : t('Unable to send report.', 'Сигналът не можа да се изпрати.'), severity: 'error' });
+          } catch {
+            addNotification({ type: 'toast', message: t('Unable to send report.', 'Сигналът не можа да се изпрати.'), severity: 'error' });
           }
         },
       },
     });
-  }, [addNotification, discussion.id]);
+  }, [addNotification, discussion.id, t]);
   
   // Initialize router
   const router = useRouter();

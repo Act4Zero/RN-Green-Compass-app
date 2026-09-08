@@ -20,6 +20,8 @@ describe('community engagement validation', () => {
   it('uses human countdown labels at event boundaries', () => {
     expect(getCountdownLabel('2026-09-02T12:00:00Z', new Date('2026-09-01T12:00:00Z'))).toBe('1 day left');
     expect(getCountdownLabel('2026-08-31T12:00:00Z', new Date('2026-09-01T12:00:00Z'))).toBe('Ended');
+    expect(getCountdownLabel('2026-09-04T12:00:00Z', new Date('2026-09-01T12:00:00Z'), 'bg')).toBe('Остават 3 дни');
+    expect(getCountdownLabel('2026-08-31T12:00:00Z', new Date('2026-09-01T12:00:00Z'), 'bg')).toBe('Приключило');
   });
 
   it('calculates virtual reward progress without overshooting', () => {

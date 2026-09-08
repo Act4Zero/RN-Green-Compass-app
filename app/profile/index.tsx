@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const { theme, preference, setPreference } = useAppTheme();
-  const { t } = useAppLocale();
+  const { locale, t } = useAppLocale();
   const [imageLoadError, setImageLoadError] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -374,7 +374,7 @@ useEffect(() => {
                     activeFilters.length === 0 && styles.filterChipTextActive
                   ]}
                 >
-                  All
+                  {t('All', 'Всички')}
                 </Text>
               </TouchableOpacity>
 
@@ -394,7 +394,7 @@ useEffect(() => {
                       activeFilters.includes(source) && styles.filterChipTextActive
                     ]}
                   >
-                    {formatPointSource(source)}
+                    {formatPointSource(source, locale)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -428,12 +428,12 @@ useEffect(() => {
                         <View style={styles.historyItemContent}>
                           <View style={styles.historyItemHeader}>
                             <Text style={styles.pointsDescription}>
-                              {formatPointSource(event.source)}
+                              {formatPointSource(event.source, locale)}
                             </Text>
                             <Text style={styles.pointsAmount}>+{event.points}</Text>
                           </View>
                           <Text style={styles.pointsDescription}>
-                            {`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`}
+                            {t(`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`, `Спечелихте ${event.points} точки за ${formatPointSource(event.source, locale).toLowerCase()}!`)}
                           </Text>
                           <Text style={styles.historyItemDate}>
                             {new Date(event.created_at).toLocaleTimeString([], {
@@ -449,7 +449,7 @@ useEffect(() => {
             ) : (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>
-                  No points history found. Start earning points by logging in daily and tracking sustainable habits!
+                  {t('No points history found. Start earning points by logging in daily and tracking sustainable habits!', 'Няма история на точки. Печелете точки с ежедневно влизане и проследяване на устойчиви навици!')}
                 </Text>
               </View>
             )}

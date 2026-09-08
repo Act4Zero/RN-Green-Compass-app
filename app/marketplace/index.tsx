@@ -18,7 +18,7 @@ export default function MarketplaceScreen() {
   const [data, setData] = useState<MarketplaceHome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const compact = width < theme.breakpoints.tablet;
-  const load = useCallback(async () => { setError(null); try { setData(await marketplaceService.getHome(locale, localDate())); } catch (loadError) { setError(loadError instanceof Error ? loadError.message : t('The marketplace could not load.', 'Marketplace не можа да се зареди.')); } }, [locale, t]);
+  const load = useCallback(async () => { setError(null); try { setData(await marketplaceService.getHome(locale, localDate())); } catch { setError(t('The marketplace could not load.', 'Пазарът не можа да се зареди.')); } }, [locale, t]);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
   useEffect(() => analyticsService.trackScreenView('Sustainability Marketplace'), []);
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content wide>
@@ -31,9 +31,9 @@ export default function MarketplaceScreen() {
       <View style={{ flexDirection: compact ? 'column' : 'row', gap: 10, marginTop: 20 }}><AppButton label={t('Search products', 'Търсене на продукти')} icon="search" variant="secondary" onPress={() => router.push('/marketplace/search' as any)} /><AppButton label={t('View orders', 'Моите поръчки')} icon="receipt-outline" variant="ghost" onPress={() => router.push('/marketplace/orders' as any)} style={{ borderColor: '#D8EAE0' }} /></View>
     </Card>
     {!data && !error ? <View style={{ gap: 12 }}><Skeleton height={230} /><Skeleton height={180} /></View> : null}
-    {error ? <StatePanel icon="bag-outline" title={t('Marketplace unavailable', 'Marketplace не е достъпен')} message={error} action={<AppButton label={t('Try again', 'Опитайте отново')} onPress={() => void load()} />} /> : null}
+    {error ? <StatePanel icon="bag-outline" title={t('Marketplace unavailable', 'Пазарът не е достъпен')} message={error} action={<AppButton label={t('Try again', 'Опитайте отново')} onPress={() => void load()} />} /> : null}
     {data ? <>
-      {data.dailyPick ? <><SectionTitle title={t("Today's Daily Pick", 'Днешният Daily Pick')} description={data.dailyPick.reasons[0]?.[locale] || t('A considered alternative for today.', 'Обмислена алтернатива за днес.')} /><View style={{ marginBottom: 30, alignItems: 'flex-start' }}><ProductCard product={data.dailyPick.product} reason={data.dailyPick.reasons[0]?.[locale]} /></View></> : null}
+      {data.dailyPick ? <><SectionTitle title={t("Today's Daily Pick", 'Днешният избор')} description={data.dailyPick.reasons[0]?.[locale] || t('A considered alternative for today.', 'Обмислена алтернатива за днес.')} /><View style={{ marginBottom: 30, alignItems: 'flex-start' }}><ProductCard product={data.dailyPick.product} reason={data.dailyPick.reasons[0]?.[locale]} /></View></> : null}
       <SectionTitle title={t('Browse by category', 'Разгледайте по категория')} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 9, paddingBottom: 26 }}>{data.categories.map((category) => <AppButton key={category.id} label={category.name[locale]} variant="secondary" onPress={() => router.push({ pathname: '/marketplace/search' as any, params: { category: category.slug } })} />)}</ScrollView>
       {data.deals.length ? <><SectionTitle title={t('Exclusive deals', 'Ексклузивни оферти')} description={t('Server-verified prices for Green Compass members.', 'Проверени от сървъра цени за потребители на Green Compass.')} /><ProductGrid products={data.deals} /></> : null}

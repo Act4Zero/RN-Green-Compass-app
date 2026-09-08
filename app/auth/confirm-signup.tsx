@@ -5,6 +5,7 @@ import supabase from '@/lib/supabase';
 import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   container: ViewStyle;
@@ -19,8 +20,9 @@ interface Styles {
 export default function ConfirmSignup() {
   const { confirmation_url } = useLocalSearchParams();
   const router = useRouter();
+  const { locale, t } = useAppLocale();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Confirming your email...');
+  const [message, setMessage] = useState(t('Confirming your email...', 'Потвърждаваме имейла ви...'));
   const { theme } = useAppTheme();
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function ConfirmSignup() {
       try {
         if (!confirmation_url) {
           setStatus('error');
-          setMessage('No confirmation URL provided. Please check your email link and try again.');
+          setMessage(t('No confirmation URL provided. Please check your email link and try again.', 'Липсва връзка за потвърждение. Проверете връзката в имейла си и опитайте отново.'));
           return;
         }
 
@@ -39,7 +41,7 @@ export default function ConfirmSignup() {
 
         if (!token) {
           setStatus('error');
-          setMessage('Invalid confirmation link. Please check your email and try again.');
+          setMessage(t('Invalid confirmation link. Please check your email and try again.', 'Невалидна връзка за потвърждение. Проверете имейла си и опитайте отново.'));
           return;
         }
 
@@ -52,20 +54,20 @@ export default function ConfirmSignup() {
         if (error) {
           console.error('Error confirming email:', error);
           setStatus('error');
-          setMessage(`Failed to confirm your email: ${error.message}`);
+          setMessage(locale === 'bg' ? 'Имейлът не можа да бъде потвърден. Опитайте отново.' : `Failed to confirm your email: ${error.message}`);
         } else {
           setStatus('success');
-          setMessage('Your email has been successfully confirmed! You can now sign in to your account.');
+          setMessage(t('Your email has been successfully confirmed! You can now sign in to your account.', 'Имейлът ви е потвърден успешно! Вече можете да влезете в профила си.'));
         }
       } catch (error) {
         console.error('Error in email confirmation process:', error);
         setStatus('error');
-        setMessage('An unexpected error occurred. Please try again later.');
+        setMessage(t('An unexpected error occurred. Please try again later.', 'Възникна неочаквана грешка. Опитайте отново по-късно.'));
       }
     };
 
     confirmEmail();
-  }, [confirmation_url]);
+  }, [confirmation_url, locale, t]);
 
   const handleContinue = () => {
     router.push('/auth/signin');
@@ -90,13 +92,13 @@ export default function ConfirmSignup() {
             </View>
 
             <Text style={[styles.title, { color: status === 'success' ? theme.colors.success : theme.colors.danger }]}>
-              {status === 'success' ? 'Email Confirmed!' : 'Confirmation Failed'}
+              {status === 'success' ? t('Email Confirmed!', 'Имейлът е потвърден!') : t('Confirmation Failed', 'Неуспешно потвърждение')}
             </Text>
             <Text style={[styles.message, { color: theme.colors.textMuted }]}>{message}</Text>
 
             <View style={styles.buttonContainer}>
               <Button
-                title={status === 'success' ? 'Continue to Sign In' : 'Try Again'}
+                title={status === 'success' ? t('Continue to Sign In', 'Продължи към вход') : t('Try Again', 'Опитай отново')}
                 onPress={handleContinue}
                 variant="primary"
               />

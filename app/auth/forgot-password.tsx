@@ -19,6 +19,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Turnstile from '@/components/Turnstile';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -44,6 +45,7 @@ export default function ForgotPassword() {
   const isTabletOrLarger = width > 768;
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,20 +62,20 @@ export default function ForgotPassword() {
     const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
     
     if (!trimmedEmail) {
-      setEmailError('Email is required');
+      setEmailError(t('Email is required', 'Имейлът е задължителен'));
       return false;
     } else if (!emailRegex.test(trimmedEmail)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError(t('Please enter a valid email address', 'Въведете валиден имейл адрес'));
       return false;
     } else if (trimmedEmail.length > 255) {
-      setEmailError('Email is too long');
+      setEmailError(t('Email is too long', 'Имейлът е твърде дълъг'));
       return false;
     }
     
     // Check for potentially dangerous characters
     const dangerousCharsRegex = /[<>\\]/;
     if (dangerousCharsRegex.test(trimmedEmail)) {
-      setEmailError('Email contains invalid characters');
+      setEmailError(t('Email contains invalid characters', 'Имейлът съдържа невалидни знаци'));
       return false;
     }
     
@@ -108,7 +110,7 @@ export default function ForgotPassword() {
         setIsSuccess(true);
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('An unexpected error occurred. Please try again.', 'Възникна неочаквана грешка. Опитайте отново.'));
       console.error('Password reset error:', err);
     } finally {
       setLoading(false);
@@ -133,9 +135,9 @@ export default function ForgotPassword() {
           />
         </View>
           <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>Reset your password</Text>
+            <Text style={[styles.title, { color: theme.colors.text }]}>{t('Reset your password', 'Възстановяване на парола')}</Text>
             <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-              We’ll email you a secure link to get back into Green Compass.
+              {t('We’ll email you a secure link to get back into Green Compass.', 'Ще ви изпратим защитена връзка за достъп до Green Compass.')}
             </Text>
           </View>
 
@@ -143,10 +145,10 @@ export default function ForgotPassword() {
             {!isSuccess ? (
               <>
                 <Input
-                  label="Email"
+                  label={t('Email', 'Имейл')}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="Enter your email"
+                  placeholder={t('Enter your email', 'Въведете имейла си')}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   error={emailError}
@@ -169,7 +171,7 @@ export default function ForgotPassword() {
                 )}
 
                 <Button
-                  title="Send Reset Link"
+                  title={t('Send Reset Link', 'Изпрати връзка за възстановяване')}
                   onPress={handleResetPassword}
                   loading={loading}
                   disabled={loading || !captchaToken}
@@ -179,10 +181,10 @@ export default function ForgotPassword() {
             ) : (
               <View style={[styles.successContainer, { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.success, borderWidth: 1 }]}>
                 <Text style={[styles.successText, { color: theme.colors.text }]}>
-                  Password reset link sent! Please check your email inbox.
+                  {t('Password reset link sent! Please check your email inbox.', 'Връзката за възстановяване е изпратена. Проверете входящата си поща.')}
                 </Text>
                 <Button
-                  title="Back to Login"
+                  title={t('Back to Login', 'Обратно към вход')}
                   onPress={() => router.push('/auth/signin')}
                   variant="secondary"
                   style={{ marginTop: 24 }}
@@ -193,8 +195,8 @@ export default function ForgotPassword() {
 
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
-              Remember your password?{' '}
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signin')}>Sign in</Text>
+              {t('Remember your password? ', 'Спомнихте си паролата? ')}
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push('/auth/signin')}>{t('Sign in', 'Вход')}</Text>
             </Text>
           </View>
         </View>

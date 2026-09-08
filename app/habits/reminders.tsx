@@ -34,7 +34,7 @@ export default function SustainabilityRemindersScreen() {
       if (!Number.isInteger(h) || h < 0 || h > 23 || !Number.isInteger(m) || m < 0 || m > 59) throw new Error('Въведи валиден час в 24-часов формат.');
       if (enabled === 'yes' && weekdays.length === 0) throw new Error('Избери поне един ден за напомняне.');
       await saveSustainabilityReminder(user.id, { enabled: enabled === 'yes', hour: h, minute: m, weekdays }); setSaved(true);
-    } catch (value) { setError(value instanceof Error ? value.message : 'Напомнянето не можа да се запази.'); }
+    } catch { setError('Напомнянето не можа да се запази.'); }
     finally { setBusy(false); }
   };
 

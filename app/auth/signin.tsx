@@ -170,7 +170,7 @@ export default function SignIn() {
         } else if (error.message.includes('Email not confirmed')) {
           setError(t('Please confirm your email address before signing in.', 'Потвърдете имейл адреса си преди вход.'));
         } else {
-          setError(error.message);
+          setError(locale === 'bg' ? 'Входът не бе успешен. Опитайте отново.' : error.message);
         }
         return;
       }
@@ -342,7 +342,7 @@ export default function SignIn() {
                   style={styles.googleButtonImage}
                   resizeMode="contain"
                   accessible
-                  accessibilityLabel="Google logo"
+                  accessibilityLabel={t('Google logo', 'Лого на Google')}
                 />
                 <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>{t('Sign in with Google', 'Вход с Google')}</Text>
               </TouchableOpacity>

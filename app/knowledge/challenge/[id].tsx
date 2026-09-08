@@ -20,7 +20,7 @@ export default function KnowledgeChallengeScreen() {
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(() => { if (user && challenge) void knowledgeService.getChallengeAttempts(user.id).then((items) => setAttempt(items.filter((entry) => entry.challengeId === challenge.id).at(-1) || null)); }, [user, challenge]);
   useFocusEffect(load);
-  if (!challenge) return <Screen><Content><StatePanel icon="alert-circle-outline" title={t('Challenge unavailable', 'Предизвикателството не е налично')} message={t('Choose another mission from the Hub.', 'Изберете друга мисия от Hub.')} /></Content></Screen>;
+  if (!challenge) return <Screen><Content><StatePanel icon="alert-circle-outline" title={t('Challenge unavailable', 'Предизвикателството не е налично')} message={t('Choose another mission from the Hub.', 'Изберете друга мисия от Центъра за знания.')} /></Content></Screen>;
 
   const start = async (restart = false) => {
     if (!user) return router.push('/auth/signin');
@@ -32,9 +32,9 @@ export default function KnowledgeChallengeScreen() {
       const permission = await Notifications.requestPermissionsAsync();
       const reminder = new Date(new Date(next.deadlineAt).getTime() - 86400000);
       if (permission.status === 'granted' && reminder > new Date()) await Notifications.scheduleNotificationAsync({ content: { title: t('Learning challenge reminder', 'Напомняне за учебно предизвикателство'), body: challenge.title[locale], data: { url: `/knowledge/challenge/${challenge.id}` } }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: reminder } });
-    } catch (cause) { setError(cause instanceof Error ? cause.message : t('Challenge could not be started.', 'Предизвикателството не можа да започне.')); } finally { setBusy(null); }
+    } catch { setError(t('Challenge could not be started.', 'Предизвикателството не можа да започне.')); } finally { setBusy(null); }
   };
-  const complete = async (stepId: string) => { if (!user) return router.push('/auth/signin'); setBusy(stepId); setError(null); try { setAttempt(await knowledgeService.completeChallengeStep(user.id, challenge.id, stepId)); } catch (cause) { setError(cause instanceof Error ? cause.message : t('This step could not be verified.', 'Стъпката не можа да бъде потвърдена.')); } finally { setBusy(null); } };
+  const complete = async (stepId: string) => { if (!user) return router.push('/auth/signin'); setBusy(stepId); setError(null); try { setAttempt(await knowledgeService.completeChallengeStep(user.id, challenge.id, stepId)); } catch { setError(t('This step could not be verified.', 'Стъпката не можа да бъде потвърдена.')); } finally { setBusy(null); } };
   const percent = attempt ? Math.round((attempt.completedStepIds.length / challenge.steps.filter((step) => step.required).length) * 100) : 0;
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content>
     <PageHeader eyebrow={t(`${challenge.durationDays}-day learning challenge`, `${challenge.durationDays}-дневно учебно предизвикателство`)} title={challenge.title[locale]} description={challenge.summary[locale]} />

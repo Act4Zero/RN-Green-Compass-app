@@ -13,7 +13,7 @@ export default function KnowledgeTourScreen() {
   const router = useRouter();
   const tour = useMemo(() => knowledgeService.getTour(id), [id]);
   const [index, setIndex] = useState(0);
-  if (!tour) return <Screen><Content><StatePanel title={t('Tour unavailable', 'Обиколката не е налична')} message={t('Return to the Hub and choose another experience.', 'Върнете се в Hub и изберете друго преживяване.')} /></Content></Screen>;
+  if (!tour) return <Screen><Content><StatePanel title={t('Tour unavailable', 'Обиколката не е налична')} message={t('Return to the Hub and choose another experience.', 'Върнете се в Центъра за знания и изберете друго преживяване.')} /></Content></Screen>;
   const stop = tour.stops[index];
   const percent = Math.round(((index + 1) / tour.stops.length) * 100);
   return <Screen><ScrollView><Content>

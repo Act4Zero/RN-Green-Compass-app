@@ -21,6 +21,7 @@ import {
   getAvailableSocialPlatforms 
 } from '../../utils/sharing/shareUtils';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Using styles from shareModalStyles.ts
 
@@ -50,6 +51,7 @@ export function ShareModal({
   achievementData,
   showUserName = false
 }: ShareModalProps) {
+  const { t } = useAppLocale();
   const { displayName } = useUserDisplayName();
 
   const { width } = useWindowDimensions();
@@ -109,7 +111,7 @@ export function ShareModal({
       if (result.success) {
         setShareResult({
           success: true,
-          message: 'Successfully shared!'
+          message: t('Successfully shared!', 'Споделено успешно!')
         });
 
         // Auto close after successful share with a slight delay
@@ -119,15 +121,15 @@ export function ShareModal({
       } else {
         setShareResult({
           success: false,
-          message: result.error || 'Failed to share. Please try again.'
+          message: result.error || t('Failed to share. Please try again.', 'Споделянето е неуспешно. Опитайте отново.')
         });
       }
-    } catch (error) {
+    } catch {
       setShareResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
+        message: t('Unknown error occurred', 'Възникна неизвестна грешка')
       });
-      Alert.alert('Sharing Error', 'Failed to share your achievement. Please try again later.');
+      Alert.alert(t('Sharing Error', 'Грешка при споделяне'), t('Failed to share your achievement. Please try again later.', 'Постижението не можа да бъде споделено. Опитайте отново по-късно.'));
     } finally {
       setIsSharing(false);
     }
@@ -145,7 +147,7 @@ export function ShareModal({
           <View style={styles.contentWrapper}>
             <View style={styles.header}>
               <Text style={styles.title}>
-                Share Your Achievement
+                {t('Share Your Achievement', 'Споделяне на постижението')}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -169,7 +171,7 @@ export function ShareModal({
 
             <View style={styles.sharingOptions}>
               <Text style={styles.sharingOptionsTitle}>
-                Share to:
+                {t('Share to:', 'Сподели чрез:')}
               </Text>
               {isSharing ? (
                 <ActivityIndicator size="large" color="#2E7D32" />
@@ -196,7 +198,7 @@ export function ShareModal({
                   <View style={styles.platformRow}>
                     <View style={styles.buttonContainer}>
                       <ShareButton
-                        label="General"
+                        label={t('General', 'Други')}
                         platformIcon="general"
                         onPress={() => handleShare('general')}
                         disabled={isSharing}

@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   container: ViewStyle;
@@ -42,14 +42,15 @@ export function ShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: ShareableCardProps) {
+  const { locale, t } = useAppLocale();
   // Always use light theme
   const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
   const formattedDate = achievementDate instanceof Date 
-    ? format(achievementDate, 'PPP') 
-    : 'Date not available';
+    ? achievementDate.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+    : t('Date not available', 'Няма налична дата');
 
   return (
     <ViewShot ref={ref}>
@@ -75,12 +76,12 @@ export function ShareableCard({
                 {achievementTitle}
               </Text>
               <Text style={styles.dateText}>
-                Achieved on {formattedDate}
+                {t('Achieved on', 'Постигнато на')} {formattedDate}
               </Text>
               
               {showUserName && userName && (
                 <Text style={styles.userName}>
-                  by {userName}
+                  {t('by', 'от')} {userName}
                 </Text>
               )}
             </View>

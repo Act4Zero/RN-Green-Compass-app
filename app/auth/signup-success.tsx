@@ -14,6 +14,7 @@ import Button from '@/components/Button';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
 import { sanitizeInternalDestination } from '@/utils/navigation';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   container: ViewStyle;
@@ -30,6 +31,7 @@ export default function SignupSuccess() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
 
   const handleContinue = () => {
     console.log('User not authenticated, redirecting to signin');
@@ -43,14 +45,14 @@ export default function SignupSuccess() {
           <Ionicons name="checkmark-circle" size={88} color={theme.colors.success} />
         </View>
 
-        <Text style={[styles.title, { color: theme.colors.text }]}>Check your inbox</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>{t('Check your inbox', 'Проверете входящата си поща')}</Text>
         <Text style={[styles.message, { color: theme.colors.textMuted }]}>
-          Your Green Compass account has been successfully created. Please head over to your inbox to confirm your email address. Once confirmed, you're ready to start your sustainability journey!
+          {t("Your Green Compass account has been successfully created. Please head over to your inbox to confirm your email address. Once confirmed, you're ready to start your sustainability journey!", 'Профилът ви в Green Compass е създаден успешно. Отворете входящата си поща и потвърдете имейл адреса си. След потвърждението сте готови да започнете своя път към устойчивостта!')}
         </Text>
 
         <View style={styles.buttonContainer}>
           <Button
-            title="Continue to Sign In"
+            title={t('Continue to Sign In', 'Продължи към вход')}
             onPress={handleContinue}
             variant="primary"
           />

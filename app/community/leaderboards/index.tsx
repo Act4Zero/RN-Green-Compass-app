@@ -48,7 +48,7 @@ export default function CommunityLeaderboardScreen() {
       if (scope === 'team' && !selectedTeam) { setEntries([]); setTotal(0); return; }
       const result = await communityEngagementService.getLeaderboard({ scope, metric, groupId: scope === 'team' ? selectedTeam : undefined });
       setEntries(result.entries); setTotal(result.totalEntries);
-    } catch (error) { setEntries([]); addNotification({ type: 'toast', severity: 'error', message: error instanceof Error ? error.message : t('Unable to load leaderboard.', 'Класацията не можа да се зареди.') }); }
+    } catch { setEntries([]); addNotification({ type: 'toast', severity: 'error', message: t('Unable to load leaderboard.', 'Класацията не можа да се зареди.') }); }
     finally { setLoading(false); }
   }, [addNotification, metric, scope, teamId, t, user]);
   useFocusEffect(useCallback(() => { if (user) void load(); }, [load, user]));
@@ -60,8 +60,8 @@ export default function CommunityLeaderboardScreen() {
       setGlobalEnabled(!globalEnabled);
       await load();
       addNotification({ type: 'toast', severity: 'success', message: globalEnabled ? t('Your profile is no longer visible in global rankings.', 'Профилът ви вече не се вижда в глобалните класации.') : t('Your aggregate points and streak can now appear globally.', 'Общите ви точки и серия вече могат да се показват глобално.') });
-    } catch (error) {
-      addNotification({ type: 'toast', severity: 'error', message: error instanceof Error ? error.message : t('Unable to update leaderboard privacy.', 'Настройката за поверителност не можа да се обнови.') });
+    } catch {
+      addNotification({ type: 'toast', severity: 'error', message: t('Unable to update leaderboard privacy.', 'Настройката за поверителност не можа да се обнови.') });
     } finally { setPrivacyBusy(false); }
   };
 

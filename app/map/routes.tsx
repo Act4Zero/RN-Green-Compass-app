@@ -16,7 +16,7 @@ export default function EcoRoutesScreen() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    void sustainabilityMapService.listRoutes().then(setRoutes).catch((value) => setError(value instanceof Error ? value.message : t('Unable to load routes.', 'Маршрутите не могат да бъдат заредени.')));
+    void sustainabilityMapService.listRoutes().then(setRoutes).catch(() => setError(t('Unable to load routes.', 'Маршрутите не могат да бъдат заредени.')));
   }, [t]);
 
   return <Screen><ScrollView><Content wide>

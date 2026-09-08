@@ -49,7 +49,7 @@ function BadgeShareModal({
   badgeData,
   shareContent,
 }: BadgeShareModalProps) {
-  const { t } = useAppLocale();
+  const { locale, t } = useAppLocale();
   const viewShotRef = useRef<ViewShot>(null);
   const { displayName } = useUserDisplayName();
   const [isSharing, setIsSharing] = useState(false);
@@ -90,7 +90,7 @@ function BadgeShareModal({
       setShareResult({});
 
       // Create share content with the display name
-      const userName = displayName || 'I';
+      const userName = displayName || t('I', 'Аз');
       
       // Create a single message format without duplication
       // Preserve the original title and URL while customizing just the message
@@ -102,7 +102,9 @@ function BadgeShareModal({
       } = {
         title: shareContent.title,
         url: 'https://app.greencompass.app', // Correct app URL
-        message: `${userName} earned the ${badgeData.name} badge on Green Compass! Join the movement for sustainable living.`
+        message: locale === 'bg'
+          ? `${userName} спечели значката „${badgeData.name}“ в Green Compass! Присъедини се към движението за устойчив начин на живот.`
+          : `${userName} earned the ${badgeData.name} badge on Green Compass! Join the movement for sustainable living.`
       };
 
       // Capture image for all sharing platforms
@@ -119,7 +121,7 @@ function BadgeShareModal({
       if (result.success) {
         setShareResult({
           success: true,
-          message: 'Successfully shared!'
+          message: t('Successfully shared!', 'Споделено успешно!')
         });
 
         // Auto close after successful share with a slight delay
@@ -129,13 +131,13 @@ function BadgeShareModal({
       } else {
         setShareResult({
           success: false,
-          message: result.error || 'Failed to share. Please try again.'
+          message: locale === 'bg' ? 'Споделянето е неуспешно. Опитайте отново.' : result.error || 'Failed to share. Please try again.'
         });
       }
     } catch (error) {
       setShareResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
+        message: locale === 'bg' ? 'Възникна грешка при споделянето.' : error instanceof Error ? error.message : 'Unknown error occurred'
       });
       if (onError) {
         onError(error instanceof Error ? error.message : String(error));

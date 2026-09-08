@@ -154,7 +154,7 @@ export default function Home() {
                 <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{dailyProduct.product.name[locale]}</Text>
                 <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{dailyProduct.reasons[0]?.[locale]}</Text>
               </View>
-              <AppButton label={t('View Daily Pick', 'Виж Daily Pick')} variant="secondary" icon="arrow-forward" onPress={() => router.push(`/marketplace/product/${dailyProduct.product.slug}` as any)} />
+              <AppButton label={t('View Daily Pick', 'Виж днешния избор')} variant="secondary" icon="arrow-forward" onPress={() => router.push(`/marketplace/product/${dailyProduct.product.slug}` as any)} />
             </Card>
           ) : null}
 

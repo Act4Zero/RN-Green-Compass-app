@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface ChallengeShareableCardProps {
   challengeTitle: string;
@@ -32,6 +32,7 @@ export function ChallengeShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: ChallengeShareableCardProps) {
+  const { locale, t } = useAppLocale();
   // Always use light theme
   const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
@@ -39,7 +40,7 @@ export function ChallengeShareableCard({
   
   // Format dates
   const formatDateStr = (date: Date) => {
-    return format(date, 'MMM d, yyyy');
+    return date.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
   };
   
   const startDateStr = formatDateStr(startDate);
@@ -54,7 +55,7 @@ export function ChallengeShareableCard({
   const getStatusInfo = () => {
     if (hasEnded) {
       return { 
-        label: 'Completed',
+        label: t('Completed', 'Завършено'),
         icon: 'checkmark-circle',
         color: '#9E9E9E'
       };
@@ -62,7 +63,7 @@ export function ChallengeShareableCard({
     
     if (!isActive) {
       return {
-        label: 'Upcoming',
+        label: t('Upcoming', 'Предстоящо'),
         icon: 'time',
         color: '#FFB74D'
       };
@@ -70,14 +71,14 @@ export function ChallengeShareableCard({
     
     if (isParticipant) {
       return {
-        label: 'Participating',
+        label: t('Participating', 'Участвате'),
         icon: 'people',
         color: '#2E7D32'
       };
     }
     
     return {
-      label: 'Active',
+      label: t('Active', 'Активно'),
       icon: 'flame',
       color: '#4CAF50'
     };
@@ -137,7 +138,7 @@ export function ChallengeShareableCard({
           <View style={styles.participantContainer}>
             <Ionicons name="people" size={16} color="#2E7D32" />
             <Text style={styles.participantText}>
-              {participantCount} participants
+              {participantCount} {t('participants', 'участници')}
             </Text>
           </View>
           
@@ -153,7 +154,7 @@ export function ChallengeShareableCard({
                 />
               </View>
               <Text style={styles.progressText}>
-                {progressMetric}% complete
+                {progressMetric}% {t('complete', 'завършено')}
               </Text>
             </View>
           )}

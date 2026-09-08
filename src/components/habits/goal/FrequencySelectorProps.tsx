@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import goalStyles from '@/styles/Goal.styles';
 import { TimeFrequency } from '@/types/goal.types';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface FrequencySelectorProps {
   frequency: TimeFrequency;
@@ -9,12 +10,13 @@ interface FrequencySelectorProps {
 }
 
 const FrequencySelector: React.FC<FrequencySelectorProps> = ({ frequency, onFrequencyChange }) => {
+  const { t } = useAppLocale();
   const options: TimeFrequency[] = ['daily', 'weekly', 'monthly', 'one-time'];
 
   return (
     <View style={goalStyles.section}>
       <Text style={goalStyles.sectionTitle}>
-        How often would you like to track your progress?
+        {t('How often would you like to track your progress?', 'Колко често искате да проследявате напредъка си?')}
       </Text>
       <View style={goalStyles.frequencyContainer}>
         {options.map((option) => (
@@ -32,7 +34,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ frequency, onFreq
                 { color: frequency === option ? '#FFFFFF' : '#333333' },
               ]}
             >
-              {option.charAt(0).toUpperCase() + option.slice(1)}
+              {t(option.charAt(0).toUpperCase() + option.slice(1), option === 'daily' ? 'Ежедневно' : option === 'weekly' ? 'Седмично' : option === 'monthly' ? 'Месечно' : 'Еднократно')}
             </Text>
           </TouchableOpacity>
         ))}

@@ -52,9 +52,9 @@ export default function MapPopup({ location }: { location: MapLocation }) {
       setCheckInState('done');
       setCheckInMessage(result.firstVisit ? t(`First visit recorded · +${result.pointsAwarded} Green Points`, `Първото посещение е записано · +${result.pointsAwarded} зелени точки`) : t('Today’s visit was recorded.', 'Днешното посещение е записано.'));
       analyticsService.trackEvent('map_checkin_completed', { location_id: location.id, first_visit: result.firstVisit });
-    } catch (error) {
+    } catch {
       setCheckInState('error');
-      setCheckInMessage(error instanceof Error ? error.message : t('Check-in failed.', 'Неуспешен check-in.'));
+      setCheckInMessage(t('Check-in failed.', 'Посещението не можа да бъде записано.'));
     }
   };
 

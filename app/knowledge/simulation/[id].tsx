@@ -19,7 +19,7 @@ export default function KnowledgeSimulationScreen() {
   const simulation = useMemo(() => knowledgeService.getSimulation(id), [id]);
   const [inputs, setInputs] = useState<SimulationInputs>({ primary: 100, secondary: 20, tertiary: 15 });
   const result = simulation ? knowledgeService.runSimulation(id, inputs, locale) : null;
-  if (!simulation || !result) return <Screen><Content><StatePanel title={t('Lab unavailable', 'Лабораторията не е налична')} message={t('Choose another interactive tool from the Hub.', 'Изберете друг интерактивен инструмент от Hub.')} /></Content></Screen>;
+  if (!simulation || !result) return <Screen><Content><StatePanel title={t('Lab unavailable', 'Лабораторията не е налична')} message={t('Choose another interactive tool from the Hub.', 'Изберете друг интерактивен инструмент от Центъра за знания.')} /></Content></Screen>;
   const labels = LABELS[simulation.kind];
   const keys: (keyof SimulationInputs)[] = ['primary', 'secondary', 'tertiary'];
   return <Screen><ScrollView><Content>
@@ -31,6 +31,7 @@ export default function KnowledgeSimulationScreen() {
 
 function StepControl({ label, value, percent, onChange }: { label: string; value: number; percent?: boolean; onChange: (value: number) => void }) {
   const { theme } = useAppTheme();
+  const { t } = useKnowledgeLocale();
   const step = percent ? 5 : 10;
-  return <View><Text style={[theme.typography.label, { color: theme.colors.text }]}>{label}</Text><View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 }}><AppButton accessibilityLabel={`Decrease ${label}`} label="−" variant="secondary" onPress={() => onChange(Math.max(0, value - step))} /><Text accessibilityLiveRegion="polite" style={[theme.typography.metric, { color: theme.colors.primary, minWidth: 100, textAlign: 'center' }]}>{value}{percent ? '%' : ''}</Text><AppButton accessibilityLabel={`Increase ${label}`} label="+" variant="secondary" onPress={() => onChange(percent ? Math.min(100, value + step) : value + step)} /></View></View>;
+  return <View><Text style={[theme.typography.label, { color: theme.colors.text }]}>{label}</Text><View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 }}><AppButton accessibilityLabel={t(`Decrease ${label}`, `Намали ${label}`)} label="−" variant="secondary" onPress={() => onChange(Math.max(0, value - step))} /><Text accessibilityLiveRegion="polite" style={[theme.typography.metric, { color: theme.colors.primary, minWidth: 100, textAlign: 'center' }]}>{value}{percent ? '%' : ''}</Text><AppButton accessibilityLabel={t(`Increase ${label}`, `Увеличи ${label}`)} label="+" variant="secondary" onPress={() => onChange(percent ? Math.min(100, value + step) : value + step)} /></View></View>;
 }

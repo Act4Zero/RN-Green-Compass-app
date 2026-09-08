@@ -47,8 +47,8 @@ export default function HabitsOverview() {
       setCarbonBalance(balance); setGamification(progress); setCarbonTips(tips);
       const activeCategories = Object.keys(data.impact.byCategory || {});
       setRecommendations(await offsettingService.getPersonalizedKnowledge(interests, activeCategories, user.id, data.learningStage, locale));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : t('Unable to load your impact dashboard.', 'Таблото за въздействие не можа да се зареди.'));
+    } catch {
+      setError(t('Unable to load your impact dashboard.', 'Таблото за въздействие не можа да се зареди.'));
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -37,7 +37,7 @@ export default function MapContributionScreen() {
     try {
       await sustainabilityMapService.submitLocation(user.id, { kind: correction ? 'correction' : 'new_location', locationId: params.locationId || null, proposedData: { name, town, address, description, category_ids: [category], ...(Number.isFinite(lat) ? { latitude: lat } : {}), ...(Number.isFinite(lng) ? { longitude: lng } : {}) }, evidenceUrls: evidenceUrl ? [evidenceUrl] : [] });
       setMessage('Изпратено е за одобрение. Одобрено ново място носи 50 зелени точки.');
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Изпращането не бе успешно.'); }
+    } catch { setMessage('Изпращането не бе успешно.'); }
     finally { setBusy(false); }
   };
 

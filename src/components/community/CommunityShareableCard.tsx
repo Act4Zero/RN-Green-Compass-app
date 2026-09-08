@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Image, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { format } from 'date-fns';
 import ViewShot, { ViewShotProperties } from 'react-native-view-shot';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface CommunityShareableCardProps {
   postTitle?: string | null;
@@ -25,14 +25,15 @@ export function CommunityShareableCard({
   viewShotRef,
   viewShotOptions = {}
 }: CommunityShareableCardProps) {
+  const { locale, t } = useAppLocale();
   // Always use light theme
   const theme: 'light' | 'dark' = 'light';
   const defaultRef = useRef<ViewShot>(null);
   const ref = viewShotRef || defaultRef;
   
   const formattedDate = postDate instanceof Date 
-    ? format(postDate, 'PPP') 
-    : 'Date not available';
+    ? postDate.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+    : t('Date not available', 'Няма налична дата');
 
   // Truncate content if too long
   const maxContentLength = 280;

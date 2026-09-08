@@ -42,9 +42,9 @@ export default function TodayScreen() {
       const data = await offsettingService.getDashboard(user.id, dateKey(), interests);
       setDashboard(data);
       setKnowledge(await offsettingService.getPersonalizedKnowledge(interests, Object.keys(data.impact.byCategory || {}), user.id, data.learningStage, locale));
-    } catch (loadError) {
+    } catch {
       setDashboard(null);
-      setError(loadError instanceof Error ? loadError.message : t('Unable to load today’s practice.', 'Днешната практика не може да бъде заредена.'));
+      setError(t('Unable to load today’s practice.', 'Днешната практика не може да бъде заредена.'));
     } finally {
       setLoading(false);
     }

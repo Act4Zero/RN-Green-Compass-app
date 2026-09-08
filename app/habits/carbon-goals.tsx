@@ -32,7 +32,7 @@ export default function CarbonGoalsScreen() {
     if (!user) return;
     setLoading(true); setError(null);
     try { setGoals(await offsettingService.getCarbonGoals(user.id)); }
-    catch (value) { setError(value instanceof Error ? value.message : 'Целите не можаха да се заредят.'); }
+    catch { setError('Целите не можаха да се заредят.'); }
     finally { setLoading(false); }
   }, [user]);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
@@ -48,7 +48,7 @@ export default function CarbonGoalsScreen() {
         steps: [stepOne, stepTwo].filter((step) => step.trim()).map((step) => ({ title: step.trim(), knowledgeSlug: category === 'transport' ? 'green-transportation-starter-guide' : null })),
       });
       setShowForm(false); await load();
-    } catch (value) { setError(value instanceof Error ? value.message : 'Целта не можа да се създаде.'); }
+    } catch { setError('Целта не можа да се създаде.'); }
     finally { setBusy(false); }
   };
 
@@ -69,8 +69,8 @@ export default function CarbonGoalsScreen() {
     </Card> : null}
     <Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: theme.spacing.sm }]}>Твоите цели</Text>
     {loading ? <View style={{ gap: theme.spacing.sm }}><Skeleton height={150} /><Skeleton height={150} /></View> : goals.length === 0 ? <StatePanel icon="flag-outline" title="Все още няма въглеродни цели" message="Създай измерима цел и записвай свързани дейности, за да следиш напредъка." /> : <View style={{ gap: theme.spacing.md }}>{goals.map((goal) => <Card key={goal.id} style={{ gap: theme.spacing.sm, borderTopWidth: 4, borderTopColor: goal.status === 'completed' ? theme.colors.success : theme.colors.primary }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}><View style={{ flex: 1 }}><Text style={[theme.typography.label, { color: goal.status === 'completed' ? theme.colors.success : theme.colors.primary, textTransform: 'uppercase' }]}>{goal.status} · {goal.category}</Text><Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 4 }]}>{goal.title}</Text></View><Text style={[theme.typography.metric, { color: theme.colors.primary }]}>{goal.percentComplete.toFixed(0)}%</Text></View>
-      <View accessibilityLabel={`${goal.percentComplete.toFixed(0)} percent complete`} style={{ height: 10, borderRadius: 5, backgroundColor: theme.colors.surfaceStrong, overflow: 'hidden' }}><View style={{ height: '100%', width: `${goal.percentComplete}%`, backgroundColor: goal.status === 'completed' ? theme.colors.success : theme.colors.primary }} /></View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}><View style={{ flex: 1 }}><Text style={[theme.typography.label, { color: goal.status === 'completed' ? theme.colors.success : theme.colors.primary, textTransform: 'uppercase' }]}>{goal.status === 'completed' ? 'ЗАВЪРШЕНА' : 'АКТИВНА'} · {{ transport: 'Транспорт', electricity: 'Електричество', heating: 'Отопление', food: 'Храна', purchases: 'Покупки', waste: 'Отпадъци' }[goal.category]}</Text><Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 4 }]}>{goal.title}</Text></View><Text style={[theme.typography.metric, { color: theme.colors.primary }]}>{goal.percentComplete.toFixed(0)}%</Text></View>
+      <View accessibilityLabel={`${goal.percentComplete.toFixed(0)} процента завършени`} style={{ height: 10, borderRadius: 5, backgroundColor: theme.colors.surfaceStrong, overflow: 'hidden' }}><View style={{ height: '100%', width: `${goal.percentComplete}%`, backgroundColor: goal.status === 'completed' ? theme.colors.success : theme.colors.primary }} /></View>
       <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{goal.currentValue.toFixed(1)} / {goal.targetValue} {goal.unit} · до {goal.endsOn}{goal.baselineSource === 'self_reported' ? ' · въведена базова стойност' : ''}</Text>
       {goal.steps.map((step) => <View key={step.id || step.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Text style={[theme.typography.bodySmall, { flex: 1, color: step.completedAt ? theme.colors.textMuted : theme.colors.text, textDecorationLine: step.completedAt ? 'line-through' : 'none' }]}>{step.title}</Text><AppButton label={step.completedAt ? 'Отмени' : 'Готово'} variant="ghost" onPress={async () => { await offsettingService.completeCarbonGoalStep(user!.id, goal.id, step.id!, !step.completedAt); await load(); }} /></View>)}
     </Card>)}</View>}

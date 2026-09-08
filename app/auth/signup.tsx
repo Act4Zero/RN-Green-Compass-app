@@ -26,6 +26,7 @@ import supabase, { ensureValidSession } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
 import { sanitizeInternalDestination } from '@/utils/navigation';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -57,6 +58,7 @@ interface Styles {
 
 export default function SignUp() {
   const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
   const { width } = useWindowDimensions();
   const isTabletOrLarger = width > 768;
   const router = useRouter();
@@ -103,27 +105,27 @@ export default function SignUp() {
     const trimmedName = name.trim();
     
     if (!trimmedName) {
-      setFullNameError('Name is required');
+      setFullNameError(t('Name is required', 'Името е задължително'));
       return false;
     } else if (trimmedName.length < 2) {
-      setFullNameError('Name is too short');
+      setFullNameError(t('Name is too short', 'Името е твърде кратко'));
       return false;
     } else if (trimmedName.length > 100) {
-      setFullNameError('Name is too long');
+      setFullNameError(t('Name is too long', 'Името е твърде дълго'));
       return false;
     }
     
     // Check for potentially dangerous characters or script tags
     const dangerousCharsRegex = /[<>\\]/;
     if (dangerousCharsRegex.test(trimmedName)) {
-      setFullNameError('Name contains invalid characters');
+      setFullNameError(t('Name contains invalid characters', 'Името съдържа невалидни знаци'));
       return false;
     }
     
     // Only allow letters, spaces, hyphens, and apostrophes in names
     const nameRegex = /^[\p{L}\s\-']+$/u;
     if (!nameRegex.test(trimmedName)) {
-      setFullNameError('Name contains invalid characters');
+      setFullNameError(t('Name contains invalid characters', 'Името съдържа невалидни знаци'));
       return false;
     }
     
@@ -139,13 +141,13 @@ export default function SignUp() {
     const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
     
     if (!trimmedEmail) {
-      setEmailError('Email is required');
+      setEmailError(t('Email is required', 'Имейлът е задължителен'));
       return false;
     } else if (!emailRegex.test(trimmedEmail)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError(t('Please enter a valid email address', 'Въведете валиден имейл адрес'));
       return false;
     } else if (trimmedEmail.length > 255) {
-      setEmailError('Email is too long');
+      setEmailError(t('Email is too long', 'Имейлът е твърде дълъг'));
       return false;
     }
     
@@ -155,20 +157,20 @@ export default function SignUp() {
 
   const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError('Password is required');
+      setPasswordError(t('Password is required', 'Паролата е задължителна'));
       return false;
     } else if (password.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError(t('Password must be at least 8 characters', 'Паролата трябва да съдържа поне 8 знака'));
       return false;
     } else if (password.length > 100) {
-      setPasswordError('Password is too long');
+      setPasswordError(t('Password is too long', 'Паролата е твърде дълга'));
       return false;
     }
     
     // Check for potentially dangerous characters
     const dangerousCharsRegex = /[<>\\]/;
     if (dangerousCharsRegex.test(password)) {
-      setPasswordError('Password contains invalid characters');
+      setPasswordError(t('Password contains invalid characters', 'Паролата съдържа невалидни знаци'));
       return false;
     }
     
@@ -179,7 +181,7 @@ export default function SignUp() {
     const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
     
     if (!(hasUpperCase && hasLowerCase && (hasNumbers || hasSpecialChars))) {
-      setPasswordError('Password must include uppercase, lowercase, and numbers or special characters');
+      setPasswordError(t('Password must include uppercase, lowercase, and numbers or special characters', 'Паролата трябва да включва главна и малка буква, както и цифра или специален знак'));
       return false;
     }
     
@@ -189,7 +191,7 @@ export default function SignUp() {
 
   const validateTerms = () => {
     if (!termsAccepted) {
-      setTermsError('You must accept the Terms and Privacy Policy');
+      setTermsError(t('You must accept the Terms and Privacy Policy', 'Трябва да приемете Общите условия и Политиката за поверителност'));
       return false;
     }
     setTermsError(undefined);
@@ -233,11 +235,13 @@ export default function SignUp() {
       
       if (error) {
         if (error.message.includes('already registered')) {
-          setError('This email is already registered. Please use a different email or try signing in.');
+          setError(t('This email is already registered. Please use a different email or try signing in.', 'Този имейл вече е регистриран. Използвайте друг имейл или опитайте да влезете.'));
         } else if (error.message.includes('password')) {
-          setError('Password is too weak. Please use a stronger password with at least 8 characters.');
+          setError(t('Password is too weak. Please use a stronger password with at least 8 characters.', 'Паролата е твърде слаба. Използвайте по-силна парола с поне 8 знака.'));
+        } else if (error.message.toLowerCase().includes('captcha')) {
+          setError(t('Security verification failed. Please try again.', 'Проверката за сигурност е неуспешна. Опитайте отново.'));
         } else {
-          setError(error.message);
+          setError(locale === 'bg' ? 'Регистрацията не бе успешна. Опитайте отново.' : error.message);
         }
         return;
       }
@@ -294,7 +298,7 @@ export default function SignUp() {
         ? destination
         : { pathname: '/auth/signup-success', params: { next: destination } }) as any);
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('An unexpected error occurred. Please try again.', 'Възникна неочаквана грешка. Опитайте отново.'));
       console.error('Sign up error:', err);
     } finally {
       setLoading(false);
@@ -325,26 +329,26 @@ export default function SignUp() {
         </View>
           
           <View style={styles.header}>
-            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>Create your account</Text>
-            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>Start with one action and build momentum that lasts.</Text>
+            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>{t('Create your account', 'Създайте своя профил')}</Text>
+            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>{t('Start with one action and build momentum that lasts.', 'Започнете с едно действие и изградете устойчив напредък.')}</Text>
           </View>
 
           <View style={styles.form}>
             <Input
-              label="Full Name"
+              label={t('Full Name', 'Име и фамилия')}
               value={fullName}
               onChangeText={setFullName}
-              placeholder="Enter your full name"
+              placeholder={t('Enter your full name', 'Въведете име и фамилия')}
               error={fullNameError}
               onBlur={() => validateFullName(fullName)}
               autoComplete="name"
             />
 
             <Input
-              label="Email"
+              label={t('Email', 'Имейл')}
               value={email}
               onChangeText={setEmail}
-              placeholder="Enter your email"
+              placeholder={t('Enter your email', 'Въведете имейла си')}
               keyboardType="email-address"
               autoCapitalize="none"
               error={emailError}
@@ -353,10 +357,10 @@ export default function SignUp() {
             />
 
             <Input
-              label="Password"
+              label={t('Password', 'Парола')}
               value={password}
               onChangeText={setPassword}
-              placeholder="Create a password"
+              placeholder={t('Create a password', 'Създайте парола')}
               isPassword
               showPasswordStrength
               error={passwordError}
@@ -373,18 +377,18 @@ export default function SignUp() {
                 {termsAccepted && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
               </View>
               <Text style={[styles.checkboxText, { color: theme.colors.textMuted }]}>
-                I agree to the{' '}
+                {t('I agree to the ', 'Съгласявам се с ')}
                 <Text 
                   style={[styles.checkboxLink, { color: theme.colors.primary }]}
                   onPress={() => Linking.openURL('https://www.greencompass.app/tos')}
                 >
-                  Terms of Service
-                </Text> and{' '}
+                  {t('Terms of Service', 'Общите условия')}
+                </Text>{t(' and ', ' и ')}
                 <Text 
                   style={[styles.checkboxLink, { color: theme.colors.primary }]}
                   onPress={() => Linking.openURL('https://www.greencompass.app/privacy')}
                 >
-                  Privacy Policy
+                  {t('Privacy Policy', 'Политиката за поверителност')}
                 </Text>
               </Text>
             </TouchableOpacity>
@@ -405,7 +409,7 @@ export default function SignUp() {
             )}
 
             <Button
-              title="Sign Up"
+              title={t('Sign Up', 'Регистрация')}
               onPress={handleSignUp}
               loading={loading}
               disabled={loading || !captchaToken}
@@ -414,7 +418,7 @@ export default function SignUp() {
 
             <View style={styles.dividerContainer}>
               <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or</Text>
+              <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>{t('or', 'или')}</Text>
               <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             </View>
 
@@ -430,16 +434,16 @@ export default function SignUp() {
                 activeOpacity={0.85}
                 disabled={googleLoading}
                 accessibilityRole="button"
-                accessibilityLabel="Sign up with Google"
+                accessibilityLabel={t('Sign up with Google', 'Регистрация с Google')}
               >
                 <Image
                   source={require('../../assets/images/google-logo.png')}
                   style={styles.googleButtonImage}
                   resizeMode="contain"
                   accessible
-                  accessibilityLabel="Google logo"
+                  accessibilityLabel={t('Google logo', 'Лого на Google')}
                 />
-                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>Sign up with Google</Text>
+                <Text style={[styles.googleButtonText, { color: theme.colors.text }]}>{t('Sign up with Google', 'Регистрация с Google')}</Text>
               </TouchableOpacity>
             )}
 
@@ -447,8 +451,8 @@ export default function SignUp() {
 
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textMuted }]}>
-              Already have an account?{' '}
-              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signin', params: { next: destination } })}>Sign in</Text>
+              {t('Already have an account? ', 'Вече имате профил? ')}
+              <Text style={[styles.footerLink, { color: theme.colors.primary }]} onPress={() => router.push({ pathname: '/auth/signin', params: { next: destination } })}>{t('Sign in', 'Вход')}</Text>
             </Text>
           </View>
         </View>

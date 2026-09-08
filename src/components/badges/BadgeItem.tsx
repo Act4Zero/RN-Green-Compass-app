@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, ViewStyle, TextStyle, ImageStyle, Toucha
 import { Ionicons } from '@expo/vector-icons';
 import BadgeShareModal from './BadgeShareModal';
 import { formatBadgeForSharing } from '@/utils/sharing/badgeShareUtils';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface BadgeItemProps {
   name: string;
@@ -15,6 +16,7 @@ interface BadgeItemProps {
 }
 
 function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate, userName }: BadgeItemProps) {
+  const { t } = useAppLocale();
   const [hasImageError, setHasImageError] = useState(false);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
@@ -58,11 +60,11 @@ function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate
             style={[styles.badgeIcon, !isEarned && styles.badgeUnearnedIcon as ImageStyle]}
             resizeMode="contain"
             onError={() => setHasImageError(true)}
-            accessibilityLabel={`${name} badge`}
+            accessibilityLabel={t(`${name} badge`, `Значка ${name}`)}
           />
         ) : (
           <View style={styles.placeholderIcon}>
-            <Ionicons name="trophy" size={32} color={isEarned ? "#2E7D32" : "#AAAAAA"} accessibilityLabel="Badge placeholder" />
+            <Ionicons name="trophy" size={32} color={isEarned ? "#2E7D32" : "#AAAAAA"} accessibilityLabel={t('Badge placeholder', 'Място за значка')} />
           </View>
         )}
         {isEarned && (
@@ -78,7 +80,7 @@ function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate
             <TouchableOpacity
               style={styles.shareButton}
               onPress={handleSharePress}
-              accessibilityLabel={`Share ${name} badge`}
+              accessibilityLabel={t(`Share ${name} badge`, `Сподели значката ${name}`)}
             >
               <Ionicons name="share-social-outline" size={18} color="#2E7D32" />
             </TouchableOpacity>

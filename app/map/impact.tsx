@@ -16,7 +16,7 @@ export default function MapImpactScreen() {
   const { user } = useAuth();
   const [impact, setImpact] = useState<PersonalMapImpact | null>(null);
   const [error, setError] = useState('');
-  useEffect(() => { if (user) void sustainabilityMapService.getMyImpact().then(setImpact).catch((value) => setError(value instanceof Error ? value.message : t('Unable to load impact.', 'Въздействието не може да бъде заредено.'))); }, [t, user]);
+  useEffect(() => { if (user) void sustainabilityMapService.getMyImpact().then(setImpact).catch(() => setError(t('Unable to load impact.', 'Въздействието не може да бъде заредено.'))); }, [t, user]);
   if (!user) return <Screen><Content><StatePanel icon="lock-closed-outline" title={t('Sign in to view impact', 'Влезте, за да видите въздействието')} message={t('Your visit history and estimates are private to your account.', 'Историята на посещенията и оценките са видими само във вашия профил.')} action={<AppButton label={t('Sign in', 'Вход')} onPress={() => router.replace({ pathname: '/auth/signin', params: { next: '/map/impact' } })} />} /></Content></Screen>;
   return <Screen><ScrollView><Content>
     <PageHeader eyebrow={t('Private impact', 'Лично въздействие')} title={t('Your sustainability map journey', 'Твоето устойчиво пътуване по картата')} description={t('Visits are factual check-ins. Resource estimates appear only when a published methodology and measurable input are available.', 'Посещенията са реални отбелязвания. Оценки за ресурсите се показват само при публикувана методология и измерими данни.')} action={<AppButton label={t('Back to map', 'Назад към картата')} icon="arrow-back" variant="ghost" onPress={() => router.back()} />} />

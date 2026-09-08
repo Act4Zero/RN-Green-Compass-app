@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 import pointsStyles from '@/styles/community/Points.styles';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface PointsHistoryFilterProps {
   activeFilters: PointSource[];
@@ -17,6 +18,7 @@ function PointsHistoryFilter({
   onToggleFilter,
   onClearFilters
 }: PointsHistoryFilterProps) {
+  const { locale, t } = useAppLocale();
   return (
     <View style={pointsStyles.filterContainer}>
       <ScrollView 
@@ -38,7 +40,7 @@ function PointsHistoryFilter({
               activeFilters.length === 0 && pointsStyles.filterChipTextActive
             ]}
           >
-            All
+            {t('All', 'Всички')}
           </Text>
         </TouchableOpacity>
 
@@ -58,7 +60,7 @@ function PointsHistoryFilter({
                 activeFilters.includes(source) && pointsStyles.filterChipTextActive
               ]}
             >
-              {formatPointSource(source)}
+              {formatPointSource(source, locale)}
             </Text>
           </TouchableOpacity>
         ))}
