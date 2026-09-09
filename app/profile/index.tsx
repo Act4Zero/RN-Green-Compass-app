@@ -27,6 +27,7 @@ import { formatPointSource } from '@/utils/pointsFormatters';
 import { useAppTheme } from '@/theme';
 import { knowledgeService, type KnowledgeProgress } from '@/features/knowledge';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeSustainabilityInterest } from '@/types/profiles';
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
@@ -297,7 +298,7 @@ useEffect(() => {
             {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
               profile.interests.map((interest) => (
                 <View key={interest} style={[styles.interestItem, { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.borderStrong }]}>
-                  <Text style={[styles.interestText, { color: theme.colors.primary }]}>{interest}</Text>
+                  <Text style={[styles.interestText, { color: theme.colors.primary }]}>{localizeSustainabilityInterest(interest, locale)}</Text>
                 </View>
               ))
             ) : (
@@ -318,8 +319,8 @@ useEffect(() => {
         </TouchableOpacity>
 
         {/* Points Summary Section */}
-        <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Green points', 'Зелени точки')}</Text>
+        <TouchableOpacity accessibilityRole="link" onPress={() => router.push('/community/rewards' as any)} style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}><View style={{ flex: 1 }}><Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Green points', 'Зелени точки')}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{t('See exactly how points are earned and what they unlock.', 'Виж точно как се печелят точките и какво отключват.')}</Text></View><Ionicons name="chevron-forward" size={20} color={theme.colors.primary} /></View>
           {isPointsLoading ? (
             <View style={styles.loadingPoints}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -327,7 +328,7 @@ useEffect(() => {
           ) : (
             <PointsSummary points={points} streak={loginStreak} />
           )}
-        </View>
+        </TouchableOpacity>
         
         {/* Badges Summary Section */}
         {isBadgesLoading ? (

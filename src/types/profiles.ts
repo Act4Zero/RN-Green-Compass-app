@@ -31,3 +31,20 @@ export const SUSTAINABILITY_INTERESTS = [
   'Permaculture',
   'Sustainable Building'
 ];
+
+export const SUSTAINABILITY_INTERESTS_BG: Record<string, string> = {
+  'Zero Waste': 'Нулеви отпадъци',
+  'Clean Energy': 'Чиста енергия',
+  'Sustainable Food': 'Устойчива храна',
+  'Ethical Fashion': 'Етична мода',
+  Conservation: 'Опазване на природата',
+  'Climate Action': 'Действия за климата',
+  'Water Conservation': 'Опазване на водата',
+  'Green Transportation': 'Зелен транспорт',
+  Permaculture: 'Пермакултура',
+  'Sustainable Building': 'Устойчиво строителство',
+};
+
+export function localizeSustainabilityInterest(interest: string, locale: 'en' | 'bg') {
+  return locale === 'bg' ? SUSTAINABILITY_INTERESTS_BG[interest] || interest : interest;
+}

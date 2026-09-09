@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { sanitizeMarkdownInput } from '@/utils/sanitizeMarkdownInput';
 import useCommunityFeed from '../community/useCommunityFeed';
 import type { DiscussionCategory } from '@/types/community/community';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 /**
  * Custom hook for managing new post creation and editing logic
@@ -15,6 +16,7 @@ function useNewPost() {
   const isEditMode = Boolean(postId);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { t } = useAppLocale();
   
   // Get community feed functionality
   const {
@@ -69,7 +71,7 @@ function useNewPost() {
           console.error('Error loading post for editing:', error);
           notification?.addNotification({
             type: 'toast',
-            message: 'Failed to load post data for editing.',
+            message: t('Failed to load post data for editing.', 'Публикацията не можа да бъде заредена за редактиране.'),
             severity: 'error',
           });
           router.back();
@@ -78,7 +80,7 @@ function useNewPost() {
     };
     
     loadPostData();
-  }, [isEditMode, postId, user, loadDiscussion, notification, router]);
+  }, [isEditMode, postId, user, loadDiscussion, notification, router, t]);
   
   // Update form when post data is loaded
   useEffect(() => {
@@ -98,11 +100,11 @@ function useNewPost() {
   const handlePermissionDenied = () => {
     notification?.addNotification({
       type: 'modal',
-      title: 'Permission Denied',
-      message: "You don't have permission to edit this post.",
+      title: t('Permission Denied', 'Нямате разрешение'),
+      message: t("You don't have permission to edit this post.", 'Нямате право да редактирате тази публикация.'),
       severity: 'error',
       action: {
-        label: 'OK',
+        label: t('OK', 'Добре'),
         onPress: () => router.back(),
       },
     });
@@ -135,7 +137,7 @@ function useNewPost() {
         } else if (submitError) {
           notification?.addNotification({
             type: 'toast',
-            message: `Failed to update post: ${submitError}`,
+            message: t(`Failed to update post: ${submitError}`, 'Публикацията не можа да бъде обновена.'),
             severity: 'error',
           });
         }
@@ -152,7 +154,7 @@ function useNewPost() {
           // Show toast for successful creation
           notification?.addNotification({
             type: 'toast',
-            message: 'Post created successfully!',
+            message: t('Post created successfully!', 'Публикацията е създадена!'),
             severity: 'success',
           });
 
@@ -161,7 +163,7 @@ function useNewPost() {
         } else if (submitError) {
           notification?.addNotification({
             type: 'toast',
-            message: `Failed to create post: ${submitError}`,
+            message: t(`Failed to create post: ${submitError}`, 'Публикацията не можа да бъде създадена.'),
             severity: 'error',
           });
         }
@@ -170,7 +172,7 @@ function useNewPost() {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} post:`, error);
       notification?.addNotification({
         type: 'toast',
-        message: `Failed to ${isEditMode ? 'update' : 'create'} post. Please try again.`,
+        message: isEditMode ? t('Failed to update post. Please try again.', 'Публикацията не можа да бъде обновена. Опитайте отново.') : t('Failed to create post. Please try again.', 'Публикацията не можа да бъде създадена. Опитайте отново.'),
         severity: 'error',
       });
     }

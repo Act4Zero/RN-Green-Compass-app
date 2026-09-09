@@ -5,6 +5,7 @@ import useCommunityFeed from '../community/useCommunityFeed';
 import { deletePost } from '../../utils/deletePost';
 import { useNotification } from '../../context/NotificationContext';
 import { sanitizeMarkdownInput, getCharacterInfo } from '@/utils/sanitizeMarkdownInput';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 /**
  * Custom hook to manage post detail state and logic
@@ -13,6 +14,7 @@ import { sanitizeMarkdownInput, getCharacterInfo } from '@/utils/sanitizeMarkdow
 function usePostDetailState(discussionId: string) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { t } = useAppLocale();
   
   const {
     // User state
@@ -54,7 +56,7 @@ function usePostDetailState(discussionId: string) {
   
   // UI state
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('Success!');
+  const [toastMessage, setToastMessage] = useState(t('Success!', 'Готово!'));
   
   // Post editing state
   const [isEditingPost, setIsEditingPost] = useState(false);
@@ -102,7 +104,7 @@ function usePostDetailState(discussionId: string) {
   }, [user, authLoading, router]);
 
   // Notification handler
-  const showToastMessage = (message: string = 'Success!', severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+  const showToastMessage = (message: string = t('Success!', 'Готово!'), severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
     addNotification({
       type: 'toast',
       message,
@@ -117,7 +119,7 @@ function usePostDetailState(discussionId: string) {
     
     const success = await toggleDiscussionReaction(selectedDiscussion.id);
     if (success) {
-      showToastMessage('Post liked!', 'success');
+      showToastMessage(t('Post liked!', 'Публикацията е харесана!'), 'success');
     }
   };
 
@@ -132,7 +134,7 @@ function usePostDetailState(discussionId: string) {
     const result = await createComment(sanitizeMarkdownInput(limitedComment, 'comment'));
     
     if (result) {
-      showToastMessage('Comment added!', 'success');
+      showToastMessage(t('Comment added!', 'Коментарът е добавен!'), 'success');
       // Refresh comments to display the new comment and its user details
       loadComments();
       // Optionally clear the comment input for better UX
@@ -167,19 +169,19 @@ function usePostDetailState(discussionId: string) {
     
     if (!user) {
       console.error('[POST DETAIL] No user found for delete operation');
-      showToastMessage('Error: You must be logged in to delete a post', 'error');
+      showToastMessage(t('Error: You must be logged in to delete a post', 'Грешка: трябва да сте влезли, за да изтриете публикация'), 'error');
       return;
     }
     
     // Show confirmation dialog with our notification system
     addNotification({
       type: 'modal',
-      title: 'Delete Post',
-      message: 'Are you sure you want to delete this post? This action cannot be undone.',
+      title: t('Delete Post', 'Изтриване на публикация'),
+      message: t('Are you sure you want to delete this post? This action cannot be undone.', 'Сигурни ли сте, че искате да изтриете публикацията? Действието е необратимо.'),
       severity: 'warning',
       autoClose: false,
       action: {
-        label: 'Delete',
+        label: t('Delete', 'Изтрий'),
         onPress: () => {
           // Execute deletion after confirmation
           deletePost(
@@ -187,7 +189,7 @@ function usePostDetailState(discussionId: string) {
             user.id,
             // On success callback
             () => {
-              showToastMessage('Post deleted successfully!', 'success');
+              showToastMessage(t('Post deleted successfully!', 'Публикацията е изтрита.'), 'success');
               
               // Navigate back to community feed
               router.push('/community');
@@ -195,7 +197,7 @@ function usePostDetailState(discussionId: string) {
             // On error callback
             (errorMsg) => {
               console.error(`[POST DETAIL] Error deleting post: ${errorMsg}`);
-              showToastMessage(`Error: ${errorMsg}`, 'error');
+              showToastMessage(t(`Error: ${errorMsg}`, 'Публикацията не можа да бъде изтрита.'), 'error');
             }
           );
         }
@@ -215,7 +217,7 @@ function usePostDetailState(discussionId: string) {
     
     if (result) {
       setIsEditingPost(false);
-      showToastMessage('Post updated!', 'success');
+      showToastMessage(t('Post updated!', 'Публикацията е обновена!'), 'success');
       // Reload the discussion to show the updated content
       loadDiscussion(selectedDiscussion.id);
     }
@@ -241,7 +243,7 @@ function usePostDetailState(discussionId: string) {
     if (result) {
       setEditingCommentId(null);
       setEditCommentContent('');
-      showToastMessage('Comment updated!', 'success');
+      showToastMessage(t('Comment updated!', 'Коментарът е обновен!'), 'success');
     }
   };
   
@@ -263,7 +265,7 @@ function usePostDetailState(discussionId: string) {
     const success = await deleteComment(commentToDelete);
     
     if (success) {
-      showToastMessage('Comment deleted!', 'success');
+      showToastMessage(t('Comment deleted!', 'Коментарът е изтрит!'), 'success');
     }
     
     // Reset state

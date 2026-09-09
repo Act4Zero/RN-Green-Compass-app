@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { focusAreas, TimeFrequency } from '@/types/goal.types';
 import useGoals from '../../hooks/useGoals';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface UseGoalManagerProps {
   source?: string;
@@ -29,6 +30,7 @@ export default function useGoalManager({ source }: UseGoalManagerProps): UseGoal
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { createNewGoal, loading, error } = useGoals();
+  const { locale, t } = useAppLocale();
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<TimeFrequency>('weekly');
@@ -84,12 +86,12 @@ export default function useGoalManager({ source }: UseGoalManagerProps): UseGoal
 
   const handleContinue = async () => {
     if (selectedFocusAreas.length === 0) {
-      Alert.alert('Please select at least one focus area');
+      Alert.alert(t('Please select at least one focus area', 'Изберете поне една област'));
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'User not authenticated. Please sign in again.');
+      Alert.alert(t('Error', 'Грешка'), t('User not authenticated. Please sign in again.', 'Няма активен профил. Влезте отново.'));
       router.replace('/auth/signin');
       return;
     }
@@ -103,15 +105,16 @@ export default function useGoalManager({ source }: UseGoalManagerProps): UseGoal
 
         let goalTitle;
         switch(area.name) {
-          case 'Mobility': goalTitle = 'Green Journey'; break;
-          case 'Food': goalTitle = 'Sustainable Bites'; break;
-          case 'Household Activities': goalTitle = 'Eco Home Challenge'; break;
-          case 'Heating': goalTitle = 'Climate Comfort'; break;
-          default: goalTitle = `${area.name} Challenge`;
+          case 'Mobility': goalTitle = t('Green Journey', 'Зелено пътуване'); break;
+          case 'Food': goalTitle = t('Sustainable Bites', 'Устойчиво хранене'); break;
+          case 'Household Activities': goalTitle = t('Eco Home Challenge', 'Предизвикателство за еко дом'); break;
+          case 'Heating': goalTitle = t('Climate Comfort', 'Климатичен комфорт'); break;
+          default: goalTitle = t(`${area.name} Challenge`, `Предизвикателство: ${area.name}`);
         }
 
         const frequencyText = frequency === 'one-time' ? '' : frequency;
-        const goalDescription = `Complete ${targetValue} sustainable actions ${frequencyText} related to ${area.name.toLowerCase()}`;
+        const frequencyBg = frequency === 'daily' ? 'дневно' : frequency === 'weekly' ? 'седмично' : frequency === 'monthly' ? 'месечно' : '';
+        const goalDescription = locale === 'bg' ? `Изпълнете ${targetValue} устойчиви действия ${frequencyBg} в избраната област.` : `Complete ${targetValue} sustainable actions ${frequencyText} related to ${area.name.toLowerCase()}`;
 
         let endDate: string | undefined = undefined;
         const today = new Date();
@@ -146,7 +149,7 @@ export default function useGoalManager({ source }: UseGoalManagerProps): UseGoal
       await Promise.all(promises);
       router.replace('/home');
     } catch (error) {
-      Alert.alert('Error', 'Failed to create goal');
+      Alert.alert(t('Error', 'Грешка'), t('Failed to create goal', 'Целта не можа да бъде създадена'));
     } finally {
       setIsSubmitting(false);
     }

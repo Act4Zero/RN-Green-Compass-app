@@ -40,6 +40,8 @@ export function EcosystemHero({ snapshot, loading, preview = false, onOpen }: { 
   const stageLabel = STAGE_LABELS[snapshot.stage][locale];
   const plantName = snapshot.activeSpecies.name[locale];
   const completion = getEcosystemCompletion(snapshot.growthUnits, snapshot.biome);
+  const lifeUnlocked = snapshot.unlockedSpecies.length + snapshot.guests.length;
+  const lifeTotal = biome.species.length + biome.guests.length;
   const growthLabel = completion.complete
     ? t('Every species and wild guest has found a place here.', 'Всеки вид и див гост вече е намерил своето място тук.')
     : snapshot.nextStageAt == null
@@ -87,6 +89,15 @@ export function EcosystemHero({ snapshot, loading, preview = false, onOpen }: { 
                 <View style={{ width: `${Math.max(4, completion.progress * 100)}%`, height: '100%', borderRadius: 999, backgroundColor: '#4C8A50' }} />
               </View>
               <Text style={[theme.typography.bodySmall, { color: '#506057', marginTop: 8 }]}>{growthLabel}</Text>
+              <View accessibilityLabel={t(`${lifeUnlocked} of ${lifeTotal} ecosystem leaves filled`, `${lifeUnlocked} от ${lifeTotal} листа на екосистемата са запълнени`)} style={{ marginTop: 13 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <Text style={[theme.typography.label, { color: '#174C35', fontSize: 10, textTransform: 'uppercase', letterSpacing: .7 }]}>{t('Life unlocked', 'Отключен живот')}</Text>
+                  <Text style={[theme.typography.label, { color: '#174C35', fontSize: 10 }]}>{lifeUnlocked}/{lifeTotal}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 7 }}>
+                  {Array.from({ length: lifeTotal }, (_, index) => <Ionicons key={index} name={index < lifeUnlocked ? 'leaf' : 'leaf-outline'} size={16} color={index < lifeUnlocked ? '#4C8A50' : '#AAB3A1'} />)}
+                </View>
+              </View>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 13 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 999, backgroundColor: '#174C35' }}><Ionicons name="leaf-outline" size={14} color="#B8E36B" /><Text style={[theme.typography.label, { color: '#FFFFFF', fontSize: 10 }]}>{snapshot.unlockedSpecies.length} {t('species', 'вида')}</Text></View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 999, backgroundColor: '#E9F1DF' }}><Ionicons name="paw-outline" size={14} color="#174C35" /><Text style={[theme.typography.label, { color: '#174C35', fontSize: 10 }]}>{snapshot.guests.length} {t('wild guests', 'диви гости')}</Text></View>
