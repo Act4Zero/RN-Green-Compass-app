@@ -17,15 +17,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { SUSTAINABILITY_INTERESTS } from '../../types/profiles';
+import { localizeSustainabilityInterest, SUSTAINABILITY_INTERESTS } from '../../types/profiles';
 import { useAppLocale } from '@/context/AppLocaleContext';
-
-const INTERESTS_BG: Record<string, string> = {
-  'Zero Waste': 'Нулеви отпадъци', 'Clean Energy': 'Чиста енергия', 'Sustainable Food': 'Устойчива храна',
-  'Ethical Fashion': 'Етична мода', Conservation: 'Опазване на природата', 'Climate Action': 'Действия за климата',
-  'Water Conservation': 'Опазване на водата', 'Green Transportation': 'Зелен транспорт', Permaculture: 'Пермакултура',
-  'Sustainable Building': 'Устойчиво строителство',
-};
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -315,7 +308,7 @@ export default function ProfileForm({
                       selectedInterests.includes(interest) && styles.selectedInterestText,
                     ]}
                   >
-                    {locale === 'bg' ? INTERESTS_BG[interest] || interest : interest}
+                    {localizeSustainabilityInterest(interest, locale)}
                   </Text>
                 </TouchableOpacity>
               ))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface SubmitButtonProps {
   isEditMode: boolean;
@@ -15,6 +16,7 @@ function SubmitButton({
   isDisabled, 
   onSubmit 
 }: SubmitButtonProps) {
+  const { t } = useAppLocale();
   return (
     <TouchableOpacity
       style={[
@@ -29,7 +31,7 @@ function SubmitButton({
       ) : (
         <>
           <Ionicons name="send" size={20} color="#FFFFFF" />
-          <Text style={styles.submitButtonText}>{isEditMode ? 'Update' : 'Post'}</Text>
+          <Text style={styles.submitButtonText}>{isEditMode ? t('Update', 'Обнови') : t('Post', 'Публикувай')}</Text>
         </>
       )}
     </TouchableOpacity>

@@ -5,6 +5,7 @@ import { ImageBackground, type ImageSourcePropType, Pressable, ScrollView, Text,
 import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
+import { PointsGuide } from '@/components/community/points/PointsGuide';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemCompletion, getEcosystemProgress, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
 import type { EcosystemBiomeId } from '@/features/ecosystem';
@@ -22,13 +23,16 @@ export default function EcosystemScreen() {
   const { width } = useWindowDimensions();
   const { theme } = useAppTheme();
   const { user } = useAuth();
-  const { pointHistory } = usePoints();
+  const { pointHistory, pointBalance } = usePoints();
   const { locale, t } = useKnowledgeLocale();
   const { snapshot, loading, selectSpecies, selectBiome } = useEcosystem(user?.id, pointHistory);
   const [showCompletePreview, setShowCompletePreview] = useState(false);
   const wide = width >= 760;
   const biome = getBiomeCatalog(snapshot.biome);
   const completion = getEcosystemCompletion(snapshot.growthUnits, snapshot.biome);
+  const unlockedLife = snapshot.unlockedSpecies.length + snapshot.guests.length;
+  const totalLife = biome.species.length + biome.guests.length;
+  const nextUnlock = [...biome.species.map((species) => ({ at: species.unlockAt, name: species.name[locale], kind: t('plant', 'растение') })), ...biome.guests.map((guest) => ({ at: guest.unlockAt, name: guest.name[locale], kind: t('wild guest', 'див гост') }))].filter((entry) => entry.at > snapshot.growthUnits).sort((a, b) => a.at - b.at)[0];
   const displaySnapshot = showCompletePreview ? {
     ...snapshot,
     ...getEcosystemProgress(completion.threshold),
@@ -87,6 +91,23 @@ export default function EcosystemScreen() {
             preview={showCompletePreview}
             onOpen={() => router.push(`/ecosystem/species/${snapshot.activeSpecies.slug}` as any)}
           />
+
+          <Card style={{ padding: wide ? 22 : 18, marginBottom: 14, backgroundColor: '#F5F8EF', borderColor: '#9BB58A' }}>
+            <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 16 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .8 }]}>{t('Your two progress balances', 'Твоите два вида напредък')}</Text>
+                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('Points reward you. Growth changes nature.', 'Точките те награждават. Растежът променя природата.')}</Text>
+                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{nextUnlock ? t(`Next: ${nextUnlock.name}, a ${nextUnlock.kind}, in ${nextUnlock.at - snapshot.growthUnits} growth.`, `Следва: ${nextUnlock.name} — ${nextUnlock.kind}, след още ${nextUnlock.at - snapshot.growthUnits} растеж.`) : t('All life in this ecosystem is unlocked.', 'Целият живот в тази екосистема е отключен.')}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 9 }}>
+                <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: '#FFF3CC' }}><Ionicons name="star" size={18} color={theme.colors.warning} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{pointBalance.total.toLocaleString()}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('green points', 'зелени точки')}</Text></View>
+                <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: theme.colors.primarySoft }}><Ionicons name="leaf" size={18} color={theme.colors.primary} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{snapshot.growthUnits}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('ecosystem growth', 'растеж')}</Text></View>
+                {wide ? <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: theme.colors.surface }}><Ionicons name="sparkles" size={18} color={theme.colors.primary} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{unlockedLife}/{totalLife}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('life unlocked', 'отключен живот')}</Text></View> : null}
+              </View>
+            </View>
+          </Card>
+
+          <View style={{ marginBottom: 18 }}><PointsGuide compact /></View>
 
           {!completion.complete ? (
             <View style={{ alignItems: wide ? 'flex-end' : 'stretch', marginTop: -6, marginBottom: 18 }}>

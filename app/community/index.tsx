@@ -40,6 +40,14 @@ const FORUM_CATEGORIES: { value: DiscussionCategory | 'all'; label: { en: string
   { value: 'questions', label: { en: 'Questions', bg: 'Въпроси' } },
 ];
 
+const SUBMISSION_TYPE_LABELS: Record<string, { en: string; bg: string }> = {
+  story: { en: 'Story', bg: 'История' },
+  tip: { en: 'Eco-tip', bg: 'Еко съвет' },
+  article: { en: 'Article', bg: 'Статия' },
+  video: { en: 'Video', bg: 'Видео' },
+  project_idea: { en: 'Project idea', bg: 'Идея за проект' },
+};
+
 // Styles for this component
 const styles = FeedStyles;
 
@@ -200,7 +208,7 @@ export default function CommunityFeed() {
             {canModerate ? <FeatureCard title={t('Moderation & Spotlights', 'Модерация и акценти')} description={t('Review reported discussions and community submissions', 'Прегледайте докладвани дискусии и предложения')} icon={<Ionicons name="shield-checkmark" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.danger} buttonText={t('Open Review Queue', 'Отвори опашката')} onPress={() => router.push('/admin/community' as any)} /> : null}
           </View>
 
-          {overview?.featuredSubmission ? <View style={{ borderRadius: 18, padding: 20, marginBottom: 18, backgroundColor: theme.colors.accentSoft, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{t('Community spotlight', 'Акцент от общността')} · {overview.featuredSubmission.type.replace('_', ' ')}</Text><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 7 }]}>{overview.featuredSubmission.title}</Text><Text numberOfLines={4} style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6 }]}>{overview.featuredSubmission.body}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Shared by', 'Споделено от')} {overview.featuredSubmission.authorName || t('a community member', 'член на общността')}</Text></View> : null}
+          {overview?.featuredSubmission ? <View style={{ borderRadius: 18, padding: 20, marginBottom: 18, backgroundColor: theme.colors.accentSoft, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{t('Community spotlight', 'Акцент от общността')} · {(SUBMISSION_TYPE_LABELS[overview.featuredSubmission.type]?.[locale] || overview.featuredSubmission.type.replace('_', ' '))}</Text><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 7 }]}>{overview.featuredSubmission.title}</Text><Text numberOfLines={4} style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6 }]}>{overview.featuredSubmission.body}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Shared by', 'Споделено от')} {overview.featuredSubmission.authorName || t('a community member', 'член на общността')}</Text></View> : null}
           {overview?.featuredProjects?.length ? <View style={{ marginBottom: 24 }}><Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 10 }]}>{t('Upcoming initiatives', 'Предстоящи инициативи')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{overview.featuredProjects.map((project) => <Pressable key={project.id} onPress={() => router.push('/community/projects' as any)} style={{ minWidth: 260, flex: 1, padding: 16, borderRadius: 16, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{project.eventName || project.scope.toUpperCase()} · {getCountdownLabel(project.endsAt, new Date(), locale)}</Text><Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{project.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{project.participantCount} {t('participants', 'участници')}</Text></Pressable>)}</View></View> : null}
           
           {/* Discussion Section Header */}

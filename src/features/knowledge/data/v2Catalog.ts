@@ -114,7 +114,7 @@ export const KNOWLEDGE_BADGES: Omit<KnowledgeBadgeSummary, 'earned'>[] = [
   { code: 'knowledge_experimenter', name: { en: 'Experimenter', bg: 'Експериментатор' }, description: { en: 'Complete three interactive tools.', bg: 'Завършете три интерактивни инструмента.' } },
   { code: 'knowledge_challenge_finisher', name: { en: 'Challenge Finisher', bg: 'Финалист в предизвикателство' }, description: { en: 'Finish a learning challenge on time.', bg: 'Завършете учебно предизвикателство навреме.' } },
   { code: 'knowledge_quest_seeker', name: { en: 'Quest Seeker', bg: 'Търсач на мисии' }, description: { en: 'Complete a Knowledge Quest.', bg: 'Завършете приключение за знания.' } },
-  { code: 'knowledge_green_guru', name: { en: 'Green Guru', bg: 'Зелен гуру' }, description: { en: 'Reach 350 learning XP.', bg: 'Достигнете 350 learning XP.' } },
+  { code: 'knowledge_green_guru', name: { en: 'Green Guru', bg: 'Зелен гуру' }, description: { en: 'Reach 350 learning XP.', bg: 'Достигнете 350 учебни точки.' } },
 ];
 
 export function getKnowledgeLevel(xp: number): KnowledgeLevel {

@@ -34,6 +34,7 @@ export function getPointEventDescription(pointEvent: PointEvent, locale: 'en' | 
     switch (pointEvent.source) {
       case 'habit_log': return `${source} — записахте устойчив навик (+${pointEvent.points} точки)`;
       case 'discussion_participation': return `${source} — благодарим за приноса (+${pointEvent.points} точки)`;
+      case 'habit_streak': return `${source} — запазихте постоянството си (+${pointEvent.points} точки)`;
       case 'learning_milestone': return `${source} — завършихте етап в Центъра за знания (+${pointEvent.points} точки)`;
       case 'daily_challenge': return `${source} — завършихте днешното предизвикателство (+${pointEvent.points} точки)`;
       default: return `${source} — спечелихте ${pointEvent.points} точки`;
@@ -47,6 +48,8 @@ export function getPointEventDescription(pointEvent: PointEvent, locale: 'en' | 
       return `${source} - You logged a sustainable habit (+${pointEvent.points} points)`;
     case 'discussion_participation':
       return `${source} - Thanks for contributing (+${pointEvent.points} points)`;
+    case 'habit_streak':
+      return `${source} - You kept your consistency (+${pointEvent.points} points)`;
     case 'learning_milestone':
       return `${source} - You completed a Knowledge Hub milestone (+${pointEvent.points} points)`;
     case 'daily_challenge':

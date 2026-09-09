@@ -73,7 +73,7 @@ export default function OfflineMapsScreen() {
     description={t('Choose only the regions you need. Installed PMTiles maps activate automatically without internet.', 'Изберете само нужните региони. Инсталираните PMTiles карти се включват автоматично без интернет.')}
     action={<AppButton label={t('Back to map', 'Към картата')} icon="arrow-back" variant="ghost" onPress={() => router.replace('/map')} />}
   />
-  {Platform.OS === 'web' ? <StatePanel icon="phone-portrait-outline" title={t('Mobile download', 'Изтегляне за мобилно устройство')} message={t('Offline maps are available in the iOS and Android apps. The web map stays online.', 'Офлайн картите са достъпни в iOS и Android. Web картата остава онлайн.')} /> : null}
+  {Platform.OS === 'web' ? <StatePanel icon="phone-portrait-outline" title={t('Mobile download', 'Изтегляне за мобилно устройство')} message={t('Offline maps are available in the iOS and Android apps. The web map stays online.', 'Офлайн картите са достъпни в iOS и Android. Картата в браузъра остава онлайн.')} /> : null}
   {error ? <Card style={{ marginBottom: 12, borderColor: theme.colors.danger }}><Text accessibilityLiveRegion="assertive" style={[theme.typography.bodySmall, { color: theme.colors.danger }]}>{error}</Text></Card> : null}
   <View style={{ gap: 12 }}>{packs.map((state) => {
     const pack = state.manifest;

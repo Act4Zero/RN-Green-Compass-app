@@ -21,13 +21,19 @@ function PointsHistoryItem({ pointEvent }: PointsHistoryItemProps) {
         return 'leaf-outline';
       case 'discussion_participation':
         return 'chatbubbles-outline';
+      case 'habit_streak':
+        return 'flame-outline';
+      case 'learning_milestone':
+        return 'school-outline';
+      case 'daily_challenge':
+        return 'sparkles-outline';
       default:
         return 'star-outline';
     }
   };
 
   // Format the date in a readable format
-  const formattedDate = new Date(pointEvent.created_at).toLocaleTimeString([], {
+  const formattedDate = new Date(pointEvent.created_at).toLocaleTimeString(locale === 'bg' ? 'bg-BG' : 'en-GB', {
     hour: '2-digit',
     minute: '2-digit'
   });

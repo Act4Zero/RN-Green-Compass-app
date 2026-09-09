@@ -5,6 +5,7 @@ import useCommunityFeed from '../../hooks/community/useCommunityFeed';
 import { useNotification } from '../../context/NotificationContext';
 import { discussionService } from '../../services/community';
 import { deletePost } from '../../utils/deletePost';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 /**
  * Custom hook to manage community feed state and logic
@@ -14,6 +15,7 @@ function useCommunityFeedState() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { t } = useAppLocale();
   
   // Get community feed data and methods from the main hook
   const {
@@ -76,7 +78,7 @@ function useCommunityFeedState() {
   const handleLike = async (postId: string) => {
     const success = await toggleDiscussionReaction(postId);
     if (success) {
-      showToastMessage('Post liked!', 'success');
+      showToastMessage(t('Post liked!', 'Публикацията е харесана!'), 'success');
     }
   };
 
@@ -137,19 +139,19 @@ function useCommunityFeedState() {
     togglePostOptions(postId);
     if (!user) {
       console.error('[FEED] No user found for delete operation');
-      showToastMessage('Error: You must be logged in to delete a post', 'error');
+      showToastMessage(t('Error: You must be logged in to delete a post', 'Грешка: трябва да сте влезли, за да изтриете публикация'), 'error');
       return;
     }
     
     // Show confirmation using our notification system
     addNotification({
       type: 'modal',
-      title: 'Delete Post',
-      message: 'Are you sure you want to delete this post? This action cannot be undone.',
+      title: t('Delete Post', 'Изтриване на публикация'),
+      message: t('Are you sure you want to delete this post? This action cannot be undone.', 'Сигурни ли сте, че искате да изтриете публикацията? Действието е необратимо.'),
       severity: 'warning',
       autoClose: false,
       action: {
-        label: 'Delete',
+        label: t('Delete', 'Изтрий'),
         onPress: () => {
           // Execute delete operation after confirmation
           deletePost(
@@ -157,7 +159,7 @@ function useCommunityFeedState() {
             user.id,
             // On success
             () => {
-              showToastMessage('Post deleted successfully!', 'success');
+              showToastMessage(t('Post deleted successfully!', 'Публикацията е изтрита.'), 'success');
               
               // Force refresh to update the UI
               refreshDiscussions().then(() => {});
@@ -165,7 +167,7 @@ function useCommunityFeedState() {
             // On error
             (errorMsg) => {
               console.error(`[FEED] Error deleting post: ${errorMsg}`);
-              showToastMessage(`Error: ${errorMsg}`, 'error');
+              showToastMessage(t(`Error: ${errorMsg}`, 'Публикацията не можа да бъде изтрита.'), 'error');
             }
           );
         }
