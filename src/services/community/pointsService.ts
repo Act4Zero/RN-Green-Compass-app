@@ -52,16 +52,14 @@ const pointsService = {
         throw error;
       }
 
-      // Ecosystem growth is calculated and deduplicated by the database. A
-      // missing migration must never prevent the original points flow.
+      // Wait for ecosystem growth before reporting success. This keeps the
+      // points balance and living world in sync when the destination screen
+      // refreshes immediately after an action.
       if (data?.id) {
-        void (supabase as any)
-          .rpc('record_ecosystem_growth', { p_point_event_id: data.id })
-          .then(({ error: growthError }: { error?: { message?: string } | null }) => {
-            if (growthError && !growthError.message?.includes('Could not find the function')) {
-              console.warn('Ecosystem growth was not recorded:', growthError.message);
-            }
-          });
+        const { error: growthError } = await (supabase as any).rpc('record_ecosystem_growth', { p_point_event_id: data.id });
+        if (growthError && !growthError.message?.includes('Could not find the function')) {
+          console.warn('Ecosystem growth was not recorded:', growthError.message);
+        }
       }
       
       // Calculate updated point balance
@@ -382,7 +380,6 @@ const pointsService = {
    * @returns The user's total points and last update time
    */
   getUserPointBalance: async (userId: string): Promise<PointBalance> => {
-  const { data, error } = await supabase.rpc('get_user_points_total', { user_id_param: userId });
     try {
       // Sum all points for the user
       const { data, error } = await supabase

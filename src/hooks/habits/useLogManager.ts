@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import useHabitTracking from '../../hooks/useHabitTracking';
 import { Habit } from '../../types/supabase';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { usePoints } from '@/context/PointsContext';
 import { localizeHabitCategory, localizeHabitSubcategory } from '@/features/habits/localization';
 
 // Map category names to icons and display names based on habits_rows.csv
@@ -57,6 +58,7 @@ interface UseLogManagerReturn {
 export default function useLogManager(): UseLogManagerReturn {
   const router = useRouter();
   const { locale, t } = useAppLocale();
+  const { refreshBalance, refreshHistory } = usePoints();
   // Get category parameter from navigation if available
   const { category: initialCategory } = useLocalSearchParams();
   
@@ -245,7 +247,9 @@ export default function useLogManager(): UseLogManagerReturn {
     setIsSubmitting(true);
 
     try {
-      await logCompletedHabit(selectedHabit.id, quantity, sanitizedNotes);
+      const logged = await logCompletedHabit(selectedHabit.id, quantity, sanitizedNotes);
+      if (!logged) throw new Error('Habit logging did not complete.');
+      await Promise.all([refreshBalance(), refreshHistory()]);
       
       // Show success toast briefly
       setShowToast(true);
@@ -258,7 +262,7 @@ export default function useLogManager(): UseLogManagerReturn {
       Alert.alert(t('Error', 'Грешка'), t('Failed to log habit. Please try again.', 'Навикът не можа да бъде записан. Опитайте отново.'));
       setIsSubmitting(false);
     }
-  }, [selectedHabit, notes, validateNotes, logCompletedHabit, quantity, router, t]);
+  }, [selectedHabit, notes, validateNotes, logCompletedHabit, quantity, refreshBalance, refreshHistory, router, t]);
 
   return {
     // States

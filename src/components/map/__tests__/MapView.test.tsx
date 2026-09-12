@@ -113,4 +113,23 @@ describe('Living Planet shell', () => {
     act(() => tree.unmount());
   });
 
+  it('closes map-only panels and selection before returning to the globe', () => {
+    mockMapFacade.isResultsOpen = true;
+    mockMapFacade.isResultsRailCollapsed = false;
+    mockMapFacade.selectedLocation = { id: 'place-1', name: 'Test place', lat: 42.7, lng: 23.3 };
+    let tree!: renderer.ReactTestRenderer;
+    act(() => { tree = renderer.create(<MapView />); });
+    expect(tree.root.findAllByType(require('../MapResultsPanel').default)).toHaveLength(1);
+    expect(tree.root.findAllByType(require('../MapPopup').default)).toHaveLength(1);
+
+    act(() => tree.root.findByProps({ testID: 'globe-renderer' }).props.onRequestGlobe());
+
+    expect(mockMapFacade.setResultsOpen).toHaveBeenCalledWith(false);
+    expect(mockMapFacade.setResultsRailCollapsed).toHaveBeenCalledWith(true);
+    expect(mockMapFacade.selectLocation).toHaveBeenCalledWith(null, false);
+    expect(tree.root.findAllByType(require('../MapResultsPanel').default)).toHaveLength(0);
+    expect(tree.root.findAllByType(require('../MapPopup').default)).toHaveLength(0);
+    act(() => tree.unmount());
+  });
+
 });

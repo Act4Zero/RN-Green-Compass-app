@@ -168,16 +168,11 @@ export const offsettingService = {
 
   async completeDailyChallenge(userId: string, assignment: DailyChallengeAssignment): Promise<DailyChallengeAssignment> {
     if (assignment.completedAt) return assignment;
-    const completedAt = new Date().toISOString();
-    const completed = { ...assignment, completedAt };
-    await offsettingStorage.saveAssignment(userId, completed);
-    try {
-      const { data, error } = await (supabase as any).rpc('complete_daily_eco_challenge', { p_challenge_id: assignment.challenge.id, p_challenge_date: assignment.challengeDate, p_event_id: cryptoRandomId() });
-      if (error) throw error;
-      if (data?.completed_at) completed.completedAt = data.completed_at;
-    } catch {
-      // A repeated completion remains locally idempotent and can be retried safely.
-    }
+    const { data, error } = await (supabase as any).rpc('complete_daily_eco_challenge', { p_challenge_id: assignment.challenge.id, p_challenge_date: assignment.challengeDate, p_event_id: cryptoRandomId() });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row?.completed_at) throw new Error('Challenge completion was not confirmed.');
+    const completed = { ...assignment, completedAt: row.completed_at as string };
     return offsettingStorage.saveAssignment(userId, completed);
   },
 

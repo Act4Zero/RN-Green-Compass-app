@@ -1,163 +1,39 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
-import { BadgeCategoryType } from '@/types/community/badges';
-import BadgeItem from './BadgeItem';
+import { ScrollView, Text, Pressable, View } from 'react-native';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { useAppTheme } from '@/theme';
+import type { Badge, BadgeCategoryType } from '@/types/community/badges';
+import BadgeItem, { BADGE_CATEGORY_LABELS } from './BadgeItem';
+
+type DisplayBadge = Badge & { imageUrl?: string; isEarned: boolean; awarded_at?: string };
 
 interface BadgeListProps {
-  title: string;
-  badges: Array<any>;
+  title?: string;
+  badges: DisplayBadge[];
   availableCategories: BadgeCategoryType[];
   selectedCategory: BadgeCategoryType | 'all';
   onSelectCategory: (category: BadgeCategoryType | 'all') => void;
   emptyMessage: string;
 }
 
-function BadgeList({
-  title,
-  badges,
-  availableCategories,
-  selectedCategory,
-  onSelectCategory,
-  emptyMessage
-}: BadgeListProps) {
-  const { t } = useAppLocale();
-  return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      
-      {/* Category filters */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.filterScrollView}
-      >
-        {/* All filter */}
-        <TouchableOpacity 
-          style={[
-            styles.filterChip, 
-            selectedCategory === 'all' && styles.filterChipActive
-          ]}
-          onPress={() => onSelectCategory('all')}
-        >
-          <Text 
-            style={[
-              styles.filterChipText, 
-              selectedCategory === 'all' && styles.filterChipTextActive
-            ]}
-          >
-            {t('All', 'Всички')}
-          </Text>
-        </TouchableOpacity>
+export default function BadgeList({ title, badges, availableCategories, selectedCategory, onSelectCategory, emptyMessage }: BadgeListProps) {
+  const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
 
-        {/* Category-specific filters */}
-        {availableCategories.map(category => (
-          <TouchableOpacity 
-            key={category}
-            style={[
-              styles.filterChip, 
-              selectedCategory === category && styles.filterChipActive
-            ]}
-            onPress={() => onSelectCategory(category)}
-          >
-            <Text 
-              style={[
-                styles.filterChipText, 
-                selectedCategory === category && styles.filterChipTextActive
-              ]}
-            >
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      
-      {/* Badge items */}
-      <View style={styles.badgeList}>
-        {badges.length > 0 ? (
-          badges.map((badge, index) => (
-            <BadgeItem
-              key={`${badge.code}-${index}`}
-              name={badge.name}
-              description={badge.description}
-              imageUrl={badge.imageUrl}
-              isEarned={badge.isEarned}
-              category={badge.category}
-            />
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>{emptyMessage}</Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
+  return <View style={{ gap: theme.spacing.md }}>
+    {title ? <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{title}</Text> : null}
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: theme.spacing.lg }}>
+      {(['all', ...availableCategories] as const).map((category) => {
+        const active = selectedCategory === category;
+        const meta = category === 'all' ? null : BADGE_CATEGORY_LABELS[category];
+        const label = category === 'all' ? t('All', 'Всички') : (locale === 'bg' ? meta?.bg : meta?.en) || category;
+        return <Pressable key={category} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => onSelectCategory(category)} style={{ minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: theme.radii.pill, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface }}>
+          {meta ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: meta.color }} /> : null}
+          <Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted }]}>{label}</Text>
+        </Pressable>;
+      })}
+    </ScrollView>
+
+    {badges.length ? <View style={{ gap: theme.spacing.sm }}>{badges.map((badge) => <BadgeItem key={badge.id || badge.code} name={badge.name} description={badge.description} imageUrl={badge.imageUrl} isEarned={badge.isEarned} category={badge.category} earnedDate={badge.awarded_at} />)}</View> : <View style={{ alignItems: 'center', gap: theme.spacing.sm, padding: theme.spacing.xl, borderRadius: theme.radii.lg, backgroundColor: theme.colors.surfaceMuted }}><Text style={[theme.typography.body, { color: theme.colors.textMuted, textAlign: 'center' }]}>{emptyMessage}</Text></View>}
+  </View>;
 }
-
-interface Styles {
-  container: ViewStyle;
-  sectionTitle: TextStyle;
-  filterScrollView: ViewStyle;
-  filterChip: ViewStyle;
-  filterChipActive: ViewStyle;
-  filterChipText: TextStyle;
-  filterChipTextActive: TextStyle;
-  badgeList: ViewStyle;
-  emptyState: ViewStyle;
-  emptyStateText: TextStyle;
-}
-
-const styles = StyleSheet.create<Styles>({
-  container: {
-    width: '100%' as any,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333333',
-  },
-  filterScrollView: {
-    flexDirection: 'row',
-    paddingVertical: 8,
-    marginBottom: 16,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    borderRadius: 16,
-    backgroundColor: '#F0F0F0',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  filterChipActive: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#2E7D32',
-  },
-  filterChipText: {
-    color: '#555555',
-  },
-  filterChipTextActive: {
-    color: '#2E7D32',
-    fontWeight: 'bold',
-  },
-  badgeList: {
-    width: '100%',
-  },
-  emptyState: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-  },
-  emptyStateText: {
-    color: '#888888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-});
-
-export default BadgeList;

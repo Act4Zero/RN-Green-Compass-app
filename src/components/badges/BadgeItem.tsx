@@ -1,13 +1,23 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, Image, StyleSheet, ViewStyle, TextStyle, ImageStyle, TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import BadgeShareModal from './BadgeShareModal';
-import { formatBadgeForSharing } from '@/utils/sharing/badgeShareUtils';
+import React, { useCallback, useState } from 'react';
+import { Image, Pressable, Text, View } from 'react-native';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { useAppTheme } from '@/theme';
+import { formatBadgeForSharing } from '@/utils/sharing/badgeShareUtils';
+import BadgeShareModal from './BadgeShareModal';
+
+export const BADGE_CATEGORY_LABELS: Record<string, { en: string; bg: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+  daily_flow: { en: 'Daily rhythm', bg: 'Дневен ритъм', icon: 'flame', color: '#F97316' },
+  habit_tracker: { en: 'Green habits', bg: 'Зелени навици', icon: 'leaf', color: '#16A36A' },
+  goals_challenges: { en: 'Challenges', bg: 'Предизвикателства', icon: 'flag', color: '#7C5CE5' },
+  community: { en: 'Community', bg: 'Общност', icon: 'people', color: '#2389DA' },
+  knowledge_hub: { en: 'Knowledge', bg: 'Знания', icon: 'school', color: '#D99A13' },
+  meta: { en: 'Special', bg: 'Специални', icon: 'sparkles', color: '#D94F8A' },
+};
 
 interface BadgeItemProps {
   name: string;
-  description: string;
+  description: string | null;
   imageUrl?: string;
   isEarned: boolean;
   category: string;
@@ -15,218 +25,49 @@ interface BadgeItemProps {
   userName?: string;
 }
 
-function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate, userName }: BadgeItemProps) {
-  const { t } = useAppLocale();
+export default function BadgeItem({ name, description, imageUrl, isEarned, category, earnedDate, userName }: BadgeItemProps) {
+  const { theme } = useAppTheme();
+  const { locale, t } = useAppLocale();
   const [hasImageError, setHasImageError] = useState(false);
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const categoryMeta = BADGE_CATEGORY_LABELS[category] || BADGE_CATEGORY_LABELS.meta;
+  const categoryLabel = locale === 'bg' ? categoryMeta.bg : categoryMeta.en;
+  const copy = description || '';
+  const closeShare = useCallback(() => setShareOpen(false), []);
 
-  const showImage = imageUrl && !hasImageError;
-  
-  // Only allow sharing of earned badges
-  const canShare = isEarned;
-  
-  // Format badge data for sharing
-  const shareContent = formatBadgeForSharing(
-    name,
-    description,
-    category,
-    earnedDate,
-    userName
-  );
-  
-  // Handle share button press
-  const handleSharePress = useCallback((e: GestureResponderEvent) => {
-    e.stopPropagation();
-    setIsShareModalVisible(true);
-  }, []);
-  
-  // Handle closing the share modal
-  const handleCloseShareModal = useCallback(() => {
-    setIsShareModalVisible(false);
-  }, []);
-  
-  // Handle share error
-  const handleShareError = useCallback((error: string) => {
-    console.error('Error sharing badge:', error);
-  }, []);
-
-  return (
-    <>
-      <View style={[styles.badgeContainer, !isEarned && styles.badgeUnearnedContainer]}>
-      <View style={styles.badgeIconContainer}>
-        {showImage ? (
-          <Image
-            source={{ uri: imageUrl }}
-            style={[styles.badgeIcon, !isEarned && styles.badgeUnearnedIcon as ImageStyle]}
-            resizeMode="contain"
-            onError={() => setHasImageError(true)}
-            accessibilityLabel={t(`${name} badge`, `Значка ${name}`)}
-          />
-        ) : (
-          <View style={styles.placeholderIcon}>
-            <Ionicons name="trophy" size={32} color={isEarned ? "#2E7D32" : "#AAAAAA"} accessibilityLabel={t('Badge placeholder', 'Място за значка')} />
-          </View>
-        )}
-        {isEarned && (
-          <View style={styles.earnedBadge}>
-            <Ionicons name="checkmark-circle" size={16} color="#2E7D32" />
-          </View>
-        )}
-      </View>
-      <View style={styles.badgeInfo}>
-        <View style={styles.badgeHeader}>
-          <Text style={[styles.badgeName, !isEarned && styles.badgeUnearnedText]}>{name}</Text>
-          {canShare && (
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleSharePress}
-              accessibilityLabel={t(`Share ${name} badge`, `Сподели значката ${name}`)}
-            >
-              <Ionicons name="share-social-outline" size={18} color="#2E7D32" />
-            </TouchableOpacity>
-          )}
+  return <>
+    <View style={{
+      flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, padding: theme.spacing.md,
+      borderRadius: theme.radii.lg, borderWidth: 1,
+      borderColor: isEarned ? `${categoryMeta.color}55` : theme.colors.border,
+      backgroundColor: isEarned ? theme.colors.surface : theme.colors.surfaceMuted,
+      opacity: isEarned ? 1 : 0.78,
+    }}>
+      <View style={{ width: 82, height: 82, borderRadius: 41, padding: 5, backgroundColor: `${categoryMeta.color}20`, borderWidth: 2, borderColor: isEarned ? categoryMeta.color : theme.colors.border, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 66, height: 66, borderRadius: 33, backgroundColor: isEarned ? `${categoryMeta.color}18` : theme.colors.background, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          {imageUrl && !hasImageError
+            ? <Image source={{ uri: imageUrl }} style={{ width: 54, height: 54, opacity: isEarned ? 1 : 0.45 }} resizeMode="contain" onError={() => setHasImageError(true)} />
+            : <Ionicons name={isEarned ? categoryMeta.icon : 'lock-closed'} size={32} color={isEarned ? categoryMeta.color : theme.colors.textMuted} />}
         </View>
-        <Text style={[styles.badgeDescription, !isEarned && styles.badgeUnearnedText]}>
-          {description}
-        </Text>
-        <View style={styles.categoryChip}>
-          <Text style={styles.categoryText}>{category}</Text>
+        {isEarned ? <View style={{ position: 'absolute', right: -2, bottom: 2, width: 24, height: 24, borderRadius: 12, backgroundColor: categoryMeta.color, borderWidth: 3, borderColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="checkmark" size={14} color="#FFFFFF" /></View> : null}
+      </View>
+
+      <View style={{ flex: 1, gap: 5 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+          <Text style={[theme.typography.h3, { flex: 1, color: isEarned ? theme.colors.text : theme.colors.textMuted }]}>{name}</Text>
+          {isEarned ? <Pressable accessibilityRole="button" accessibilityLabel={t(`Share ${name}`, `Сподели ${name}`)} onPress={() => setShareOpen(true)} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: `${categoryMeta.color}16`, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="share-social-outline" size={19} color={categoryMeta.color} /></Pressable> : null}
+        </View>
+        {copy ? <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]} numberOfLines={3}>{copy}</Text> : null}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 5, borderRadius: theme.radii.pill, backgroundColor: `${categoryMeta.color}16` }}>
+            <Ionicons name={categoryMeta.icon} size={13} color={categoryMeta.color} />
+            <Text style={[theme.typography.label, { color: categoryMeta.color }]}>{categoryLabel}</Text>
+          </View>
+          <Text style={[theme.typography.label, { color: isEarned ? theme.colors.success : theme.colors.textMuted }]}>{isEarned ? t('Earned', 'Спечелена') : t('Locked', 'Заключена')}</Text>
         </View>
       </View>
     </View>
-      
-      {/* Share Modal */}
-      {isEarned && (
-        <BadgeShareModal
-          isVisible={isShareModalVisible}
-          onClose={handleCloseShareModal}
-          onError={handleShareError}
-          badgeData={{
-            name,
-            description,
-            category,
-            isEarned,
-            earnedDate,
-            imageUrl
-          }}
-          shareContent={shareContent}
-          userName={userName}
-        />
-      )}
-    </>
-  );
+
+    {isEarned ? <BadgeShareModal isVisible={shareOpen} onClose={closeShare} onError={(error) => console.error('Error sharing badge:', error)} badgeData={{ name, description: copy, category, isEarned, earnedDate, imageUrl }} shareContent={formatBadgeForSharing(name, copy, category, earnedDate, userName)} userName={userName} /> : null}
+  </>;
 }
-
-interface Styles {
-  badgeContainer: ViewStyle;
-  badgeUnearnedContainer: ViewStyle;
-  badgeIconContainer: ViewStyle;
-  badgeIcon: ImageStyle;
-  badgeUnearnedIcon: ImageStyle;
-  placeholderIcon: ViewStyle;
-  earnedBadge: ViewStyle;
-  badgeInfo: ViewStyle;
-  badgeHeader: ViewStyle;
-  badgeName: TextStyle;
-  badgeUnearnedText: TextStyle;
-  badgeDescription: TextStyle;
-  categoryChip: ViewStyle;
-  categoryText: TextStyle;
-  shareButton: ViewStyle;
-}
-
-const styles = StyleSheet.create<Styles>({
-  badgeContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-    alignItems: 'center',
-  },
-  badgeUnearnedContainer: {
-    backgroundColor: '#F9F9F9',
-  },
-  badgeIconContainer: {
-    position: 'relative',
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeIcon: {
-    width: 50,
-    height: 50,
-  },
-  badgeUnearnedIcon: {
-    opacity: 0.5,
-  },
-  placeholderIcon: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  earnedBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 2,
-  },
-  badgeInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  badgeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  badgeName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  badgeUnearnedText: {
-    color: '#888888',
-  },
-  badgeDescription: {
-    fontSize: 12,
-    color: '#555555',
-    marginBottom: 6,
-  },
-  categoryChip: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.3)',
-  },
-  categoryText: {
-    fontSize: 10,
-    color: '#2E7D32',
-  },
-  shareButton: {
-    padding: 4,
-    backgroundColor: '#EAF6EA',
-    borderRadius: 16,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
-
-export default BadgeItem;

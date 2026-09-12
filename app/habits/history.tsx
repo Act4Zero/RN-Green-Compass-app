@@ -20,6 +20,7 @@ import useHistoryManager from '@/hooks/habits/useHistoryManager';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 import { useAppTheme } from '@/theme';
+import { localizeHabit } from '@/features/habits/localization';
 
 const styles = historyStyles;
 
@@ -63,7 +64,8 @@ export default function HabitHistory() {
   // Render functions for list items
   const renderLogItem = ({ item }: { item: HabitLog }) => {
     // Find the habit name from the habit_id
-    const habitName = habits?.find(h => h.id === item.habit_id)?.name || 'Неизвестен навик';
+    const habit = habits?.find(h => h.id === item.habit_id);
+    const habitName = habit ? localizeHabit(habit, 'bg').name : 'Неизвестен навик';
     
     return (
       <View style={styles.logItem}>
