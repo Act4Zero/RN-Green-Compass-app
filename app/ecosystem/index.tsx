@@ -1,24 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, type ImageSourcePropType, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen, SegmentedControl } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { PointsGuide } from '@/components/community/points/PointsGuide';
 import { useKnowledgeLocale } from '@/features/knowledge';
-import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemMaturity, getEcosystemProgress, getSpeciesGrowth, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemProgress, getSpeciesGrowth, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { getHabitatPhaseThresholds, HABITAT_DESCRIPTIONS, HABITAT_IMAGES, HABITAT_PHASES, HABITAT_PHASE_LABELS } from '@/features/ecosystem/habitatVisuals';
 import { GUEST_EMOJI } from '@/features/ecosystem/components/HabitatScene';
 import { GrowthActions } from '@/features/ecosystem/components/GrowthActions';
-import type { EcosystemBiomeId } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
-
-const BIOME_PREVIEWS: Record<EcosystemBiomeId, ImageSourcePropType> = {
-  forest_meadow: require('../../assets/images/ecosystem/forest-meadow-biome-card-v1.webp'),
-  savanna: require('../../assets/images/ecosystem/savanna-biome-card-v1.webp'),
-  rainforest: require('../../assets/images/ecosystem/rainforest-biome-card-v1.webp'),
-};
 
 export default function EcosystemScreen() {
   const router = useRouter();
@@ -33,8 +27,8 @@ export default function EcosystemScreen() {
   const [showPoints, setShowPoints] = useState(false);
   const wide = width >= 760;
   const biome = getBiomeCatalog(snapshot.biome);
-  const previewSteps = [0, 24, 96, 240, 528, getEcosystemMaturity(snapshot.biome), getEcosystemMaturity(snapshot.biome) + 720];
-  const previewLabels = [t('A seed', 'Едно семе'), t('First leaves', 'Първи листа'), t('New neighbours', 'Нови съседи'), t('More life', 'Повече живот'), t('All species', 'Всички видове'), t('A mature habitat', 'Зряло местообитание'), t('Natural renewal', 'Естествено подновяване')];
+  const previewSteps = getHabitatPhaseThresholds(snapshot.biome);
+  const previewLabels = HABITAT_PHASES.map((phase) => HABITAT_PHASE_LABELS[phase][locale]);
   const previewUnits = previewStep == null ? null : previewSteps[previewStep];
   const displaySnapshot = previewUnits == null ? snapshot : {
     ...snapshot, ...getEcosystemProgress(previewUnits), activeSpecies: biome.species[0],
@@ -58,7 +52,7 @@ export default function EcosystemScreen() {
                 accessibilityLabel={`${entry.name[locale]}. ${active ? t('Selected', 'Избрано') : t('Choose habitat', 'Избери местообитание')}`}
                 onPress={() => { if (!active) { setPreviewStep(null); void selectBiome(entry.id); } }}
                 style={({ pressed }) => ({ flex: 1, minHeight: wide ? 136 : 106, borderRadius: 18, overflow: 'hidden', borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border, opacity: pressed ? .85 : 1 })}>
-                <ImageBackground source={BIOME_PREVIEWS[entry.id]} resizeMode="cover" style={{ flex: 1, justifyContent: 'flex-end' }}>
+                <ImageBackground source={HABITAT_IMAGES[entry.id].mature} resizeMode="cover" style={{ flex: 1, justifyContent: 'flex-end' }}>
                   {active ? <View style={{ position: 'absolute', top: 7, right: 7, borderRadius: 12, backgroundColor: '#174C35' }}><Ionicons name="checkmark-circle" size={22} color="#D7F28E" /></View> : null}
                   <View style={{ padding: wide ? 12 : 8, minHeight: 55, justifyContent: 'center', backgroundColor: 'rgba(11,37,25,.85)' }}>
                     <Text style={[theme.typography.label, { color: '#FFFFFF', fontSize: wide ? 15 : 12 }]}>{entry.name[locale]}</Text>
@@ -73,7 +67,7 @@ export default function EcosystemScreen() {
           {tab === 'world' ? <>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
               <Text style={[theme.typography.label, { color: theme.colors.textMuted, flex: 1 }]}>{previewStep == null ? t('Your progress, at your pace', 'Твоят напредък, с твоето темпо') : t('Preview · your progress is unchanged', 'Преглед · напредъкът ти е запазен')}</Text>
-              <AppButton label={previewStep == null ? t('Look ahead', 'Поглед напред') : t('My growth', 'Моят растеж')} icon={previewStep == null ? 'eye-outline' : 'arrow-undo-outline'} variant="secondary" onPress={() => setPreviewStep(previewStep == null ? 5 : null)} style={{ paddingHorizontal: 14 }} />
+              <AppButton label={previewStep == null ? t('Look ahead', 'Поглед напред') : t('My growth', 'Моят растеж')} icon={previewStep == null ? 'eye-outline' : 'arrow-undo-outline'} variant="secondary" onPress={() => setPreviewStep(previewStep == null ? 2 : null)} style={{ paddingHorizontal: 14 }} />
             </View>
             {previewStep != null ? <Card style={{ padding: 12, marginBottom: 12, backgroundColor: theme.colors.accentSoft }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -86,7 +80,8 @@ export default function EcosystemScreen() {
             <GrowthActions />
             <Card style={{ marginTop: 18, backgroundColor: theme.colors.primarySoft, gap: 8 }}>
               <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('A place for every layer', 'Място за всеки природен етаж')}</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{biome.growthDescription[locale]}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{HABITAT_DESCRIPTIONS[snapshot.biome][locale]}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('You begin in an existing natural habitat. Your actions nurture the new growth; the old trees and the surrounding landscape remain. Your field guide records the species you discover along the way.', 'Започваш сред вече съществуваща природа. Действията ти развиват младата растителност, а старите дървета и пейзажът остават. Албумът отбелязва видовете, които откриваш по пътя.')}</Text>
               <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{snapshot.biome === 'savanna' ? t('🌾 Grasses · 🌳 Scattered trees · 🐾 Wildlife', '🌾 Треви · 🌳 Рехави дървета · 🐾 Животни') : t('🌱 Ground cover · 🌿 Understory · 🌳 Canopy', '🌱 Почвен покрив · 🌿 Подлес · 🌳 Корони')}</Text>
             </Card>
           </> : null}
@@ -126,7 +121,8 @@ export default function EcosystemScreen() {
           {tab === 'growth' ? <>
             <GrowthActions />
             <Card style={{ marginTop: 20, gap: 14 }}>
-              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('From a seed to a habitat', 'От семе до местообитание')}</Text>
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('New life in a growing habitat', 'Нов живот в развиващата се природа')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('The landscape develops through four views: new growth, young vegetation, a thriving habitat and natural renewal. New generations join the old trees.', 'Пейзажът преминава през четири изгледа: начален растеж, млада растителност, развито местообитание и естествено подновяване. Новите поколения растат редом със старите дървета.')}</Text>
               <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Each new plant starts small and develops with your next actions. Choosing a favourite does not change its age.', 'Всяко ново растение започва малко и се развива със следващите ти действия. Изборът на любим вид не променя възрастта му.')}</Text>
               {STAGE_ORDER.map((stage, index) => <View key={stage} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 20 }}>{['🫘', '🌱', '🌿', '🌳', '🌳'][index]}</Text></View>
