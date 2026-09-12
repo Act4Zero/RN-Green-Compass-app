@@ -42,8 +42,8 @@ export interface AppTheme {
 }
 
 export const lightColors: ThemeColors = {
-  background: '#F3F6F0',
-  backgroundElevated: '#F8FAF6',
+  background: '#F5F6F0',
+  backgroundElevated: '#FAFBF6',
   surface: '#FFFFFF',
   surfaceMuted: '#E8EFE6',
   surfaceStrong: '#DDE8DE',
@@ -101,8 +101,8 @@ export const spacing = {
 export const radii = {
   sm: 8,
   md: 12,
-  lg: 18,
-  xl: 24,
+  lg: 20,
+  xl: 28,
   pill: 999,
 } as const;
 

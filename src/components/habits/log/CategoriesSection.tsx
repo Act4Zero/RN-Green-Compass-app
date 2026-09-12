@@ -29,6 +29,8 @@ export function CategoriesSection({
             {categories.map((category) => (
               <TouchableOpacity
                 key={category.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedCategory === category.id }}
                 style={[
                   styles.categoryItem,
                   { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
@@ -37,7 +39,7 @@ export function CategoriesSection({
                 ]}
                 onPress={() => handleSelectCategory(category.id)}
               >
-                <View style={styles.categoryIcon}>
+                <View style={[styles.categoryIcon, { backgroundColor: selectedCategory === category.id ? theme.colors.accent : theme.colors.primarySoft, borderRadius: 15 }]}>
                   <Ionicons
                     name={category.icon as any}
                     size={24}

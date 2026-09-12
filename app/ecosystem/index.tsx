@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ImageBackground, type ImageSourcePropType, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
-import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
+import { AppButton, Card, Content, PageHeader, Screen, SegmentedControl } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { PointsGuide } from '@/components/community/points/PointsGuide';
 import { useKnowledgeLocale } from '@/features/knowledge';
-import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemCompletion, getEcosystemProgress, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { ECOSYSTEM_BIOMES, EcosystemHero, getBiomeCatalog, getEcosystemMaturity, getEcosystemProgress, getSpeciesGrowth, PlantIllustration, STAGE_LABELS, STAGE_ORDER, useEcosystem } from '@/features/ecosystem';
+import { GUEST_EMOJI } from '@/features/ecosystem/components/HabitatScene';
+import { GrowthActions } from '@/features/ecosystem/components/GrowthActions';
 import type { EcosystemBiomeId } from '@/features/ecosystem';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
@@ -25,209 +27,122 @@ export default function EcosystemScreen() {
   const { user } = useAuth();
   const { pointHistory, pointBalance } = usePoints();
   const { locale, t } = useKnowledgeLocale();
-  const { snapshot, loading, selectSpecies, selectBiome } = useEcosystem(user?.id, pointHistory);
-  const [showCompletePreview, setShowCompletePreview] = useState(false);
+  const { snapshot, loading, saving, error, refresh, selectBiome } = useEcosystem(user?.id, pointHistory);
+  const [tab, setTab] = useState('world');
+  const [previewStep, setPreviewStep] = useState<number | null>(null);
+  const [showPoints, setShowPoints] = useState(false);
   const wide = width >= 760;
   const biome = getBiomeCatalog(snapshot.biome);
-  const completion = getEcosystemCompletion(snapshot.growthUnits, snapshot.biome);
-  const unlockedLife = snapshot.unlockedSpecies.length + snapshot.guests.length;
-  const totalLife = biome.species.length + biome.guests.length;
-  const nextUnlock = [...biome.species.map((species) => ({ at: species.unlockAt, name: species.name[locale], kind: t('plant', 'растение') })), ...biome.guests.map((guest) => ({ at: guest.unlockAt, name: guest.name[locale], kind: t('wild guest', 'див гост') }))].filter((entry) => entry.at > snapshot.growthUnits).sort((a, b) => a.at - b.at)[0];
-  const displaySnapshot = showCompletePreview ? {
-    ...snapshot,
-    ...getEcosystemProgress(completion.threshold),
-    unlockedSpecies: biome.species,
-    guests: biome.guests,
-    nextGuest: null,
-  } : snapshot;
+  const previewSteps = [0, 24, 96, 240, 528, getEcosystemMaturity(snapshot.biome), getEcosystemMaturity(snapshot.biome) + 720];
+  const previewLabels = [t('A seed', 'Едно семе'), t('First leaves', 'Първи листа'), t('New neighbours', 'Нови съседи'), t('More life', 'Повече живот'), t('All species', 'Всички видове'), t('A mature habitat', 'Зряло местообитание'), t('Natural renewal', 'Естествено подновяване')];
+  const previewUnits = previewStep == null ? null : previewSteps[previewStep];
+  const displaySnapshot = previewUnits == null ? snapshot : {
+    ...snapshot, ...getEcosystemProgress(previewUnits), activeSpecies: biome.species[0],
+    unlockedSpecies: biome.species.filter((species) => species.unlockAt <= previewUnits),
+    guests: biome.guests.filter((guest) => guest.unlockAt <= previewUnits),
+    nextGuest: biome.guests.find((guest) => guest.unlockAt > previewUnits) || null,
+  };
 
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Content wide>
-          <PageHeader
-            eyebrow={biome.name[locale]}
-            title={t('Your living ecosystem', 'Твоята жива екосистема')}
-            description={t('Meaningful actions grow this world. Plants never wither, and every new species opens a short piece of real nature knowledge.', 'Смислените действия развиват този свят. Растенията никога не увяхват, а всеки нов вид отключва кратко и достоверно природно знание.')}
-            action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/more')} />}
-          />
+          <PageHeader eyebrow={t('Small actions. A living world.', 'Малки стъпки. Жив свят.')} title={t('My green world 🌿', 'Моят зелен свят 🌿')}
+            description={t('Watch your choices take root. Every plant has its own story.', 'Виж как изборите ти пускат корени. Всяко растение има своя история.')}
+            action={<AppButton label={t('Home', 'Начало')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/home')} />} />
 
-          <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 6 }]}>{t('Choose your ecosystem', 'Избери своята екосистема')}</Text>
-          <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginBottom: 14 }]}>{t('Your growth is shared, so you can explore another habitat without losing progress.', 'Растежът ти е общ, така че можеш да изследваш друго местообитание, без да губиш напредък.')}</Text>
-          <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
             {ECOSYSTEM_BIOMES.map((entry) => {
               const active = entry.id === snapshot.biome;
-              return (
-                <Pressable
-                  key={entry.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${entry.name[locale]}. ${active ? t('Selected', 'Избрано') : t('Choose ecosystem', 'Избери екосистема')}`}
-                  onPress={() => {
-                    if (active) return;
-                    setShowCompletePreview(false);
-                    void selectBiome(entry.id);
-                  }}
-                  style={({ pressed }) => ({ flex: 1, minHeight: 154, borderRadius: theme.radii.lg, overflow: 'hidden', borderWidth: active ? 3 : 1, borderColor: active ? theme.colors.primary : theme.colors.borderStrong, opacity: pressed ? 0.88 : 1 })}
-                >
-                  <ImageBackground source={BIOME_PREVIEWS[entry.id]} resizeMode="cover" imageStyle={{ width: '100%', height: '100%', resizeMode: 'cover', objectFit: 'cover' }} style={{ flex: 1, justifyContent: 'flex-end' }}>
-                    <View style={{ padding: 14, backgroundColor: 'rgba(11,37,25,0.82)' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name={entry.icon} size={18} color="#D7F28E" />
-                        <Text style={[theme.typography.h3, { color: '#FFFFFF', flex: 1 }]}>{entry.name[locale]}</Text>
-                        {active ? <Ionicons name="checkmark-circle" size={20} color="#D7F28E" /> : null}
-                      </View>
-                      <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: '#E9F2E8', fontSize: 11, marginTop: 4 }]}>{entry.description[locale]}</Text>
-                    </View>
-                  </ImageBackground>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <EcosystemHero
-            snapshot={displaySnapshot}
-            loading={loading}
-            preview={showCompletePreview}
-            onOpen={() => router.push(`/ecosystem/species/${snapshot.activeSpecies.slug}` as any)}
-          />
-
-          <Card style={{ padding: wide ? 22 : 18, marginBottom: 14, backgroundColor: '#F5F8EF', borderColor: '#9BB58A' }}>
-            <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'stretch', gap: 16 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .8 }]}>{t('Your two progress balances', 'Твоите два вида напредък')}</Text>
-                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{t('Points reward you. Growth changes nature.', 'Точките те награждават. Растежът променя природата.')}</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{nextUnlock ? t(`Next: ${nextUnlock.name}, a ${nextUnlock.kind}, in ${nextUnlock.at - snapshot.growthUnits} growth.`, `Следва: ${nextUnlock.name} — ${nextUnlock.kind}, след още ${nextUnlock.at - snapshot.growthUnits} растеж.`) : t('All life in this ecosystem is unlocked.', 'Целият живот в тази екосистема е отключен.')}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 9 }}>
-                <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: '#FFF3CC' }}><Ionicons name="star" size={18} color={theme.colors.warning} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{pointBalance.total.toLocaleString()}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('green points', 'зелени точки')}</Text></View>
-                <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: theme.colors.primarySoft }}><Ionicons name="leaf" size={18} color={theme.colors.primary} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{snapshot.growthUnits}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('ecosystem growth', 'растеж')}</Text></View>
-                {wide ? <View style={{ flex: 1, minWidth: 118, padding: 13, borderRadius: theme.radii.md, backgroundColor: theme.colors.surface }}><Ionicons name="sparkles" size={18} color={theme.colors.primary} /><Text style={[theme.typography.metric, { color: theme.colors.text, marginTop: 4 }]}>{unlockedLife}/{totalLife}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('life unlocked', 'отключен живот')}</Text></View> : null}
-              </View>
-            </View>
-          </Card>
-
-          <View style={{ marginBottom: 18 }}><PointsGuide compact /></View>
-
-          {!completion.complete ? (
-            <View style={{ alignItems: wide ? 'flex-end' : 'stretch', marginTop: -6, marginBottom: 18 }}>
-              <AppButton
-                label={showCompletePreview ? t('Back to my progress', 'Назад към моя напредък') : t('Preview the complete ecosystem', 'Виж завършената екосистема')}
-                icon={showCompletePreview ? 'arrow-back-outline' : 'eye-outline'}
-                variant="secondary"
-                onPress={() => setShowCompletePreview((current) => !current)}
-              />
-            </View>
-          ) : null}
-
-          {completion.complete || showCompletePreview ? (
-            <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 16, backgroundColor: '#E6F0DF', borderColor: '#82A46F' }}>
-              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#174C35', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="sparkles" size={25} color="#D7F28E" /></View>
-              <View style={{ flex: 1 }}>
-                <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text }]}>{showCompletePreview ? t('This is how your complete ecosystem will look', 'Така ще изглежда завършената ти екосистема') : biome.completionTitle[locale]}</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{showCompletePreview ? t('This is a visual preview only. Your points and unlocked species have not changed.', 'Това е само визуален преглед. Точките и отключените ти видове не са променени.') : t('All eight plants and four wild guests now share one believable habitat. This final landscape remains permanent while your growth continues.', 'Всичките осем растения и четирите диви гости вече споделят едно естествено местообитание. Този завършен пейзаж остава постоянен, докато развитието ти продължава.')}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#174C35' }}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>{biome.species.length} {t('plants', 'растения')}</Text></View>
-                <View style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F4F7EF' }}><Text style={[theme.typography.label, { color: '#174C35' }]}>{biome.guests.length} {t('guests', 'гости')}</Text></View>
-              </View>
-            </Card>
-          ) : null}
-
-          <Card style={{ padding: wide ? 24 : 19, marginBottom: 18, backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.borderStrong }}>
-            <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 18 }}>
-              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="layers-outline" size={25} color={theme.colors.accent} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: .9 }]}>{t('What they form together', 'Какво образуват заедно')}</Text>
-                <Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 5 }]}>{biome.description[locale]}</Text>
-                <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 6 }]}>{biome.growthDescription[locale]}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {[
-                  { icon: 'leaf-outline' as const, en: 'Trees', bg: 'Дървета' },
-                  { icon: 'flower-outline' as const, en: 'Ground layer', bg: 'Долен етаж' },
-                  { icon: 'paw-outline' as const, en: 'Wildlife', bg: 'Животни' },
-                ].map((layer) => <View key={layer.en} style={{ alignItems: 'center', gap: 5 }}><View style={{ width: 40, height: 40, borderRadius: 14, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={layer.icon} size={19} color={theme.colors.primary} /></View><Text style={[theme.typography.label, { color: theme.colors.textMuted, fontSize: 9 }]}>{locale === 'bg' ? layer.bg : layer.en}</Text></View>)}
-              </View>
-            </View>
-          </Card>
-
-          <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16, marginBottom: 30 }}>
-            <Card style={{ flex: 1, padding: 20 }}>
-              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Five calm stages', 'Пет спокойни етапа')}</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5, marginBottom: 18 }]}>{t('There is no punishment or decay. Your progress is permanent.', 'Няма наказание или увяхване. Напредъкът ти е постоянен.')}</Text>
-              <View style={{ gap: 12 }}>
-                {STAGE_ORDER.map((stage, index) => {
-                  const reached = index <= snapshot.stageIndex;
-                  return (
-                    <View key={stage} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View style={{ width: 31, height: 31, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: reached ? theme.colors.primary : theme.colors.surfaceMuted }}>
-                        <Ionicons name={reached ? 'checkmark' : 'ellipse-outline'} size={16} color={reached ? theme.colors.accent : theme.colors.textMuted} />
-                      </View>
-                      <Text style={[theme.typography.body, { color: reached ? theme.colors.text : theme.colors.textMuted }]}>{STAGE_LABELS[stage][locale]}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </Card>
-
-            <Card style={{ flex: 1, padding: 20 }}>
-              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Wild guests', 'Диви гости')}</Text>
-              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 5, marginBottom: 18 }]}>{t('Different kinds of action make the habitat more welcoming.', 'Различните видове действия правят местообитанието по-гостоприемно.')}</Text>
-              <View style={{ gap: 12 }}>
-                {biome.guests.map((guest) => {
-                  const unlocked = snapshot.growthUnits >= guest.unlockAt;
-                  return (
-                    <View key={guest.slug} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', opacity: unlocked ? 1 : 0.48 }}>
-                      <View style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: unlocked ? theme.colors.accentSoft : theme.colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name={unlocked ? guest.icon : 'lock-closed-outline'} size={18} color={theme.colors.primary} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[theme.typography.label, { color: theme.colors.text }]}>{guest.name[locale]}</Text>
-                        <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{unlocked ? guest.message[locale] : t(`Unlocks at ${guest.unlockAt} growth`, `Отключва се при ${guest.unlockAt} растеж`)}</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </Card>
-          </View>
-
-          <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 6 }]}>{t('Species collection', 'Колекция от видове')}</Text>
-          <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginBottom: 16 }]}>{t('Choose any unlocked plant as the focus of your world.', 'Избери всяко отключено растение като фокус на твоя свят.')}</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 32 }}>
-            {biome.species.map((species) => {
-              const unlocked = snapshot.growthUnits >= species.unlockAt;
-              const active = snapshot.activeSpecies.slug === species.slug;
-              return (
-                <Pressable
-                  key={species.slug}
-                  accessibilityRole="button"
-                  accessibilityLabel={unlocked ? `${species.name[locale]}. ${active ? t('Selected', 'Избрано') : t('Open species', 'Отвори вида')}` : `${species.name[locale]}. ${t('Locked', 'Заключено')}`}
-                  onPress={() => unlocked && router.push(`/ecosystem/species/${species.slug}` as any)}
-                  style={({ pressed }) => ({ width: wide ? '31.8%' : '100%', minHeight: 150, padding: 18, borderRadius: theme.radii.lg, borderWidth: active ? 2 : 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surface, opacity: unlocked ? (pressed ? 0.82 : 1) : 0.55 })}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ width: 58, height: 58, borderRadius: 17, backgroundColor: unlocked ? theme.colors.accentSoft : theme.colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                      {unlocked ? <PlantIllustration stage="mature" size={54} speciesSlug={species.slug} /> : <Ionicons name="lock-closed-outline" size={21} color={theme.colors.primary} />}
-                    </View>
-                    {active ? <View style={{ paddingHorizontal: 9, paddingVertical: 5, borderRadius: 999, backgroundColor: theme.colors.primary }}><Text style={[theme.typography.label, { color: theme.colors.textInverse, fontSize: 10 }]}>{t('Growing', 'Отглеждаш')}</Text></View> : null}
+              return <Pressable key={entry.id} accessibilityRole="button" accessibilityState={{ selected: active, disabled: saving || loading }} disabled={saving || loading}
+                accessibilityLabel={`${entry.name[locale]}. ${active ? t('Selected', 'Избрано') : t('Choose habitat', 'Избери местообитание')}`}
+                onPress={() => { if (!active) { setPreviewStep(null); void selectBiome(entry.id); } }}
+                style={({ pressed }) => ({ flex: 1, minHeight: wide ? 136 : 106, borderRadius: 18, overflow: 'hidden', borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border, opacity: pressed ? .85 : 1 })}>
+                <ImageBackground source={BIOME_PREVIEWS[entry.id]} resizeMode="cover" style={{ flex: 1, justifyContent: 'flex-end' }}>
+                  {active ? <View style={{ position: 'absolute', top: 7, right: 7, borderRadius: 12, backgroundColor: '#174C35' }}><Ionicons name="checkmark-circle" size={22} color="#D7F28E" /></View> : null}
+                  <View style={{ padding: wide ? 12 : 8, minHeight: 55, justifyContent: 'center', backgroundColor: 'rgba(11,37,25,.85)' }}>
+                    <Text style={[theme.typography.label, { color: '#FFFFFF', fontSize: wide ? 15 : 12 }]}>{entry.name[locale]}</Text>
                   </View>
-                  <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 14 }]}>{species.name[locale]}</Text>
-                  <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontStyle: 'italic', marginTop: 2 }]}>{species.scientificName}</Text>
-                  {!unlocked ? <Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 10 }]}>{species.unlockAt} {t('growth', 'растеж')}</Text> : null}
-                </Pressable>
-              );
+                </ImageBackground>
+              </Pressable>;
             })}
           </View>
+          {error ? <Card style={{ marginBottom: 16, gap: 10 }}><Text accessibilityRole="alert" style={[theme.typography.bodySmall, { color: theme.colors.danger }]}>{t('We could not refresh your world. Please try again.', 'Не успяхме да обновим твоя свят. Опитай отново.')}</Text><AppButton label={t('Try again', 'Опитай отново')} variant="secondary" onPress={() => void refresh()} /></Card> : null}
+          <View style={{ marginBottom: 20 }}><SegmentedControl value={tab} onChange={setTab} options={[{ value: 'world', label: t('My world', 'Моят свят') }, { value: 'species', label: t('Species', 'Видове') }, { value: 'growth', label: t('How it grows', 'Как расте') }]} /></View>
 
-          {snapshot.unlockedSpecies.length > 1 ? (
-            <Card style={{ padding: 18, marginBottom: 28, flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: 14, backgroundColor: theme.colors.accentSoft }}>
-              <Ionicons name="swap-horizontal-outline" size={24} color={theme.colors.primary} />
-              <Text style={[theme.typography.body, { flex: 1, color: theme.colors.text }]}>{t('Ready for a change? Select an unlocked species from its detail page. Your total growth stays the same.', 'Искаш промяна? Избери отключен вид от страницата му. Общият ти растеж се запазва.')}</Text>
-              <AppButton label={t('Use first unlocked', 'Избери първия отключен')} variant="secondary" onPress={() => void selectSpecies(snapshot.unlockedSpecies[1].slug)} />
+          {tab === 'world' ? <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+              <Text style={[theme.typography.label, { color: theme.colors.textMuted, flex: 1 }]}>{previewStep == null ? t('Your progress, at your pace', 'Твоят напредък, с твоето темпо') : t('Preview · your progress is unchanged', 'Преглед · напредъкът ти е запазен')}</Text>
+              <AppButton label={previewStep == null ? t('Look ahead', 'Поглед напред') : t('My growth', 'Моят растеж')} icon={previewStep == null ? 'eye-outline' : 'arrow-undo-outline'} variant="secondary" onPress={() => setPreviewStep(previewStep == null ? 5 : null)} style={{ paddingHorizontal: 14 }} />
+            </View>
+            {previewStep != null ? <Card style={{ padding: 12, marginBottom: 12, backgroundColor: theme.colors.accentSoft }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <AppButton label="←" accessibilityLabel={t('Previous growth stage', 'Предишен етап на растеж')} variant="ghost" disabled={previewStep === 0} onPress={() => setPreviewStep(previewStep - 1)} style={{ paddingHorizontal: 16 }} />
+                <View style={{ flex: 1, alignItems: 'center' }}><Text style={[theme.typography.label, { color: theme.colors.text, textAlign: 'center' }]}>{previewLabels[previewStep]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{previewStep + 1} / {previewSteps.length}</Text></View>
+                <AppButton label="→" accessibilityLabel={t('Next growth stage', 'Следващ етап на растеж')} variant="ghost" disabled={previewStep === previewSteps.length - 1} onPress={() => setPreviewStep(previewStep + 1)} style={{ paddingHorizontal: 16 }} />
+              </View>
+            </Card> : null}
+            <EcosystemHero snapshot={displaySnapshot} loading={loading} preview={previewStep != null} actionLabel={t('Meet the plants', 'Запознай се с растенията')} onOpen={() => setTab('species')} />
+            <GrowthActions />
+            <Card style={{ marginTop: 18, backgroundColor: theme.colors.primarySoft, gap: 8 }}>
+              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('A place for every layer', 'Място за всеки природен етаж')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{biome.growthDescription[locale]}</Text>
+              <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{snapshot.biome === 'savanna' ? t('🌾 Grasses · 🌳 Scattered trees · 🐾 Wildlife', '🌾 Треви · 🌳 Рехави дървета · 🐾 Животни') : t('🌱 Ground cover · 🌿 Understory · 🌳 Canopy', '🌱 Почвен покрив · 🌿 Подлес · 🌳 Корони')}</Text>
             </Card>
-          ) : null}
+          </> : null}
+
+          {tab === 'species' ? <>
+            <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 6 }]}>{t('Your field guide', 'Твоят природен албум')}</Text>
+            <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginBottom: 18 }]}>{t('Meet every species, including those you will unlock next.', 'Разгледай всеки вид, включително тези, които ти предстои да откриеш.')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+              {biome.species.map((species) => {
+                const unlocked = species.unlockAt <= snapshot.growthUnits;
+                const active = snapshot.activeSpecies.slug === species.slug;
+                const growth = getSpeciesGrowth(snapshot.growthUnits, species);
+                return <Pressable key={species.slug} accessibilityRole="button" accessibilityLabel={`${species.name[locale]}. ${unlocked ? STAGE_LABELS[growth.stage][locale] : t(`Unlocks at ${species.unlockAt} growth`, `Отключва се при ${species.unlockAt} растеж`)}`}
+                  onPress={() => router.push(`/ecosystem/species/${species.slug}` as any)}
+                  style={({ pressed }) => ({ flexBasis: wide ? '23%' : '47%', flexGrow: 1, maxWidth: wide ? '25%' : '50%', padding: 14, borderRadius: 20, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.border, backgroundColor: theme.colors.surface, opacity: pressed ? .85 : 1 })}>
+                  <View style={{ height: 124, borderRadius: 14, backgroundColor: theme.colors.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 12 }}>
+                    <PlantIllustration stage="mature" size={114} speciesSlug={species.slug} />
+                    {!unlocked ? <View style={{ position: 'absolute', top: 7, right: 7, padding: 6, borderRadius: 12, backgroundColor: theme.colors.surface }}><Ionicons name="lock-closed-outline" size={15} color={theme.colors.textMuted} /></View> : null}
+                  </View>
+                  <Text style={[theme.typography.label, { color: theme.colors.text, fontSize: 14 }]}>{species.name[locale]}</Text>
+                  <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 11, marginTop: 3, fontStyle: 'italic' }]}>{species.scientificName}</Text>
+                  <Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 10, fontSize: 11 }]}>{unlocked ? `${active ? '✓ ' : ''}${STAGE_LABELS[growth.stage][locale]}` : t(`${species.unlockAt - snapshot.growthUnits} growth to discover`, `След още ${species.unlockAt - snapshot.growthUnits} растеж`)}</Text>
+                </Pressable>;
+              })}
+            </View>
+            <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginTop: 28, marginBottom: 14 }]}>{t('Wild visitors', 'Гости от природата')}</Text>
+            <View style={{ gap: 10 }}>{biome.guests.map((guest) => {
+              const unlocked = guest.unlockAt <= snapshot.growthUnits;
+              return <Card key={guest.slug} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <Text style={{ fontSize: 30 }} accessibilityElementsHidden>{GUEST_EMOJI[guest.slug]}</Text>
+                <View style={{ flex: 1 }}><Text style={[theme.typography.label, { color: theme.colors.text }]}>{guest.name[locale]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{unlocked ? guest.message[locale] : t(`Arrives at ${guest.unlockAt} growth`, `Ще те посети при ${guest.unlockAt} растеж`)}</Text></View>
+                <Ionicons name={unlocked ? 'checkmark-circle' : 'lock-closed-outline'} size={20} color={theme.colors.primary} />
+              </Card>;
+            })}</View>
+          </> : null}
+
+          {tab === 'growth' ? <>
+            <GrowthActions />
+            <Card style={{ marginTop: 20, gap: 14 }}>
+              <Text style={[theme.typography.h2, { color: theme.colors.text }]}>{t('From a seed to a habitat', 'От семе до местообитание')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Each new plant starts small and develops with your next actions. Choosing a favourite does not change its age.', 'Всяко ново растение започва малко и се развива със следващите ти действия. Изборът на любим вид не променя възрастта му.')}</Text>
+              {STAGE_ORDER.map((stage, index) => <View key={stage} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 20 }}>{['🫘', '🌱', '🌿', '🌳', '🌳'][index]}</Text></View>
+                <Text style={[theme.typography.body, { color: theme.colors.text }]}>{STAGE_LABELS[stage][locale]}</Text>
+              </View>)}
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('All species are discovered at 528 growth. The newest plants keep developing after that, followed by a new generation in the open spaces. A break does not erase your progress.', 'При 528 растеж всички видове са открити. Най-новите растения продължават да се развиват и след това, а на свободните места пониква ново поколение. Почивката не изтрива напредъка ти.')}</Text>
+            </Card>
+            <Card style={{ marginTop: 16, gap: 12 }}>
+              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Your rewards', 'Твоите награди')}</Text>
+              <Text style={[theme.typography.body, { color: theme.colors.text }]}>{t(`⭐ ${pointBalance.total} green points · 🌱 ${snapshot.growthUnits} growth`, `⭐ ${pointBalance.total} зелени точки · 🌱 ${snapshot.growthUnits} растеж`)}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{t('Points record your achievements. Growth develops your virtual habitat. Opening the app alone does not add growth.', 'Точките отбелязват постиженията ти. Растежът развива виртуалното местообитание. Самото отваряне на приложението не добавя растеж.')}</Text>
+              <AppButton label={showPoints ? t('Hide point rules', 'Скрий правилата за точки') : t('See point rules', 'Виж правилата за точки')} variant="ghost" onPress={() => setShowPoints(!showPoints)} />
+              {showPoints ? <PointsGuide compact /> : null}
+            </Card>
+            <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 20 }]}>{t('Inspired by nature. This is an illustrated learning world with selected species, not a simulation of ecological time or a measure of real restoration.', 'Вдъхновено от природата. Това е илюстриран образователен свят с подбрани видове, а не симулация на природното време или измерване на реално възстановена природа.')}</Text>
+          </> : null}
         </Content>
       </ScrollView>
     </Screen>

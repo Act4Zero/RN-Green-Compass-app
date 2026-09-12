@@ -29,6 +29,8 @@ export function HabitsSection({
                 return (
                 <TouchableOpacity
                   key={habit.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedHabit?.id === habit.id }}
                   style={[styles.habitItemWrapper]}
                   onPress={() => handleSelectHabit(habit)}
                 >

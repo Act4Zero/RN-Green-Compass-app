@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,11 +21,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppLocale } from '@/context/AppLocaleContext';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Turnstile, { isTurnstileConfigured } from '@/components/Turnstile';
-import { ensureValidSession, isSupabaseConfigured } from '@/lib/supabase';
+import Turnstile, { isTurnstileConfigured, TurnstileHandle } from '@/components/Turnstile';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
+import { AuthBrand } from '@/components/ui/AuthBrand';
 import { goBackOrReplace, sanitizeInternalDestination } from '@/utils/navigation';
+import { signInErrorMessage } from '@/utils/authErrors';
 
 interface Styles {
   keyboardAvoidingContainer: ViewStyle;
@@ -61,7 +63,7 @@ export default function SignIn() {
   const router = useRouter();
   const { next, error: routeError } = useLocalSearchParams<{ next?: string; error?: string }>();
   const destination = sanitizeInternalDestination(next);
-  const { signIn, signInWithGoogle, refreshSession } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const { locale, setLocale, t } = useAppLocale();
   
   // Track screen view when component mounts
@@ -69,9 +71,6 @@ export default function SignIn() {
     analyticsService.trackScreenView('SignIn');
   }, []);
   
-  // Debug flag - set to true for verbose logging in development
-  const DEBUG = __DEV__;
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,6 +79,14 @@ export default function SignIn() {
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
+  const captchaRef = useRef<TurnstileHandle>(null);
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    setCaptchaError(false);
+    captchaRef.current?.reset();
+  };
 
   useEffect(() => {
     if (routeError) setError(routeError);
@@ -89,8 +96,7 @@ export default function SignIn() {
     // Trim the email to remove any leading/trailing whitespace
     const trimmedEmail = email.trim();
     
-    // Strict email regex that only allows standard email format
-    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!trimmedEmail) {
       setEmailError(t('Email is required', 'Имейлът е задължителен'));
@@ -110,16 +116,6 @@ export default function SignIn() {
   const validatePassword = (password: string) => {
     if (!password) {
       setPasswordError(t('Password is required', 'Паролата е задължителна'));
-      return false;
-    } else if (password.length > 100) {
-      setPasswordError(t('Password is too long', 'Паролата е твърде дълга'));
-      return false;
-    }
-    
-    // Check for potentially dangerous characters
-    const dangerousCharsRegex = /[<>\\]/;
-    if (dangerousCharsRegex.test(password)) {
-      setPasswordError(t('Password contains invalid characters', 'Паролата съдържа невалидни знаци'));
       return false;
     }
     
@@ -141,10 +137,24 @@ export default function SignIn() {
   }, [loading]);
 
   const handleSignIn = async () => {
+    if (loading || googleLoading) return;
     setError(undefined);
 
     if (!isSupabaseConfigured) {
       setError(t('Sign in is temporarily unavailable. Please try again after the app configuration is restored.', 'Входът временно не е достъпен. Опитайте отново след възстановяване на конфигурацията на приложението.'));
+      return;
+    }
+
+    if (!isTurnstileConfigured) {
+      setError(t(
+        'Sign in is unavailable because CAPTCHA is not configured for this build.',
+        'Входът не е достъпен, защото CAPTCHA не е конфигурирана за тази версия на приложението.',
+      ));
+      return;
+    }
+
+    if (!captchaToken) {
+      setError(t('Security verification is still loading. Please try again.', 'Проверката за сигурност още се зарежда. Опитайте отново.'));
       return;
     }
     
@@ -165,26 +175,21 @@ export default function SignIn() {
       const { data, error } = await signIn(sanitizedEmail, password, captchaToken || undefined);
       
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          setError(t('Invalid email or password. Please try again.', 'Невалиден имейл или парола. Опитайте отново.'));
-        } else if (error.message.includes('Email not confirmed')) {
-          setError(t('Please confirm your email address before signing in.', 'Потвърдете имейл адреса си преди вход.'));
-        } else {
-          setError(locale === 'bg' ? 'Входът не бе успешен. Опитайте отново.' : error.message);
-        }
+        resetCaptcha();
+        setError(signInErrorMessage(error, t));
         return;
       }
       
-      // Ensure we have a valid session by explicitly refreshing it
-      await ensureValidSession();
-      
-      // Note: We removed the duplicate refreshSession() call that was here
-      // as ensureValidSession() already refreshes the session when needed
-      
-      // Navigate to home screen
+      if (!data?.session) {
+        resetCaptcha();
+        setError(t('Sign in did not complete. Please try again.', 'Входът не завърши. Опитайте отново.'));
+        return;
+      }
+
       router.replace(destination as any);
     } catch (err) {
-      setError(t('An unexpected error occurred. Please try again.', 'Възникна неочаквана грешка. Опитайте отново.'));
+      resetCaptcha();
+      setError(signInErrorMessage(err instanceof Error ? err : new Error('Unknown sign-in error'), t));
       console.error('Sign in error:', err);
     } finally {
       setLoading(false);
@@ -246,17 +251,11 @@ export default function SignIn() {
               <Text style={[styles.actionText, { color: theme.colors.primary }]}>{locale === 'bg' ? 'EN' : 'BG'}</Text>
             </TouchableOpacity>
           </View>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <AuthBrand />
 
           <View style={styles.header}>
-            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>{t('Welcome back', 'Добре дошли отново')}</Text>
-            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>{t('Continue building a greener everyday.', 'Продължете да изграждате по-зелено ежедневие.')}</Text>
+            <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>{t('Welcome back', 'Радваме се, че си тук 👋')}</Text>
+            <Text style={[styles.subtitle, theme.typography.body, { color: theme.colors.textMuted }]}>{t('Continue building a greener everyday.', 'Влез и продължи своята зелена история.')}</Text>
           </View>
 
           <View style={styles.form}>
@@ -288,18 +287,43 @@ export default function SignIn() {
               <Text style={[styles.forgotPassword, { color: theme.colors.primary }]}>{t('Forgot password?', 'Забравена парола?')}</Text>
             </TouchableOpacity>
 
-            {/* Invisible Captcha verification */}
             <Turnstile
+              ref={captchaRef}
               onVerify={(token) => {
                 setCaptchaToken(token);
-                setError(undefined);
+                setCaptchaError(false);
+              }}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => {
+                setCaptchaToken(null);
+                setCaptchaError(true);
               }}
             />
 
-            {!isSupabaseConfigured && !error ? (
+            {isTurnstileConfigured && !captchaToken && (
+              <View style={{ gap: 8, marginVertical: 12 }}>
+                <Text accessibilityLiveRegion="polite" style={{ color: captchaError ? theme.colors.danger : theme.colors.textMuted, textAlign: 'center' }}>
+                  {captchaError
+                    ? t('The security check could not finish. Check your connection and try again.', 'Проверката за сигурност не завърши. Проверете връзката си и опитайте отново.')
+                    : t('Preparing secure sign in…', 'Подготвяме сигурния вход…')}
+                </Text>
+                {captchaError && (
+                  <TouchableOpacity onPress={resetCaptcha} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+                    <Text style={{ color: theme.colors.primary, textAlign: 'center', fontWeight: '700' }}>{t('Retry verification', 'Повтори проверката')}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {(!isSupabaseConfigured || !isTurnstileConfigured) && !error ? (
               <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
                 <Text style={[styles.errorText, { color: theme.colors.danger }]}>
-                  {t('Sign in is temporarily unavailable. Please try again later.', 'Входът временно не е достъпен. Опитайте отново по-късно.')}
+                  {!isSupabaseConfigured
+                    ? t('Sign in is temporarily unavailable. Please try again later.', 'Входът временно не е достъпен. Опитайте отново по-късно.')
+                    : t(
+                      'Email sign in is temporarily unavailable in this version. You can use Google below.',
+                      'Входът с имейл временно не е достъпен в тази версия. Може да използвате Google по-долу.',
+                    )}
                 </Text>
               </View>
             ) : null}
@@ -314,8 +338,7 @@ export default function SignIn() {
               title={t('Login', 'Вход')}
               onPress={handleSignIn}
               loading={loading}
-              disabled={loading || !isSupabaseConfigured || (isTurnstileConfigured && !captchaToken)}
-              showSpinnerWhenDisabled={isTurnstileConfigured && !captchaToken}
+              disabled={loading || googleLoading || !isSupabaseConfigured || !isTurnstileConfigured || !captchaToken}
             />
 
             <View style={styles.dividerContainer}>

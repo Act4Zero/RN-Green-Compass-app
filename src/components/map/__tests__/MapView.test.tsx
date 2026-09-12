@@ -49,7 +49,7 @@ describe('Living Planet shell', () => {
     expect(tree.root.findByProps({ children: 'Preparing the verified sustainability catalogue…' })).toBeTruthy();
   });
 
-  it('mounts Living Planet without a token or account gate', () => {
+  it('mounts the renderer within the shell protected by the root navigator', () => {
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapView />); });
     expect(tree.root.findByProps({ testID: 'globe-renderer' })).toBeTruthy();
@@ -83,4 +83,34 @@ describe('Living Planet shell', () => {
     expect(mockMapFacade.moveCamera).toHaveBeenCalledWith({ center: { lat: 42.7, lng: 23.3 }, zoom: 8, pitch: 36 }, 850);
     expect(analyticsService.trackEvent).toHaveBeenCalledWith('map_cluster_opened', { zoom: 8 });
   });
+  it('opens the cycling layer over Sofia, toggles nearby places and closes it on return to the globe', () => {
+    let tree!: renderer.ReactTestRenderer;
+    act(() => { tree = renderer.create(<MapView />); });
+    const button = tree.root.findByProps({ accessibilityLabel: 'Show Sofia cycleways' });
+    expect(tree.root.findByProps({ testID: 'globe-renderer' }).props.cyclingVisible).toBe(false);
+    act(() => button.props.onPress());
+    expect(mockMapFacade.moveCamera).toHaveBeenCalledWith(expect.objectContaining({ center: {lat:42.691,lng:23.323}, zoom:12.1, pitch:0 }), expect.any(Number));
+    expect(mockMapFacade.setResultsRailCollapsed).toHaveBeenCalledWith(true);
+    expect(tree.root.findByProps({ testID: 'globe-renderer' }).props.cyclingVisible).toBe(true);
+    act(() => tree.root.findByProps({ accessibilityLabel: 'Cycling map legend and details' }).props.onPress());
+    const toggle = tree.root.findByProps({ accessibilityRole:'checkbox' });
+    expect(toggle.props.accessibilityState.checked).toBe(true);
+    act(() => toggle.props.onPress());
+    expect(tree.root.findByProps({ testID: 'globe-renderer' }).props.cyclingPlacesVisible).toBe(false);
+    act(() => tree.root.findByProps({ testID: 'globe-renderer' }).props.onRequestGlobe());
+    expect(tree.root.findByProps({ testID: 'globe-renderer' }).props.cyclingVisible).toBe(false);
+    act(() => tree.unmount());
+  });
+  it('shows a clicked cycling feature and removes selection when the layer closes', () => {
+    const feature = require('@/features/cycling').SOFIA_CYCLING.features.find((item: any) => item.properties.name);
+    let tree!: renderer.ReactTestRenderer;
+    act(() => { tree = renderer.create(<MapView />); });
+    act(() => tree.root.findByProps({ accessibilityLabel: 'Show Sofia cycleways' }).props.onPress());
+    act(() => tree.root.findByProps({ testID: 'globe-renderer' }).props.onCyclingFeaturePress(feature.properties.id));
+    expect(tree.root.findByProps({ children: feature.properties.name })).toBeTruthy();
+    act(() => tree.root.findByProps({ accessibilityLabel: 'Show Sofia cycleways' }).props.onPress());
+    expect(tree.root.findAllByProps({ children: feature.properties.name })).toHaveLength(0);
+    act(() => tree.unmount());
+  });
+
 });

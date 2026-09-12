@@ -14,7 +14,7 @@ export interface AppNavItem {
 }
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
-  { label: 'Home', labelBg: 'Начало', href: '/home', match: '/home', icon: 'home-outline', activeIcon: 'home' },
+  { label: 'Home', labelBg: 'Начало', href: '/home', match: '/home', additionalMatches: ['/ecosystem'], icon: 'home-outline', activeIcon: 'home' },
   { label: 'Habits', labelBg: 'Навици', href: '/habits', match: '/habits', icon: 'leaf-outline', activeIcon: 'leaf' },
   { label: 'Map', labelBg: 'Карта', href: '/map', match: '/map', icon: 'map-outline', activeIcon: 'map' },
   { label: 'Hub', labelBg: 'Знания', href: '/knowledge', match: '/knowledge', icon: 'library-outline', activeIcon: 'library' },
@@ -23,7 +23,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
 ];
 
 export const MOBILE_NAV_ITEMS: AppNavItem[] = [
-  { label: 'Home', labelBg: 'Начало', href: '/home', match: '/home', icon: 'home-outline', activeIcon: 'home' },
+  { label: 'Home', labelBg: 'Начало', href: '/home', match: '/home', additionalMatches: ['/ecosystem'], icon: 'home-outline', activeIcon: 'home' },
   { label: 'Habits', labelBg: 'Навици', href: '/habits', match: '/habits', icon: 'leaf-outline', activeIcon: 'leaf' },
   { label: 'Map', labelBg: 'Карта', href: '/map', match: '/map', icon: 'map-outline', activeIcon: 'map' },
   { label: 'Marketplace', labelBg: 'Магазин', href: '/marketplace', match: '/marketplace', icon: 'storefront-outline', activeIcon: 'storefront' },

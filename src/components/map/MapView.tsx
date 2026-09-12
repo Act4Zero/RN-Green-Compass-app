@@ -14,6 +14,8 @@ import MapFooter from './MapFooter';
 import MapPopup from './MapPopup';
 import MapResultsPanel from './MapResultsPanel';
 import MapSidebar from './MapSidebar';
+import CyclingPanel from './CyclingPanel';
+import { CYCLING_SOFIA_CAMERA, SOFIA_CYCLING, type CyclingFeature } from '@/features/cycling';
 import { mapExperienceReducer } from '../../utils/livingPlanet';
 import { getOfflineSource } from '../../features/offline-maps';
 import type { MapSourceConfig } from '../../types/map';
@@ -42,6 +44,9 @@ export default function MapView() {
   const map = useMapIntegration();
   const { theme } = useAppTheme();
   const { t } = useAppLocale();
+  const [cyclingEnabled, setCyclingEnabled] = useState(false);
+  const [cyclingPlacesVisible, setCyclingPlacesVisible] = useState(true);
+  const [cyclingSelection, setCyclingSelection] = useState<CyclingFeature | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [rendererError, setRendererError] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -100,6 +105,8 @@ export default function MapView() {
   }, [map, moveCamera, reducedMotion]);
 
   const openGlobe = useCallback(() => {
+    setCyclingEnabled(false);
+    setCyclingSelection(null);
     map.setResultsRailCollapsed(true);
     dispatchMode({ type: 'open-globe' });
     setRendererError(null);
@@ -115,6 +122,21 @@ export default function MapView() {
   // The URL handoff is consumed after the public catalogue loads.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map.isDataInitialized, place]);
+
+  const toggleCycling = () => {
+    const enabled = !cyclingEnabled;
+    setCyclingEnabled(enabled);
+    setCyclingSelection(null);
+    if (enabled) {
+      setRendererError(null);
+      setSearchedAddress(null);
+      map.selectLocation(null, false);
+      map.setResultsOpen(false);
+      map.setResultsRailCollapsed(true);
+      moveCamera(CYCLING_SOFIA_CAMERA, reducedMotion ? 0 : 850);
+      dispatchMode({ type: 'open-map' });
+    }
+  };
 
   if (map.isLoading) {
     return (
@@ -136,6 +158,9 @@ export default function MapView() {
         cameraCommand={map.cameraCommand}
         userLocation={map.userLocation}
         searchPoint={searchedAddress}
+        cyclingVisible={cyclingEnabled}
+        cyclingPlacesVisible={cyclingPlacesVisible}
+        onCyclingFeaturePress={(id) => setCyclingSelection(SOFIA_CYCLING.features.find(feature => feature.properties.id === id) || null)}
         reducedMotion={reducedMotion}
         mode={mode}
         quality={width >= 768 && !reducedMotion ? 'high' : 'adaptive'}
@@ -164,8 +189,8 @@ export default function MapView() {
           <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>{t('Loading the map…', 'Зареждаме картата…')}</Text>
         </View>
       ) : null}
-      <MapSidebar compact={mode === 'globe' || mode === 'to-globe'} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} />
-      <MapResultsPanel />
+      <MapSidebar cyclingEnabled={cyclingEnabled} onToggleCycling={toggleCycling} compact={mode === 'globe' || mode === 'to-globe'} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} />
+      {!cyclingEnabled ? <MapResultsPanel /> : <CyclingPanel selected={cyclingSelection} showPlaces={cyclingPlacesVisible} onTogglePlaces={() => setCyclingPlacesVisible(value => !value)} onClearSelection={() => setCyclingSelection(null)} />}
       <LocateButton onPress={map.locateUser} isLoading={map.isLocating} />
       <CoverageAlert />
       {map.selectedLocation ? <MapPopup location={map.selectedLocation} /> : null}

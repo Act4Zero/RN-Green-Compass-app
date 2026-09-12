@@ -31,3 +31,6 @@ app/.DS_Store
 
 yarn.lock
 .vercel
+
+# Local visual review build and browser checks
+/tmp/design-review/

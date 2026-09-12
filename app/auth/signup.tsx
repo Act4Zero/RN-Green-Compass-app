@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,11 +20,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Turnstile from '@/components/Turnstile';
+import Turnstile, { isTurnstileConfigured, TurnstileHandle } from '@/components/Turnstile';
 import { Ionicons } from '@expo/vector-icons';
-import supabase, { ensureValidSession } from '@/lib/supabase';
 import analyticsService from '@/services/analyticsService';
 import { useAppTheme } from '@/theme';
+import { AuthBrand } from '@/components/ui/AuthBrand';
 import { sanitizeInternalDestination } from '@/utils/navigation';
 import { useAppLocale } from '@/context/AppLocaleContext';
 
@@ -64,7 +64,7 @@ export default function SignUp() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
   const destination = sanitizeInternalDestination(next);
-  const { signUp, refreshSession, signInWithGoogle } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
 
   // Handler for Google sign up
@@ -86,7 +86,6 @@ export default function SignUp() {
   }, []);
   
   // Debug flag - set to true for verbose logging in development
-  const DEBUG = __DEV__;
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -99,6 +98,12 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [termsError, setTermsError] = useState<string | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileHandle>(null);
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    captchaRef.current?.reset();
+  };
 
   const validateFullName = (name: string) => {
     // Trim the name to remove any leading/trailing whitespace
@@ -213,6 +218,16 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     setError(null);
+
+    if (!isTurnstileConfigured) {
+      setError(t('Account creation is unavailable because CAPTCHA is not configured for this build.', 'Създаването на профил не е достъпно, защото CAPTCHA не е конфигурирана за тази версия.'));
+      return;
+    }
+
+    if (!captchaToken) {
+      setError(t('Security verification is still loading. Please try again.', 'Проверката за сигурност още се зарежда. Опитайте отново.'));
+      return;
+    }
     
     // Sanitize inputs before validation
     const sanitizedFullName = fullName.trim();
@@ -234,6 +249,7 @@ export default function SignUp() {
       const { data, error } = await signUp(sanitizedEmail, password, captchaToken || undefined);
       
       if (error) {
+        resetCaptcha();
         if (error.message.includes('already registered')) {
           setError(t('This email is already registered. Please use a different email or try signing in.', 'Този имейл вече е регистриран. Използвайте друг имейл или опитайте да влезете.'));
         } else if (error.message.includes('password')) {
@@ -246,55 +262,16 @@ export default function SignUp() {
         return;
       }
       
-      // For new users, explicitly check if we have a session
-      if (!data?.session) {
-        // Try to sign in immediately after signup to establish a session
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: sanitizedEmail,
-          password
-        });
-        
-        if (signInError) {
-          setError('An unexpected error occurred. Please try again.');
-          console.error('Auto sign-in after signup failed:', signInError);
-          return;
-        } else if (signInData.session) {
-          // Explicitly set the session to ensure it's properly stored
-          await supabase.auth.setSession({
-            access_token: signInData.session.access_token,
-            refresh_token: signInData.session.refresh_token
-          });
-        }
-      }
-      
-      // Ensure we have a valid session by explicitly refreshing it
-      await ensureValidSession();
-      
-      // Double-check session state with a manual refresh
-      const { error: refreshError } = await refreshSession();
-      if (refreshError) {
-        setError('An unexpected error occurred. Please try again.');
-        console.error('Session refresh after signup failed:', refreshError);
-        return;
-      }
-      
-      // Final verification of session existence
-      const { data: finalSessionCheck } = await supabase.auth.getSession();
-      if (!finalSessionCheck.session) {
-        setError('An unexpected error occurred. Please try again.');
-        console.warn('Still no session after all attempts - user may need to sign in manually');
-        return;
-      }
-      
       // If fullName is provided, we would update the user profile here
       // This would typically be done in a separate function that calls the Supabase profiles table
       if (fullName) {
         // Future implementation: Update user profile with fullName
       }
       
-      // Confirmed projects return a session immediately; email-confirmation projects
-      // continue through the success screen while preserving the requested map route.
-      router.replace((finalSessionCheck.session
+      // Email-confirmation projects do not return a session yet. A second automatic
+      // password request would need a fresh, single-use CAPTCHA token, so continue
+      // to the confirmation screen instead.
+      router.replace((data?.session
         ? destination
         : { pathname: '/auth/signup-success', params: { next: destination } }) as any);
     } catch (err) {
@@ -320,13 +297,7 @@ export default function SignUp() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, theme.shadows.raised, isTabletOrLarger && { width: '60%', maxWidth: 540 }]}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <AuthBrand />
           
           <View style={styles.header}>
             <Text style={[styles.title, theme.typography.h1, { color: theme.colors.text }]}>{t('Create your account', 'Създайте своя профил')}</Text>
@@ -396,11 +367,25 @@ export default function SignUp() {
 
             {/* Invisible Captcha verification */}
             <Turnstile
+              ref={captchaRef}
               onVerify={(token) => {
                 setCaptchaToken(token);
                 setError(null);
               }}
+              onExpire={() => setCaptchaToken(null)}
+              onError={() => {
+                setCaptchaToken(null);
+                setError(t('Security verification could not load. Check your connection and try again.', 'Проверката за сигурност не можа да се зареди. Проверете връзката си и опитайте отново.'));
+              }}
             />
+
+            {!isTurnstileConfigured && !error ? (
+              <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
+                <Text style={[styles.errorText, { color: theme.colors.danger }]}>
+                  {t('Account creation is unavailable because CAPTCHA is not configured for this build.', 'Създаването на профил не е достъпно, защото CAPTCHA не е конфигурирана за тази версия.')}
+                </Text>
+              </View>
+            ) : null}
 
             {error && (
               <View style={[styles.errorContainer, { backgroundColor: theme.colors.primarySoft }]}>
@@ -412,8 +397,7 @@ export default function SignUp() {
               title={t('Sign Up', 'Регистрация')}
               onPress={handleSignUp}
               loading={loading}
-              disabled={loading || !captchaToken}
-              showSpinnerWhenDisabled={!captchaToken}
+              disabled={loading || !isTurnstileConfigured || !captchaToken}
             />
 
             <View style={styles.dividerContainer}>

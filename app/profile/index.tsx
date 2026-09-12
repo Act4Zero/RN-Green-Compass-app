@@ -25,6 +25,7 @@ import BadgeSummary from '@/components/badges/BadgeSummary';
 import { PointSource } from '@/types/community/points';
 import { formatPointSource } from '@/utils/pointsFormatters';
 import { useAppTheme } from '@/theme';
+import { AppButton, PageHeader } from '@/components/ui';
 import { knowledgeService, type KnowledgeProgress } from '@/features/knowledge';
 import { useAppLocale } from '@/context/AppLocaleContext';
 import { localizeSustainabilityInterest } from '@/types/profiles';
@@ -244,56 +245,42 @@ useEffect(() => {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.contentContainer, { maxWidth: 1040 }, isTabletOrLarger && { width: '100%' }]}>
-        {/* Header */}
-        <View style={styles.pageHeader}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.replace('/home')}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <View>
-            <Text style={[styles.title, { color: theme.colors.text }]}>{t('Your profile', 'Твоят профил')}</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Identity, achievements, preferences, and account.', 'Самоличност, постижения, предпочитания и профил.')}</Text>
-          </View>
-        </View>
+        <PageHeader eyebrow={t('Your story so far', 'Твоята история досега')} title={t('Your profile 🌿', 'Твоят профил 🌿')} description={t('Your interests, small wins and next steps. Make this space yours.', 'Твоите интереси, малки победи и следващи стъпки. Направи това място свое.')} action={<AppButton variant="ghost" label={t('Home', 'Начало')} icon="arrow-back" onPress={() => router.replace('/home')} />} />
 
         {/* Profile Card */}
-        <View style={[styles.profileCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
+        <View style={[styles.profileCard, { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.border, borderWidth: 1, borderRadius: 28, flexDirection: isTabletOrLarger ? 'row' : 'column', gap: 20, padding: 26 }]}>
           {/* Avatar and Name */}
-          <View style={styles.avatarContainer}>
+          <View style={[styles.avatarContainer, { marginBottom: 0, borderWidth: 4, borderColor: theme.colors.surface, borderRadius: 56, padding: 4 }]}>
             {profile.avatar_url && !imageLoadError ? (
               <Image 
                 source={{ uri: profile.avatar_url }} 
-                style={styles.avatar}
+                style={[styles.avatar, { width: 88, height: 88, borderRadius: 44 }]}
                 onError={(e) => {
                   console.error('Error loading profile image:', e.nativeEvent.error);
                   setImageLoadError(true);
                 }}
               />
             ) : (
-              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primarySoft }]}>
+              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.surface, width: 88, height: 88, borderRadius: 44 }]}>
                 <Text style={[styles.avatarPlaceholderText, { color: theme.colors.primary }]}>{displayIdentifier.charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </View>
 
-          <View style={styles.nameContainer}>
-            <Text style={[styles.displayName, { color: theme.colors.text }]}>{displayIdentifier}</Text>
+          <View style={[styles.nameContainer, { flex: isTabletOrLarger ? 1 : undefined, alignItems: isTabletOrLarger ? 'flex-start' : 'center' }]}>
+            <Text style={[styles.displayName, theme.typography.h2, { color: theme.colors.text }]}>{displayIdentifier}</Text>
             {profile.is_anonymous && (
               <Text style={[styles.anonymousIndicator, { color: theme.colors.textMuted }]}>{t('Anonymous mode', 'Анонимен режим')}</Text>
             )}
           </View>
 
-          <TouchableOpacity style={[styles.editButton, { backgroundColor: theme.colors.primary }]} onPress={handleEditProfile}>
-            <Ionicons name="pencil-outline" size={16} color="white" style={{ marginRight: 8 }} />
-            <Text style={styles.editButtonText}>{t('Edit Profile', 'Редактирай профила')}</Text>
-          </TouchableOpacity>
+          <AppButton label={t('Edit profile', 'Редактирай профила')} icon="pencil-outline" onPress={handleEditProfile} />
+
         </View>
 
         {/* Interests Section */}
         <View style={[styles.sectionContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('Sustainability interests', 'Интереси в устойчивостта')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('What inspires you ✨', 'Какво те вдъхновява ✨')}</Text>
           <View style={styles.interestsContainer}>
             {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
               profile.interests.map((interest) => (
@@ -411,7 +398,7 @@ useEffect(() => {
                 .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
                 .map(([date, events]) => (
                   <View key={date} style={styles.historyDateGroup}>
-                    <Text style={styles.historyDate}>{date}</Text>
+                    <Text style={[styles.historyDate, theme.typography.label, { color: theme.colors.textMuted }]}>{date}</Text>
                     {events.map(event => (
                       <View key={event.id} style={styles.historyItem}>
                         <View style={styles.pointSourceIcon}>
@@ -428,12 +415,12 @@ useEffect(() => {
 
                         <View style={styles.historyItemContent}>
                           <View style={styles.historyItemHeader}>
-                            <Text style={styles.pointsDescription}>
+                            <Text style={[styles.pointsDescription, { color: theme.colors.text }]}>
                               {formatPointSource(event.source, locale)}
                             </Text>
-                            <Text style={styles.pointsAmount}>+{event.points}</Text>
+                            <Text style={[styles.pointsAmount, { color: theme.colors.primary }]}>+{event.points}</Text>
                           </View>
-                          <Text style={styles.pointsDescription}>
+                          <Text style={[styles.pointsDescription, { color: theme.colors.text }]}>
                             {t(`You earned ${event.points} points for ${formatPointSource(event.source).toLowerCase()}!`, `Спечелихте ${event.points} точки за ${formatPointSource(event.source, locale).toLowerCase()}!`)}
                           </Text>
                           <Text style={styles.historyItemDate}>

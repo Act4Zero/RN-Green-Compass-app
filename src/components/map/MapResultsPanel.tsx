@@ -21,18 +21,19 @@ function ResultRow({ location }: { location: MapLocation }) {
       accessibilityLabel={t(`Open ${location.name}`, `Отворете ${getLocalizedLocationName(location, 'bg')}`)}
       onPress={() => map.selectLocation(location)}
       style={({ pressed }) => ({
-        padding: theme.spacing.sm, borderRadius: theme.radii.md, gap: 4,
+        padding: 14, borderRadius: 20, gap: 8,
         backgroundColor: selected ? theme.colors.primarySoft : pressed ? theme.colors.surfaceMuted : theme.colors.surface,
         borderWidth: 1, borderColor: selected ? theme.colors.primary : theme.colors.border,
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.xs }}>
-        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}>
-          <Ionicons name={category.icon as any} size={17} color={theme.colors.accent} />
+        <View style={{ width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: `${category.color}22` }}>
+          <Ionicons name={category.icon as any} size={23} color={category.color} />
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Text numberOfLines={1} style={[theme.typography.label, { color: theme.colors.text, flexShrink: 1 }]}>{getLocalizedLocationName(location, locale)}</Text>{recommended ? <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 10 }]}>{t('FOR YOU', 'ЗА ВАС')}</Text> : null}</View>
           <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{formatLocalizedAddress(location, locale) || location.town}</Text>
+          <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 11, marginTop: 6 }]}>{t(category.label, category.labelBg)}</Text>
         </View>
         {location.power_kw ? <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{location.power_kw} kW</Text> : location.verified ? <Ionicons name="shield-checkmark" size={18} color={theme.colors.primary} /> : null}
       </View>
@@ -51,7 +52,7 @@ export default function MapResultsPanel() {
   return (
     <View style={[theme.shadows.raised, {
       position: 'absolute', zIndex: 35,
-      left: desktop ? 20 : 12, top: desktop ? 146 : 144,
+      left: desktop ? 20 : 12, top: desktop ? 164 : 144,
       bottom: desktop ? 54 : 14, width: desktop ? 340 : undefined, right: desktop ? undefined : 12,
       maxHeight: desktop ? undefined : 300,
       borderRadius: theme.radii.xl, borderWidth: 1, borderColor: theme.colors.border,

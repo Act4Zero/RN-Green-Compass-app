@@ -1,6 +1,7 @@
 import {
   Camera,
   CircleLayer,
+  LineLayer,
   MapView,
   ShapeSource,
   SymbolLayer,
@@ -12,6 +13,7 @@ import { View } from 'react-native';
 import { useAppLocale } from '../../context/AppLocaleContext';
 import type { MapRendererProps } from '../../types/map';
 import { locationsToFeatureCollection } from '../../utils/mapGlobe';
+import { CYCLING_PATHS, CYCLING_PLACES, CYCLING_LINE_COLOR } from '@/features/cycling';
 import { localizeMapStyle, type MapStyleDocument } from '../../utils/mapStyleLocale';
 
 export default function MapLibreRenderer(props: MapRendererProps) {
@@ -50,7 +52,7 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     const command = props.cameraCommand;
     if (!command) return;
     cameraRef.current?.setCamera({ centerCoordinate: command.center ? [command.center.lng, command.center.lat] : undefined, zoomLevel: command.zoom, pitch: command.pitch, heading: command.heading, animationDuration: props.reducedMotion ? 0 : command.durationMs ?? 850, animationMode: props.reducedMotion ? 'moveTo' : 'flyTo' });
-  }, [props.cameraCommand, props.reducedMotion]);
+  }, [props.cameraCommand, props.reducedMotion, localizedStyle]);
 
   useEffect(() => {
     if (!props.searchPoint) return;
@@ -76,7 +78,17 @@ export default function MapLibreRenderer(props: MapRendererProps) {
         if (isUserInteraction && zoomLevel < 4.65) props.onRequestGlobe();
       }}
     >
-      <Camera ref={cameraRef} defaultSettings={{ centerCoordinate: [25.35, 42.72], zoomLevel: 6.35, pitch: 34, heading: -8 }} minZoomLevel={3.8} />
+      <Camera ref={cameraRef} defaultSettings={{ centerCoordinate: [props.cameraCommand?.center?.lng ?? 25.35, props.cameraCommand?.center?.lat ?? 42.72], zoomLevel: props.cameraCommand?.zoom ?? 6.35, pitch: props.cameraCommand?.pitch ?? 34, heading: props.cameraCommand?.heading ?? -8 }} minZoomLevel={3.8} />
+      {props.cyclingVisible ? <>
+        <ShapeSource id="green-compass-cycleways" shape={CYCLING_PATHS} hitbox={{ width: 24, height: 24 }} onPress={event => { const id = event.features[0]?.properties?.id; if (id) props.onCyclingFeaturePress?.(String(id)); }}>
+          <LineLayer id="cycling-outline" style={{ lineColor: '#FFFFFF', lineWidth: ['interpolate', ['linear'], ['zoom'], 10, 4, 15, 9], lineOpacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
+          <LineLayer id="cycling-lines" style={{ lineColor: CYCLING_LINE_COLOR as any, lineWidth: ['interpolate', ['linear'], ['zoom'], 10, 2, 15, 5], lineCap: 'round', lineJoin: 'round' }} />
+        </ShapeSource>
+        {props.cyclingPlacesVisible !== false ? <ShapeSource id="green-compass-cycling-places" shape={CYCLING_PLACES} hitbox={{ width: 32, height: 32 }} onPress={event => { const id = event.features[0]?.properties?.id; if (id) props.onCyclingFeaturePress?.(String(id)); }}>
+          <CircleLayer id="cycling-places" minZoomLevel={14} style={{ circleColor: ['match', ['get', 'kind'], 'parking', '#1951BE', '#087DAB'], circleRadius: 10, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 2 }} />
+          <SymbolLayer id="cycling-place-labels" minZoomLevel={14} style={{ textFont: ['Noto Sans Regular'], textField: ['match', ['get', 'kind'], 'parking', 'P', '●'], textSize: 12, textColor: '#FFFFFF', textAllowOverlap: true }} />
+        </ShapeSource> : null}
+      </> : null}
       <ShapeSource
         ref={sourceRef}
         id="green-compass-locations"

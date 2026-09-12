@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
-  TouchableOpacity,
   Text,
   Animated,
   Pressable,
@@ -22,7 +21,8 @@ import PostItem from '@/components/community/PostItem';
 import LoadingState from '@/components/community/LoadingState';
 import ErrorState from '@/components/community/ErrorState';
 import EmptyState from '@/components/community/EmptyState';
-import FeedHeader from '@/components/community/FeedHeader';
+import { SectionHero } from '@/components/ui/SectionHero';
+import { AppButton } from '@/components/ui';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import NewPostButton from '@/components/community/NewPostButton';
 import PostOptionsMenu from '@/components/community/postdetails/PostOptionsMenu';
@@ -63,27 +63,13 @@ interface FeatureCardProps {
 
 function FeatureCard({ title, description, icon, onPress, backgroundColor, buttonText }: FeatureCardProps) {
   const { theme } = useAppTheme();
-  return (
-    <View style={[styles.featureCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 }] }>
-      <View style={styles.featureCardContent}>
-        <View style={[styles.featureCardIcon, { backgroundColor }]}>
-          {icon}
-        </View>
-        <View style={styles.featureCardTextContainer}>
-          <Text style={[styles.featureCardTitle, { color: theme.colors.text }]}>{title}</Text>
-          <Text style={[styles.featureCardDescription, { color: theme.colors.textMuted }]}>{description}</Text>
-        </View>
-      </View>
-      <TouchableOpacity 
-        style={[styles.featureCardButton, { backgroundColor: theme.colors.primary }]}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
-        <Text style={[styles.featureCardButtonText, { color: theme.colors.textInverse }]}>{buttonText}</Text>
-        <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
-      </TouchableOpacity>
-    </View>
-  );
+  const { width } = useWindowDimensions();
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${description}`} onPress={onPress} style={({ pressed }) => ({ flexBasis: width < 760 ? '46%' : '30%', flexGrow: 1, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: pressed ? theme.colors.primarySoft : theme.colors.surface, gap: 10 })}>
+    <View style={{ width: 44, height: 44, borderRadius: 15, backgroundColor, alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
+    <Text style={[theme.typography.h3, { color: theme.colors.text, fontSize: 17 }]}>{title}</Text>
+    <Text numberOfLines={2} style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12, lineHeight: 18 }]}>{description}</Text>
+    <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 12, marginTop: 'auto' }]}>{buttonText} →</Text>
+  </Pressable>;
 }
 
 export default function CommunityFeed() {
@@ -168,25 +154,18 @@ export default function CommunityFeed() {
           { useNativeDriver: false }
         )}
       >
-        <View style={[styles.content, { maxWidth: 1120 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
-          {/* Header */}
-          <FeedHeader />
-
-          <View style={{ marginBottom: 22, padding: isTabletOrLarger ? 28 : 22, borderRadius: 22, backgroundColor: theme.colors.primary, overflow: 'hidden' }}>
-            <View style={{ position: 'absolute', width: 220, height: 220, borderRadius: 110, right: -55, top: -90, backgroundColor: theme.colors.accent, opacity: 0.16 }} />
-            <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase', letterSpacing: 1.1 }]}>{t('Collaborate · learn · act', 'Сътрудничи · учи · действай')}</Text>
-            <Text style={[theme.typography.h1, { color: '#FFFFFF', marginTop: 7, maxWidth: 680 }]}>{t('Make sustainability a team effort', 'Превърнете устойчивостта в общо усилие')}</Text>
-            <Text style={[theme.typography.body, { color: '#DDECE3', marginTop: 8, maxWidth: 720 }]}>{t('Compare opt-in impact summaries, complete shared goals, exchange practical knowledge, and join local or global projects.', 'Сравнявайте доброволно споделеното въздействие, изпълнявайте общи цели, обменяйте практични знания и участвайте в местни или глобални проекти.')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 18 }}><TouchableOpacity style={{ minHeight: 46, paddingHorizontal: 16, borderRadius: 12, backgroundColor: theme.colors.accent, justifyContent: 'center' }} onPress={() => router.push('/community/groups' as any)}><Text style={[theme.typography.label, { color: theme.colors.textInverse }]}>{t('Open my groups', 'Моите групи')}</Text></TouchableOpacity><TouchableOpacity style={{ minHeight: 46, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,.38)', justifyContent: 'center' }} onPress={() => router.push('/habits/today' as any)}><Text style={[theme.typography.label, { color: '#FFFFFF' }]}>{t("Today’s challenge & poll", 'Днешно предизвикателство и анкета')}</Text></TouchableOpacity></View>
-          </View>
-          
+        <View style={[styles.content, { maxWidth: 1120, padding: 0 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
+          <SectionHero tone="sun" eyebrow={t('Our community', 'Нашата общност')} title={t('Find your people', 'Намери своите хора')} emoji="🙌" description={t('Share a small win, ask a question or join a local mission. Good ideas grow together.', 'Сподели малка победа, задай въпрос или се включи в местна мисия. Добрите идеи растат заедно.')} illustration={require('../../assets/images/design/community-garden.webp')} illustrationLabel={t('Illustration of friends caring for a community garden', 'Илюстрация на приятели, които се грижат за обща градина')}>
+            <AppButton label={t('Share something', 'Сподели нещо')} icon="add" onPress={handleNewPost} />
+            <AppButton label={t('Find a group', 'Намери група')} icon="people-outline" variant="secondary" onPress={() => router.push('/community/groups' as any)} />
+          </SectionHero>
           {/* Feature Cards Container */}
-          <View style={styles.featureCardsContainer}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
             {/* Sustainability Challenges Card */}
             <FeatureCard
-              title={t('Sustainability Challenges', 'Предизвикателства за устойчивост')}
-              description={t('Join eco-challenges with the community and earn impact points', 'Включете се в еко предизвикателства и печелете точки за въздействие')}
-              icon={<MaterialCommunityIcons name="leaf" size={32} color="#FFFFFF" />}
+              title={t('Sustainability Challenges', 'Общи мисии')}
+              description={t('Join eco-challenges with the community and earn impact points', 'Опитай нещо ново заедно с общността')}
+              icon={<MaterialCommunityIcons name="leaf" size={28} color="#164B37" />}
               backgroundColor={theme.colors.accent}
               buttonText={t('Join Challenges', 'Включи се')}
               onPress={() => router.push({ pathname: '/community/challenges' })}
@@ -194,22 +173,22 @@ export default function CommunityFeed() {
             
             {/* Community Leaderboards Card */}
             <FeatureCard
-              title={t('Community Leaderboards', 'Класации на общността')}
-              description={t('See top contributors and track your environmental impact', 'Вижте водещите участници и проследете своето въздействие')}
-              icon={<Ionicons name="trophy" size={28} color="#FFFFFF" />}
+              title={t('Community Leaderboards', 'Класации')}
+              description={t('See top contributors and track your environmental impact', 'Виж общия напредък и активните участници')}
+              icon={<Ionicons name="trophy" size={28} color={theme.colors.textInverse} />}
               backgroundColor={theme.colors.primary}
               buttonText={t('View Leaderboards', 'Виж класациите')}
               onPress={() => router.push({ pathname: '/community/leaderboards' })}
             />
-            <FeatureCard title={t('Friends, Teams & Local Circles', 'Приятели, екипи и местни кръгове')} description={t('Invite people privately, share aggregate impact, and pursue common goals', 'Канете хора, споделяйте общото въздействие и следвайте общи цели')} icon={<Ionicons name="people" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.info} buttonText={t('Open Groups', 'Отвори групите')} onPress={() => router.push('/community/groups' as any)} />
-            <FeatureCard title={t('Community Projects', 'Проекти на общността')} description={t('Join reviewed local meet-ups and global sustainability initiatives', 'Участвайте в проверени местни събития и глобални инициативи')} icon={<Ionicons name="earth" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.success} buttonText={t('Explore Projects', 'Разгледай проектите')} onPress={() => router.push('/community/projects' as any)} />
-            <FeatureCard title={t('Rewards & Achievements', 'Награди и постижения')} description={t('Track green points, virtual reward tiers, badges, and streak bonuses', 'Следете зелени точки, нива, значки и бонуси за серия')} icon={<Ionicons name="ribbon" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.warning} buttonText={t('View Rewards', 'Виж наградите')} onPress={() => router.push('/community/rewards' as any)} />
-            <FeatureCard title={t('Share Knowledge', 'Сподели знание')} description={t('Submit stories, eco-tips, articles, videos, and project ideas for review', 'Изпращайте истории, еко съвети, статии, видеа и идеи за преглед')} icon={<Ionicons name="bulb" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.primary} buttonText={t('Contribute', 'Сподели')} onPress={() => router.push('/community/contribute' as any)} />
-            {canModerate ? <FeatureCard title={t('Moderation & Spotlights', 'Модерация и акценти')} description={t('Review reported discussions and community submissions', 'Прегледайте докладвани дискусии и предложения')} icon={<Ionicons name="shield-checkmark" size={28} color="#FFFFFF" />} backgroundColor={theme.colors.danger} buttonText={t('Open Review Queue', 'Отвори опашката')} onPress={() => router.push('/admin/community' as any)} /> : null}
+            <FeatureCard title={t('Friends, Teams & Local Circles', 'Групи')} description={t('Invite people privately, share aggregate impact, and pursue common goals', 'Намери приятели за следващата си зелена стъпка')} icon={<Ionicons name="people" size={28} color={theme.colors.textInverse} />} backgroundColor={theme.colors.info} buttonText={t('Open Groups', 'Отвори групите')} onPress={() => router.push('/community/groups' as any)} />
+            <FeatureCard title={t('Community Projects', 'Проекти')} description={t('Join reviewed local meet-ups and global sustainability initiatives', 'Открий местни събития и полезни инициативи')} icon={<Ionicons name="earth" size={28} color={theme.colors.textInverse} />} backgroundColor={theme.colors.success} buttonText={t('Explore Projects', 'Разгледай проектите')} onPress={() => router.push('/community/projects' as any)} />
+            <FeatureCard title={t('Rewards & Achievements', 'Награди')} description={t('Track green points, virtual reward tiers, badges, and streak bonuses', 'Твоите точки, значки и малки победи')} icon={<Ionicons name="ribbon" size={26} color={theme.colors.textInverse} />} backgroundColor={theme.colors.warning} buttonText={t('View Rewards', 'Виж наградите')} onPress={() => router.push('/community/rewards' as any)} />
+            <FeatureCard title={t('Share Knowledge', 'Сподели знание')} description={t('Submit stories, eco-tips, articles, videos, and project ideas for review', 'Дай живот на своя идея или полезен съвет')} icon={<Ionicons name="bulb" size={28} color={theme.colors.textInverse} />} backgroundColor={theme.colors.primary} buttonText={t('Contribute', 'Сподели')} onPress={() => router.push('/community/contribute' as any)} />
+            {canModerate ? <FeatureCard title={t('Moderation & Spotlights', 'Модерация и акценти')} description={t('Review reported discussions and community submissions', 'Прегледайте докладвани дискусии и предложения')} icon={<Ionicons name="shield-checkmark" size={28} color={theme.colors.textInverse} />} backgroundColor={theme.colors.danger} buttonText={t('Open Review Queue', 'Отвори опашката')} onPress={() => router.push('/admin/community' as any)} /> : null}
           </View>
 
           {overview?.featuredSubmission ? <View style={{ borderRadius: 18, padding: 20, marginBottom: 18, backgroundColor: theme.colors.accentSoft, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase' }]}>{t('Community spotlight', 'Акцент от общността')} · {(SUBMISSION_TYPE_LABELS[overview.featuredSubmission.type]?.[locale] || overview.featuredSubmission.type.replace('_', ' '))}</Text><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 7 }]}>{overview.featuredSubmission.title}</Text><Text numberOfLines={4} style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6 }]}>{overview.featuredSubmission.body}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Shared by', 'Споделено от')} {overview.featuredSubmission.authorName || t('a community member', 'член на общността')}</Text></View> : null}
-          {overview?.featuredProjects?.length ? <View style={{ marginBottom: 24 }}><Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 10 }]}>{t('Upcoming initiatives', 'Предстоящи инициативи')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{overview.featuredProjects.map((project) => <Pressable key={project.id} onPress={() => router.push('/community/projects' as any)} style={{ minWidth: 260, flex: 1, padding: 16, borderRadius: 16, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{project.eventName || project.scope.toUpperCase()} · {getCountdownLabel(project.endsAt, new Date(), locale)}</Text><Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{project.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{project.participantCount} {t('participants', 'участници')}</Text></Pressable>)}</View></View> : null}
+          {overview?.featuredProjects?.length ? <View style={{ marginBottom: 24 }}><Text style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 10 }]}>{t('Upcoming initiatives', 'Предстоящи инициативи')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{overview.featuredProjects.map((project) => <Pressable key={project.id} onPress={() => router.push('/community/projects' as any)} style={{ minWidth: 0, flexBasis: '100%', flex: 1, padding: 16, borderRadius: 16, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{project.eventName || project.scope.toUpperCase()} · {getCountdownLabel(project.endsAt, new Date(), locale)}</Text><Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 5 }]}>{project.title}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4 }]}>{project.participantCount} {t('participants', 'участници')}</Text></Pressable>)}</View></View> : null}
           
           {/* Discussion Section Header */}
           <View style={styles.sectionHeader}>

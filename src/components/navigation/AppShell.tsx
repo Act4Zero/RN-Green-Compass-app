@@ -70,20 +70,17 @@ function NavItem({ item, compact = false }: { item: AppNavItem; compact?: boolea
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { theme, toggleTheme } = useAppTheme();
   const { locale, setLocale, t } = useAppLocale();
-  const { user, loading: authLoading } = useAuth();
+  const { session, user } = useAuth();
   const knowledgeEnabled = useFeatureFlag('knowledge_hub', true);
   // Marketplace is a primary destination. Backend flags may control commerce
   // operations, but they must not make the whole destination disappear.
   const marketplaceEnabled = true;
   const [hasHydrated, setHasHydrated] = useState(false);
-  const isPublicKnowledge = pathname.startsWith('/knowledge') && !user && !authLoading;
-  const isPublicMarketplace = pathname.startsWith('/marketplace') && !user && !authLoading;
-  const isPublic = pathname === '/' || pathname.startsWith('/auth') || isPublicKnowledge || isPublicMarketplace;
+  const hideNavigation = !session || !user || pathname === '/' || pathname.startsWith('/auth/');
   const desktop = hasHydrated && width >= theme.breakpoints.desktop;
   const filterEnabled = (items: AppNavItem[]) => items.filter((item) => (knowledgeEnabled || item.href !== '/knowledge') && (marketplaceEnabled || item.href !== '/marketplace'));
   const desktopNavItems = filterEnabled(APP_NAV_ITEMS);
@@ -93,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // initial client render, then promote to the desktop rail after hydration.
   useEffect(() => setHasHydrated(true), []);
 
-  if (isPublic) return <>{children}</>;
+  if (hideNavigation) return <>{children}</>;
 
   return (
     <View style={{ flex: 1, flexDirection: desktop ? 'row' : 'column', backgroundColor: theme.colors.background }}>
@@ -142,18 +139,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </View>
       ) : null}
       <View style={{ flex: 1, paddingBottom: desktop ? 0 : 72 + insets.bottom }}>{children}</View>
-      {!desktop ? (
-        <View style={{ position: 'absolute', right: theme.spacing.md, bottom: 80 + insets.bottom, zIndex: 20 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('Switch language', 'Смени езика')}
-          onPress={() => void setLocale(locale === 'en' ? 'bg' : 'en')}
-          style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: theme.colors.borderStrong, backgroundColor: theme.colors.backgroundElevated, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.78 : 1, ...theme.shadows.subtle })}
-        >
-          <Text style={[theme.typography.label, { color: theme.colors.primary, fontSize: 11 }]}>{locale === 'en' ? 'BG' : 'EN'}</Text>
-        </Pressable>
-        </View>
-      ) : null}
       {!desktop ? (
         <View
           style={{

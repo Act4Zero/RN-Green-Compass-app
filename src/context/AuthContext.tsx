@@ -53,10 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         setSessionError(null);
         
-        // First ensure we have a valid session (checks and refreshes if needed)
-        await ensureValidSession();
-        
-        // Then get the current session
+        // Supabase reads persisted credentials and refreshes an expired session.
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -90,10 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // On sign-in, ensure we have a valid session
-      if (event === 'SIGNED_IN' && session) {
-        ensureValidSession();
-      }
+      // Keep this callback synchronous; auth methods here can contend for its lock.
     });
     
     // Set up app state change listener to refresh session when app comes to foreground
@@ -157,24 +151,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Ensure we have a valid session
         await ensureValidSession();
-      } else {
-        // If no session is returned, try to sign in immediately to establish a session
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (!signInError && signInData.session) {
-          // Set the user and session state directly
-          setSession(signInData.session);
-          setUser(signInData.user);
-          
-          // Track login event in Google Analytics
-          analyticsService.trackLogin('email');
-          if (signInData.user?.id) {
-            analyticsService.setUserId(signInData.user.id);
-          }
-        }
       }
       
       return { data, error };
@@ -203,20 +179,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     if (data.session) {
-      // Explicitly set the session to ensure it's properly stored
-      await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token
-      });
+      // signInWithPassword already persists the session. Publish it immediately.
+      setSession(data.session);
+      setUser(data.user);
+      setSessionError(null);
       
       // Track login event in Google Analytics
-      analyticsService.trackLogin('email');
-      if (data.user?.id) {
-        analyticsService.setUserId(data.user.id);
+      try {
+        analyticsService.trackLogin('email');
+        if (data.user?.id) analyticsService.setUserId(data.user.id);
+      } catch (analyticsError) {
+        console.error('Could not record login analytics:', analyticsError);
       }
 
       // Update last_login_date and login_streak in profiles table
       if (data.user?.id) {
+        // Profile rewards must not delay access after successful authentication.
+        void (async () => {
         try {
           // Fetch previous profile data
           const { data: profileData, error: profileError } = await supabase
@@ -258,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (err) {
           console.error('Unexpected error updating login streak:', err);
         }
+        })();
       }
     }
     
@@ -323,7 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         redirectTo = `com.act4zero.greencompass://${safePath.replace(/^\//, '')}`;
       }
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo }
       });
