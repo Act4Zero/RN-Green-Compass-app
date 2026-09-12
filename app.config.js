@@ -13,7 +13,13 @@ const EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIE
 const EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 const EXPO_PUBLIC_GOOGLE_REDIRECT_URI = process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI;
-const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY;
+// Turnstile site keys are public. Keep a production-only fallback so the
+// existing GitHub -> Vercel deployment does not depend on access to the
+// Vercel project's environment settings.
+const VERCEL_PRODUCTION_TURNSTILE_SITE_KEY = '0x4AAAAAAEkOcOz9xZyZUAuT';
+const EXPO_PUBLIC_TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY
+  || (process.env.VERCEL === '1' ? VERCEL_PRODUCTION_TURNSTILE_SITE_KEY : undefined);
+const EXPO_PUBLIC_TURNSTILE_BASE_URL = process.env.EXPO_PUBLIC_TURNSTILE_BASE_URL;
 const EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (process.env.VERCEL_ENV === 'production' && (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY)) {
@@ -100,6 +106,7 @@ module.exports = {
     googleRedirectUri: EXPO_PUBLIC_GOOGLE_REDIRECT_URI,
     // Cloudflare Turnstile site key for captcha
     turnstileSiteKey: EXPO_PUBLIC_TURNSTILE_SITE_KEY,
+    turnstileBaseUrl: EXPO_PUBLIC_TURNSTILE_BASE_URL,
     stripePublishableKey: EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   }
 };

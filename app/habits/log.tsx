@@ -5,7 +5,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +17,8 @@ import SelectedHabitSection from '@/components/habits/log/SelectedHabitSection';
 import useLogManager from '@/hooks/habits/useLogManager';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/theme';
+import { AppButton, PageHeader } from '@/components/ui';
+import { goBackOrReplace } from '@/utils/navigation';
 import { useAppLocale } from '@/context/AppLocaleContext';
 
 // Styles for this component
@@ -79,18 +80,17 @@ export default function LogHabit() {
       contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.content, { maxWidth: 1040 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <View>
-            <Text style={[styles.title, { color: theme.colors.text }]}>{t('Log an action', 'Запиши действие')}</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>{t('Choose a category, then capture the impact.', 'Избери категория и запиши въздействието.')}</Text>
-          </View>
+      <View style={[styles.content, { maxWidth: 1040, padding: 0 }, isTabletOrLarger && { alignSelf: 'center', width: '100%' }]}>
+        <PageHeader eyebrow={t('One small win', 'Една малка победа')} title={t('What did you do today? 🌱', 'Какво направи днес? 🌱')} description={t('Choose an action, add the details and give your green world a little growth.', 'Избери действие, добави подробности и дай малко растеж на своя зелен свят.')} action={<AppButton variant="ghost" label={t('Back', 'Назад')} icon="arrow-back" onPress={() => goBackOrReplace(router, '/habits')} />} />
+        <View accessibilityLabel={t('Logging progress', 'Напредък на записа')} style={{ flexDirection: 'row', gap: 6, marginBottom: 26 }}>
+          {[t('Topic', 'Тема'), t('Type', 'Вид'), t('Action', 'Действие'), t('Save', 'Запис')].map((label, index) => {
+            const step = selectedHabit ? 4 : showHabitsList ? 3 : selectedCategory ? 2 : 1;
+            const active = index + 1 <= step;
+            return <View key={index} style={{ flex: 1, gap: 8, alignItems: 'center', paddingVertical: 12, borderRadius: 16, backgroundColor: active ? theme.colors.primarySoft : theme.colors.surfaceMuted }}>
+              <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? theme.colors.primary : theme.colors.surface }}><Text style={[theme.typography.label, { color: active ? theme.colors.textInverse : theme.colors.textMuted }]}>{index + 1 < step ? '✓' : index + 1}</Text></View>
+              <Text style={[theme.typography.label, { color: active ? theme.colors.primary : theme.colors.textMuted, fontSize: 11 }]}>{label}</Text>
+            </View>;
+          })}
         </View>
 
         {/* Categories Section */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
-  Image,
   ImageStyle,
   ViewStyle,
   TextStyle,
-  Alert,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import supabase from '@/lib/supabase';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import Turnstile from '@/components/Turnstile';
+import Turnstile, { isTurnstileConfigured, TurnstileHandle } from '@/components/Turnstile';
 import { useAppTheme } from '@/theme';
+import { AuthBrand } from '@/components/ui/AuthBrand';
 import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface Styles {
@@ -53,13 +52,18 @@ export default function ForgotPassword() {
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [isSuccess, setIsSuccess] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileHandle>(null);
+
+  const resetCaptcha = () => {
+    setCaptchaToken(null);
+    captchaRef.current?.reset();
+  };
 
   const validateEmail = (email: string) => {
     // Trim the email to remove any leading/trailing whitespace
     const trimmedEmail = email.trim();
     
-    // Strict email regex that only allows standard email format
-    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]{0,61}[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!trimmedEmail) {
       setEmailError(t('Email is required', 'Имейлът е задължителен'));
@@ -85,6 +89,16 @@ export default function ForgotPassword() {
 
   const handleResetPassword = async () => {
     setError(undefined);
+
+    if (!isTurnstileConfigured) {
+      setError(t('Password reset is unavailable because CAPTCHA is not configured for this build.', 'Възстановяването на парола не е достъпно, защото CAPTCHA не е конфигурирана за тази версия.'));
+      return;
+    }
+
+    if (!captchaToken) {
+      setError(t('Security verification is still loading. Please try again.', 'Проверката за сигурност още се зарежда. Опитайте отново.'));
+      return;
+    }
     
     // Sanitize input before validation
     const sanitizedEmail = email.trim();
@@ -100,16 +114,20 @@ export default function ForgotPassword() {
     try {
       // Include captcha token in the options object
       const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
-        redirectTo: 'greencompass://reset-password',
+        redirectTo: Platform.OS === 'web' ? `${window.location.origin}/auth/reset-password` : 'greencompass://auth/reset-password',
         captchaToken: captchaToken || undefined,
       });
       
       if (error) {
-        setError(error.message);
+        resetCaptcha();
+        setError(error.message.toLowerCase().includes('captcha')
+          ? t('Security verification failed. Please try again.', 'Проверката за сигурност е неуспешна. Опитайте отново.')
+          : locale === 'bg' ? 'Заявката не бе успешна. Опитайте отново.' : error.message);
       } else {
         setIsSuccess(true);
       }
     } catch (err) {
+      resetCaptcha();
       setError(t('An unexpected error occurred. Please try again.', 'Възникна неочаквана грешка. Опитайте отново.'));
       console.error('Password reset error:', err);
     } finally {
@@ -127,13 +145,7 @@ export default function ForgotPassword() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.content, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1, borderRadius: theme.radii.xl }, isTabletOrLarger && { width: '100%', maxWidth: 520 }]}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/images/GCLogo-rich-premium-original-shape.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <AuthBrand />
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.colors.text }]}>{t('Reset your password', 'Възстановяване на парола')}</Text>
             <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
@@ -158,11 +170,25 @@ export default function ForgotPassword() {
 
                 {/* Invisible Captcha verification */}
                 <Turnstile
+                  ref={captchaRef}
                   onVerify={(token) => {
                     setCaptchaToken(token);
                     setError(undefined);
                   }}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => {
+                    setCaptchaToken(null);
+                    setError(t('Security verification could not load. Check your connection and try again.', 'Проверката за сигурност не можа да се зареди. Проверете връзката си и опитайте отново.'));
+                  }}
                 />
+
+                {!isTurnstileConfigured && !error ? (
+                  <View style={[styles.errorContainer, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.danger, borderWidth: 1 }]}>
+                    <Text style={[styles.errorText, { color: theme.colors.danger }]}>
+                      {t('Password reset is unavailable because CAPTCHA is not configured for this build.', 'Възстановяването на парола не е достъпно, защото CAPTCHA не е конфигурирана за тази версия.')}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {error && (
                   <View style={[styles.errorContainer, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.danger, borderWidth: 1 }]}>
@@ -174,8 +200,7 @@ export default function ForgotPassword() {
                   title={t('Send Reset Link', 'Изпрати връзка за възстановяване')}
                   onPress={handleResetPassword}
                   loading={loading}
-                  disabled={loading || !captchaToken}
-                  showSpinnerWhenDisabled={!captchaToken}
+                  disabled={loading || !isTurnstileConfigured || !captchaToken}
                 />
               </>
             ) : (

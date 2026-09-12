@@ -10,6 +10,7 @@ import { NotificationContainer } from '@/components/notifications/NotificationCo
 import PointsProvider from '@/context/PointsContext';
 import { ThemeProvider } from '@/theme';
 import { AppShell } from '@/components/navigation/AppShell';
+import { AppAccessGate } from '@/components/navigation/AppAccessGate';
 import { KnowledgeLocaleProvider } from '@/features/knowledge';
 import { useFonts } from 'expo-font';
 import {
@@ -22,7 +23,7 @@ import {
 const { HabitProvider } = HabitContextModule;
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Manrope_400Regular,
     Manrope_500Medium,
     Manrope_600SemiBold,
@@ -43,7 +44,8 @@ export default function RootLayout() {
     }
   }, []);
 
-  if (!fontsLoaded) return null;
+  // Keep the app usable with system fallbacks if a font request fails.
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <ThemeProvider>
@@ -56,7 +58,7 @@ export default function RootLayout() {
             <BadgesProvider>
         <AppShell>
         {/* Provide global defaults via screenOptions here */}
-        <Stack screenOptions={{ headerTitle: "" }}>
+        <Stack screenOptions={{ headerTitle: "" }} screenLayout={({ route, children }) => <AppAccessGate routeName={route.name}>{children}</AppAccessGate>}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="habits/index" options={{ headerShown: false }} />
           <Stack.Screen name="habits/goal" options={{ headerShown: false }} />

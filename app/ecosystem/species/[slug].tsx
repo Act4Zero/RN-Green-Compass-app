@@ -5,7 +5,7 @@ import { Linking, ScrollView, Text, View } from 'react-native';
 import { AppButton, Card, Content, PageHeader, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
-import { ALL_ECOSYSTEM_SPECIES, getSpeciesBiome, PlantIllustration, useEcosystem } from '@/features/ecosystem';
+import { ALL_ECOSYSTEM_SPECIES, getSpeciesBiome, getSpeciesGrowth, STAGE_LABELS, PlantIllustration, useEcosystem } from '@/features/ecosystem';
 import { useKnowledgeLocale } from '@/features/knowledge';
 import { useAppTheme } from '@/theme';
 import { goBackOrReplace } from '@/utils/navigation';
@@ -17,7 +17,7 @@ export default function EcosystemSpeciesScreen() {
   const { locale, t } = useKnowledgeLocale();
   const { user } = useAuth();
   const { pointHistory } = usePoints();
-  const { snapshot, selectSpecies } = useEcosystem(user?.id, pointHistory);
+  const { snapshot, selectSpecies, loading, saving, error } = useEcosystem(user?.id, pointHistory);
   const species = ALL_ECOSYSTEM_SPECIES.find((entry) => entry.slug === slug);
 
   if (!species) {
@@ -34,11 +34,12 @@ export default function EcosystemSpeciesScreen() {
         <Content>
           <PageHeader eyebrow={speciesBiome?.name[locale] || t('Species field note', 'Полеви бележки за вида')} title={species.name[locale]} description={species.scientificName} action={<AppButton label={t('Back', 'Назад')} icon="arrow-back" variant="ghost" onPress={() => goBackOrReplace(router, '/ecosystem')} />} />
           <Card elevated style={{ padding: 0, overflow: 'hidden', marginBottom: 18 }}>
-            <View style={{ minHeight: 210, padding: 28, justifyContent: 'flex-end', backgroundColor: theme.colors.primary }}>
-              <View style={{ position: 'absolute', right: -20, top: -30, width: 210, height: 210, borderRadius: 105, backgroundColor: theme.colors.accent, opacity: 0.15 }} />
-              <View style={{ position: 'absolute', right: 24, bottom: 10, width: 160, height: 180, alignItems: 'center', justifyContent: 'center' }}><PlantIllustration stage="mature" size={160} speciesSlug={species.slug} /></View>
-              <Text style={[theme.typography.h1, { color: '#FFFFFF', marginTop: 16 }]}>{species.name[locale]}</Text>
-              <Text style={[theme.typography.body, { color: '#D8EAE0', fontStyle: 'italic', marginTop: 3 }]}>{species.scientificName}</Text>
+            <View style={{ height: 260, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surfaceMuted }}>
+              <PlantIllustration stage="mature" size={230} speciesSlug={species.slug} />
+            </View>
+            <View style={{ padding: 20, gap: 6 }}>
+              <Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('Botanical portrait · mature plant', 'Ботанически портрет · зряло растение')}</Text>
+              <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted }]}>{unlocked ? t(`In your world: ${STAGE_LABELS[getSpeciesGrowth(snapshot.growthUnits, species).stage].en}`, `В твоя свят: ${STAGE_LABELS[getSpeciesGrowth(snapshot.growthUnits, species).stage].bg}`) : t('Discover this species as your habitat grows.', 'Ще откриеш този вид, докато местообитанието ти расте.')}</Text>
             </View>
           </Card>
 
@@ -54,8 +55,9 @@ export default function EcosystemSpeciesScreen() {
             <AppButton label={species.sourceLabel} variant="ghost" icon="open-outline" onPress={() => void Linking.openURL(species.sourceUrl)} />
           </Card>
 
+          {error ? <Text accessibilityRole="alert" style={[theme.typography.bodySmall, { color: theme.colors.danger, marginBottom: 12 }]}>{t('The selection could not be saved. Please try again.', 'Изборът не можа да се запази. Опитай отново.')}</Text> : null}
           {unlocked ? (
-            <AppButton disabled={active} label={active ? t('Currently growing', 'В момента отглеждаш този вид') : t('Grow this species', 'Отглеждай този вид')} icon={active ? 'checkmark-circle-outline' : 'leaf-outline'} onPress={async () => { const selected = await selectSpecies(species.slug); if (selected) router.back(); }} style={{ marginBottom: 32 }} />
+            <AppButton loading={saving} disabled={active || loading} label={active ? t('Your favourite species', 'Твоят любим вид') : t('Choose as favourite', 'Избери за любим вид')} icon={active ? 'checkmark-circle-outline' : 'leaf-outline'} onPress={async () => { const selected = await selectSpecies(species.slug); if (selected) goBackOrReplace(router, '/ecosystem'); }} style={{ marginBottom: 32 }} />
           ) : (
             <StatePanel icon="lock-closed-outline" title={t('Not unlocked yet', 'Все още не е отключен')} message={t(`This species joins your collection at ${species.unlockAt} growth units. You currently have ${snapshot.growthUnits}.`, `Този вид се добавя при ${species.unlockAt} единици растеж. В момента имаш ${snapshot.growthUnits}.`)} />
           )}

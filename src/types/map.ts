@@ -233,6 +233,9 @@ export interface MapRendererProps {
   cameraCommand: MapCameraCommand | null;
   userLocation: MapPoint | null;
   searchPoint?: MapPoint | null;
+  cyclingVisible?: boolean;
+  cyclingPlacesVisible?: boolean;
+  onCyclingFeaturePress?: (id: string) => void;
   reducedMotion: boolean;
   mode: MapExperienceMode;
   quality: LivingPlanetQuality;

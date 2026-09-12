@@ -39,7 +39,7 @@ export function SelectedHabitSection({
     return (
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            {t('4. Add the details', '4. Добави подробности')}
+            {selectedHabit ? t('4. Add the details', '4. Добави подробности') : t('Your next action', 'Твоето следващо действие')}
           </Text>
           
           {selectedHabit ? (

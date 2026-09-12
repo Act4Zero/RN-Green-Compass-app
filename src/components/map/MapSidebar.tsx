@@ -10,7 +10,7 @@ import { getCategoryConfig } from '../../utils/categoryUtils';
 import { searchBulgarianAddress } from '../../services/geocodingService';
 import type { GeocodingResult } from '../../services/geocodingService';
 
-export default function MapSidebar({ compact = false, onAddressSearchResult }: { compact?: boolean; onAddressSearchResult?: (result: GeocodingResult) => void }) {
+export default function MapSidebar({ compact = false, onAddressSearchResult, cyclingEnabled = false, onToggleCycling }: { cyclingEnabled?: boolean; onToggleCycling?: () => void; compact?: boolean; onAddressSearchResult?: (result: GeocodingResult) => void }) {
   const map = useMapIntegration();
   const { t } = useAppLocale();
   const { theme } = useAppTheme();
@@ -70,21 +70,21 @@ export default function MapSidebar({ compact = false, onAddressSearchResult }: {
           </View>
           {desktop && !compact ? (
             <View style={{ minWidth: 180 }}>
-              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Sustainability Globe', 'Глобус на устойчивостта')}</Text>
+              <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{t('Go explore 🌍', 'Открий навън 🌍')}</Text>
               <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, fontSize: 12 }]}>{map.locations.length} {t('verified places · Bulgaria', 'проверени места · България')}</Text>
             </View>
           ) : null}
-          <View style={{ flex: 1, minHeight: compact ? 42 : 46, borderRadius: compact ? theme.radii.pill : theme.radii.md, borderWidth: 1, borderColor: theme.colors.borderStrong, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.sm }}>
+          <View style={{ flex: 1, minWidth: 0, minHeight: 50, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.borderStrong, backgroundColor: theme.colors.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.sm }}>
             <Ionicons name="search" size={19} color={theme.colors.textMuted} />
             <TextInput
               value={map.query}
               onChangeText={(value) => { map.setQuery(value); setAddressResult(null); setAddressError(null); }}
               onSubmitEditing={() => void submitAddressSearch()}
-              placeholder={t('Search a place or address', 'Търсете място или адрес')}
+              placeholder={t('A place or address…', 'Място или адрес…')}
               placeholderTextColor={theme.colors.textMuted}
               accessibilityLabel={t('Search places and addresses', 'Търсете места и адреси')}
               returnKeyType="search"
-              style={[theme.typography.bodySmall, { flex: 1, color: theme.colors.text, paddingHorizontal: theme.spacing.sm, paddingVertical: Platform.OS === 'web' ? 10 : 8 }]}
+              style={[theme.typography.bodySmall, { flex: 1, minWidth: 0, color: theme.colors.text, paddingHorizontal: theme.spacing.sm, paddingVertical: Platform.OS === 'web' ? 10 : 8 }]}
             />
             {map.query ? <Pressable accessibilityLabel={t('Clear search', 'Изчистете търсенето')} onPress={() => { map.setQuery(''); setAddressResult(null); setAddressError(null); }} hitSlop={8}><Ionicons name="close-circle" size={20} color={theme.colors.textMuted} /></Pressable> : null}
             <Pressable accessibilityRole="button" accessibilityLabel={t('Find address', 'Намерете адреса')} disabled={isAddressSearching} onPress={() => void submitAddressSearch()} hitSlop={8} style={{ width: 34, height: 34, marginLeft: 6, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primary }}>
@@ -110,7 +110,9 @@ export default function MapSidebar({ compact = false, onAddressSearchResult }: {
             </Pressable>
           )}
         </View>
+        {compact && onToggleCycling ? <Pressable accessibilityRole="button" accessibilityLabel={t('Show Sofia cycleways', 'Покажи велоалеите в София')} onPress={onToggleCycling} style={{ minHeight: 44, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 }}><Ionicons name="bicycle" size={22} color={theme.colors.primary} /><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('Sofia cycleways', 'Велоалеи · София')}</Text></Pressable> : null}
         {!compact ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: theme.spacing.xs, alignItems: 'center' }}>
+          {onToggleCycling ? <Pressable accessibilityRole="button" accessibilityLabel={t('Show Sofia cycleways', 'Покажи велоалеите в София')} accessibilityState={{ selected: cyclingEnabled }} onPress={onToggleCycling} style={{ minHeight: 44, borderRadius: theme.radii.pill, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: cyclingEnabled ? theme.colors.primary : theme.colors.accentSoft, borderWidth: 1, borderColor: theme.colors.primary }}><Ionicons name="bicycle" size={21} color={cyclingEnabled ? theme.colors.textInverse : theme.colors.primary} /><Text style={[theme.typography.label, { color: cyclingEnabled ? theme.colors.textInverse : theme.colors.primary }]}>{t('Sofia cycleways', 'Велоалеи · София')}</Text></Pressable> : null}
           <Animated.View style={{ transform: [{ scale: pulse }], flexDirection: 'row', gap: theme.spacing.xs }}>
             {map.availableCategories.map((category: LocationCategory) => {
               const config = getCategoryConfig(category);
@@ -121,9 +123,9 @@ export default function MapSidebar({ compact = false, onAddressSearchResult }: {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                   onPress={() => map.toggleCategory(category, !active)}
-                  style={{ minHeight: 40, borderRadius: theme.radii.pill, paddingHorizontal: theme.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: active ? theme.colors.primary : theme.colors.surface, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.borderStrong }}
+                  style={{ minHeight: 44, borderRadius: theme.radii.pill, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: active ? theme.colors.primary : theme.colors.surface, borderWidth: 1, borderColor: active ? theme.colors.primary : theme.colors.borderStrong }}
                 >
-                  <Ionicons name={config.icon as any} size={17} color={active ? theme.colors.accent : theme.colors.textMuted} />
+                  <View style={{ width: 26, height: 26, borderRadius: 9, backgroundColor: `${config.color}22`, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={config.icon as any} size={17} color={active ? theme.colors.accent : config.color} /></View>
                   <Text style={[theme.typography.label, { color: active ? theme.colors.textInverse : theme.colors.text }]}>{t(config.label, config.labelBg)}</Text>
                 </Pressable>
               );

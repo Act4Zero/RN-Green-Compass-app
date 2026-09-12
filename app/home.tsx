@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { GoalsHeader, GoalsList } from '@/components/home/GoalsList';
 import EditGoalModal from '@/components/modals/EditGoalModal';
 import { AppButton, Card, Content, PageHeader, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { usePoints } from '@/context/PointsContext';
 import { EcosystemHero, useEcosystem } from '@/features/ecosystem';
+import { GrowthActions } from '@/features/ecosystem/components/GrowthActions';
+import { KNOWLEDGE_ILLUSTRATIONS } from '@/features/knowledge/visuals';
 import { knowledgeService, type KnowledgeItemDetail, useKnowledgeLocale } from '@/features/knowledge';
 import { marketplaceService, type MarketplaceRecommendation } from '@/features/marketplace';
 import useGoalsManager from '@/hooks/useGoalsManager';
@@ -62,10 +64,12 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => {
-    void knowledgeService.getKnowledgeHome({ userId: user?.id })
-      .then((result) => setDailyDose(result.dailyDose))
+    let current = true;
+    void knowledgeService.getKnowledgeHome({ userId: user?.id, locale })
+      .then((result) => { if (current) setDailyDose(result.dailyDose); })
       .catch(() => undefined);
-  }, [user?.id]);
+    return () => { current = false; };
+  }, [user?.id, locale]);
 
   useEffect(() => {
     if (!marketplaceEnabled) return;
@@ -93,9 +97,9 @@ export default function Home() {
     { label: t('Current streak', 'Текуща серия'), value: `${overallStreak || 0} ${t('days', 'дни')}`, icon: 'flame-outline' as const },
   ];
   const actions = [
-    { label: t('Log an action', 'Запиши действие'), detail: t('Give today one sustainable choice.', 'Добави един устойчив избор за днес.'), icon: 'add-circle-outline' as const, route: '/habits/log' as const },
-    { label: t('Explore the map', 'Разгледай картата'), detail: t('Find greener places nearby.', 'Открий по-зелени места наблизо.'), icon: 'map-outline' as const, route: '/map' as const },
-    { label: t('Join a challenge', 'Включи се в предизвикателство'), detail: t('Grow together with the community.', 'Развивайте се заедно с общността.'), icon: 'people-outline' as const, route: '/community/challenges' as const },
+    { label: t('Explore your interests', 'Открий своите теми'), detail: t('Quick reads, quizzes and ideas for real life.', 'Кратки четива, тестове и идеи за ежедневието.'), emoji: '💡', icon: 'bulb-outline' as const, route: '/knowledge' as const },
+    { label: t('Explore the map', 'Разгледай картата'), detail: t('Find greener places nearby.', 'Открий по-зелени места наблизо.'), emoji: '🧭', icon: 'map-outline' as const, route: '/map' as const },
+    { label: t('Join a challenge', 'Включи се в предизвикателство'), detail: t('Grow together with the community.', 'Развивайте се заедно с общността.'), emoji: '🤝', icon: 'people-outline' as const, route: '/community/challenges' as const },
   ];
 
   const handleUpdateGoal = async (goalId: string, updates: { goalName: string; category: string; targetValue: number; currentValue: number; timeFrequency: TimeFrequency }) => updateGoal(goalId, updates);
@@ -107,20 +111,23 @@ export default function Home() {
         <Content wide>
           <PageHeader
             eyebrow={t('Your compass', 'Твоят компас')}
-            title={t(`Welcome back${displayIdentifier ? `, ${displayIdentifier}` : ''}`, `Добре дошъл отново${displayIdentifier ? `, ${displayIdentifier}` : ''}`)}
-            description={t('A living view of the good choices you are building, one meaningful action at a time.', 'Жив образ на добрите избори, които изграждаш — едно смислено действие след друго.')}
-            action={wide ? <AppButton label={t('Log action', 'Запиши действие')} icon="add" onPress={() => router.push('/habits/log')} /> : undefined}
+            title={t(`Hello${displayIdentifier ? `, ${displayIdentifier}` : ''} 👋`, `Здравей${displayIdentifier ? `, ${displayIdentifier}` : ''} 👋`)}
+            description={t('A small step today. A greener world tomorrow.', 'Малка стъпка днес. По-зелен свят утре.')}
+            action={<AppButton label={t('Log action', 'Запиши действие')} icon="add" onPress={() => router.push('/habits/log')} />}
           />
 
-          {ecosystemEnabled ? <EcosystemHero snapshot={snapshot} loading={ecosystemLoading} onOpen={() => router.push('/ecosystem' as any)} /> : null}
+          {ecosystemEnabled ? <View style={{ flexDirection: width >= 1180 ? 'row' : 'column', gap: 20, marginBottom: 22 }}>
+            <View style={{ flex: width >= 1180 ? 1.6 : undefined }}><EcosystemHero snapshot={snapshot} loading={ecosystemLoading} onOpen={() => router.push('/ecosystem' as any)} /></View>
+            <View style={{ flex: width >= 1180 ? 1 : undefined, justifyContent: 'center' }}><GrowthActions /></View>
+          </View> : null}
 
-          <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 28 }}>
             {metrics.map((metric) => (
-              <Card key={metric.label} style={{ flex: 1, padding: 18 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <Card key={metric.label} style={{ flex: 1, padding: wide ? 18 : 10 }}>
+                <View style={{ flexDirection: wide ? 'row' : 'column-reverse', alignItems: wide ? 'center' : 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[theme.typography.metric, { color: theme.colors.text, fontSize: 25 }]}>{metric.value}</Text>
-                    <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3 }]}>{metric.label}</Text>
+                    <Text style={[theme.typography.metric, { color: theme.colors.text, fontSize: wide ? 25 : 18 }]}>{metric.value}</Text>
+                    <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 3, fontSize: wide ? 14 : 11, lineHeight: wide ? 21 : 16 }]}>{metric.label}</Text>
                   </View>
                   <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name={metric.icon} size={20} color={theme.colors.primary} /></View>
                 </View>
@@ -128,16 +135,17 @@ export default function Home() {
             ))}
           </View>
 
-          <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{t('One good next step', 'Една добра следваща стъпка')}</Text>
+          <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{t('A little inspiration ✨', 'Малко вдъхновение ✨')}</Text>
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 30 }}>
             <Card style={{ flex: 1, padding: 20, backgroundColor: theme.colors.accentSoft }}>
               <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="sparkles-outline" size={22} color={theme.colors.accent} /></View>
               <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', marginTop: 16 }]}>{t("Today's eco practice", 'Днешната еко практика')}</Text>
               <Text style={[theme.typography.h3, { color: theme.colors.text, marginTop: 6, marginBottom: 16 }]}>{t('A small challenge and reflection are ready.', 'Кратко предизвикателство и размисъл те очакват.')}</Text>
-              <AppButton label={t('Check in', 'Отбележи')} icon="arrow-forward" onPress={() => router.push('/habits/today' as any)} />
+              <AppButton label={t('See today’s challenge', 'Виж днешната мисия')} icon="arrow-forward" onPress={() => router.push('/habits/today' as any)} />
             </Card>
             {dailyDose ? (
               <Card style={{ flex: 1, padding: 20 }}>
+                {dailyDose.topicSlugs[0] && KNOWLEDGE_ILLUSTRATIONS[dailyDose.topicSlugs[0]] ? <Image source={KNOWLEDGE_ILLUSTRATIONS[dailyDose.topicSlugs[0]]} resizeMode="cover" style={{ width: '100%', height: 130, borderRadius: 14, marginBottom: 14 }} /> : null}
                 <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="bulb-outline" size={22} color={theme.colors.primary} /></View>
                 <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', marginTop: 16 }]}>{t('Daily knowledge dose', 'Дневна доза знание')}</Text>
                 <Text numberOfLines={2} style={[theme.typography.h3, { color: theme.colors.text, marginTop: 6, marginBottom: 16 }]}>{dailyDose.title}</Text>
@@ -161,12 +169,12 @@ export default function Home() {
           <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 14 }]}>{t('Choose your next move', 'Избери следващата си стъпка')}</Text>
           <View style={{ flexDirection: wide ? 'row' : 'column', gap: 12, marginBottom: 30 }}>
             {actions.map((action) => (
-              <Card key={action.label} style={{ flex: 1, padding: 18 }}>
-                <View style={{ width: 43, height: 43, borderRadius: 14, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}><Ionicons name={action.icon} size={21} color={theme.colors.primary} /></View>
+              <Pressable key={action.label} accessibilityRole="button" accessibilityLabel={action.label} onPress={() => router.push(action.route as any)} style={({ pressed }) => ({ flex: 1, padding: 20, borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: pressed ? theme.colors.primarySoft : theme.colors.surface })}>
+                <View style={{ width: 43, height: 43, borderRadius: 14, backgroundColor: theme.colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}><Text style={{ fontSize: 25 }}>{action.emoji}</Text></View>
                 <Text style={[theme.typography.h3, { color: theme.colors.text }]}>{action.label}</Text>
                 <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 4, marginBottom: 14 }]}>{action.detail}</Text>
-                <AppButton label={t('Open', 'Отвори')} variant="ghost" icon="arrow-forward" onPress={() => router.push(action.route as any)} />
-              </Card>
+                <Ionicons name="arrow-forward" size={22} color={theme.colors.primary} />
+              </Pressable>
             ))}
           </View>
 

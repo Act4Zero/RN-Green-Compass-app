@@ -38,55 +38,40 @@ const SEED_ASSETS: Record<string, ImageSourcePropType> = {
   'kapok-tree': require('../../../../assets/images/ecosystem/kapok-seed-realistic.webp'),
 };
 
-const STAGE_SCALE: Record<EcosystemStage, number> = {
-  seed: 0,
-  sprout: 0.42,
-  young: 0.68,
-  leafy: 0.86,
-  mature: 1,
+const MATURE_ASSETS: Record<string, ImageSourcePropType> = {
+  'english-oak': ENGLISH_OAK_MATURE,
+  'small-leaved-lime': require('../../../../assets/images/ecosystem/small-leaved-lime-mature-v2.webp'),
+  'cornelian-cherry': require('../../../../assets/images/ecosystem/cornelian-cherry-mature-v2.webp'),
+  'dog-rose': require('../../../../assets/images/ecosystem/dog-rose-mature-v2.webp'),
 };
 
-export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oak' }: { stage: EcosystemStage; size?: number; speciesSlug?: string }) {
+const EARLY_GROWTH_ATLAS = require('../../../../assets/images/ecosystem/botanical-early-growth-atlas-v1.png');
+const ATLAS_COLUMN: Record<string, number> = { 'english-oak': 0, 'umbrella-thorn': 1, 'kapok-tree': 2 };
+const STAGE_MATURITY: Record<EcosystemStage, number> = { seed: 0, sprout: .1, young: .3, leafy: .6, mature: 1 };
+
+export function PlantIllustration({ stage, size = 180, speciesSlug = 'english-oak', maturity = STAGE_MATURITY[stage] }: { stage: EcosystemStage; size?: number; speciesSlug?: string; maturity?: number }) {
+  const column = ATLAS_COLUMN[speciesSlug];
   if (stage === 'seed') {
     return (
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-        <Image
-          source={SEED_ASSETS[speciesSlug] || ENGLISH_OAK_SEED}
-          resizeMode="contain"
-          style={{ position: 'absolute', width: size * 0.56, height: size * 0.56, left: size * 0.22, bottom: size * 0.12 }}
-        />
-        <Image
-          source={FOREST_SOIL}
-          resizeMode="contain"
-          style={{ position: 'absolute', width: size * 0.88, height: size * 0.39, left: size * 0.06, bottom: -size * 0.025 }}
-        />
+        <Image source={FOREST_SOIL} resizeMode="contain" style={{ position: 'absolute', width: size * .55, height: size * .18, left: size * .225, bottom: -size * .04 }} />
+        {SEED_ASSETS[speciesSlug] ? <Image source={SEED_ASSETS[speciesSlug]} resizeMode="contain" style={{ position: 'absolute', width: size * .23, height: size * .23, left: size * .385, bottom: 0 }} /> : <View style={{ position: 'absolute', width: size * .045, height: size * .03, borderRadius: 9, left: size * .48, bottom: size * .025, backgroundColor: '#66492B' }} />}
       </View>
     );
   }
-
-  const scale = STAGE_SCALE[stage];
-  const imageHeight = size * 1.34;
-  const imageWidth = imageHeight * (2 / 3);
+  const scale = .2 + .8 * Math.sqrt(Math.max(0, Math.min(1, maturity)));
+  const drawSize = size * scale;
+  const juvenile = (column != null || MATURE_ASSETS[speciesSlug] != null) && stage !== 'mature';
+  const matureOpacity = stage === 'leafy' ? Math.max(0, (maturity - .6) / .4) : stage === 'mature' ? 1 : 0;
+  const row = stage === 'sprout' ? 0 : 1;
 
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-      <Image
-        source={stage === 'mature' && speciesSlug === 'english-oak' ? ENGLISH_OAK_MATURE : SPECIES_ASSETS[speciesSlug] || SPECIES_ASSETS['english-oak']}
-        resizeMode="contain"
-        style={{
-          position: 'absolute',
-          width: imageWidth,
-          height: imageHeight,
-          left: (size - imageWidth) / 2,
-          bottom: -imageHeight * (1 - scale) / 2,
-          transform: [{ scale }],
-        }}
-      />
-      {stage !== 'mature' ? <Image
-        source={FOREST_SOIL}
-        resizeMode="contain"
-        style={{ position: 'absolute', width: size * 0.94, height: size * 0.42, left: size * 0.03, bottom: -size * 0.035 }}
-      /> : null}
+      {juvenile && column != null ? <View style={{ position: 'absolute', width: drawSize, height: drawSize, left: (size - drawSize) / 2, bottom: 0, overflow: 'hidden', opacity: 1 - matureOpacity }}>
+        <Image source={EARLY_GROWTH_ATLAS} style={{ position: 'absolute', width: drawSize * 3, height: drawSize * 2, left: -column * drawSize, top: -row * drawSize + drawSize * (row === 0 ? .27 : .04) }} />
+      </View> : null}
+      {juvenile && column == null ? <Image source={SPECIES_ASSETS[speciesSlug]} resizeMode="contain" style={{ position: 'absolute', width: drawSize, height: drawSize, left: (size - drawSize) / 2, bottom: 0, opacity: 1 - matureOpacity }} /> : null}
+      {!juvenile || matureOpacity > 0 ? <Image source={MATURE_ASSETS[speciesSlug] || SPECIES_ASSETS[speciesSlug] || SPECIES_ASSETS['english-oak']} resizeMode="contain" style={{ position: 'absolute', width: drawSize, height: drawSize, left: (size - drawSize) / 2, bottom: MATURE_ASSETS[speciesSlug] && speciesSlug !== 'english-oak' ? -drawSize * .065 : 0, opacity: juvenile ? matureOpacity : 1 }} /> : null}
     </View>
   );
 }

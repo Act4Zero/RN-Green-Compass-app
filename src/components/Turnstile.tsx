@@ -1,200 +1,254 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Platform, StyleSheet, ViewStyle } from 'react-native';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
+import { Platform, StyleSheet, View, ViewStyle } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Constants from 'expo-constants';
 
 interface TurnstileProps {
   onVerify: (token: string) => void;
+  onExpire?: () => void;
+  onError?: (code?: string) => void;
   style?: ViewStyle;
 }
 
-const turnstileSiteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || Constants.expoConfig?.extra?.turnstileSiteKey || '';
+export interface TurnstileHandle {
+  reset: () => void;
+}
+
+const turnstileSiteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY
+  || Constants.expoConfig?.extra?.turnstileSiteKey
+  || '';
+const turnstileBaseUrl = process.env.EXPO_PUBLIC_TURNSTILE_BASE_URL
+  || Constants.expoConfig?.extra?.turnstileBaseUrl
+  || 'https://rn-green-compass-app.vercel.app';
+
 export const isTurnstileConfigured = Boolean(turnstileSiteKey);
 
-// HTML content for the Turnstile widget - Invisible mode
 const getTurnstileHTML = (siteKey: string) => `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Turnstile</title>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #turnstile-container {
-      width: 100%;
-      height: 100px;
-    }
-  </style>
 </head>
 <body>
   <div id="turnstile-container"></div>
   <script>
-    // Wait for turnstile to be available
-    function waitForTurnstile() {
+    function postMessage(type, payload) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, ...payload }));
+    }
+
+    function waitForTurnstile(attempt) {
       if (window.turnstile) {
-        renderTurnstile();
+        window.turnstileWidgetId = window.turnstile.render('#turnstile-container', {
+          sitekey: ${JSON.stringify(siteKey)},
+          callback: function(token) { postMessage('verify', { token: token }); },
+          'expired-callback': function() { postMessage('expired', {}); },
+          'error-callback': function(code) { postMessage('error', { code: code }); },
+          'timeout-callback': function() { postMessage('error', { code: 'challenge-timeout' }); },
+          theme: 'auto',
+          size: 'compact',
+          appearance: 'interaction-only',
+          action: 'auth'
+        });
+      } else if (attempt < 150) {
+        setTimeout(function() { waitForTurnstile(attempt + 1); }, 100);
       } else {
-        setTimeout(waitForTurnstile, 100);
+        postMessage('error', { code: 'load-timeout' });
       }
     }
 
-    function renderTurnstile() {
-      window.turnstile.render('#turnstile-container', {
-        sitekey: '${siteKey}',
-        callback: function(token) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'verify', token: token }));
-        },
-        'theme': 'light',
-        'size': 'invisible',
-        'action': 'auth'
-      });
-    }
-
-    // Start waiting for turnstile when page loads
-    window.onload = waitForTurnstile;
+    window.onload = function() { waitForTurnstile(0); };
   </script>
 </body>
 </html>
 `;
 
-// Declare the global window interface to include Turnstile properties
 declare global {
   interface Window {
-    onloadTurnstileCallback?: () => void;
     turnstile?: {
-      render: (container: HTMLElement, options: any) => string;
-      execute: (widgetId: string) => void;
+      render: (container: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
     };
   }
 }
 
-// Web implementation using the Turnstile script directly
-const WebTurnstile: React.FC<TurnstileProps> = ({ onVerify, style }) => {
+const WebTurnstile = forwardRef<TurnstileHandle, TurnstileProps>(function WebTurnstile(
+  { onVerify, onExpire, onError },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const onVerifyRef = useRef(onVerify);
+  const onExpireRef = useRef(onExpire);
+  const onErrorRef = useRef(onError);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => { onVerifyRef.current = onVerify; }, [onVerify]);
+  useEffect(() => { onExpireRef.current = onExpire; }, [onExpire]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
 
   useEffect(() => {
-    if (!turnstileSiteKey) return;
+    if (!turnstileSiteKey || window.turnstile) {
+      setIsLoaded(Boolean(window.turnstile));
+      return;
+    }
 
-    // Check if the Turnstile script is already loaded
-    if (!document.querySelector('script[src*="turnstile/v0/api.js"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback';
+    let script = document.querySelector<HTMLScriptElement>('script[src*="turnstile/v0/api.js"]');
+    if (script?.dataset.gcTurnstileFailed === 'true') {
+      script.remove();
+      script = null;
+    }
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
       script.async = true;
       script.defer = true;
-      window.onloadTurnstileCallback = () => {
-        setIsLoaded(true);
-      };
       document.head.appendChild(script);
-    } else {
-      setIsLoaded(true);
     }
 
-    return () => {
-      // Clean up if needed
-      if (window.onloadTurnstileCallback) {
-        delete window.onloadTurnstileCallback;
-      }
+    const handleScriptError = () => {
+      if (script) script.dataset.gcTurnstileFailed = 'true';
+      onErrorRef.current?.('script-load-failed');
     };
-  }, []);
+    script.addEventListener('error', handleScriptError);
+
+    let attempts = 0;
+    const poll = window.setInterval(() => {
+      attempts += 1;
+      if (window.turnstile) {
+        window.clearInterval(poll);
+        setIsLoaded(true);
+      } else if (attempts >= 150) {
+        window.clearInterval(poll);
+        if (script) script.dataset.gcTurnstileFailed = 'true';
+        onErrorRef.current?.('load-timeout');
+      }
+    }, 100);
+
+    return () => {
+      window.clearInterval(poll);
+      script?.removeEventListener('error', handleScriptError);
+    };
+  }, [attempt]);
 
   useEffect(() => {
-    let widgetId: string | null = null;
-    
-    if (isLoaded && containerRef.current && window.turnstile) {
-      try {
-        // Render the widget
-        widgetId = window.turnstile.render(containerRef.current, {
-          sitekey: turnstileSiteKey,
-          callback: onVerify,
-          theme: 'light',
-          size: 'invisible',
-          action: 'auth',
-        });
-      } catch (error) {
-        console.error('Error rendering Turnstile widget:', error);
-      }
-    }
-    
-    // Clean up function
-    return () => {
-      try {
-        if (widgetId && window.turnstile) {
-          window.turnstile.remove(widgetId);
-        }
-      } catch (error) {
-        console.error('Error removing Turnstile widget:', error);
-      }
-    };
-  }, [isLoaded, onVerify]);
+    if (!isLoaded || !containerRef.current || !window.turnstile || widgetIdRef.current) return;
 
-  // Use inline style object for React DOM - invisible mode
+    try {
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: turnstileSiteKey,
+        callback: (token: string) => onVerifyRef.current(token),
+        'expired-callback': () => onExpireRef.current?.(),
+        'error-callback': (code: string) => onErrorRef.current?.(code),
+        'timeout-callback': () => onErrorRef.current?.('challenge-timeout'),
+        theme: 'auto',
+        size: 'compact',
+        appearance: 'interaction-only',
+        action: 'auth',
+      });
+    } catch (error) {
+      console.error('Error rendering Turnstile widget:', error);
+      onErrorRef.current?.('render-failed');
+    }
+
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (error) {
+          console.error('Error removing Turnstile widget:', error);
+        }
+      }
+      widgetIdRef.current = null;
+    };
+  }, [isLoaded, attempt]);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      if (typeof window === 'undefined') return;
+      if (widgetIdRef.current && window.turnstile) {
+        try {
+          window.turnstile.reset(widgetIdRef.current);
+          return;
+        } catch {
+          // A removed or failed widget needs a fresh render.
+        }
+      }
+      setIsLoaded(Boolean(window.turnstile));
+      setAttempt(value => value + 1);
+    },
+  }), []);
+
   return (
-    <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+    <div style={{ alignSelf: 'center', maxWidth: '100%' }}>
       <div ref={containerRef} />
     </div>
   );
-};
+});
 
-// Mobile implementation using WebView
-const MobileTurnstile: React.FC<TurnstileProps> = ({ onVerify, style }) => {
-  const handleMessage = (event: any) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'verify' && data.token) {
-        onVerify(data.token);
-      }
-    } catch (error) {
-      console.error('Error parsing Turnstile message:', error);
-    }
-  };
+const MobileTurnstile = forwardRef<TurnstileHandle, TurnstileProps>(function MobileTurnstile(
+  { onVerify, onExpire, onError, style },
+  ref,
+) {
+  const webViewRef = useRef<WebView>(null);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      webViewRef.current?.reload();
+    },
+  }), []);
 
   return (
     <View style={[styles.container, style]}>
       <WebView
-        source={{ html: getTurnstileHTML(turnstileSiteKey) }}
-        onMessage={handleMessage}
+        ref={webViewRef}
+        source={{ html: getTurnstileHTML(turnstileSiteKey), baseUrl: turnstileBaseUrl }}
+        originWhitelist={['https://*', 'about:*']}
+        onMessage={(event) => {
+          try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'verify' && data.token) onVerify(data.token);
+            if (data.type === 'expired') onExpire?.();
+            if (data.type === 'error') onError?.(data.code);
+          } catch (error) {
+            console.error('Error parsing Turnstile message:', error);
+            onError?.('invalid-message');
+          }
+        }}
+        onError={() => onError?.('webview-load-failed')}
         style={styles.webview}
         scrollEnabled={false}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
+        javaScriptEnabled
+        domStorageEnabled
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
       />
     </View>
   );
-};
+});
 
-// Platform-specific component export
-export default function Turnstile(props: TurnstileProps) {
+const Turnstile = forwardRef<TurnstileHandle, TurnstileProps>(function Turnstile(props, ref) {
   if (!isTurnstileConfigured) return null;
+  return Platform.OS === 'web'
+    ? <WebTurnstile ref={ref} {...props} />
+    : <MobileTurnstile ref={ref} {...props} />;
+});
 
-  return Platform.OS === 'web' ? (
-    <WebTurnstile {...props} />
-  ) : (
-    <MobileTurnstile {...props} />
-  );
-}
+export default Turnstile;
 
 const styles = StyleSheet.create({
   container: {
-    // For invisible Captcha, we need a small container that can be positioned off-screen
-    height: 100,
+    height: 156,
     width: '100%',
-    position: 'absolute',
-    opacity: 0,
-    pointerEvents: 'none',
-    zIndex: -1,
   },
   webview: {
     flex: 1,

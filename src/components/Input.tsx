@@ -11,9 +11,11 @@ import {
   KeyboardTypeOptions,
   NativeSyntheticEvent,
   TextInputFocusEventData,
+  TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme';
+import { useAppLocale } from '@/context/AppLocaleContext';
 
 interface InputProps {
   label?: string;
@@ -27,7 +29,7 @@ interface InputProps {
   style?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
   onBlur?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
-  autoComplete?: 'email' | 'password' | 'off' | 'name';
+  autoComplete?: TextInputProps['autoComplete'];
   isPassword?: boolean;
   showPasswordStrength?: boolean;
   multiline?: boolean;
@@ -71,6 +73,7 @@ const Input: React.FC<InputProps> = ({
   maxLength,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useAppLocale();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -135,6 +138,7 @@ const Input: React.FC<InputProps> = ({
       {isPassword ? (
         <View style={[styles.passwordContainer, { backgroundColor: theme.colors.surface, borderColor: error ? theme.colors.danger : isFocused ? theme.colors.primary : theme.colors.borderStrong }]}>
           <TextInput
+            accessibilityLabel={label || placeholder}
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
@@ -146,8 +150,11 @@ const Input: React.FC<InputProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             autoComplete={autoComplete}
+            maxLength={maxLength}
           />
           <TouchableOpacity 
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? t('Hide password', 'Скрий паролата') : t('Show password', 'Покажи паролата')}
             style={styles.passwordToggle} 
             onPress={togglePasswordVisibility}
           >
@@ -160,6 +167,7 @@ const Input: React.FC<InputProps> = ({
         </View>
       ) : (
         <TextInput
+          accessibilityLabel={label || placeholder}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -183,12 +191,12 @@ const Input: React.FC<InputProps> = ({
             <View style={getPasswordStrengthBarStyle()} />
           </View>
           <Text style={[styles.passwordStrengthText, { color: theme.colors.textMuted }]}>
-            {passwordStrength.label && `Password strength: ${passwordStrength.label}`}
+            {passwordStrength.label && t(`Password strength: ${passwordStrength.label}`, `Сила на паролата: ${{ Weak: 'слаба', Medium: 'средна', Strong: 'силна' }[passwordStrength.label as 'Weak' | 'Medium' | 'Strong']}`)}
           </Text>
         </View>
       )}
       
-      {error ? <Text style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text> : null}
+      {error ? <Text accessibilityRole="alert" style={[styles.errorText, { color: theme.colors.danger }]}>{error}</Text> : null}
     </View>
   );
 };
@@ -207,7 +215,8 @@ const styles = StyleSheet.create<Styles>({
   input: {
     borderWidth: 1,
     borderColor: '#DDDDDD',
-    borderRadius: 8,
+    borderRadius: 16,
+    minHeight: 52,
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
@@ -226,11 +235,16 @@ const styles = StyleSheet.create<Styles>({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#DDDDDD',
-    borderRadius: 8,
+    borderRadius: 16,
+    minHeight: 52,
     backgroundColor: '#FFFFFF',
   },
   passwordToggle: {
     padding: 10,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   passwordStrengthContainer: {
     marginTop: 8,

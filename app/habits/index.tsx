@@ -3,7 +3,8 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { ActionCard, ImpactBars, MetricCard, titleForTier } from '@/components/offsetting/OffsettingUI';
-import { AppButton, Card, Content, PageHeader, Screen, Skeleton, StatePanel } from '@/components/ui';
+import { AppButton, Card, Content, Screen, Skeleton, StatePanel } from '@/components/ui';
+import { SectionHero } from '@/components/ui/SectionHero';
 import { useAuth } from '@/context/AuthContext';
 import { offsettingService, type CarbonBalanceSummary, type OffsettingDashboard, type PersonalizedCarbonTip } from '@/features/offsetting';
 import type { KnowledgeItemSummary } from '@/features/knowledge';
@@ -61,7 +62,7 @@ export default function HabitsOverview() {
   }, [authLoading, user, router, load]));
 
   const quickActions = [
-    { title: t('Log measured activity', 'Запиши измерена дейност'), description: t('Record emissions with a reviewed factor snapshot.', 'Запиши емисии с проверен коефициент.'), icon: 'calculator-outline' as const, route: '/habits/activity' },
+    { title: t('Measure an activity', 'Измери дейност'), description: t('Add a trip, a meal or energy use and see an estimate.', 'Добави пътуване, храна или енергия и виж приблизителното въздействие.'), icon: 'calculator-outline' as const, route: '/habits/activity' },
     { title: t('Carbon goals', 'Въглеродни цели'), description: t('Create measurable reduction and consistency goals.', 'Създай измерими цели за намаляване и постоянство.'), icon: 'flag-outline' as const, route: '/habits/carbon-goals' },
     { title: t('Review history', 'Преглед на историята'), description: t('See completed habits, goals, and calendar activity.', 'Виж изпълнените навици, цели и дейности в календара.'), icon: 'calendar-outline' as const, route: '/habits/history' },
     { title: t('Compare travel', 'Сравни пътуване'), description: t('Weigh plane, train, bus, boat, and car options.', 'Сравни самолет, влак, автобус, кораб и автомобил.'), icon: 'navigate-outline' as const, route: '/habits/travel' },
@@ -76,7 +77,10 @@ export default function HabitsOverview() {
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}>
         <Content wide>
-          <PageHeader eyebrow={t('Habit-based impact', 'Въздействие чрез навици')} title={t('Your sustainability compass', 'Твоят компас за устойчивост')} description={t('Build your green identity, choose one achievable action today, and keep estimated impact visible over time.', 'Изгради своята зелена идентичност, избери едно постижимо действие днес и следи оцененото въздействие във времето.')} action={isTablet ? <AppButton label={t('Today', 'Днес')} icon="sunny-outline" onPress={() => router.push('/habits/today' as any)} /> : undefined} />
+          <SectionHero eyebrow={t('Everyday choices', 'Малките избори всеки ден')} title={t('Good habits start small', 'Голямата промяна започва с малко')} emoji="🌱" description={t('Walk, reuse, try something new. Record one action and watch your progress grow.', 'Разходи се, използвай отново, опитай нещо ново. Запиши едно действие и виж напредъка си.')} illustration={require('../../assets/images/knowledge/green-transportation.webp')} illustrationLabel={t('Illustration of greener ways to travel', 'Илюстрация на по-устойчиво придвижване')}>
+            <AppButton label={t('Log a habit', 'Запиши навик')} icon="add" onPress={() => router.push('/habits/log')} />
+            <AppButton label={t('Today’s mission', 'Днешната мисия')} icon="sunny-outline" variant="secondary" onPress={() => router.push('/habits/today' as any)} />
+          </SectionHero>
 
           {loading ? <View style={{ gap: theme.spacing.md }}><Skeleton height={190} /><Skeleton height={120} /></View> : error ? <StatePanel icon="cloud-offline-outline" title={t('Impact dashboard unavailable', 'Таблото за въздействие не е достъпно')} message={error} action={<AppButton label={t('Try again', 'Опитай отново')} onPress={() => void load()} />} /> : dashboard ? (
             <>
@@ -84,7 +88,7 @@ export default function HabitsOverview() {
                 <Card elevated style={{ backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, marginBottom: theme.spacing.lg }}>
                   <View style={{ maxWidth: 720, gap: theme.spacing.sm }}>
                     <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase' }]}>{t('Start with your baseline', 'Започни от своята основа')}</Text>
-                    <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>{t('Discover your green identity', 'Открий своята зелена идентичност')}</Text>
+                    <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>{t('Discover your green identity', 'Открий откъде да започнеш')}</Text>
                     <Text style={[theme.typography.body, { color: '#DDECE3' }]}>{t('Answer a short guided assessment to estimate the travel and household-energy sources you track. Results are directional estimates, not verified offsets.', 'Отговори на кратка насочена оценка за пътуването и домашната енергия. Резултатите са ориентировъчни оценки, а не проверени компенсации.')}</Text>
                     <AppButton label={t('Start assessment', 'Започни оценката')} icon="arrow-forward" variant="secondary" onPress={() => router.push('/habits/identity' as any)} style={{ alignSelf: 'flex-start', marginTop: 8 }} />
                   </View>
@@ -94,11 +98,11 @@ export default function HabitsOverview() {
                   <View style={{ flexDirection: isTablet ? 'row' : 'column', justifyContent: 'space-between', gap: theme.spacing.lg }}>
                     <View style={{ flex: 1, gap: theme.spacing.xs }}>
                       <Text style={[theme.typography.label, { color: theme.colors.accent, textTransform: 'uppercase' }]}>{t(titleForTier(dashboard.identity.identityTier), dashboard.identity.identityTier === 'impact_leader' ? 'Лидер по въздействие' : dashboard.identity.identityTier === 'green_builder' ? 'Зелен създател' : 'Еко изследовател')}</Text>
-                      <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>{dashboard.identity.identityScore}/100 {t('identity score', 'оценка на идентичността')}</Text>
+                      <Text style={[theme.typography.h1, { color: '#FFFFFF' }]}>{dashboard.identity.identityScore}/100 {t('identity score', 'зелен ориентир')}</Text>
                       <Text style={[theme.typography.body, { color: '#DDECE3' }]}>{t(`Estimated tracked baseline: ${dashboard.identity.annualBaselineKgCo2e.toFixed(0)} kg CO₂e/year across assessed mobility, energy, food, purchases, and waste.`, `Оценена проследявана база: ${dashboard.identity.annualBaselineKgCo2e.toFixed(0)} kg CO₂e/година за мобилност, енергия, храна, покупки и отпадъци.`)}</Text>
                       {dashboard.identity.assessmentVersion !== '2026.2' || dashboard.identity.isPartial ? <Text style={[theme.typography.bodySmall, { color: theme.colors.accent }]}>{t('Your saved assessment is partial. Update to 2026.2 for the expanded baseline and country benchmark.', 'Запазената оценка е частична. Обновете до версия 2026.2 за разширена база и сравнение по държава.')}</Text> : null}
                     </View>
-                    <AppButton label={t('Update identity', 'Обнови идентичността')} variant="secondary" onPress={() => router.push('/habits/identity' as any)} />
+                    <AppButton label={t('Update identity', 'Обнови отговорите')} variant="secondary" onPress={() => router.push('/habits/identity' as any)} />
                   </View>
                 </Card>
               )}

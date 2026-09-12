@@ -16,6 +16,9 @@ const AppLocaleContext = createContext<AppLocaleContextValue | null>(null);
 export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<AppLocale>('bg');
   useEffect(() => {
+    if (typeof document !== 'undefined') document.documentElement.lang = locale;
+  }, [locale]);
+  useEffect(() => {
     void Promise.all([AsyncStorage.getItem(STORAGE_KEY), AsyncStorage.getItem(LEGACY_STORAGE_KEY)]).then(([current, legacy]) => {
       const saved = current || legacy;
       if (saved === 'bg' || saved === 'en') setLocaleState(saved);

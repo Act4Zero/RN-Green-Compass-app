@@ -11,6 +11,7 @@ import {
   TextStyle,
   View,
   ViewStyle,
+  useWindowDimensions,
 } from 'react-native';
 import { useAppTheme } from '@/theme';
 
@@ -24,6 +25,7 @@ export function Screen({ children, style }: { children: React.ReactNode; style?:
 }
 export function Content({ children, style, wide = false }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; wide?: boolean }) {
   const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
   return (
     <View
       style={[
@@ -31,8 +33,8 @@ export function Content({ children, style, wide = false }: { children: React.Rea
           width: '100%',
           maxWidth: wide ? 1280 : 1040,
           alignSelf: 'center',
-          paddingHorizontal: theme.spacing.lg,
-          paddingVertical: theme.spacing.xl,
+          paddingHorizontal: width < 600 ? theme.spacing.md : theme.spacing.lg,
+          paddingVertical: width < 600 ? theme.spacing.lg : theme.spacing.xl,
         },
         style,
       ]}
@@ -87,11 +89,13 @@ export function AppButton({ label, icon, variant = 'primary', loading, disabled,
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled || loading}
+      accessibilityState={{ disabled: Boolean(disabled || loading), busy: Boolean(loading) }}
       style={({ pressed }) => [
         {
           minHeight: 48,
+          paddingVertical: 12,
           paddingHorizontal: theme.spacing.lg,
-          borderRadius: theme.radii.md,
+          borderRadius: theme.radii.pill,
           borderWidth: 1,
           borderColor: palette.border,
           backgroundColor: palette.background,
@@ -110,7 +114,7 @@ export function AppButton({ label, icon, variant = 'primary', loading, disabled,
       ) : (
         <>
           {icon ? <Ionicons name={icon} size={19} color={palette.foreground} /> : null}
-          <Text style={[theme.typography.label, { color: palette.foreground }]}>{label}</Text>
+          <Text style={[theme.typography.label, { color: palette.foreground, flexShrink: 1, textAlign: 'center' }]}>{label}</Text>
         </>
       )}
     </Pressable>
@@ -147,11 +151,13 @@ export function AppInput({ label, error, style, ...props }: TextInputProps & { l
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: React.ReactNode }) {
   const { theme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const compact = width < 600;
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: theme.spacing.lg, marginBottom: theme.spacing.xl }}>
-      <View style={{ flex: 1, gap: theme.spacing.xs }}>
+    <View style={{ flexDirection: compact ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: theme.spacing.md, marginBottom: theme.spacing.lg }}>
+      <View style={{ flex: compact ? undefined : 1, gap: theme.spacing.xs }}>
         {eyebrow ? <Text style={[theme.typography.label, { color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 1.2 }]}>{eyebrow}</Text> : null}
-        <Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text }]}>{title}</Text>
+        <Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, ...(compact ? { fontSize: 28, lineHeight: 35 } : {}) }]}>{title}</Text>
         {description ? <Text style={[theme.typography.body, { color: theme.colors.textMuted, maxWidth: 680 }]}>{description}</Text> : null}
       </View>
       {action}
@@ -178,7 +184,7 @@ export function Skeleton({ width = '100%', height = 18, style }: { width?: ViewS
   return <View accessibilityLabel="Loading" style={[{ width, height, borderRadius: theme.radii.sm, backgroundColor: theme.colors.surfaceStrong }, style]} />;
 }
 
-export function SegmentedControl<T extends string>({ value, options, onChange }: { value: T; options: Array<{ value: T; label: string }>; onChange: (value: T) => void }) {
+export function SegmentedControl<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
   const { theme } = useAppTheme();
   return (
     <View style={{ flexDirection: 'row', padding: 4, borderRadius: theme.radii.md, backgroundColor: theme.colors.surfaceMuted, gap: 4 }}>

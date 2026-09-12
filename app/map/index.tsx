@@ -1,7 +1,7 @@
 import React from 'react';
 import PublicMap from '@/components/map/PublicMap';
 
-/** Public Living Planet entry. Account gates are applied only to personal actions. */
+/** The root navigator requires authentication before mounting the map. */
 export default function MapScreen() {
   return <PublicMap />;
 }

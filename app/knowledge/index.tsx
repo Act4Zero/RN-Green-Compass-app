@@ -3,6 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { AppButton, Card, Content, Screen } from '@/components/ui';
+import { SectionHero } from '@/components/ui/SectionHero';
 import { useAuth } from '@/context/AuthContext';
 import { KnowledgeError, KnowledgeLoading } from '@/features/knowledge/components/KnowledgeState';
 import {
@@ -28,11 +29,11 @@ type HubView = 'overview' | 'library' | 'topics' | 'practice' | 'paths' | 'missi
 
 const HUB_VIEWS: { id: HubView; icon: keyof typeof Ionicons.glyphMap; en: string; bg: string }[] = [
   { id: 'overview', icon: 'home-outline', en: 'Overview', bg: 'Начало' },
-  { id: 'library', icon: 'library-outline', en: 'Library', bg: 'Библиотека' },
+  { id: 'library', icon: 'library-outline', en: 'Library', bg: '📚 Библиотека' },
   { id: 'topics', icon: 'grid-outline', en: 'Topics', bg: 'Теми' },
-  { id: 'practice', icon: 'flask-outline', en: 'Practice', bg: 'Практика' },
+  { id: 'practice', icon: 'flask-outline', en: 'Practice', bg: '🧪 Практика' },
   { id: 'paths', icon: 'trail-sign-outline', en: 'Paths', bg: 'Пътеки' },
-  { id: 'missions', icon: 'compass-outline', en: 'Missions', bg: 'Мисии' },
+  { id: 'missions', icon: 'compass-outline', en: 'Missions', bg: '🎯 Мисии' },
   { id: 'live', icon: 'videocam-outline', en: 'Live', bg: 'На живо' },
 ];
 
@@ -104,23 +105,12 @@ export default function KnowledgeHubScreen() {
   );
 }
 
-function HubHeader({ compact, locale, profile, onLocale, onSearch, onLearning }: { compact: boolean; locale: 'en' | 'bg'; profile: KnowledgeLearningProfile | null; onLocale: () => void; onSearch: () => void; onLearning: () => void }) {
-  const { theme } = useAppTheme();
+function HubHeader({ profile, onSearch, onLearning }: { compact: boolean; locale: 'en' | 'bg'; profile: KnowledgeLearningProfile | null; onLocale: () => void; onSearch: () => void; onLearning: () => void }) {
   const { t } = useKnowledgeLocale();
-  return (
-    <View style={{ flexDirection: compact ? 'column' : 'row', justifyContent: 'space-between', alignItems: compact ? 'stretch' : 'flex-end', gap: 16, marginBottom: 20 }}>
-      <View style={{ flex: 1 }}>
-        <Text style={[theme.typography.label, { color: theme.colors.primary, letterSpacing: 1.1 }]}>{t('LEARN • PRACTICE • ACT', 'УЧИ • ПРАКТИКУВАЙ • ДЕЙСТВАЙ')}</Text>
-        <Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 4 }]}>{t('Knowledge Hub', 'Център за знания')}</Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 6, maxWidth: 650 }]}>{t('A clear, reviewed learning library for practical sustainability.', 'Подредена и проверена библиотека за практична устойчивост.')}</Text>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <AppButton label={locale.toUpperCase()} icon="language-outline" variant="secondary" onPress={onLocale} style={{ flex: compact ? 1 : undefined }} />
-        <AppButton label={t('Search', 'Търсене')} accessibilityLabel={t('Search Knowledge Hub', 'Търсене в Центъра за знания')} icon="search" onPress={onSearch} style={{ flex: compact ? 1 : undefined }} />
-        <AppButton label={profile ? `${profile.learningXp} ${t('XP', 'учебни т.')}` : t('Progress', 'Прогрес')} accessibilityLabel={t('Open My Learning', 'Отвори Моето обучение')} icon="school-outline" variant="secondary" onPress={onLearning} style={{ flex: compact ? 1 : undefined }} />
-      </View>
-    </View>
-  );
+  return <SectionHero tone="sky" eyebrow={t('Learn · try · discover', 'Научи · опитай · открий')} title={t('Stay curious', 'Дай воля на любопитството')} emoji="💡" description={t('Small lessons. Big discoveries. Choose a topic or try a quick challenge.', 'Кратки уроци. Големи открития. Избери тема или се пробвай с кратко предизвикателство.')}>
+    <AppButton label={t('Find something interesting', 'Намери нещо интересно')} icon="search" onPress={onSearch} />
+    <AppButton label={profile ? `${profile.learningXp} ${t('learning points', 'учебни точки')}` : t('My learning', 'Моето обучение')} icon="school-outline" variant="secondary" onPress={onLearning} />
+  </SectionHero>;
 }
 
 function HubNavigation({ compact, value, onChange }: { compact: boolean; value: HubView; onChange: (value: HubView) => void }) {
@@ -141,7 +131,7 @@ function Overview({ data, profile, compact, columns, onViewChange }: { data: Kno
     <>
       <DailyHero item={data.dailyDose} compact={compact} onPress={() => router.push('/knowledge/daily' as any)} />
       {profile ? <LearningSnapshot profile={profile} compact={compact} /> : null}
-      <SectionHeader title={t('Find your way', 'Изберете посока')} description={t('Start with the kind of learning you need today.', 'Започнете с подходящия за днес начин на учене.')} />
+      <SectionHeader title={t('Find your way', 'Как ти се учи днес?')} description={t('Start with the kind of learning you need today.', 'Започнете с подходящия за днес начин на учене.')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 34 }}>
         <BrowseTile columns={columns} icon="library-outline" title={t('Browse library', 'Библиотека')} text={t('Articles, videos and guides', 'Статии, видеа и ръководства')} onPress={() => onViewChange('library')} />
         <BrowseTile columns={columns} icon="grid-outline" title={t('Explore topics', 'Разгледайте темите')} text={t('Ten sustainability areas', 'Десет области на устойчивост')} onPress={() => onViewChange('topics')} />
@@ -152,7 +142,7 @@ function Overview({ data, profile, compact, columns, onViewChange }: { data: Kno
         <BrowseTile columns={columns} icon="download-outline" title={t('Use offline', 'Използвайте офлайн')} text={t('Downloads and printable toolkits', 'Изтегляния и пакети за печат')} onPress={() => router.push('/knowledge/downloads' as any)} />
       </View>
 
-      <SectionHeader title={data.continueLearning.length ? t('Continue learning', 'Продължете обучението') : t('Recommended starting points', 'Препоръчани начални точки')} description={t('A short, focused selection—not the whole catalog.', 'Кратък и фокусиран избор, а не целият каталог.')} action={t('Open library', 'Отвори библиотеката')} onAction={() => onViewChange('library')} />
+      <SectionHeader title={data.continueLearning.length ? t('Continue learning', 'Продължете обучението') : t('Recommended starting points', 'Препоръчани начални точки')} description={t('A short, focused selection—not the whole catalog.', 'Подбрани идеи за следващото ти откритие.')} action={t('Open library', 'Отвори библиотеката')} onAction={() => onViewChange('library')} />
       <Card style={{ padding: 0, overflow: 'hidden', marginBottom: 34 }}>{recommendations.slice(0, 4).map((item, index) => <ContentRow key={item.id} item={item} progress={'progress' in item && typeof item.progress === 'number' ? item.progress : undefined} last={index === Math.min(recommendations.length, 4) - 1} />)}</Card>
 
       <SectionHeader title={t('Turn learning into action', 'Превърнете ученето в действие')} description={t('Continue in the Green Compass tools you already use.', 'Продължете в инструментите на Green Compass, които вече използвате.')} />
@@ -179,7 +169,7 @@ function Library({ data, columns }: { data: KnowledgeHomeData; columns: number }
         <FormatShortcut columns={columns} icon="hammer-outline" label={t('DIY projects', 'Направи си сам')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'diy' } })} />
         <FormatShortcut columns={columns} icon="bookmark-outline" label={t('Resources', 'Ресурси')} onPress={() => router.push({ pathname: '/knowledge/search' as any, params: { type: 'resource' } })} />
       </View>
-      <SectionHeader title={t('Editor-reviewed collection', 'Редакторски проверена колекция')} description={t('Text-first rows make the catalog faster to scan.', 'Редовете с водещ текст правят каталога по-лесен за преглед.')} />
+      <SectionHeader title={t('Editor-reviewed collection', 'Редакторски проверена колекция')} description={t('Text-first rows make the catalog faster to scan.', 'Намери практична идея, която да приложиш още днес.')} />
       <Card style={{ padding: 0, overflow: 'hidden' }}>{items.slice(0, 12).map((item, index) => <ContentRow key={item.id} item={item} last={index === Math.min(items.length, 12) - 1} />)}</Card>
     </>
   );
@@ -189,7 +179,7 @@ function Topics({ topics, columns }: { topics: KnowledgeTopic[]; columns: number
   const { t } = useKnowledgeLocale();
   return (
     <>
-      <SectionHeader title={t('Explore by topic', 'Разгледайте по тема')} description={t('Choose a subject first; illustrations support the lesson after you open it.', 'Първо изберете тема; илюстрациите подпомагат урока след отварянето му.')} />
+      <SectionHeader title={t('Explore by topic', 'Разгледайте по тема')} description={t('Choose a subject first; illustrations support the lesson after you open it.', 'От ежедневните избори до живия свят — открий това, което те вълнува.')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>{topics.map((topic) => <TopicRow key={topic.id} topic={topic} columns={columns} />)}</View>
     </>
   );
@@ -241,7 +231,7 @@ function Missions({ columns }: { columns: number }) {
   const { theme } = useAppTheme();
   const { locale, t } = useKnowledgeLocale();
   return <>
-    <SectionHeader title={t('Learning missions', 'Учебни мисии')} description={t('Choose a timed personal challenge or explore a branching Knowledge Quest. Core library content remains open.', 'Изберете лично предизвикателство със срок или разклонено приключение за знания. Основната библиотека остава отворена.')} />
+    <SectionHeader title={t('Learning missions', 'Учебни мисии')} description={t('Choose a timed personal challenge or explore a branching Knowledge Quest. Core library content remains open.', 'Избери кратко предизвикателство или приключение с различни възможни посоки.')} />
     <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 12 }]}>{t('Learning Challenges', 'Учебни предизвикателства')}</Text>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 30 }}>{KNOWLEDGE_CHALLENGES.map((challenge) => <Pressable key={challenge.id} accessibilityRole="link" onPress={() => router.push(`/knowledge/challenge/${challenge.id}` as any)} style={{ width: columnWidth(columns) }}><Card style={{ minHeight: 220, height: '100%', borderTopWidth: 4, borderTopColor: theme.colors.accent }}><View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{challenge.durationDays} {t('DAYS', 'ДНИ')}</Text><Ionicons name="timer-outline" size={22} color={theme.colors.primary} /></View><Text style={[theme.typography.h2, { color: theme.colors.text, marginTop: 18 }]}>{challenge.title[locale]}</Text><Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 7, flex: 1 }]}>{challenge.summary[locale]}</Text><Text style={[theme.typography.label, { color: theme.colors.primary, marginTop: 16 }]}>{challenge.steps.length} {t('steps', 'стъпки')} • {challenge.rewardPoints} {t('points', 'точки')}</Text></Card></Pressable>)}</View>
     <Text accessibilityRole="header" style={[theme.typography.h2, { color: theme.colors.text, marginBottom: 12 }]}>{t('Knowledge Quests', 'Приключения за знания')}</Text>
@@ -265,24 +255,24 @@ function InterestOnboarding({ preference, onComplete }: { preference: KnowledgeP
   const [saving, setSaving] = useState(false);
   const toggle = (slug: string) => setSelected((current) => current.includes(slug) ? current.filter((entry) => entry !== slug) : current.length < 3 ? [...current, slug] : current);
   const finish = async (topics: string[]) => { setSaving(true); await onComplete(topics); setSaving(false); };
-  return <Modal visible transparent animationType="fade" onRequestClose={() => void finish([])}><View style={{ flex: 1, backgroundColor: '#00000066', alignItems: 'center', justifyContent: 'center', padding: 20 }}><View accessibilityViewIsModal style={{ width: '100%', maxWidth: 720, maxHeight: '90%' }}><Card elevated style={{ padding: 24 }}><ScrollView showsVerticalScrollIndicator={false}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('PERSONALISE YOUR HUB', 'ПЕРСОНАЛИЗИРАЙТЕ ЦЕНТЪРА')}</Text><Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 6 }]}>{t('What do you want to learn first?', 'Какво искате да научите първо?')}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Choose up to three topics. This only orders recommendations—the complete library stays open.', 'Изберете до три теми. Това само подрежда препоръките — цялата библиотека остава отворена.')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}>{KNOWLEDGE_TOPICS.map((topic) => { const active = selected.includes(topic.slug); const copy = localizedTopic(topic, locale); return <Pressable key={topic.slug} accessibilityRole="checkbox" accessibilityState={{ checked: active }} onPress={() => toggle(topic.slug)} style={{ width: '48%', minWidth: 150, borderWidth: 1, borderColor: active ? topic.visual.palette.primary : theme.colors.border, backgroundColor: active ? topic.visual.palette.surface : theme.colors.surface, borderRadius: theme.radii.md, padding: 13 }}><Text style={[theme.typography.label, { color: active ? topic.visual.palette.primary : theme.colors.text }]}>{copy.name}</Text></Pressable>; })}</View><Text accessibilityLiveRegion="polite" style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 12 }]}>{selected.length}/3 {t('selected', 'избрани')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}><AppButton label={t('Save interests', 'Запази интересите')} disabled={selected.length === 0} loading={saving} onPress={() => void finish(selected)} style={{ flex: 1 }} /><AppButton label={t('Skip for now', 'Пропусни засега')} variant="ghost" onPress={() => void finish([])} /></View></ScrollView></Card></View></View></Modal>;
+  return <Modal visible transparent animationType="fade" onRequestClose={() => void finish([])}><View style={{ flex: 1, backgroundColor: '#00000066', alignItems: 'center', justifyContent: 'center', padding: 20 }}><View accessibilityViewIsModal style={{ width: '100%', maxWidth: 720, maxHeight: '90%' }}><Card elevated style={{ padding: 24 }}><ScrollView showsVerticalScrollIndicator={false}><Text style={[theme.typography.label, { color: theme.colors.primary }]}>{t('PERSONALISE YOUR HUB', 'ПЕРСОНАЛИЗИРАЙТЕ ЦЕНТЪРА')}</Text><Text accessibilityRole="header" style={[theme.typography.h1, { color: theme.colors.text, marginTop: 6 }]}>{t('What do you want to learn first?', 'Какво искате да научите първо?')}</Text><Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 8 }]}>{t('Choose up to three topics. This only orders recommendations—the complete library stays open.', 'Избери до три теми, които те вълнуват. Можеш да ги промениш по-късно.')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}>{KNOWLEDGE_TOPICS.map((topic) => { const active = selected.includes(topic.slug); const copy = localizedTopic(topic, locale); return <Pressable key={topic.slug} accessibilityRole="checkbox" accessibilityState={{ checked: active }} onPress={() => toggle(topic.slug)} style={{ width: '47%', flexGrow: 1, minWidth: 110, borderWidth: 1, borderColor: active ? topic.visual.palette.primary : theme.colors.border, backgroundColor: active ? topic.visual.palette.surface : theme.colors.surface, borderRadius: theme.radii.md, padding: 13 }}><Text style={[theme.typography.label, { color: active ? topic.visual.palette.primary : theme.colors.text }]}>{copy.name}</Text></Pressable>; })}</View><Text accessibilityLiveRegion="polite" style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 12 }]}>{selected.length}/3 {t('selected', 'избрани')}</Text><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 20 }}><AppButton label={t('Save interests', 'Запази интересите')} disabled={selected.length === 0} loading={saving} onPress={() => void finish(selected)} style={{ flex: 1 }} /><AppButton label={t('Skip for now', 'Пропусни засега')} variant="ghost" onPress={() => void finish([])} /></View></ScrollView></Card></View></View></Modal>;
 }
 
 function DailyHero({ item, compact, onPress }: { item: KnowledgeHomeData['dailyDose']; compact: boolean; onPress: () => void }) {
   const { theme } = useAppTheme();
-  const { t } = useKnowledgeLocale();
+  const { locale, t } = useKnowledgeLocale();
   const { source, visual, topic } = resolveKnowledgeVisual(item, KNOWLEDGE_TOPICS);
   return (
     <Card elevated style={{ backgroundColor: theme.mode === 'dark' ? visual.palette.darkSurface : visual.palette.surface, padding: 0, marginBottom: 34, overflow: 'hidden' }}>
       <View style={{ flexDirection: compact ? 'column' : 'row', minHeight: compact ? undefined : 390 }}>
         <View style={{ flex: 1.35, padding: compact ? 24 : 38, justifyContent: 'center' }}>
           <Text style={[theme.typography.label, { color: visual.palette.primary, letterSpacing: 1 }]}>{t('TODAY’S FOCUS', 'ФОКУСЪТ ДНЕС')}</Text>
-          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{topic.name} • {item.estimatedMinutes} {t('min', 'мин')}</Text>
-          <Text style={[theme.typography.display, { color: theme.colors.text, marginTop: 16, fontSize: compact ? 32 : 43, lineHeight: compact ? 38 : 49 }]}>{item.title}</Text>
+          <Text style={[theme.typography.bodySmall, { color: theme.colors.textMuted, marginTop: 8 }]}>{localizedTopic(topic, locale).name} • {item.estimatedMinutes} {t('min', 'мин')}</Text>
+          <Text style={[theme.typography.display, { color: theme.colors.text, marginTop: 16, fontSize: compact ? 26 : 38, lineHeight: compact ? 33 : 45 }]}>{item.title}</Text>
           <Text style={[theme.typography.body, { color: theme.colors.textMuted, marginTop: 12, maxWidth: 530 }]}>{item.summary}</Text>
           <AppButton label={t('Open today’s lesson', 'Отвори днешния урок')} icon="arrow-forward" onPress={onPress} style={{ marginTop: 22, alignSelf: 'flex-start' }} />
         </View>
-        <View style={{ width: compact ? '100%' : 350, height: compact ? 300 : 390, backgroundColor: `${visual.palette.secondary}24`, alignItems: 'center', justifyContent: 'center' }}><Image source={source} accessibilityLabel={visual.alt[item.locale]} resizeMode="contain" style={{ width: '100%', height: '100%' }} /></View>
+        <View style={{ width: compact ? '100%' : 350, height: compact ? 190 : 300, backgroundColor: `${visual.palette.secondary}24`, alignItems: 'center', justifyContent: 'center' }}><Image source={source} accessibilityLabel={visual.alt[item.locale]} resizeMode="contain" style={{ width: '100%', height: '100%' }} /></View>
       </View>
     </Card>
   );

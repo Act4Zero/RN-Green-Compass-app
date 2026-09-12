@@ -12,10 +12,16 @@ import { View } from 'react-native';
 import { useAppLocale } from '../../context/AppLocaleContext';
 import type { MapLocationFeatureCollection, MapRendererProps } from '../../types/map';
 import { locationsToFeatureCollection } from '../../utils/mapGlobe';
+import { CYCLING_PATHS, CYCLING_PLACES, CYCLING_LINE_COLOR } from '@/features/cycling';
 import { getLocalizedMapNameExpression, isMapNameTextField } from '../../utils/mapStyleLocale';
 
 const LOCATIONS_SOURCE = 'green-compass-locations';
 const USER_SOURCE = 'green-compass-user-location';
+const CYCLING_SOURCE = 'green-compass-cycleways';
+const CYCLING_PLACES_SOURCE = 'green-compass-cycling-places';
+const CYCLING_LAYERS = ['cycling-outline', 'cycling-lines'];
+const CYCLING_PLACE_LAYERS = ['cycling-places', 'cycling-place-labels'];
+
 const SEARCH_SOURCE = 'green-compass-address-search';
 
 function userFeature(point: { lat: number; lng: number } | null): GeoJSON.FeatureCollection {
@@ -87,6 +93,14 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
     map.addControl(new NavigationControl({ showCompass: true }), 'bottom-right');
     map.on('load', () => {
+      map.addSource(CYCLING_SOURCE, { type: 'geojson', data: CYCLING_PATHS });
+      const visibility = latest.current.cyclingVisible ? 'visible' : 'none';
+      map.addLayer({ id: 'cycling-outline', type: 'line', source: CYCLING_SOURCE, layout: { visibility, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 4, 15, 9], 'line-opacity': 0.9 } });
+      map.addLayer({ id: 'cycling-lines', type: 'line', source: CYCLING_SOURCE, layout: { visibility, 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': CYCLING_LINE_COLOR as any, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2, 15, 5] } });
+      map.addSource(CYCLING_PLACES_SOURCE, { type: 'geojson', data: CYCLING_PLACES });
+      const placeVisibility = latest.current.cyclingVisible && latest.current.cyclingPlacesVisible !== false ? 'visible' : 'none';
+      map.addLayer({ id: 'cycling-places', type: 'circle', source: CYCLING_PLACES_SOURCE, minzoom: 12, layout: { visibility: placeVisibility }, paint: { 'circle-color': ['match', ['get', 'kind'], 'parking', '#1951BE', '#087DAB'], 'circle-radius': 10, 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 2 } });
+      map.addLayer({ id: 'cycling-place-labels', type: 'symbol', source: CYCLING_PLACES_SOURCE, minzoom: 12, layout: { visibility: placeVisibility, 'text-font': ['Noto Sans Regular'], 'text-field': ['match', ['get', 'kind'], 'parking', 'P', '●'], 'text-size': 12, 'text-allow-overlap': true }, paint: { 'text-color': '#FFFFFF' } });
       map.addSource(LOCATIONS_SOURCE, { type: 'geojson', data: locationsToFeatureCollection(latest.current.locations), cluster: true, clusterRadius: 54, clusterMaxZoom: 13 });
       map.addLayer({ id: 'location-clusters', type: 'circle', source: LOCATIONS_SOURCE, filter: ['has', 'point_count'], paint: { 'circle-color': ['step', ['get', 'point_count'], '#76D49B', 25, '#B8E36B', 60, '#F0B15D'], 'circle-radius': ['step', ['get', 'point_count'], 19, 25, 24, 60, 29], 'circle-stroke-width': 3, 'circle-stroke-color': '#FFFFFF' } });
       map.addLayer({ id: 'cluster-count', type: 'symbol', source: LOCATIONS_SOURCE, filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 13 }, paint: { 'text-color': '#0B1711' } });
@@ -113,6 +127,19 @@ export default function MapLibreRenderer(props: MapRendererProps) {
     };
     map.on('moveend', reportCamera);
     map.on('zoomend', reportCamera);
+    map.on('click', event => {
+      if (!latest.current.cyclingVisible || !map.getLayer('cycling-lines')) return;
+      // Give narrow lines a comfortable touch target while keeping the map legible.
+      const { x, y } = event.point;
+      const features = map.queryRenderedFeatures([[x - 10, y - 10], [x + 10, y + 10]], { layers: ['cycling-lines', 'cycling-places'] });
+      const feature = features.find(item => item.layer.id === 'cycling-places') ?? features[0];
+      const id = feature?.properties?.id;
+      if (id) latest.current.onCyclingFeaturePress?.(String(id));
+    });
+    for (const layer of ['cycling-lines', 'cycling-places']) {
+      map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+    }
     map.on('click', 'location-clusters', async (event: MapLayerMouseEvent) => {
       const selected = event.features?.[0];
       if (!selected || selected.geometry.type !== 'Point') return;
@@ -138,6 +165,13 @@ export default function MapLibreRenderer(props: MapRendererProps) {
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    for (const layer of CYCLING_LAYERS) if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', props.cyclingVisible ? 'visible' : 'none');
+    for (const layer of CYCLING_PLACE_LAYERS) if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', props.cyclingVisible && props.cyclingPlacesVisible !== false ? 'visible' : 'none');
+  }, [props.cyclingVisible, props.cyclingPlacesVisible]);
 
   useEffect(() => { (mapRef.current?.getSource(LOCATIONS_SOURCE) as GeoJSONSource | undefined)?.setData(geoJson as MapLocationFeatureCollection); }, [geoJson]);
   useEffect(() => { const map = mapRef.current; if (map?.isStyleLoaded()) syncVisibleMarkers(map); }, [props.locations, props.selectedLocationId, locale]);

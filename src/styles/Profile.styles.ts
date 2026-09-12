@@ -120,7 +120,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     // Profile Card
     profileCard: {
       backgroundColor: 'white',
-      borderRadius: 16,
+      borderRadius: 24,
       padding: 20,
       marginBottom: 20,
       alignItems: 'center',
@@ -183,7 +183,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     // Section Containers
     sectionContainer: {
       backgroundColor: 'white',
-      borderRadius: 16,
+      borderRadius: 24,
       padding: 20,
       marginBottom: 20,
       width: '100%',
@@ -285,7 +285,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     justifyContent: 'space-between',
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -332,7 +332,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
   },
   pointsHistoryContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -360,7 +360,7 @@ const profileStyles = StyleSheet.create<ProfileStyles>({
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
-    borderRadius: 16,
+    borderRadius: 24,
     backgroundColor: '#F0F0F0',
     borderWidth: 1,
     borderColor: '#E0E0E0',

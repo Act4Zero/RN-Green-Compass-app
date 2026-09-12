@@ -101,7 +101,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
       alignItems: 'center',
       padding: 12,
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#E0E0E0',
       minWidth: 100,
@@ -136,7 +136,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
       justifyContent: 'center',
       padding: 12,
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#E0E0E0',
       minWidth: 100,
@@ -171,7 +171,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
       alignItems: 'flex-start', // Align to top for better layout with long descriptions
       padding: 16,
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#E0E0E0',
     },
@@ -199,7 +199,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
     // Selected habit section styles
     selectedHabitContainer: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#E0E0E0',
       padding: 16,
@@ -236,7 +236,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
     },
     noHabitSelectedContainer: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       borderWidth: 1,
       borderColor: '#E0E0E0',
       padding: 16,
@@ -257,7 +257,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
     },
     quantityContainer: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
+      borderRadius: 20,
       padding: 16,
       borderWidth: 1,
       borderColor: '#E0E0E0',
@@ -309,7 +309,7 @@ export const LogStyles = StyleSheet.create<LogStyles>({
     },
     toastContainer: {
       backgroundColor: '#2E7D32',
-      borderRadius: 12,
+      borderRadius: 20,
       padding: 16,
       flexDirection: 'row',
       alignItems: 'center',
