@@ -85,8 +85,8 @@ export default function MapLibreRenderer(props: MapRendererProps) {
           <LineLayer id="cycling-lines" style={{ lineColor: CYCLING_LINE_COLOR as any, lineWidth: ['interpolate', ['linear'], ['zoom'], 10, 2, 15, 5], lineCap: 'round', lineJoin: 'round' }} />
         </ShapeSource>
         {props.cyclingPlacesVisible !== false ? <ShapeSource id="green-compass-cycling-places" shape={CYCLING_PLACES} hitbox={{ width: 32, height: 32 }} onPress={event => { const id = event.features[0]?.properties?.id; if (id) props.onCyclingFeaturePress?.(String(id)); }}>
-          <CircleLayer id="cycling-places" minZoomLevel={12} style={{ circleColor: ['match', ['get', 'kind'], 'parking', '#1951BE', '#087DAB'], circleRadius: 10, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 2 }} />
-          <SymbolLayer id="cycling-place-labels" minZoomLevel={12} style={{ textFont: ['Noto Sans Regular'], textField: ['match', ['get', 'kind'], 'parking', 'P', '●'], textSize: 12, textColor: '#FFFFFF', textAllowOverlap: true }} />
+          <CircleLayer id="cycling-places" minZoomLevel={14} style={{ circleColor: ['match', ['get', 'kind'], 'parking', '#1951BE', '#087DAB'], circleRadius: 10, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 2 }} />
+          <SymbolLayer id="cycling-place-labels" minZoomLevel={14} style={{ textFont: ['Noto Sans Regular'], textField: ['match', ['get', 'kind'], 'parking', 'P', '●'], textSize: 12, textColor: '#FFFFFF', textAllowOverlap: true }} />
         </ShapeSource> : null}
       </> : null}
       <ShapeSource
