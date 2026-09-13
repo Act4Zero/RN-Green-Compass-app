@@ -192,7 +192,7 @@ export default function MapView() {
           <Text style={[theme.typography.label, { color: '#FFFFFF', marginTop: theme.spacing.sm }]}>{t('Loading the map…', 'Зареждаме картата…')}</Text>
         </View>
       ) : null}
-      <MapSidebar cyclingEnabled={cyclingEnabled} onToggleCycling={toggleCycling} compact={mode === 'globe' || mode === 'to-globe'} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} />
+      {(mode === 'map' || mode === 'to-map') ? <MapSidebar cyclingEnabled={cyclingEnabled} onToggleCycling={toggleCycling} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} /> : null}
       {(mode === 'map' || mode === 'to-map') ? (!cyclingEnabled ? <MapResultsPanel /> : <CyclingPanel selected={cyclingSelection} showPlaces={cyclingPlacesVisible} onTogglePlaces={() => setCyclingPlacesVisible(value => !value)} onClearSelection={() => setCyclingSelection(null)} />) : null}
       <LocateButton onPress={map.locateUser} isLoading={map.isLocating} />
       <CoverageAlert />

@@ -127,6 +127,7 @@ describe('Living Planet shell', () => {
     expect(mockMapFacade.setResultsOpen).toHaveBeenCalledWith(false);
     expect(mockMapFacade.setResultsRailCollapsed).toHaveBeenCalledWith(true);
     expect(mockMapFacade.selectLocation).toHaveBeenCalledWith(null, false);
+    expect(tree.root.findAllByType(require('../MapSidebar').default)).toHaveLength(0);
     expect(tree.root.findAllByType(require('../MapResultsPanel').default)).toHaveLength(0);
     expect(tree.root.findAllByType(require('../MapPopup').default)).toHaveLength(0);
     act(() => tree.unmount());

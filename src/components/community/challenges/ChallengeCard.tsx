@@ -9,6 +9,7 @@ import ChallengeShareModal from './ChallengeShareModal';
 import formatDate from '@/utils/formatDate';
 import useUserDisplayName from '@/hooks/useUserDisplayName';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeCommunityChallenge } from '@/utils/challengeLocalization';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -20,12 +21,13 @@ const styles = ChallengeStyles;
 function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const { displayName } = useUserDisplayName();
-  const { t } = useAppLocale();
+  const { locale, t } = useAppLocale();
+  const localizedChallenge = localizeCommunityChallenge(challenge, locale);
   
   // Format the dates for display
   const startDate = new Date(challenge.start_date);
   const endDate = new Date(challenge.end_date);
-  const dateString = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  const dateString = `${formatDate(startDate, locale)} – ${formatDate(endDate, locale)}`;
   
   // Check if challenge is active
   const now = new Date();
@@ -69,8 +71,8 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   
   // Create custom-formatted sharing content for the challenge
   const shareContent = formatChallengeForSharing(
-    challenge.title,
-    challenge.description,
+    localizedChallenge.title,
+    localizedChallenge.description,
     startDate,
     endDate,
     Boolean(challenge.is_participant),
@@ -81,8 +83,8 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
   
   // Prepare challenge data for sharing modal
   const challengeData = {
-    title: challenge.title,
-    description: challenge.description,
+    title: localizedChallenge.title,
+    description: localizedChallenge.description,
     startDate,
     endDate,
     isParticipant: Boolean(challenge.is_participant),
@@ -138,11 +140,11 @@ function ChallengeCard({ challenge, onPress }: ChallengeCardProps) {
             </Text>
           </View>
           
-          <Text style={styles.challengeTitle}>{challenge.title}</Text>
+          <Text style={styles.challengeTitle}>{localizedChallenge.title}</Text>
         </View>
         
         <Text style={styles.challengeDescription} numberOfLines={2}>
-          {challenge.description}
+          {localizedChallenge.description}
         </Text>
         
         {/* Progress bar if user is participating */}

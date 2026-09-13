@@ -36,7 +36,7 @@ export function CategoryFilters({
                 selectedCategory === id && styles.filterTextActive,
               ]}
             >
-              {({ all: 'Всички', mobility: 'Придвижване', food: 'Храна', household: 'Домакинство', heating: 'Отопление' } as Record<string, string>)[id] || name}
+              {({ all: 'Всички', Mobility: 'Придвижване', Food: 'Храна', 'Household Activities': 'Домакинство', Heating: 'Отопление' } as Record<string, string>)[id] || name}
             </Text>
           </TouchableOpacity>
         ))}

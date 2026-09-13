@@ -21,6 +21,7 @@ import ChallengeProgress from '@/components/community/challenges/ChallengeProgre
 import ActivityLogsList from '@/components/community/challenges/ActivityLogsList';
 import formatDate from '@/utils/formatDate';
 import { useAppLocale } from '@/context/AppLocaleContext';
+import { localizeCommunityChallenge } from '@/utils/challengeLocalization';
 
 // Styles for this component
 const styles = ChallengeStyles;
@@ -33,7 +34,7 @@ export default function ChallengeDetail() {
   const id = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
   const { user, loading: authLoading } = useAuth();
   const { addNotification } = useNotification();
-  const { t } = useAppLocale();
+  const { locale, t } = useAppLocale();
   
   // Use our selected challenge hook
   const { loadChallenge, updateParticipantCount, updateProgressMetrics, clearChallenge, challenge, isLoading, error } = useSelectedChallenge();
@@ -168,7 +169,8 @@ export default function ChallengeDetail() {
   // Calculate start and end dates
   const startDate = new Date(challenge.start_date);
   const endDate = new Date(challenge.end_date);
-  const dateString = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  const localizedChallenge = localizeCommunityChallenge(challenge, locale);
+  const dateString = `${formatDate(startDate, locale)} – ${formatDate(endDate, locale)}`;
   
   // Check if challenge is active
   const now = new Date();
@@ -208,11 +210,11 @@ export default function ChallengeDetail() {
           {/* Challenge Detail Card */}
           <View style={styles.detailCard}>
             <View style={styles.detailHeader}>
-              <Text style={styles.detailTitle}>{challenge.title}</Text>
+              <Text style={styles.detailTitle}>{localizedChallenge.title}</Text>
               <Text style={styles.detailDates}>{dateString}</Text>
             </View>
             
-            <Text style={styles.detailDescription}>{challenge.description}</Text>
+            <Text style={styles.detailDescription}>{localizedChallenge.description}</Text>
             
             <View style={styles.creatorInfo}>
               <Ionicons name="person-circle-outline" size={24} color="#555555" />

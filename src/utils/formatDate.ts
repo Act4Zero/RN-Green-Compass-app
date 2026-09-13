@@ -3,12 +3,12 @@
  * @param date The date to format
  * @returns A formatted date string (e.g., "Apr 18, 2025")
  */
-function formatDate(date: Date): string {
+function formatDate(date: Date, locale: 'en' | 'bg' = 'en'): string {
   if (!(date instanceof Date)) {
     return '';
   }
   
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale === 'bg' ? 'bg-BG' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
