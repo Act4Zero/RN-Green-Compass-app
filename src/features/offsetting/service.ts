@@ -172,6 +172,16 @@ export const offsettingService = {
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.completed_at) throw new Error('Challenge completion was not confirmed.');
+    if (row.growth_units === undefined && row.id) {
+      const { data: pointEvent } = await (supabase as any)
+        .from('user_points')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('source', 'daily_challenge')
+        .eq('reference_id', row.id)
+        .maybeSingle();
+      if (pointEvent?.id) await (supabase as any).rpc('record_ecosystem_growth', { p_point_event_id: pointEvent.id });
+    }
     const completed = { ...assignment, completedAt: row.completed_at as string };
     return offsettingStorage.saveAssignment(userId, completed);
   },
