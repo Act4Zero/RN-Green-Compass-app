@@ -4,7 +4,8 @@ import { Linking, ScrollView, Text, View } from 'react-native';
 import { ChoiceChips } from '@/components/offsetting/OffsettingUI';
 import { AppButton, AppInput, Card, Content, PageHeader, Screen, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
-import { offsettingService, type CarbonActivityEntry } from '@/features/offsetting';
+import { localizeActivityFactor, offsettingService, type CarbonActivityEntry } from '@/features/offsetting';
+import { useAppLocale } from '@/context/AppLocaleContext';
 import { useAppTheme } from '@/theme';
 
 const localDate = () => {
@@ -14,9 +15,10 @@ const localDate = () => {
 
 export default function CarbonActivityScreen() {
   const { theme } = useAppTheme();
+  const { locale } = useAppLocale();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const factors = offsettingService.getActivityFactors();
+  const factors = offsettingService.getActivityFactors().map((factor) => localizeActivityFactor(factor, locale));
   const [factorCode, setFactorCode] = useState('car-km');
   const [comparisonCode, setComparisonCode] = useState('none');
   const [quantity, setQuantity] = useState('10');

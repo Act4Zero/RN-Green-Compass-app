@@ -1,4 +1,4 @@
-import type { DailyEcoChallenge, PersonalizedCarbonTip, SustainabilityPoll } from './types';
+import type { CarbonActivityFactor, DailyEcoChallenge, OffsetProject, PersonalizedCarbonTip, SustainabilityPoll } from './types';
 
 const CHALLENGE_BG: Record<string, [string, string]> = {
   'plastic-beginner-1': ['Носи бутилка за многократна употреба', 'Пропусни една еднократна бутилка за напитка днес.'],
@@ -52,6 +52,54 @@ const POLL_BG: Record<string, [string, Record<string, string>]> = {
   'poll-transport': ['Коя възможност за пътуване с по-нисък отпечатък можеш да използваш по-често?', { walk: 'Ходене пеша', bike: 'Колоездене', bus: 'Автобус', train: 'Влак' }],
   'poll-gratitude': ['Коя част от природата направи деня ти по-хубав?', { air: 'Свеж въздух', green: 'Зелено пространство', water: 'Вода', wildlife: 'Диви животни' }],
 };
+
+type FactorCopy = Pick<CarbonActivityFactor, 'label' | 'methodology' | 'sourceLabel'> & { unit: string };
+
+const FACTOR_BG: Record<string, FactorCopy> = {
+  'car-km': { label: 'Средно пътуване с автомобил', unit: 'км', methodology: 'Среден автомобил с неизвестен вид гориво, преки емисии и емисии от производството на горивото за един километър.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'bus-passenger-km': { label: 'Пътуване с градски автобус', unit: 'пътник-км', methodology: 'Среден градски автобус, преки емисии и емисии от производството на горивото за един пътник-километър.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'train-passenger-km': { label: 'Пътуване с влак', unit: 'пътник-км', methodology: 'Железопътен транспорт, включително преките емисии и емисиите от производството на горивото.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'electricity-uk-kwh': { label: 'Електроенергия от мрежата на Обединеното кралство', unit: 'kWh', methodology: 'Производство, пренос и разпределение на електроенергията, включително емисиите по веригата на горивата.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'natural-gas-kwh': { label: 'Отопление с природен газ', unit: 'kWh', methodology: 'Оценка за природен газ, която включва преките емисии и емисиите от производството и доставката му.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'heating-oil-kwh': { label: 'Отопление с нафта', unit: 'kWh', methodology: 'Оценка за отопление с нафта, включително емисиите от добива и доставката на горивото.', sourceLabel: 'Британски фактори за преобразуване на парникови газове за 2026 г.' },
+  'beef-meal': { label: 'Оценка за ястие с говеждо месо', unit: 'ястие', methodology: 'Ориентировъчен шаблон за лично планиране, а не пълна оценка на жизнения цикъл на храната.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+  'plant-meal': { label: 'Оценка за предимно растително ястие', unit: 'ястие', methodology: 'Ориентировъчен шаблон за лично планиране, а не пълна оценка на жизнения цикъл на храната.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+  'new-clothing-item': { label: 'Оценка за нова дреха', unit: 'артикул', methodology: 'Ориентировъчна оценка за потреблението; отпечатъкът се различава значително според конкретния продукт.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+  'reused-clothing-item': { label: 'Оценка за дреха втора употреба', unit: 'артикул', methodology: 'Ориентировъчна оценка за придобиването и обработката на дреха втора употреба.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+  'landfill-waste-kg': { label: 'Смесени отпадъци, изпратени на депо', unit: 'кг', methodology: 'Ориентировъчна оценка за смесени отпадъци; съставът и начинът на третиране влияят съществено върху резултата.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+  'recycled-waste-kg': { label: 'Материали, предадени за рециклиране', unit: 'кг', methodology: 'Ориентировъчна оценка за смесено рециклиране; при наличие следва да се използват фактори за конкретния материал.', sourceLabel: 'Прегледана ориентировъчна оценка на Green Compass' },
+};
+
+const PROJECT_BG: Record<string, Pick<OffsetProject, 'name' | 'summary' | 'country' | 'technology' | 'standard' | 'permanence'>> = {
+  'cloverly-forest-restoration': {
+    name: 'Проверено портфолио за възстановяване на гори',
+    summary: 'Прегледан временен запис за тестово плащане чрез Cloverly. Данните за реалния проект се обновяват от доставчика преди активиране.',
+    country: 'Множество региони',
+    technology: 'Залесяване и възстановяване на гори',
+    standard: 'Кредити от регистри, проверени от доставчика',
+    permanence: 'Данните са специфични за проекта; прегледайте записа в регистъра преди плащане.',
+  },
+  'cloverly-renewable-energy': {
+    name: 'Проверено портфолио за възобновяема енергия',
+    summary: 'Прегледан временен запис за тестово плащане чрез Cloverly. Наличността и сертификацията на реалните проекти се определят от доставчика.',
+    country: 'Множество региони',
+    technology: 'Възобновяема енергия',
+    standard: 'Кредити от регистри, проверени от доставчика',
+    permanence: 'Кредит за избегнати емисии; важат документите на конкретния проект.',
+  },
+};
+
+export function localizeActivityFactor(factor: CarbonActivityFactor, locale: 'en' | 'bg'): CarbonActivityFactor {
+  if (locale !== 'bg') return factor;
+  const copy = FACTOR_BG[factor.code];
+  return copy ? { ...factor, ...copy } : factor;
+}
+
+export function localizeOffsetProject(project: OffsetProject, locale: 'en' | 'bg'): OffsetProject {
+  if (locale !== 'bg') return project;
+  const copy = PROJECT_BG[project.id];
+  return copy ? { ...project, ...copy } : project;
+}
 
 export function localizeChallenge(challenge: DailyEcoChallenge, locale: 'en' | 'bg') {
   const copy = locale === 'bg' ? CHALLENGE_BG[challenge.id] : undefined;

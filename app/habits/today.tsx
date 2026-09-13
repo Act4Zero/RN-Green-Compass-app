@@ -6,6 +6,7 @@ import { ChoiceChips } from '@/components/offsetting/OffsettingUI';
 import { AppButton, Card, Content, PageHeader, Screen, Skeleton, StatePanel } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
+import { usePoints } from '@/context/PointsContext';
 import { addImpactMetrics, createPrivacySafeShareSummary, offsettingService, type OffsettingDashboard } from '@/features/offsetting';
 import type { KnowledgeItemSummary } from '@/features/knowledge';
 import { fetchUserProfile } from '@/services/profile';
@@ -24,6 +25,7 @@ export default function TodayScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { addNotification } = useNotification();
+  const { pointBalance, refreshBalance, refreshHistory } = usePoints();
   const [dashboard, setDashboard] = useState<OffsettingDashboard | null>(null);
   const [knowledge, setKnowledge] = useState<KnowledgeItemSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +64,10 @@ export default function TodayScreen() {
     setCompleting(true);
     try {
       const assignment = await offsettingService.completeDailyChallenge(user.id, dashboard.dailyChallenge);
+      const previousPoints = pointBalance.total;
+      await Promise.all([refreshBalance(), refreshHistory()]);
       setDashboard({ ...dashboard, dailyChallenge: assignment });
-      addNotification({ type: 'toast', severity: 'success', message: t('Challenge completed — 5 green points earned.', 'Предизвикателството е завършено — спечели 5 зелени точки.') });
+      addNotification({ type: 'toast', severity: 'success', message: t(`Challenge completed — ${assignment.challenge.points} green points earned. Your balance was ${previousPoints}.`, `Мисията е завършена — спечели ${assignment.challenge.points} зелени точки. Предишен баланс: ${previousPoints}.`) });
     } catch {
       addNotification({ type: 'toast', severity: 'error', message: t('The challenge could not be completed. Please try again.', 'Предизвикателството не можа да бъде завършено. Опитай отново.') });
     } finally {

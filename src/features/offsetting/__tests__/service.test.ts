@@ -58,6 +58,7 @@ describe('offsetting service fallback contracts', () => {
   it('does not process the same challenge completion twice', async () => {
     const assignment = await offsettingService.getDailyChallenge('user-2', '2026-08-21', 'beginner', []);
     mockRpc.mockClear();
+    mockRpc.mockResolvedValueOnce({ data: { completed_at: '2026-08-21T10:00:00.000Z', points: 5, growth_units: 16 }, error: null });
 
     const completed = await offsettingService.completeDailyChallenge('user-2', assignment);
     const repeated = await offsettingService.completeDailyChallenge('user-2', completed);

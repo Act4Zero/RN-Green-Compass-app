@@ -107,7 +107,10 @@ export default function MapView() {
   const openGlobe = useCallback(() => {
     setCyclingEnabled(false);
     setCyclingSelection(null);
+    setSearchedAddress(null);
+    map.setResultsOpen(false);
     map.setResultsRailCollapsed(true);
+    map.selectLocation(null, false);
     dispatchMode({ type: 'open-globe' });
     setRendererError(null);
   }, [map]);
@@ -190,10 +193,10 @@ export default function MapView() {
         </View>
       ) : null}
       <MapSidebar cyclingEnabled={cyclingEnabled} onToggleCycling={toggleCycling} compact={mode === 'globe' || mode === 'to-globe'} onAddressSearchResult={(result) => { setSearchedAddress(result); map.setResultsOpen(false); map.setResultsRailCollapsed(true); dispatchMode({ type: 'open-map' }); setRendererError(null); }} />
-      {!cyclingEnabled ? <MapResultsPanel /> : <CyclingPanel selected={cyclingSelection} showPlaces={cyclingPlacesVisible} onTogglePlaces={() => setCyclingPlacesVisible(value => !value)} onClearSelection={() => setCyclingSelection(null)} />}
+      {(mode === 'map' || mode === 'to-map') ? (!cyclingEnabled ? <MapResultsPanel /> : <CyclingPanel selected={cyclingSelection} showPlaces={cyclingPlacesVisible} onTogglePlaces={() => setCyclingPlacesVisible(value => !value)} onClearSelection={() => setCyclingSelection(null)} />) : null}
       <LocateButton onPress={map.locateUser} isLoading={map.isLocating} />
       <CoverageAlert />
-      {map.selectedLocation ? <MapPopup location={map.selectedLocation} /> : null}
+      {(mode === 'map' || mode === 'to-map') && map.selectedLocation ? <MapPopup location={map.selectedLocation} /> : null}
       <MapFooter />
       {map.locationError ? (
         <View accessibilityLiveRegion="assertive" style={{ position: 'absolute', left: 16, right: 16, bottom: 92, alignItems: 'center', zIndex: 90 }}>
