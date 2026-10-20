@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
   extends: ['expo'],
-  ignorePatterns: ['dist/', 'node_modules/', 'android/', 'ios/', '.expo/'],
+  ignorePatterns: ['dist/', 'node_modules/', 'android/', 'ios/', '.expo/', 'tmp/'],
   rules: {
     'react-hooks/exhaustive-deps': 'warn',
     'no-unused-vars': 'off',

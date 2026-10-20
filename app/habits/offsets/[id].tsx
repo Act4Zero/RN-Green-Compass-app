@@ -27,7 +27,7 @@ export default function OffsetProjectDetailScreen() {
   };
   const localizedProject = project ? localizeOffsetProject(project, locale) : null;
   return <Screen><ScrollView showsVerticalScrollIndicator={false}><Content>
-    {loading ? <Skeleton height={300} /> : !localizedProject ? <StatePanel icon="leaf-outline" title="Проектът не е достъпен" message={error || 'Този проект вече не е в проверения каталог.'} action={<AppButton label="Към проектите" onPress={() => router.replace('/habits/offsets' as any)} />} /> : <>
+    {loading ? <Skeleton height={300} /> : !project || !localizedProject ? <StatePanel icon="leaf-outline" title="Проектът не е достъпен" message={error || 'Този проект вече не е в проверения каталог.'} action={<AppButton label="Към проектите" onPress={() => router.replace('/habits/offsets' as any)} />} /> : <>
       <PageHeader eyebrow={`${localizedProject.technology} · ${localizedProject.country}`} title={localizedProject.name} description={localizedProject.summary} action={<AppButton label="Назад" icon="arrow-back" variant="ghost" onPress={() => router.back()} />} />
       <View style={{ gap: theme.spacing.lg }}>
         {error ? <StatePanel icon="shield-outline" title="Плащането не е започнато" message={error} /> : null}

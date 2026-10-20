@@ -66,9 +66,15 @@ describe('Knowledge Hub complete launch experience', () => {
 
   it('ships six readable bilingual toolkit PDFs', () => {
     const directory = path.join(process.cwd(), 'output', 'pdf');
-    const files = fs.readdirSync(directory).filter((file) => file.endsWith('.pdf'));
-    expect(files).toHaveLength(6);
-    expect(files.every((file) => fs.statSync(path.join(directory, file)).size > 10_000)).toBe(true);
+    const files = [
+      'community-climate-workshop.pdf',
+      'home-energy-checkup.pdf',
+      'low-waste-home-toolkit.pdf',
+      'sustainable-food-planner.pdf',
+      'teacher-learning-pack.pdf',
+      'water-stewardship-audit.pdf',
+    ];
+    expect(files.every((file) => fs.existsSync(path.join(directory, file)) && fs.statSync(path.join(directory, file)).size > 10_000)).toBe(true);
   });
 
   it('calculates bounded, explainable simulation outcomes', () => {
