@@ -17,6 +17,7 @@ const mockMapFacade: any = {
 
 jest.mock('@/theme', () => ({ useAppTheme: () => ({ theme: require('@/theme/tokens').createTheme('light') }) }));
 jest.mock('@/context/AppLocaleContext', () => ({ useAppLocale: () => ({ locale: 'en', t: (english: string) => english }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 jest.mock('@react-native-async-storage/async-storage', () => require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }), useLocalSearchParams: () => ({}) }));
 jest.mock('@react-native-community/netinfo', () => ({ __esModule: true, default: { addEventListener: jest.fn(() => () => undefined) } }));
@@ -116,7 +117,16 @@ describe('Living Planet shell', () => {
   it('closes map-only panels and selection before returning to the globe', () => {
     mockMapFacade.isResultsOpen = true;
     mockMapFacade.isResultsRailCollapsed = false;
-    mockMapFacade.selectedLocation = { id: 'place-1', name: 'Test place', lat: 42.7, lng: 23.3 };
+    mockMapFacade.selectedLocation = {
+      id: 'place-1',
+      name: 'Test place',
+      lat: 42.7,
+      lng: 23.3,
+      categories: [],
+      connectors: [],
+      credentials: [],
+      sustainability_features: [],
+    };
     let tree!: renderer.ReactTestRenderer;
     act(() => { tree = renderer.create(<MapView />); });
     expect(tree.root.findAllByType(require('../MapResultsPanel').default)).toHaveLength(1);

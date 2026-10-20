@@ -10,6 +10,12 @@ import { useBadges } from '@/context/BadgesContext';
 import { useAppTheme } from '@/theme';
 import type { Badge, BadgeCategoryType } from '@/types/community/badges';
 
+type DisplayBadge = Badge & {
+  imageUrl?: string;
+  isEarned: boolean;
+  awarded_at?: string;
+};
+
 export default function BadgesScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
@@ -22,9 +28,12 @@ export default function BadgesScreen() {
   useEffect(() => { if (!authLoading && !user) router.replace('/auth/signin'); }, [user, authLoading, router]);
   useFocusEffect(useCallback(() => { if (user) void Promise.all([loadAllBadges(), loadUserBadges()]); }, [user, loadAllBadges, loadUserBadges]));
 
-  const earnedBadges = useMemo(() => userBadges
-    .map((userBadge) => userBadge.badge ? { ...userBadge.badge, isEarned: true, awarded_at: userBadge.awarded_at, imageUrl: userBadge.badge.icon_url || undefined } : null)
-    .filter((badge): badge is Badge & { isEarned: true; awarded_at: string; imageUrl?: string } => Boolean(badge)), [userBadges]);
+  const earnedBadges = useMemo<DisplayBadge[]>(() => userBadges.flatMap((userBadge) => userBadge.badge ? [{
+    ...userBadge.badge,
+    isEarned: true,
+    awarded_at: userBadge.awarded_at,
+    imageUrl: userBadge.badge.icon_url || undefined,
+  }] : []), [userBadges]);
   const earnedVisible = getBadgesByCategory(earnedBadges, earnedCategory);
   const allVisible = getBadgesByCategory(badgesWithEarnedStatus, availableCategory).map((badge) => ({ ...badge, imageUrl: badge.icon_url || undefined }));
   const total = badgesWithEarnedStatus.length;

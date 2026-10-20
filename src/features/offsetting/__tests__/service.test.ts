@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DAILY_CHALLENGES } from '../catalog';
 import { offsettingService } from '../service';
 
-const mockRpc = jest.fn(async (..._args: unknown[]) => ({ data: null, error: { message: 'not migrated' } }));
+const mockRpc = jest.fn(async (..._args: unknown[]): Promise<{ data: unknown; error: { message: string } | null }> => ({ data: null, error: { message: 'not migrated' } }));
 const mockUpsert = jest.fn(async (..._args: unknown[]) => ({ error: { message: 'offline' } }));
 const mockGetKnowledgeHome = jest.fn(async (..._args: unknown[]) => ({ recommendations: [], interactive: [] }));
 
