@@ -43,19 +43,19 @@ const features = [
   },
   {
     number: '06',
-    status: 'Pilot rollout',
-    title: 'Verified marketplace',
-    text: 'Discover lower-impact physical products from reviewed businesses, with evidence-backed scores, certifications and versioned impact estimates.',
-    detail: 'Catalog and checkout are enabled in stages as partners, stock and payment operations complete verification.',
+    status: 'Partner onboarding',
+    title: 'Marketplace for local impact',
+    text: 'A marketplace designed to give Bulgarian bio-producers and responsible local businesses a trusted place to present their products and work.',
+    detail: 'The catalogue, business profiles and checkout infrastructure are built. Public offers appear only after partner, certification and product claims are reviewed.',
   },
 ];
 
 const faq = [
-  ['Is Green Compass available now?', 'Yes. The web app contains habit tracking, impact views, Knowledge Hub, community experiences, the living ecosystem and an authenticated sustainability map. Some services—such as marketplace checkout and offset purchasing—remain controlled rollouts.'],
+  ['Is Green Compass available now?', 'Yes. The web app contains habit tracking, impact views, Knowledge Hub, community experiences, the living ecosystem and an authenticated sustainability map. Marketplace infrastructure is built, while products and checkout open in stages as real partners complete onboarding and review.'],
   ['Are the impact numbers exact?', 'No. Green Compass presents directional estimates with versioned factors, units, sources and assumptions. It does not present a partial personal tracker as an emissions inventory, certification or carbon-neutrality claim.'],
   ['What stays private?', 'Personal activities, goals, travel entries, reminders and reflections are private by default. Community comparisons use only aggregate impact summaries and require explicit opt-in.'],
   ['Can I use the map without an account?', 'You can view the bundled public preview. The interactive 3D globe and its live catalogue require an account so Green Compass can protect privacy, moderation workflows and map-service capacity.'],
-  ['What does “verified” mean in the marketplace?', 'Businesses, product claims, certifications and impact evidence pass editorial and operational checks before publication. The pilot does not seed invented products or unreviewed sustainability claims.'],
+  ['How does the marketplace support local producers?', 'It gives Bulgarian bio-producers and responsible local businesses space for a reviewed profile, products and certifications. No invented products or unreviewed sustainability claims are used to make the catalogue look larger than it is.'],
 ];
 
 export default function HomePage() {
@@ -105,7 +105,7 @@ export default function HomePage() {
       <section className="signal-strip" aria-label="Green Compass capabilities">
         <div className="container signal-grid">
           <div><strong>6</strong><span>connected product areas</span></div>
-          <div><strong>BG + EN</strong><span>learning & marketplace content</span></div>
+          <div><strong>BG + EN</strong><span>learning, map & marketplace</span></div>
           <div><strong>1 wallet</strong><span>Green Points across the app</span></div>
           <div><strong>Private</strong><span>by default, shared by choice</span></div>
         </div>

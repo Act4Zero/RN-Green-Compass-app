@@ -43,10 +43,11 @@ export function NewsletterForm({ inverse = false }) {
   );
 }
 
-export function ContactForm() {
+export function ContactForm({ locale = 'en' }) {
   const [fields, setFields] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
+  const isBg = locale === 'bg';
 
   function update(event) {
     setFields((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -70,11 +71,11 @@ export function ContactForm() {
   return (
     <form className="contact-form" onSubmit={onSubmit} noValidate>
       <div className="form-row">
-        <label>Name<input name="name" maxLength="100" value={fields.name} onChange={update} autoComplete="name" /></label>
-        <label>Email address<input name="email" type="email" maxLength="254" required value={fields.email} onChange={update} autoComplete="email" /></label>
+        <label>{isBg ? 'Име' : 'Name'}<input name="name" maxLength="100" value={fields.name} onChange={update} autoComplete="name" /></label>
+        <label>{isBg ? 'Имейл адрес' : 'Email address'}<input name="email" type="email" maxLength="254" required value={fields.email} onChange={update} autoComplete="email" /></label>
       </div>
-      <label>Message<textarea name="message" maxLength="3000" required rows="6" value={fields.message} onChange={update} /></label>
-      <button className="button button-primary" type="submit" disabled={status === 'loading'}>{status === 'loading' ? 'Sending…' : 'Send message'}</button>
+      <label>{isBg ? 'Съобщение' : 'Message'}<textarea name="message" maxLength="3000" required rows="6" value={fields.message} onChange={update} /></label>
+      <button className="button button-primary" type="submit" disabled={status === 'loading'}>{status === 'loading' ? (isBg ? 'Изпращане…' : 'Sending…') : (isBg ? 'Изпратете съобщение' : 'Send message')}</button>
       {message ? <p className={`form-note ${status}`} role="status">{message}</p> : null}
     </form>
   );

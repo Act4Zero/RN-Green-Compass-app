@@ -1,8 +1,8 @@
 import Head from 'next/head';
 
-const SITE_URL = 'https://greencompass.app';
+const SITE_URL = 'https://www.greencompass.app';
 
-export default function Seo({ title, description, path = '/' }) {
+export default function Seo({ title, description, path = '/', lang = 'en' }) {
   const url = `${SITE_URL}${path === '/' ? '' : path}`;
   const fullTitle = title.includes('Green Compass') ? title : `${title} — Green Compass`;
 
@@ -10,6 +10,7 @@ export default function Seo({ title, description, path = '/' }) {
     <Head>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      <meta httpEquiv="content-language" content={lang} />
       <link rel="canonical" href={url} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Green Compass" />
