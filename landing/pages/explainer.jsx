@@ -40,7 +40,7 @@ export default function ExplainerPage() {
           <div className="status-grid">
             <article><b>Available in the app</b><h3>Daily practice</h3><p>Habits, goals, impact views, personalized learning, community, points, badges and the living ecosystem.</p></article>
             <article><b>Access controlled</b><h3>Interactive globe</h3><p>Anonymous visitors see a zero-cost preview; authenticated sessions receive the live experience when capacity is available.</p></article>
-            <article><b>Pilot rollout</b><h3>Marketplace & offsets</h3><p>Catalog, checkout and provider operations open only after verification, onboarding and production acceptance are complete.</p></article>
+            <article><b>Partner onboarding</b><h3>Marketplace & offsets</h3><p>The marketplace infrastructure is built to support Bulgarian bio-producers and responsible local businesses. Products, checkout and provider operations open only after verification and onboarding are complete.</p></article>
           </div>
         </div>
       </section>
